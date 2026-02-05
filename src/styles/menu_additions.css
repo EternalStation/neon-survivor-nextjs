@@ -1,0 +1,885 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap');
+
+:root {
+    --neon-cyan: #06b6d4;
+    --neon-purple: #7c3aed;
+    --neon-red: #be123c;
+    --neon-green: #059669;
+    --bg-dark: #000000;
+}
+
+body {
+    font-family: 'Orbitron', monospace;
+    background-color: var(--bg-dark);
+}
+
+/* --- CHAOS & NEON ANIMATIONS --- */
+@keyframes neon-flicker {
+
+    0%,
+    19%,
+    21%,
+    23%,
+    25%,
+    54%,
+    56%,
+    100% {
+        text-shadow:
+            0 0 10px rgba(255, 255, 255, 0.8),
+            0 0 20px var(--neon-cyan),
+            0 0 40px var(--neon-cyan);
+        opacity: 1;
+    }
+
+    20%,
+    22%,
+    24%,
+    55% {
+        text-shadow: none;
+        opacity: 0.5;
+    }
+}
+
+@keyframes glitch-skew {
+    0% {
+        transform: skew(0deg);
+    }
+
+    20% {
+        transform: skew(-5deg);
+    }
+
+    21% {
+        transform: skew(30deg);
+    }
+
+    23% {
+        transform: skew(-20deg);
+    }
+
+    25% {
+        transform: skew(0deg);
+    }
+
+    100% {
+        transform: skew(0deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes chaos-glitch-text {
+    0% {
+        transform: translate(0);
+        text-shadow: -2px 0 var(--neon-red), 2px 0 var(--neon-cyan);
+    }
+
+    10% {
+        transform: translate(-5px, -5px);
+        text-shadow: -4px 0 var(--neon-red), 4px 0 var(--neon-cyan);
+    }
+
+    50% {
+        transform: translate(0);
+        text-shadow: 0 0 15px white;
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+/* --- MAIN MENU (Refined & Clean) --- */
+.main-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #050505;
+    /* Deep, stable black */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Main Menu Container - Centering Wrapper */
+.menu-container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 12vh;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let clicks fall through to parallax container */
+}
+
+/* Post-Processing Overlays */
+.menu-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.menu-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            transparent,
+            transparent 50%,
+            rgba(0, 0, 0, 0.2) 50%,
+            rgba(0, 0, 0, 0.2));
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0.3;
+}
+
+.menu-scanline-beam {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to bottom,
+            transparent,
+            rgba(6, 182, 212, 0.05),
+            transparent);
+    pointer-events: none;
+    z-index: 7;
+    animation: scanline 8s linear infinite;
+}
+
+/* Structured Grid Background Overlay */
+.main-menu::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(20, 30, 40, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 30, 40, 0.4) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.1;
+    /* Reduced opacity for cleaner look */
+}
+
+/* Clean, Premium Title */
+.menu-title {
+    font-size: 110px;
+    font-weight: 900;
+    color: #f8fafc;
+    text-transform: uppercase;
+    letter-spacing: 24px;
+    margin-bottom: 60px;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 1);
+    position: relative;
+    z-index: 10;
+    animation: neon-flicker 4s infinite, glitch-skew 10s infinite;
+    pointer-events: auto;
+}
+
+.menu-title::before {
+    content: "NEON SURVIVOR";
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 100%;
+    height: 100%;
+    color: var(--neon-red);
+    clip-path: rect(10px, 9999px, 40px, 0);
+    animation: chaos-glitch-text 5s infinite linear alternate-reverse;
+    z-index: -1;
+    opacity: 0.5;
+}
+
+/* Start Button - Simple & Premium */
+.btn-start {
+    width: 340px;
+    /* Slightly wider to accommodate letter spacing */
+    height: 80px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(6, 182, 212, 0.3);
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+    white-space: nowrap;
+    /* PREVENT WRAPPING */
+}
+
+.btn-start::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
+    transform: skewX(-25deg);
+    transition: 0.5s;
+}
+
+.btn-start:hover::before {
+    left: 200%;
+}
+
+.btn-start:hover {
+    background: var(--neon-cyan);
+    color: #020617;
+    border-color: #fff;
+    letter-spacing: 10px;
+    /* Reduced from 12px to prevent tension */
+    box-shadow: 0 0 50px rgba(6, 182, 212, 0.6);
+    transform: scale(1.05) translateY(-5px);
+}
+
+/* Game Logic & Settings Button */
+.btn-logic {
+    width: 280px;
+    height: 55px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+    white-space: nowrap;
+}
+
+.btn-logic:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: var(--neon-cyan);
+    letter-spacing: 6px;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+}
+
+/* Blueprint Modal */
+.blueprint-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.95);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(15px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.blueprint-container {
+    width: 90%;
+    max-width: 1200px;
+    height: 80%;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.blueprint-header {
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.blueprint-title {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.btn-close-blueprint {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: color 0.2s;
+}
+
+.btn-close-blueprint:hover {
+    color: #fff;
+}
+
+.blueprint-iframe {
+    flex-grow: 1;
+    width: 100%;
+    border: none;
+    background: white;
+    /* The HTML file has its own background, but fallback */
+}
+
+/* Controls Container - Strict Alignment */
+.controls-hint-container {
+    position: absolute;
+    bottom: 80px;
+    /* Fixed distance from bottom */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 120px;
+    /* Spacing between groups */
+    padding: 0 40px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    /* Align to bottom so labels line up */
+    gap: 20px;
+    height: 120px;
+    /* Fixed height to ensure alignment */
+}
+
+.keys-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    /* Reserved space for keys */
+}
+
+.control-label {
+    color: #64748b;
+    /* Muted Slate */
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Key Visuals (Subtle, Dark) */
+.key-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.key-row {
+    display: flex;
+    gap: 4px;
+}
+
+.key-box {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Very subtle */
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+    /* Dim text */
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.space-key {
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+/* Hover effect for instructions (Subtle brighten) */
+.control-group:hover .key-box,
+.control-group:hover .control-label {
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+}
+
+
+/* --- DEATH SCREEN --- */
+.death-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #020617;
+    /* Slate 950, very dark blue-black */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.death-title {
+    font-size: 48px;
+    color: #ef4444;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 15px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    /* animation: chaos-glitch-text 0.5s infinite; Removed for cleaner look per request */
+}
+
+/* Removed card-like stats-table in favor of grid layout in component */
+
+.death-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+}
+
+.death-tab {
+    padding: 10px 24px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.death-tab.active {
+    color: var(--neon-cyan);
+    border-bottom-color: var(--neon-cyan);
+    background: rgba(34, 211, 238, 0.05);
+}
+
+.death-tab:hover:not(.active) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stat-row-death {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0;
+    font-size: 17px;
+    color: #fff;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+.stat-val-death {
+    color: var(--neon-red);
+    font-weight: 900;
+    text-shadow: 0 0 10px var(--neon-red);
+}
+
+.btn-restart {
+    background: black;
+    border: 2px solid var(--neon-green);
+    color: var(--neon-green);
+    font-size: 32px;
+    padding: 20px 60px;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    text-transform: uppercase;
+    box-shadow: 0 0 20px var(--neon-green);
+    transition: 0.2s;
+}
+
+.btn-restart:hover {
+    background: var(--neon-green);
+    color: black;
+    box-shadow: 0 0 80px var(--neon-green);
+}
+
+/* --- SLIDE PANELS --- */
+.stats-panel-slide {
+    position: fixed;
+    top: 0;
+    right: -650px;
+    width: 600px;
+    height: 100%;
+    bottom: 0;
+    background: rgba(5, 5, 5, 0.98);
+    border-left: 2px solid var(--neon-cyan);
+    box-shadow: -20px 0 50px rgba(0, 0, 0, 1);
+    transition: right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    padding: 30px;
+    z-index: 1500;
+    overflow-y: auto;
+}
+
+.stats-panel-slide.open {
+    right: 0;
+}
+
+/* --- UPGRADE CARDS --- */
+.upgrade-container {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    /* Ensure they fit */
+    flex-wrap: wrap;
+}
+
+.upgrade-card {
+    /* Portrait aspect ratio */
+    width: 260px;
+    height: 400px;
+    background: rgba(10, 10, 15, 0.95);
+    border: 2px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Space between elements */
+    justify-content: space-between;
+    padding: 25px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Selected State handled via .active class in individual component CSS */
+
+/* Rarity specific borders/glows handled by inline styles or utility classes in JS, 
+   but we set defaults here */
+
+.card-icon {
+    font-size: 64px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+.card-title {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.card-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(8, 145, 178, 0.5);
+}
+
+.card-description {
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.5;
+    flex-grow: 1;
+    /* Push rarity to bottom */
+    display: flex;
+    align-items: center;
+}
+
+/* Rarity Diamonds Container */
+.rarity-diamonds {
+    display: flex;
+    gap: 6px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #334155;
+    width: 100%;
+    justify-content: center;
+}
+
+.diamond {
+    width: 12px;
+    height: 12px;
+    background: #1e293b;
+    /* Empty color */
+    transform: rotate(45deg);
+    border: 1px solid #475569;
+    box-shadow: inset 0 0 2px #000;
+}
+
+.diamond.filled {
+    background: currentColor;
+    /* Inherits from parent color */
+    border-color: #fff;
+    box-shadow: 0 0 8px currentColor;
+}
+
+/* Rarity Text */
+.rarity-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #64748b;
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+/* --- SETTINGS MENU OVERHAUL --- */
+.settings-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.95);
+    backdrop-filter: blur(15px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    padding: 40px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.settings-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.settings-header {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 12px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--neon-cyan);
+    padding-bottom: 15px;
+    text-shadow: 0 0 15px var(--neon-cyan);
+    text-transform: uppercase;
+}
+
+.settings-tab-container {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.settings-tab {
+    flex: 1;
+    height: 50px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.settings-tab.active {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.2);
+}
+
+.settings-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.settings-control-group {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-slider-label {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.settings-slider-val {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.settings-input-range {
+    width: 100%;
+    height: 6px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 3px;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+}
+
+.settings-input-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid var(--neon-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.settings-actions {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-settings-primary {
+    width: 100%;
+    padding: 18px;
+    background: var(--neon-cyan);
+    color: #020617;
+    border: 1px solid #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.btn-settings-primary:hover {
+    background: #fff;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-settings-secondary {
+    flex: 1;
+    padding: 15px;
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.btn-settings-secondary:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.btn-settings-muted {
+    flex: 1;
+    padding: 15px;
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #94a3b8;
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.btn-settings-muted:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-color: #fff;
+}

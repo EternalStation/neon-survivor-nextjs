@@ -1,0 +1,55 @@
+.meteorite-card-pulse {
+    animation: card-pulse 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes card-pulse {
+    from {
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    to {
+        box-shadow: 0 0 25px var(--rarity-color);
+        border-color: var(--rarity-color);
+    }
+}
+
+.card-stat-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.card-stat-line .bullet {
+    font-size: 14px;
+    color: var(--rarity-color);
+    margin-top: -2px;
+}
+
+.card-stat-line .content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.card-stat-line .label {
+    font-size: 8px;
+    font-weight: 900;
+    color: #94a3b8;
+    letter-spacing: 1px;
+}
+
+.card-stat-line .value {
+    font-size: 9px;
+    font-weight: 900;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff88;
+}
+
+/* Pure pixel edges look */
+.meteorite-card-pulse {
+    image-rendering: auto;
+    /* Use auto for high res feel but keep sharp borders */
+    border-radius: 4px;
+}

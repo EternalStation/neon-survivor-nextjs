@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Neon Survivor - Next.js Edition
 
-## Getting Started
+Полная миграция игры на Next.js с встроенным backend API.
 
-First, run the development server:
+## 🚀 Быстрый старт
+
+### 1. Установка зависимостей
+
+```bash
+npm install
+```
+
+### 2. Настройка переменных окружения
+
+Создайте файл `.env.local` (уже создан) и убедитесь, что там есть:
+
+```env
+DATABASE_URL=your_neon_database_url
+JWT_SECRET=your_jwt_secret
+NODE_ENV=development
+```
+
+### 3. Запуск в режиме разработки
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Приложение будет доступно на `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Структура проекта
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+neon-survivor-nextjs/
+├── src/
+│   ├── app/
+│   │   ├── api/              # API Routes (Backend)
+│   │   │   ├── auth/         # Аутентификация
+│   │   │   │   ├── register/
+│   │   │   │   ├── login/
+│   │   │   │   └── verify/
+│   │   │   ├── leaderboard/  # Таблица лидеров
+│   │   │   │   ├── global/
+│   │   │   │   ├── daily/
+│   │   │   │   └── weekly/
+│   │   │   ├── runs/         # Игровые сессии
+│   │   │   └── health/       # Health check
+│   │   ├── page.tsx          # Главная страница (игра)
+│   │   └── layout.tsx        # Root layout
+│   ├── lib/                  # Утилиты
+│   │   ├── db.ts             # Database connection
+│   │   └── auth.ts           # JWT utilities
+│   └── components/           # React компоненты (TODO: перенести из старого проекта)
+├── public/                   # Статические файлы
+├── .env.local                # Переменные окружения
+└── package.json
+```
 
-## Learn More
+## 🔌 API Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+### Authentication
+- `POST /api/auth/register` - Регистрация
+- `POST /api/auth/login` - Вход
+- `GET /api/auth/verify` - Проверка токена
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Leaderboard
+- `GET /api/leaderboard/global` - Глобальная таблица
+- `GET /api/leaderboard/daily` - Дневная таблица
+- `GET /api/leaderboard/weekly` - Недельная таблица
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Runs
+- `POST /api/runs` - Сохранить игровую сессию (требует auth)
 
-## Deploy on Vercel
+### Health
+- `GET /api/health` - Проверка работоспособности
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎮 Следующие шаги
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 1. Перенести игровые компоненты
+
+Скопируйте компоненты из старого проекта:
+```bash
+# Из папки Game/src/components в neon-survivor-nextjs/src/components
+# Из папки Game/src/logic в neon-survivor-nextjs/src/lib/game
+```
+
+### 2. Обновить импорты
+
+В компонентах замените:
+```typescript
+// Старое
+import { Component } from '../components/Component';
+
+// Новое
+import { Component } from '@/components/Component';
+```
+
+### 3. Создать главную страницу игры
+
+Обновите `src/app/page.tsx` с игровым canvas и логикой.
+
+## 📦 Деплой
+
+### Vercel (Рекомендуется)
+
+```bash
+npm install -g vercel
+vercel
+```
+
+### Netlify
+
+```bash
+npm run build
+# Затем загрузите папку .next на Netlify
+```
+
+## 🔧 Разработка
+
+- `npm run dev` - Запуск dev сервера
+- `npm run build` - Сборка для production
+- `npm run start` - Запуск production сервера
+- `npm run lint` - Проверка кода
+
+## 📝 Примечания
+
+- **Frontend и Backend в одном проекте** - Всё работает на Next.js
+- **API Routes** - Автоматически становятся serverless functions при деплое
+- **TypeScript** - Полная типизация
+- **Neon PostgreSQL** - Serverless база данных
+
+## 🎯 Преимущества миграции
+
+✅ Единый проект вместо двух  
+✅ Автоматический деплой frontend + backend  
+✅ Serverless functions (масштабируемость)  
+✅ TypeScript везде  
+✅ Встроенная оптимизация Next.js  
+✅ Простой деплой на Vercel/Netlify  
+
+---
+
+**Старый проект**: `Game/` (Vite + Express)  
+**Новый проект**: `neon-survivor-nextjs/` (Next.js)

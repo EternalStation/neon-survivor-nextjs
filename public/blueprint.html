@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Survivor - Master Wiki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --bg-card: #0f172a;
+            --bg-hover: #1e293b;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+            --pink: #ec4899;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --green: #22c55e;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-accent: #22d3ee;
+            --border: #1e293b;
+            --glow-cyan: 0 0 15px rgba(34, 211, 238, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        nav {
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .wiki-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--cyan);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: var(--glow-cyan);
+            padding: 10px;
+            border-bottom: 2px solid var(--cyan);
+        }
+
+        .nav-link {
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
+        }
+
+        .nav-link:hover {
+            color: var(--text-main);
+            background: var(--bg-hover);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            color: var(--cyan);
+            background: rgba(34, 211, 238, 0.1);
+            border-left: 4px solid var(--cyan);
+        }
+
+        .nav-group {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            padding-left: 15px;
+        }
+
+        /* Main Content */
+        main {
+            padding: 60px 80px;
+            max-width: 1200px;
+            overflow-x: hidden;
+        }
+
+        section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            margin-bottom: 100px;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin: 40px 0 20px;
+            color: var(--cyan);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 15px;
+            color: var(--purple);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--pink);
+            font-size: 0.9em;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th,
+        td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: var(--cyan);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tr:hover {
+            background-color: rgba(30, 41, 59, 0.3);
+        }
+
+        /* Grids and Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--cyan);
+            box-shadow: 0 10px 30px -10px rgba(34, 211, 238, 0.2);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+
+        .card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--cyan);
+            margin-bottom: 15px;
+        }
+
+        .card-body {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+
+        .stat-list {
+            list-style: none;
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .stat-tag {
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--cyan);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Rarity Colors */
+        .rarity-scrap {
+            color: #7FFF00;
+        }
+
+        .rarity-anomalous {
+            color: #00C0C0;
+        }
+
+        .rarity-quantum {
+            color: #00FFFF;
+        }
+
+        .rarity-astral {
+            color: #7B68EE;
+        }
+
+        .rarity-radiant {
+            color: #FFD700;
+        }
+
+        .rarity-abyss {
+            color: #8B0000;
+        }
+
+        .rarity-void {
+            color: #8B0000;
+        }
+
+        .rarity-eternal {
+            color: #B8860B;
+        }
+
+        .rarity-divine {
+            color: #FFFFFF;
+        }
+
+        .rarity-singularity {
+            color: #E942FF;
+        }
+
+        .perk-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .perk-label {
+            color: var(--text-dim);
+        }
+
+        .perk-value {
+            color: var(--pink);
+            font-family: 'JetBrains Mono';
+        }
+
+        /* Utility classes */
+        .highlight-cyan {
+            color: var(--cyan);
+        }
+
+        .highlight-purple {
+            color: var(--purple);
+        }
+
+        .highlight-red {
+            color: var(--red);
+        }
+
+        .highlight-green {
+            color: var(--green);
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="wiki-logo">NEON SURVIVOR</div>
+
+        <div class="nav-group">General</div>
+        <a href="#" class="nav-link active" onclick="show('home')">Overview</a>
+        <a href="#" class="nav-link" onclick="show('stats')">Basic Stats</a>
+        <a href="#" class="nav-link" onclick="show('map')">Map & World</a>
+
+        <div class="nav-group">The Chassis</div>
+        <a href="#" class="nav-link" onclick="show('classes')">Classes</a>
+        <a href="#" class="nav-link" onclick="show('upgrades')">Upgrades</a>
+        <a href="#" class="nav-link" onclick="show('legendaries')">Legendary Hexes</a>
+
+        <div class="nav-group">Loot & Matrix</div>
+        <a href="#" class="nav-link" onclick="show('meteorites')">Meteorites</a>
+        <a href="#" class="nav-link" onclick="show('synergy')">Matrix Synergies</a>
+        <a href="#" class="nav-link" onclick="show('rarity')">Rarity Tables</a>
+
+        <div class="nav-group">Encyclopedia</div>
+        <a href="#" class="nav-link" onclick="show('enemies')">Standard Enemies</a>
+        <a href="#" class="nav-link" onclick="show('elites')">Elite Database</a>
+        <a href="#" class="nav-link" onclick="show('uniques')">Unique Entities</a>
+    </nav>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="active">
+            <h1>Master Blueprint</h1>
+            <p>Welcome to the <strong>Neon Survivor Central Database</strong>. This wiki contains the most up-to-date
+                data on chassis performance, enemy behavioral patterns, and matrix efficiency protocols.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-subtitle">System Status</div>
+                    <div class="card-title">Version 2.0.4</div>
+                    <div class="card-body">All sectors online. Multiverse portals calibrated. Meteorite drop cycles
+                        synchronized.</div>
+                </div>
+                <div class="card">
+                    <div class="card-subtitle">Global Modifiers</div>
+                    <div class="card-title">Economic Stability</div>
+                    <div class="card-body">Kill XP scales by <code>40 + (2 * Level)</code>. Spawn rate starts at 1.6/s
+                        and increases by
+                        <code>0.1</code> every 60 seconds.
+                    </div>
+                </div>
+            </div>
+
+            <h2>Portal Logic</h2>
+            <h3>Manual Activation</h3>
+            <p>Portals no longer cycle automatically. Players can open all connecting portals at any time by paying
+                <strong>5 Meteorite Dust</strong>. Once opened, they remain active for <strong>10s</strong> before
+                destabilizing.
+            </p>
+
+
+            <h3>Leveling & Scaling</h3>
+            <ul>
+                <li><strong>Experience Requirement:</strong> Starts at <code>250 XP</code>. Each level increases the
+                    required XP by <strong>10%</strong> (compounding).</li>
+                <li><strong>XP Scaling Formula:</strong> <code>250 * (1.10 ^ (Level - 1))</code></li>
+                <li><strong>Enemy HP Growth:</strong> <code>80 * (1.186^m) * (1 + (m * log2(2 + m) / 30))</code> → 20k @
+                    20min, 250M @ 60min</li>
+                <li><strong>Spawn Rate Scaling:</strong> Starts at <code>1.6/s</code>, increasing by <code>+0.1</code>
+                    every 60 seconds.</li>
+            </ul>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats">
+            <h1>Base Performance Specs</h1>
+            <p>Standardized starting statistics for all chassis before class-specific modifications.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Starting HP</td>
+                        <td>150</td>
+                        <td>Scalable via Upgrades</td>
+                    </tr>
+                    <tr>
+                        <td>Starting Damage</td>
+                        <td>50</td>
+                        <td>Base kinetic output</td>
+                    </tr>
+                    <tr>
+                        <td>Attack Speed</td>
+                        <td>330ms</td>
+                        <td>Interval between shots</td>
+                    </tr>
+                    <tr>
+                        <td>Scan Range</td>
+                        <td>800px</td>
+                        <td>Auto-aim detection radius</td>
+                    </tr>
+                    <tr>
+                        <td>Bullet Travel</td>
+                        <td>1656px</td>
+                        <td>Maximum effective range</td>
+                    </tr>
+                    <tr>
+                        <td>Level 1 XP</td>
+                        <td>250</td>
+                        <td>Initial requirement</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>System Upgrades (Base Gains)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Flat Gain</th>
+                        <th>% Gain</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Damage</td>
+                        <td>+10</td>
+                        <td>+5%</td>
+                    </tr>
+                    <tr>
+                        <td>Max Health</td>
+                        <td>+40</td>
+                        <td>+20%</td>
+                    </tr>
+                    <tr>
+                        <td>Attack Speed</td>
+                        <td>+25 pts</td>
+                        <td>--</td>
+                    </tr>
+                    <tr>
+                        <td>Health Regen</td>
+                        <td>+2.5</td>
+                        <td>+15%</td>
+                    </tr>
+                    <tr>
+                        <td>XP Gain</td>
+                        <td>+15</td>
+                        <td>+5%</td>
+                    </tr>
+                    <tr>
+                        <td>Armor</td>
+                        <td>+10</td>
+                        <td>+10%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Map Section -->
+        <section id="map">
+            <h1>The Triptych Map</h1>
+            <p>The arena consists of three massive hexagonal sectors connected by high-energy portals.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-subtitle">Sector 0</div>
+                    <div class="card-title">ECONOMIC HEX</div>
+                    <div class="card-body">The cradle of resources. Features <strong>+15% Meteorite Drop Chance</strong>
+                        and <strong>+15% XP Gain</strong>. Best for early-game scaling.</div>
+                </div>
+                <div class="card" style="border-color: var(--red);">
+                    <div class="card-subtitle" style="color: var(--red);">Sector 1</div>
+                    <div class="card-title">COMBAT HEX</div>
+                    <div class="card-body">High-intensity conflict zone. Features <strong>+15% Enemy Spawn Rate</strong>
+                        and <strong>+15% Collision Damage</strong>. Optimal for kill-count farming.</div>
+                </div>
+                <div class="card" style="border-color: var(--blue);">
+                    <div class="card-subtitle" style="color: var(--blue);">Sector 2</div>
+                    <div class="card-title">DEFENCE HEX</div>
+                    <div class="card-body">The core of stability. Features <strong>+20% Max HP</strong> and <strong>+20%
+                            Health Regen</strong>. Ideal for surviving late-game waves.</div>
+                </div>
+            </div>
+
+            <h2>Portal Logic</h2>
+            <ul>
+                <li><strong>Manual Activation:</strong> Pay 5 Dust to open all portals in the current arena.</li>
+                <li><strong>Short Duration:</strong> Portals stay open for only 10s.</li>
+                <li><strong>Red Portal:</strong> Connects to Combat Hex.</li>
+                <li><strong>Yellow Portal:</strong> Connects to Economic Hex.</li>
+                <li><strong>Blue Portal:</strong> Connects to Defence Hex.</li>
+            </ul>
+            <p>Teleportation involves a 3-second transfer delay where the camera pans to the destination.</p>
+        </section>
+
+        <!-- Classes Section -->
+        <section id="classes">
+            <h1>Chassis Variants</h1>
+            <p>Unique frames designed for specific tactical orientations in the Neon Abyss.</p>
+
+            <div class="card-grid">
+                <!-- Malware Prime -->
+                <div class="card">
+                    <div class="card-subtitle" style="color: #d946ef;">THE GLITCHED SOVEREIGN</div>
+                    <div class="card-title">Malware-Prime</div>
+                    <div class="card-body">
+                        Manual targeting frame. Projectiles ricochet off walls <strong>5 times</strong>, gaining +20%
+                        damage/speed per bounce.
+                        <div class="stat-list">
+                            <span class="stat-tag">+20% Speed</span>
+                            <span class="stat-tag">-15% HP</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Event Horizon -->
+                <div class="card">
+                    <div class="card-subtitle" style="color: #8b5cf6;">THE VOID WEAVER</div>
+                    <div class="card-title">Event-Horizon</div>
+                    <div class="card-body">
+                        Tank frame. Spawns 450px <strong>Void Singuliarities</strong> that pull enemies in.
+                        <div class="stat-list">
+                            <span class="stat-tag">+30% Armor</span>
+                            <span class="stat-tag">-10% Speed</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cosmic Beam -->
+                <div class="card">
+                    <div class="card-subtitle" style="color: #06b6d4;">THE THUNDER ENGINE</div>
+                    <div class="card-title">Cosmic Beam</div>
+                    <div class="card-body">
+                        Heavy artillery frame. Triggers massive <strong>Orbital Strikes</strong> every 8 seconds.
+                        <div class="stat-list">
+                            <span class="stat-tag">+40% DMG</span>
+                            <span class="stat-tag">-20% ATS</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Aigis Vortex -->
+                <div class="card">
+                    <div class="card-subtitle" style="color: #f59e0b;">THE GOLDEN BASTION</div>
+                    <div class="card-title">Aigis-Vortex</div>
+                    <div class="card-body">
+                        Defensive specialist. Projectiles orbit in a <strong>Magnetic Vortex</strong> for 4s before
+                        release.
+                        <div class="stat-list">
+                            <span class="stat-tag">+20% HP</span>
+                            <span class="stat-tag">+50% Regen</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Hive Mother -->
+                <div class="card">
+                    <div class="card-subtitle" style="color: #22c55e;">THE SWARM OVERLORD</div>
+                    <div class="card-title">Hive-Mother</div>
+                    <div class="card-body">
+                        Infection specialist. Projectiles deploy <strong>Nanite Swarms</strong> that spread between
+                        enemies.
+                        <div class="stat-list">
+                            <span class="stat-tag">+15% XP</span>
+                            <span class="stat-tag">+10% DMG</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upgrades Section -->
+        <section id="upgrades">
+            <h1>Upgrade Protocols</h1>
+            <p>Enhancements chosen upon leveling up. Effectiveness is dictated by Rarity multipliers.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Effect Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>dmg_f / dmg_m</td>
+                        <td>Damage</td>
+                        <td>Increase kinetic punch / Boost total output %</td>
+                    </tr>
+                    <tr>
+                        <td>atk_s</td>
+                        <td>Attack Speed</td>
+                        <td>Shorten firing interval</td>
+                    </tr>
+                    <tr>
+                        <td>hp_f / hp_m</td>
+                        <td>Max Health</td>
+                        <td>Structural integrity / Health capacity %</td>
+                    </tr>
+                    <tr>
+                        <td>reg_f / reg_m</td>
+                        <td>Regen</td>
+                        <td>Repair rate / Repair efficiency %</td>
+                    </tr>
+                    <tr>
+                        <td>xp_f / xp_m</td>
+                        <td>Exp Gain</td>
+                        <td>Tactical data harvest / Learning rate %</td>
+                    </tr>
+                    <tr>
+                        <td>arm_f / arm_m</td>
+                        <td>Armor</td>
+                        <td>Physical resistance / Plating efficiency %</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Legendaries Section -->
+        <section id="legendaries">
+            <h1>Legendary Hexes</h1>
+            <p>Special upgrades found only after defeating Sector Bosses. They socket into the Matrix's outer ring.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">STORM OF STEEL</div>
+                    <div class="card-subtitle">Economic | +0.2 DMG Per Kill</div>
+                    <div class="card-body">
+                        Lvl 2: +0.2 ATS/Kill<br>
+                        Lvl 3: +0.2% DMG/Kill<br>
+                        Lvl 4: +0.2% ATS/Kill
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">NEURAL HARVEST</div>
+                    <div class="card-subtitle">Economic | +0.2 XP Per Kill</div>
+                    <div class="card-body">
+                        Lvl 2: +0.2% Meteor Drop/Kill<br>
+                        Lvl 3: +0.2% Rarity Boost/Kill<br>
+                        Lvl 4: +0.2% XP%/Kill
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">CRIMSON FEAST</div>
+                    <div class="card-subtitle">Combat | +3% Lifesteal</div>
+                    <div class="card-body">
+                        Lvl 2: Overheal -> Shield<br>
+                        Lvl 3: 2% Enemy Max HP DMG<br>
+                        Lvl 4: 10% Zombie Spawn Chance
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">TERROR PULSE</div>
+                    <div class="card-subtitle">Combat | 15th Shot = Wave</div>
+                    <div class="card-body">
+                        Lvl 2: 1.5s Wave Fear<br>
+                        Lvl 3: Boosted Wave DMG/Range<br>
+                        Lvl 4: Twin Pulse (Front/Back)
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">TOXIC SWAMP</div>
+                    <div class="card-subtitle">Defensive | Active Puddle</div>
+                    <div class="card-body">
+                        Lvl 2: 5% Max HP/sec Acid DMG<br>
+                        Lvl 3: Stand-in Regen Buff<br>
+                        Lvl 4: Massive Puddle Radius (600px)
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">AEGIS PROTOCOL</div>
+                    <div class="card-subtitle">Defensive | Log-Scaling Defense</div>
+                    <div class="card-body">
+                        Lvl 1: +1 Armor/Kill<br>
+                        Lvl 2: Collision Reduction (Log-cap 80%)<br>
+                        Lvl 3: Projectile Reduction (Log-cap 80%)<br>
+                        Lvl 4: +1% Armor Multiplier/Kill
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Meteorites Section -->
+        <section id="meteorites">
+            <h1>Meteorite Fragments</h1>
+            <p>Artifacts dropped from enemies that can be socketed into the inner Matrix ring to boost adjacent Hexes.
+            </p>
+
+            <h3>Quality Tiers</h3>
+            <ul>
+                <li><strong>Broken:</strong> -2% Perk Value penalty.</li>
+                <li><strong>Damaged:</strong> Baseline Performance.</li>
+                <li><strong>New:</strong> +2% Perk Value bonus.</li>
+            </ul>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">Core Surge (Lvl 1)</div>
+                    <div class="card-body">Base Efficiency boost (2-5%). Found across all sectors.</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Proximity Buff (Lvl 2-3)</div>
+                    <div class="card-body">Boosts per neighboring meteorite or specific sector origin
+                        (Economic/Combat/Def).</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Legendary Link (Lvl 5-6)</div>
+                    <div class="card-body">Significant boosts for each connected Legendary Hex.</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Resonance Pairs (Lvl 7-8)</div>
+                    <div class="card-body">Massive efficiency for connecting two compatible Legendary Hexes (e.g.
+                        Eco-Eco).</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Synergy Section -->
+        <section id="synergy">
+            <h1>Matrix Efficiency</h1>
+            <p>The Matrix consists of a center <strong>Chassis</strong>, 6 inner <strong>Diamond</strong> sockets, and 6
+                outer <strong>Hexagon</strong> sockets.</p>
+
+            <h3>The Connection Rules</h3>
+            <ul>
+                <li><strong>Chassis Resonance:</strong> The center slot is boosted by all 6 inner Diamonds.</li>
+                <li><strong>Hex Multiplier:</strong> Each Legendary Hex is boosted by up to <strong>4 adjacent
+                        Meteorites</strong>.</li>
+                <li><strong>Efficiency Stacks:</strong> Meteorite perks add up. A 30% Efficiency meteorite makes a 10%
+                    Upgrade effectively 13%.</li>
+            </ul>
+
+            <h2>Synergy Perks</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Perk Name</th>
+                        <th>Lvl</th>
+                        <th>Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Base Efficiency</td>
+                        <td>1</td>
+                        <td>Static boost to all adjacent nodes.</td>
+                    </tr>
+                    <tr>
+                        <td>Neighbor Any</td>
+                        <td>2</td>
+                        <td>Scales with the amount of filled neighbor slots.</td>
+                    </tr>
+                    <tr>
+                        <td>Sector Specialist</td>
+                        <td>3-4</td>
+                        <td>Boosts based on the matching <code>DiscoveredIn</code> tag.</td>
+                    </tr>
+                    <tr>
+                        <td>Hex Link</td>
+                        <td>5-6</td>
+                        <td>Massive additive boost per adjacent Hexagon.</td>
+                    </tr>
+                    <tr>
+                        <td>Category Pair</td>
+                        <td>7-8</td>
+                        <td>Multiplier check for matching Category types (Eco/Com/Def).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Rarity Section -->
+        <section id="rarity">
+            <h1>Dimensional Rarities</h1>
+            <p>The rarity system governs the power level of all drops. Higher tiers appear as game time progresses.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rarity</th>
+                        <th>Mult</th>
+                        <th>Color</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rarity-scrap">Scrap</td>
+                        <td>0.5x</td>
+                        <td style="background:#7FFF00"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-anomalous">Anomalous</td>
+                        <td>0.8x</td>
+                        <td style="background:#00C0C0"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-quantum">Quantum</td>
+                        <td>1.5x</td>
+                        <td style="background:#00FFFF"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-astral">Astral</td>
+                        <td>2.5x</td>
+                        <td style="background:#7B68EE"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-radiant">Radiant</td>
+                        <td>4.0x</td>
+                        <td style="background:#FFD700"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-void">Abyss/Void</td>
+                        <td>7.0x</td>
+                        <td style="background:#8B0000"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-eternal">Eternal</td>
+                        <td>12.0x</td>
+                        <td style="background:#B8860B"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-divine">Divine</td>
+                        <td>20.0x</td>
+                        <td style="background:#FFFFFF"></td>
+                    </tr>
+                    <tr>
+                        <td class="rarity-singularity">Singularity</td>
+                        <td>35.0x</td>
+                        <td style="background:#E942FF"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Spawn Thresholds</h3>
+            <p><strong>0-5m:</strong> Primarily Scrap/Anomalous.<br>
+                <strong>20m+:</strong> Eternal rarities start appearing.<br>
+                <strong>60m+:</strong> Singularity peak (18%+ chance).
+            </p>
+        </section>
+
+        <!-- Enemies Section -->
+        <section id="enemies">
+            <h1>Standard Threats</h1>
+            <p>The core hostile entities encountered within the Hex Arena.</p>
+
+            <h2>Enemy Damage Formulas</h2>
+            <p>All enemy damage scales exponentially with game time through HP growth.</p>
+
+            <h3>1. Enemy HP Growth Over Time</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Base HP</td>
+                        <td><code>80 * (1.186 ^ minutes)</code></td>
+                        <td>Exponential growth foundation</td>
+                    </tr>
+                    <tr>
+                        <td>Difficulty Mult</td>
+                        <td><code>1 + (min * log₂(2 + min) / 30)</code></td>
+                        <td>Logarithmic difficulty scaling</td>
+                    </tr>
+                    <tr>
+                        <td>Cycle Mult</td>
+                        <td><code>1.2 ^ floor(minutes / 5)</code></td>
+                        <td>5-minute cycle multiplier</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Final HP</strong></td>
+                        <td><code>baseHP * diffMult * cycleMult * shapeMult</code></td>
+                        <td>Complete formula</td>
+                    </tr>
+                    <tr>
+                        <td>Boss HP</td>
+                        <td><code>Final HP * 15</code></td>
+                        <td>Boss multiplier</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>HP Benchmarks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Enemy HP</th>
+                        <th>Boss HP</th>
+                        <th>Collision Dmg (15%)</th>
+                        <th>Projectile Dmg (30%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0 min</td>
+                        <td>80</td>
+                        <td>1,200</td>
+                        <td>12</td>
+                        <td>24</td>
+                    </tr>
+                    <tr>
+                        <td>10 min</td>
+                        <td>1,392</td>
+                        <td>20,880</td>
+                        <td>209</td>
+                        <td>418</td>
+                    </tr>
+                    <tr style="background: rgba(34, 211, 238, 0.1);">
+                        <td><strong>20 min</strong></td>
+                        <td><strong>19,981</strong></td>
+                        <td><strong>299,715</strong></td>
+                        <td><strong>2,997</strong></td>
+                        <td><strong>5,994</strong></td>
+                    </tr>
+                    <tr>
+                        <td>30 min</td>
+                        <td>239,260</td>
+                        <td>3,588,900</td>
+                        <td>35,889</td>
+                        <td>71,778</td>
+                    </tr>
+                    <tr>
+                        <td>40 min</td>
+                        <td>2,589,396</td>
+                        <td>38,840,940</td>
+                        <td>388,409</td>
+                        <td>776,819</td>
+                    </tr>
+                    <tr>
+                        <td>50 min</td>
+                        <td>26,324,280</td>
+                        <td>394,864,200</td>
+                        <td>3,948,642</td>
+                        <td>7,897,284</td>
+                    </tr>
+                    <tr style="background: rgba(34, 211, 238, 0.1);">
+                        <td><strong>60 min</strong></td>
+                        <td><strong>256,577,428</strong></td>
+                        <td><strong>3,848,661,420</strong></td>
+                        <td><strong>38,486,614</strong></td>
+                        <td><strong>76,973,228</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2. Collision Damage (Contact)</h3>
+            <div class="card">
+                <div class="card-title">Base Formula</div>
+                <div class="card-body">
+                    <div class="perk-row">
+                        <span class="perk-label">Standard Arena</span>
+                        <span class="perk-value">enemy.hp * 0.15 (15%)</span>
+                    </div>
+                    <div class="perk-row">
+                        <span class="perk-label">Combat Hex</span>
+                        <span class="perk-value">enemy.hp * 0.15 * 1.15 (17.25%)</span>
+                    </div>
+                    <p class="mt-4">Damage is based on <strong>current HP</strong>, so it decreases as enemies take
+                        damage. Reduced by armor and Aegis Protocol perk (capped at 80% reduction).</p>
+                </div>
+            </div>
+
+            <h3>3. Projectile Damage (Diamond Enemies)</h3>
+            <div class="card">
+                <div class="card-title">Ranged Attack</div>
+                <div class="card-body">
+                    <div class="perk-row">
+                        <span class="perk-label">Damage</span>
+                        <span class="perk-value">floor(enemy.maxHp * 0.30)</span>
+                    </div>
+                    <div class="perk-row">
+                        <span class="perk-label">Fire Rate</span>
+                        <span class="perk-value">Every 6 seconds</span>
+                    </div>
+                    <div class="perk-row">
+                        <span class="perk-label">Speed</span>
+                        <span class="perk-value">6 units/frame</span>
+                    </div>
+                    <div class="perk-row">
+                        <span class="perk-label">Lifetime</span>
+                        <span class="perk-value">~5 seconds (300 frames)</span>
+                    </div>
+                    <p class="mt-4">Damage is based on <strong>max HP</strong> (30%), making Diamond enemies
+                        increasingly dangerous over time. Projectiles use the current era palette color.</p>
+                </div>
+            </div>
+
+            <h3>4. Shape Multipliers</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Shape</th>
+                        <th>HP Mult</th>
+                        <th>Speed Mult</th>
+                        <th>Size Mult</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Circle</td>
+                        <td>1.0x</td>
+                        <td>1.0x</td>
+                        <td>1.0x</td>
+                    </tr>
+                    <tr>
+                        <td>Triangle</td>
+                        <td>0.8x</td>
+                        <td>1.2x</td>
+                        <td>0.9x</td>
+                    </tr>
+                    <tr>
+                        <td>Square</td>
+                        <td>1.2x</td>
+                        <td>0.8x</td>
+                        <td>1.1x</td>
+                    </tr>
+                    <tr>
+                        <td>Diamond</td>
+                        <td>1.0x</td>
+                        <td>1.0x</td>
+                        <td>1.0x</td>
+                    </tr>
+                    <tr>
+                        <td>Pentagon</td>
+                        <td>1.5x</td>
+                        <td>0.7x</td>
+                        <td>1.2x</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Enemy Types</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">CIRCLE (Chaser)</div>
+                    <div class="card-body">
+                        Relentless pursuit. High spawn count and 1.3x speed. The basic building block of any swarm.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">TRIANGLE (Charger)</div>
+                    <div class="card-body">
+                        Tactical aggression. 1.3x speed. Periodic high-velocity forward charges.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">SQUARE (Tank)</div>
+                    <div class="card-body">
+                        Heavy resistance. 2.0x HP but 0.8x speed. Difficult to knock back.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">DIAMOND (Sniper)</div>
+                    <div class="card-body">
+                        Long-range kiting. Maintains distance while firing energy bolts at the player.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">PENTAGON (Swarm Mother)</div>
+                    <div class="card-body">
+                        Hive logic. Spawns 3 Minions every 15s. Kites the player and avoids close combat.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Elites Section -->
+        <section id="elites">
+            <h1>Elite Database</h1>
+            <p>Advanced variants with unique dangerous capabilities. Often leading large clusters of standard enemies.
+            </p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 5px solid var(--red);">
+                    <div class="card-title">Elite Circle (Bull Charge)</div>
+                    <div class="card-body">Enters a red-alert state before dashing directly at the player's last
+                        recorded location.</div>
+                </div>
+                <div class="card" style="border-left: 5px solid var(--amber);">
+                    <div class="card-title">Elite Triangle (Flash Dash)</div>
+                    <div class="card-body">Constantly stays within range with hyper-fast zig-zag movement.</div>
+                </div>
+                <div class="card" style="border-left: 5px solid var(--purple);">
+                    <div class="card-title">Elite Diamond (Hyper Beam)</div>
+                    <div class="card-body">Charges a massive continuous laser beam that deals heavy tick damage. Avoid
+                        the line of fire.</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #FFFFFF;">
+                    <div class="card-title">Elite Pentagon (Guardian)</div>
+                    <div class="card-body">Minions aggressively orbit the mother. After 60s, it enters "Destruction
+                        Mode" and releases all minions at once.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Uniques Section -->
+        <section id="uniques">
+            <h1>Unique Entities</h1>
+            <p>Rare or utility entities that don't fit the standard combat hierarchy.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-subtitle" style="color: var(--cyan);">Loot Entity</div>
+                    <div class="card-title">Quantum Snitch</div>
+                    <div class="card-body">A high-speed non-combative enemy. Killing it grants a <strong>Massive Rarity
+                            Boost</strong> to your next upgrade selection. It will teleport and use other enemies as
+                        cover.</div>
+                </div>
+                <div class="card">
+                    <div class="card-subtitle" style="color: var(--green);">Combat Ally</div>
+                    <div class="card-title">Viral Zombie</div>
+                    <div class="card-body">Spawned by Crimson Feast. Rises from the ground and latches onto enemies,
+                        stunning and dealing damage until it consumes them or is touched 3 times.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function show(id) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+            // Remove active class from all links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            // Show target section
+            document.getElementById(id).classList.add('active');
+            // Add active class to corresponding link
+            event.currentTarget.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+
+</html>

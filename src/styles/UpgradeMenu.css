@@ -1,0 +1,373 @@
+/* UpgradeMenu.css */
+
+/* --- Keyframes --- */
+@keyframes cardEntry {
+    0% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+
+    80% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes cardFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes pulseBloom {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px var(--card-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--card-glow);
+    }
+}
+
+@keyframes glitchAnim {
+    0% {
+        clip-path: inset(10% 0 80% 0);
+        transform: translate(-2px, 1px);
+    }
+
+    20% {
+        clip-path: inset(80% 0 5% 0);
+        transform: translate(2px, -1px);
+    }
+
+    40% {
+        clip-path: inset(30% 0 50% 0);
+        transform: translate(-1px, 2px);
+    }
+
+    60% {
+        clip-path: inset(10% 0 20% 0);
+        transform: translate(1px, -2px);
+    }
+
+    80% {
+        clip-path: inset(50% 0 10% 0);
+        transform: translate(2px, 2px);
+    }
+
+    100% {
+        clip-path: inset(20% 0 60% 0);
+        transform: translate(-1px, -1px);
+    }
+}
+
+@keyframes pcbPulse {
+    0% {
+        background-size: 100% 100%;
+        opacity: 0.3;
+    }
+
+    50% {
+        background-size: 110% 110%;
+        opacity: 0.5;
+    }
+
+    100% {
+        background-size: 100% 100%;
+        opacity: 0.3;
+    }
+}
+
+@keyframes voidSwirl {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes hologramScan {
+    0% {
+        top: -10%;
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        top: 110%;
+        opacity: 0;
+    }
+}
+
+/* --- Container --- */
+.upgrade-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #020205;
+    /* Deep Navy/Black */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center vertically */
+    gap: 60px;
+    /* Space between title and cards */
+}
+
+/* --- Card Base --- */
+.upgrade-card-container {
+    perspective: 1000px;
+    margin: 0 10px;
+    /* Reduced margin to fit better if needed */
+    z-index: 10;
+    position: relative;
+    /* Context */
+}
+
+.upgrade-card {
+    position: relative;
+    width: 320px;
+    height: 500px;
+    background: #0A0A1A;
+    background-color: rgba(10, 10, 26, 0.95);
+    border-radius: 20px;
+    border: 2px solid var(--card-glow);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    /* Fast smooth return on exit (deselection) */
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+    color: #fff;
+    cursor: pointer;
+
+    /* Entry Animation + Float */
+    animation: cardEntry 0.4s ease-out forwards;
+}
+
+/* Idle Animation applied via class? Or combined. */
+/* If we combine, float starts immediately. We want float after entry. 
+   Can use delay. */
+.upgrade-card.idle {
+    animation: cardFloat 4s ease-in-out 0.4s infinite;
+    transform: scale(1);
+    /* Ensure idle state is scale 1 */
+}
+
+/* Active/Select State */
+.upgrade-card.active {
+    transform: scale(1.15) translateY(-30px) !important;
+    /* Force override similar to hover but stronger */
+    /* Strong pop */
+    box-shadow: 0 0 50px var(--card-glow), inset 0 0 20px var(--card-glow);
+    z-index: 100;
+    /* High Z to be in front */
+    animation: none;
+    /* Stop float when active */
+    /* Bouncy Pop Up only on entry/active */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+
+.upgrade-card:hover {
+    z-index: 90;
+}
+
+/* Ensure siblings stay back - handled by default Z-index (auto/1) vs 100 */
+
+/* --- Content Layout (Center Stack) --- */
+.card-content-stack {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    position: relative;
+    z-index: 5;
+}
+
+.icon-badge-center {
+    width: 80px;
+    height: 80px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    /* Circle icon badge */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    /* Neon glow handled inline */
+}
+
+.card-title-center {
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 25px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.card-value-center {
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 10px;
+    /* Color handled inline */
+}
+
+.rarity-label-bottom {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-shadow: 0 0 8px currentColor;
+    opacity: 0.9;
+}
+
+/* --- Crystal Bar (Uniform) --- */
+.card-crystal-bar {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    width: 100%;
+    height: 20px;
+}
+
+.gem-socket-diamond {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #333;
+    transform: rotate(45deg);
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gem-filled-diamond {
+    width: 8px;
+    height: 8px;
+    /* background set inline - flat golden color */
+    box-shadow: 0 0 6px currentColor;
+}
+
+
+/* --- Rarity Themes (Backgrounds) --- */
+/* Junk */
+.card-junk {
+    --card-glow: #404040;
+    background: radial-gradient(circle, #2a2a2a 0%, #1a0f0f 100%);
+}
+
+.card-junk .card-bg-effect {
+    position: absolute;
+    inset: 0;
+    opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+}
+
+/* Broken */
+.card-broken {
+    --card-glow: #666666;
+    background: #1a1a1a;
+    border-style: dashed;
+}
+
+.card-broken:hover {
+    animation: glitchAnim 0.3s infinite;
+}
+
+/* Common */
+.card-common {
+    --card-glow: #808080;
+    background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
+}
+
+/* Uncommon */
+.card-uncommon {
+    --card-glow: #00FF88;
+    background: #05150a;
+}
+
+.card-uncommon .card-bg-effect {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(#00FF8811 1px, transparent 1px), linear-gradient(90deg, #00FF8811 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: pcbPulse 2s infinite;
+}
+
+/* Rare */
+.card-rare {
+    --card-glow: #00AAFF;
+    background: radial-gradient(circle at center, #001a33 0%, #000810 100%);
+    box-shadow: inset 0 0 20px rgba(0, 170, 255, 0.2);
+}
+
+.card-rare .card-bg-effect {
+    position: absolute;
+    inset: 0;
+    /* Simplified Rare Visuals */
+    background: radial-gradient(circle, #00AAFF15 0%, transparent 60%);
+    opacity: 0.4;
+}
+
+/* Epic */
+.card-epic {
+    --card-glow: #AA00FF;
+    background: radial-gradient(circle at center, #2a002a 0%, #0a000a 100%);
+}
+
+.card-epic .card-bg-effect {
+    position: absolute;
+    inset: -50%;
+    background: radial-gradient(circle, #AA00FF20 0%, transparent 60%);
+    animation: voidSwirl 10s linear infinite;
+}
+
+/* Mythical */
+.card-mythical {
+    --card-glow: #FF00AA;
+    background: #1a0010;
+    border: 2px double #FF00AA;
+}
+
+/* Ancient */
+.card-ancient {
+    --card-glow: #FFD700;
+    background: linear-gradient(45deg, #332a00, #1a1500);
+}
+
+/* Divine */
+.card-divine {
+    --card-glow: #00FFFF;
+    background: linear-gradient(135deg, #00FFFF10 0%, #FFFFFFFF 50%, #00FFFF10 100%);
+    border: 1px solid white;
+    box-shadow: 0 0 20px #00FFFF;
+}

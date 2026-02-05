@@ -1,0 +1,71 @@
+:root {
+    /* Rarity Colors */
+    --tier-junk: #475569;
+    --tier-broken: #78350f;
+    --tier-common: #94a3b8;
+    --tier-uncommon: #22c55e;
+    --tier-rare: #3b82f6;
+    --tier-mythical: #a855f7;
+    --tier-epic: #ec4899;
+    --tier-ancient: #facc15;
+    --tier-divine: #22d3ee;
+    --boss-glitch: #ef4444;
+
+    /* Neon Palettes */
+    --neon-blue: #00F6FF;
+    --neon-pink: #FF2EC8;
+    --neon-red: #FF2A2A;
+    --neon-green: #00FF66;
+    --neon-yellow: #FFF700;
+
+    /* UI Colors */
+    --bg-color: #020617;
+    --ui-bg: rgba(15, 23, 42, 0.98);
+    --ui-border: #334155;
+    --text-primary: #ffffff;
+    --text-secondary: #64748b;
+
+    /* Font */
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    font-family: var(--font-main);
+    color: var(--text-primary);
+    user-select: none;
+    touch-action: none;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+}
+
+/* Scrollbar for Stats */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--tier-common);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--tier-divine);
+}
