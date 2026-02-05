@@ -98,7 +98,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 case 3: {
                     const a = f.arena.toLowerCase();
                     const target = a === 'all' ? 'neighbor_any_' : `neighbor_any_${a}`;
-                    const p = perks.find((x: any) => x.id.startsWith(target) && x.id.split('_').length === 3);
+                    const p = perks.find((x: any) => x.id.startsWith(target) && x.id.split('_').length === 3 && x.id !== 'neighbor_any_all');
                     if (p) levelMatch = checkValue(p.value);
                     break;
                 }
@@ -128,7 +128,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 case 6: {
                     const a = f.arena.toLowerCase();
                     const target = a === 'all' ? 'neighbor_leg_' : `neighbor_leg_${a}`;
-                    const p = perks.find((x: any) => x.id.startsWith(target));
+                    const p = perks.find((x: any) => x.id.startsWith(target) && x.id !== 'neighbor_leg_any');
                     if (p) levelMatch = checkValue(p.value);
                     break;
                 }

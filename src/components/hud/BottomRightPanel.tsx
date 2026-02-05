@@ -98,7 +98,7 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({ onInventoryT
                         fontWeight: 900,
                         textShadow: portalError ? '0 0 5px #000' : 'none'
                     }}>
-                        {portalCost} DUST
+                        {Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST
                     </div>
                 )}
             </div>

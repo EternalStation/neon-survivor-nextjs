@@ -322,7 +322,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                 // Correlate with Game Loop logic (useGame.ts)
                                                 // calcStat(player.atk) includes hexFlat/hexMult because they are updated in PlayerLogic every frame
                                                 const score = calcStat(player.atk);
-                                                const sps = Math.max(1.65, 2.8 * Math.log(score) - 14.3 + score / 150000);
+                                                const sps = Math.max(1.0, 2.8 * Math.log(score) - 14.0 + score / 150000);
                                                 return `(${sps.toFixed(2)}/s)`;
                                             })()}
                                         />

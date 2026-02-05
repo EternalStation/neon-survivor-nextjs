@@ -700,13 +700,13 @@ export function useGameLoop(gameStarted: boolean) {
         const { player } = state;
         const atkScore = calcStat(player.atk);
 
-        // Logarithmic + Linear Scaling (User Request v5)
-        // 1.65 SPS @ 300
-        // 4.0 SPS @ 700
-        // ~35.5 SPS @ 1,500,000
-        // Fit: SPS = 2.8 * ln(Atk) - 14.3 + (Atk / 150,000)
+        // Logarithmic + Linear Scaling (Updated v6)
+        // 2.0 SPS @ 300 (Base)
+        // 1.35 SPS @ 240 (Cosmic Beam Start)
+        // ~4.4 SPS @ 700
+        // Fit: SPS = 2.8 * ln(Atk) - 14.0 + (Atk / 150,000)
 
-        let shotsPerSec = Math.max(1.65, 2.8 * Math.log(atkScore) - 14.3 + atkScore / 150000);
+        let shotsPerSec = Math.max(1.0, 2.8 * Math.log(atkScore) - 14.0 + atkScore / 150000);
 
         // Cap max SPS to avoid infinity/physics breaks if stats go wild (e.g. 60 FPS limit)
         // 60 SPS = ~3 Million Atk with this formula

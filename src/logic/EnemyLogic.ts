@@ -518,6 +518,10 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     }
                 }
 
+                // Safety Clamp: Never jump more than 100px/frame
+                if (Math.abs(vx) > 100) vx = Math.sign(vx) * 100;
+                if (Math.abs(vy) > 100) vy = Math.sign(vy) * 100;
+
                 // Restore Shield Ref Sync
                 e.legionShield = lead.legionShield;
                 e.maxLegionShield = lead.maxLegionShield;

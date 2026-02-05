@@ -379,7 +379,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{ width: '20px', height: '20px', filter: 'drop-shadow(0 0 5px #22d3ee)' }} />
                                         <span style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', fontWeight: 700 }}>DUST:</span>
-                                        <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>{meteoriteDust}</span>
+                                        <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>{Number(meteoriteDust.toFixed(1)).toLocaleString()}</span>
                                     </div>
                                 </div>
 

@@ -101,7 +101,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         const tdx = (e.lockedTargetX || 0) - e.x, tdy = (e.lockedTargetY || 0) - e.y, tdist = Math.hypot(tdx, tdy);
         if (tdist > 1) { vx = (tdx / tdist) * e.spd; vy = (tdy / tdist) * e.spd; }
         if (dToP < 350 && (!e.tacticalTimer || timeS > e.tacticalTimer)) {
-            const target = state.enemies.find(o => !o.dead && !o.boss && o.shape !== 'snitch' && Math.hypot(o.x - player.x, o.y - player.y) > dToP + 200);
+            const target = state.enemies.find(o => !o.dead && !o.boss && !o.legionId && o.shape !== 'snitch' && Math.hypot(o.x - player.x, o.y - player.y) > dToP + 200);
             if (target) {
                 const ox = e.x, oy = e.y; e.x = target.x; e.y = target.y; target.x = ox; target.y = oy;
                 spawnParticles(state, ox, oy, ['#F0F0F0', '#808080'], 20);
