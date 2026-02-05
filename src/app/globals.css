@@ -218,88 +218,9 @@ button:focus-visible {
   }
 }
 
-/* Rarity Styles */
 
-/* 1. Scrap (#3C3C3C) */
-.card-scrap {
-  background: linear-gradient(135deg, #2a2a2a 0%, #3C3C3C 100%) !important;
-  border-color: #555 !important;
-  filter: grayscale(0.8) contrast(1.1);
-}
+/* Rarity styles moved to specialized UpgradeMenu.css to avoid conflicts with global styles */
 
-/* 2. Anomalous (#00C0C0) */
-.card-anomalous {
-  border-color: #00C0C0;
-  box-shadow: 0 0 10px rgba(0, 192, 192, 0.2);
-  animation: glitch 2s infinite alternate-reverse;
-}
-
-/* 3. Quantum (#00FFFF) */
-.card-quantum {
-  border-color: #00FFFF;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-}
-
-/* 4. Astral (#7B68EE) */
-.card-astral {
-  border-color: #7B68EE;
-  box-shadow: 0 0 15px rgba(123, 104, 238, 0.4);
-}
-
-/* 5. Radiant (#FFD700) */
-.card-radiant {
-  border-color: #FFD700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  animation: pulse 3s infinite ease-in-out;
-}
-
-/* 6. Abyss (#8B0000) */
-.card-abyss {
-  border-color: #8B0000;
-  box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 20px rgba(255, 50, 50, 0.2);
-  animation: pulse 2s infinite ease-in-out;
-  overflow: visible !important;
-}
-
-/* 7. Eternal (#B8860B) */
-.card-eternal {
-  border-color: #B8860B;
-  background: linear-gradient(135deg, #1a1a1a 0%, #3a2a0a 100%) !important;
-  box-shadow: 0 0 25px rgba(184, 134, 11, 0.5);
-  position: relative;
-}
-
-/* 8. Divine (#FFFFFF) */
-.card-divine {
-  border-color: #FFFFFF;
-  background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(224, 224, 255, 0.4);
-  animation: holy-glow 2s infinite alternate;
-  color: #333 !important;
-  /* Invert text for white card? Or keep dark bg? User said "holy pristine white". Usually implies light card. */
-}
-
-/* Revert text color if card bg is dark, but user asked for "holy pristine white". Let's try to keep it readable. */
-/* If the card background is truly white, we need dark text. But the app is dark mode.
-   Let's assume the Border is White and the glow is White, but the BG is still dark-ish to fit the game?
-   User said "Color: holy pristine white". Usually implies the main ident color.
-   Let's stick to dark BG with strong White accents for now to be safe, or a very light gray BG.
-*/
-.card-divine {
-  background: linear-gradient(135deg, #e0e0e0 0%, #ffffff 100%) !important;
-  color: #1a1a1a !important;
-  /* Dark text for contrast */
-}
-
-/* 9. Singularity (#0F001F) */
-.card-singularity {
-  border: 3px solid #4B0082 !important;
-  background: linear-gradient(135deg, #000000 0%, #0F001F 100%) !important;
-  box-shadow: 0 0 60px rgba(75, 0, 130, 0.8), inset 0 0 50px rgba(0, 0, 0, 0.9);
-  animation: pulse-singularity 4s infinite ease-in-out;
-  transform-style: preserve-3d;
-  overflow: visible !important;
-}
 
 /* Animations */
 
