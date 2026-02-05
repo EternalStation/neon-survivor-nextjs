@@ -86,21 +86,54 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         state.directorState!.legionSpawned = true;
         state.directorState!.activeLegionId = legionId;
 
-        const formationAngle = Math.random() * Math.PI * 2;
-        const formationDist = 1500;
-        let baseCenterX = state.player.x + Math.cos(formationAngle) * formationDist;
-        let baseCenterY = state.player.y + Math.sin(formationAngle) * formationDist;
+        // --- Legion Formation Center Search ---
+        let formationCenterX = state.player.x;
+        let formationCenterY = state.player.y;
+        let foundSafePos = false;
 
-        // Ensure formation center is in map/current arena roughly
-        if (!isInMap(baseCenterX, baseCenterY)) {
-            const playerArena = getArenaIndex(state.player.x, state.player.y);
-            const fallback = getRandomPositionInArena(playerArena);
-            baseCenterX = fallback.x;
-            baseCenterY = fallback.y;
+        const playerArena = getArenaIndex(state.player.x, state.player.y);
+
+        // 1. Try to find a spot ~1500-1800px away from player
+        for (let attempt = 0; attempt < 100; attempt++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 1500 + Math.random() * 300;
+            const tx = state.player.x + Math.cos(angle) * dist;
+            const ty = state.player.y + Math.sin(angle) * dist;
+
+            // Constraint: Must be in same arena AND 500px from any wall
+            if (getArenaIndex(tx, ty) === playerArena) {
+                const { dist: wallDist } = getHexDistToWall(tx, ty);
+                if (wallDist >= 500) {
+                    formationCenterX = tx;
+                    formationCenterY = ty;
+                    foundSafePos = true;
+                    break;
+                }
+            }
         }
 
-        const formationCenterX = baseCenterX;
-        const formationCenterY = baseCenterY;
+        // 2. Fallback: Search anywhere in the player's arena if player-relative search fails
+        if (!foundSafePos) {
+            for (let attempt = 0; attempt < 200; attempt++) {
+                const pos = getRandomPositionInArena(playerArena);
+                const dToPlayer = Math.hypot(pos.x - state.player.x, pos.y - state.player.y);
+                const { dist: wallDist } = getHexDistToWall(pos.x, pos.y);
+
+                if (dToPlayer >= 1500 && wallDist >= 500) {
+                    formationCenterX = pos.x;
+                    formationCenterY = pos.y;
+                    foundSafePos = true;
+                    break;
+                }
+            }
+        }
+
+        // 3. Final Fallback: Use standard arena random (at least we are in a hex)
+        if (!foundSafePos) {
+            const fallback = getRandomPositionInArena(playerArena);
+            formationCenterX = fallback.x;
+            formationCenterY = fallback.y;
+        }
 
         // Scaling (Matching EnemySpawnLogic.ts)
         const minutes = state.gameTime / 60;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { RadarChart } from './RadarChart';
 export { RadarChart };
 import type { GameState, PlayerStats } from '../logic/types';
-import { calcStat } from '../logic/MathUtils';
+import { calcStat, getDefenseReduction } from '../logic/MathUtils';
 import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
 import { getArenaIndex } from '../logic/MapLogic';
 import { GAME_CONFIG } from '../logic/GameConfig';
@@ -332,7 +332,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             stat={player.arm}
                                             legendaryBonusFlat={calculateLegendaryBonus(gameState, 'arm_per_kill')}
                                             legendaryBonusPct={calculateLegendaryBonus(gameState, 'arm_pct_per_kill')}
-                                            extraInfo={`(${(0.95 * (calcStat(player.arm) / (calcStat(player.arm) + GAME_CONFIG.PLAYER.ARMOR_CONSTANT)) * 100).toFixed(1)}%)`}
+                                            extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
                                         />
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Movement Speed</span>

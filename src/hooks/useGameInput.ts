@@ -36,8 +36,8 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
     useEffect(() => {
         const handleDown = (e: KeyboardEvent) => {
             if (e.repeat) return;
-            const key = e.key.toLowerCase();
-            const code = e.code.toLowerCase();
+            const key = (e.key || '').toLowerCase();
+            const code = (e.code || '').toLowerCase();
 
             // Start music on first interaction
             startBGM(gameState.current.currentArena);
@@ -114,8 +114,8 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
         };
 
         const handleUp = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
-            const code = e.code.toLowerCase();
+            const key = (e.key || '').toLowerCase();
+            const code = (e.code || '').toLowerCase();
             keys.current[key] = false;
             keys.current[code] = false;
         };
@@ -123,7 +123,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
         // Cheat Code Buffer
         let cheatBuffer = '';
         const handleCheat = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
+            const key = (e.key || '').toLowerCase();
             cheatBuffer += key;
             if (cheatBuffer.length > 10) cheatBuffer = cheatBuffer.slice(-10);
 
@@ -230,6 +230,15 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 // Trigger Portal Sequence (10s warning then open)
                 gameState.current.portalState = 'closed';
                 gameState.current.portalTimer = 10.1; // Slightly above 10 to ensure clean transition
+                cheatBuffer = '';
+            }
+
+            // RMO - Add +100 armor and +10% multiplier (Stackable)
+            if (cheatBuffer.endsWith('rmo')) {
+                const p = gameState.current.player;
+                p.arm.base += 100;
+                p.arm.mult = (p.arm.mult || 0) + 10;
+                console.log(`Cheat: Armor Stacked! New Base: ${p.arm.base}, Mult: ${p.arm.mult}%`);
                 cheatBuffer = '';
             }
 

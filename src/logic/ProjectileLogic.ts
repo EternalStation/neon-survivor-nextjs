@@ -536,7 +536,13 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         spawnFloatingNumber(state, state.player.x, state.player.y, `-${displayDmg}`, '#FF0000', true);
                     }
                     spawnParticles(state, state.player.x, state.player.y, '#FF0000', 3);
-                    // Play 'hurt' sound?
+
+                    if (state.player.curHp <= 0 && !state.gameOver) {
+                        state.player.curHp = 0;
+                        state.gameOver = true;
+                        state.player.deathCause = `Boss Thorns (${e.shape})`;
+                        if (onEvent) onEvent('game_over');
+                    }
                 }
 
                 // 1. Apply Damage (with Soul Link Logic)

@@ -331,6 +331,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                             if (state.player.curHp <= 0) {
                                 state.player.curHp = 0;
                                 state.gameOver = true;
+                                state.player.deathCause = "Diamond Boss: Orbital Satellites";
                                 if (onEvent) onEvent('game_over');
                             }
                         }
@@ -428,6 +429,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                     if (state.player.curHp <= 0) {
                         state.player.curHp = 0;
                         state.gameOver = true;
+                        state.player.deathCause = "Diamond Boss: Kinetic Beam";
                         if (onEvent) onEvent('game_over');
                     }
                 }
@@ -501,6 +503,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                         if (state.player.curHp <= 0) {
                             state.player.curHp = 0;
                             state.gameOver = true;
+                            state.player.deathCause = "Pentagon Boss: Parasitic Link";
                             if (onEvent) onEvent('game_over');
                         }
                     }

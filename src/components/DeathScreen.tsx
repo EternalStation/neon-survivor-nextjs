@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import type { GameState, UpgradeChoice } from '../logic/types';
-import { calcStat } from '../logic/MathUtils';
+import { calcStat, getDefenseReduction } from '../logic/MathUtils';
 import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
 import { GAME_CONFIG } from '../logic/GameConfig';
 import { submitRunToLeaderboard } from '../utils/leaderboard';
@@ -103,7 +103,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     };
 
     const armor = calcStat(gameState.player.arm);
-    const armRed = (0.95 * (armor / (armor + GAME_CONFIG.PLAYER.ARMOR_CONSTANT)) * 100).toFixed(1);
+    const armRed = (getDefenseReduction(armor) * 100).toFixed(1);
 
     const colRedRaw = calculateLegendaryBonus(gameState, 'col_red_per_kill');
     const colRed = Math.min(80, colRedRaw).toFixed(1);
@@ -139,11 +139,11 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     });
 
     const StatItem = ({ label, value, color = '#fff', subValue = '' }: { label: string, value: string | number, color?: string, subValue?: string }) => (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
             <div style={{ textAlign: 'right' }}>
-                <span style={{ color, fontSize: 16, fontWeight: 800, fontFamily: 'monospace' }}>{value}</span>
-                {subValue && <div style={{ fontSize: 9, color: '#64748b' }}>{subValue}</div>}
+                <span style={{ color, fontSize: 15, fontWeight: 800, fontFamily: 'monospace' }}>{value}</span>
+                {subValue && <div style={{ fontSize: 8, color: '#64748b' }}>{subValue}</div>}
             </div>
         </div>
     );
@@ -156,12 +156,12 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             position: 'absolute',
             top: 0,
             left: 0,
-            overflow: 'hidden',
+            overflowY: 'auto',
             zIndex: 10000,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '20px 0 40px'
+            padding: '10px 0 250px'
         }}>
             {/* Action Buttons */}
             <div style={{ position: 'fixed', top: 20, right: 30, display: 'flex', alignItems: 'center', gap: 15, zIndex: 12000 }}>
@@ -213,8 +213,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
                         {/* MISSION LOG */}
-                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '20px 25px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 13, color: '#22d3ee', letterSpacing: 3, marginBottom: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
+                            <div style={{ fontSize: 12, color: '#22d3ee', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{ width: 4, height: 16, background: '#22d3ee' }} /> MISSION LOG
                             </div>
                             <StatItem label="Time Active" value={formatTime(stats.time)} color="#fff" />
@@ -223,6 +223,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <StatItem label="Snitches" value={displayStats.snitch} color="#f59e0b" />
                             <StatItem label="Portals" value={displayStats.portals} color="#a855f7" />
                             <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
+                            <StatItem label="Fatal Event" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
 
                             <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10 }}>
                                 SECTOR ALLOCATION
@@ -235,8 +236,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                         </div>
 
                         {/* SYSTEM FINALIZED */}
-                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '20px 25px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 13, color: '#10b981', letterSpacing: 3, marginBottom: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
+                            <div style={{ fontSize: 12, color: '#10b981', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{ width: 4, height: 16, background: '#10b981' }} /> SYSTEM FINALIZED
                             </div>
                             <StatItem label="Damage" value={Math.round(calcStat(gameState.player.dmg))} color="#fff" />

@@ -98,9 +98,9 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             await api.deleteRun(runId);
             setEntries(prev => prev.filter(e => e.id !== runId));
             setExpandedRunId(null);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Delete failed:', err);
-            alert('WIPE FAILED: CONNECTION INTERRUPTED');
+            alert(`WIPE FAILED: ${err.message || 'CONNECTION INTERRUPTED'}`);
         } finally {
             setDeletingId(null);
         }
@@ -113,9 +113,9 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         try {
             await api.clearMyRuns();
             loadLeaderboard();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Clear failed:', err);
-            alert('PURGE FAILED: DATABASE LOCK DETECTED');
+            alert(`PURGE FAILED: ${err.message || 'DATABASE LOCK DETECTED'}`);
         } finally {
             setLoading(false);
         }
