@@ -136,6 +136,15 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
     let bulletPierce = pierce;
     // Malware pierce logic is now handled in player.pierce initialization in GameState.ts
 
+    // --- ComWave Logic ---
+    const waveLevel = getHexLevel(state, 'ComWave');
+    if (waveLevel > 0) {
+        state.player.shotsFired = (state.player.shotsFired || 0) + 1;
+        if (state.player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
+            triggerShockwave(state, angle + offsetAngle, waveLevel);
+        }
+    }
+
     // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
     if (state.player.playerClass === 'stormstrike') {
         const now = Date.now();
@@ -259,14 +268,6 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
 
     state.bullets.push(b);
 
-    // --- ComWave Logic ---
-    const waveLevel = getHexLevel(state, 'ComWave');
-    if (waveLevel > 0) {
-        state.player.shotsFired = (state.player.shotsFired || 0) + 1;
-        if (state.player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
-            triggerShockwave(state, angle + offsetAngle, waveLevel);
-        }
-    }
 }
 
 export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {

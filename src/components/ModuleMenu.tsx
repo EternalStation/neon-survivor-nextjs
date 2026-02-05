@@ -7,6 +7,8 @@ import { LegendaryDetail } from './LegendaryDetail';
 import { InventoryPanel } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { getMeteoriteImage, getDustValue, RARITY_ORDER } from './modules/ModuleUtils';
+import { isBuffActive, researchBlueprint } from '../logic/BlueprintLogic';
+import { BlueprintBay } from './BlueprintBay';
 
 interface ModuleMenuProps {
     gameState: GameState;
@@ -32,6 +34,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     // Removal Confirmation State
     const [removalCandidate, setRemovalCandidate] = useState<{ index: number, item: any, replaceWith?: { item: any, source: string, index: number } } | null>(null);
     const [placementAlert, setPlacementAlert] = useState(false);
+    const [, setRefresh] = useState(0);
 
     const hoverTimeout = useRef<number | null>(null);
 
@@ -122,11 +125,25 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         }
         const item = gameState.inventory[idx];
         if (item) {
-            const dustAmount = getDustValue(item.rarity);
+            let dustAmount = getDustValue(item.rarity);
+
+            // Blueprint: Quantum Scrapper
+            if (isBuffActive(gameState, 'QUANTUM_SCRAPPER')) {
+                if (Math.random() < 0.25) {
+                    dustAmount *= 2;
+                }
+            }
+
             onRecycle('inventory', idx, dustAmount);
             // Visual feedback for successful recycle (maybe sound too if I could)
             setRecyclingAnim(true);
             setTimeout(() => setRecyclingAnim(false), 200);
+        }
+    };
+
+    const handleResearch = (idx: number) => {
+        if (researchBlueprint(gameState, idx)) {
+            setRefresh(p => p + 1);
         }
     };
 
@@ -212,7 +229,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                 background: 'radial-gradient(circle, rgb(10, 10, 30) 0%, rgb(2, 2, 5) 100%)',
                 zIndex: 2000, color: 'white', fontFamily: 'Orbitron, sans-serif',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                userSelect: 'none'
             }}>
 
             {/* MAIN LAYOUT CONTAINER */}
@@ -462,7 +480,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             }}
                             onSort={handleSortByRarity}
                             onToggleRecycle={() => setIsRecycleMode(!isRecycleMode)}
+                            onResearch={handleResearch}
                             recyclingAnim={recyclingAnim}
+                        />
+
+                        <BlueprintBay
+                            gameState={gameState}
+                            spendDust={spendDust}
+                            onUpdate={() => setRefresh(prev => prev + 1)}
                         />
                     </div>
                 </div>

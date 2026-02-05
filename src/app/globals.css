@@ -32,6 +32,10 @@ body,
   height: 100%;
   background-color: #020617;
   overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 body {

@@ -420,6 +420,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     onMouseDown={(e) => {
                         if (gameState.pendingLegendaryHex) return; // Disable during placement
                         if (!movedItem && moduleSockets.diamonds[i]) {
+                            e.preventDefault();
                             e.stopPropagation();
                             onAttemptRemove(i, moduleSockets.diamonds[i]);
                             return;

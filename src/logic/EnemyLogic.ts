@@ -4,6 +4,7 @@ import { playSfx } from './AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from './ParticleLogic';
 import { handleEnemyDeath } from './DeathLogic';
 import { getPlayerThemeColor } from './helpers';
+import { isBuffActive } from './BlueprintLogic';
 
 // Modular Enemy Logic
 import { updateNormalCircle, updateNormalTriangle, updateNormalSquare, updateNormalDiamond, updateNormalPentagon, updateUniquePentagon } from './enemies/NormalEnemyLogic';
@@ -399,6 +400,11 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         // Speed - elites move at same speed as normal enemies generally, unless specific shape logic overrides
         let currentSpd = e.spd;
         if (e.shape === 'circle') currentSpd *= 1.5;
+
+        // Blueprint: Stasis Field (-20% Movement Speed)
+        if (isBuffActive(state, 'STASIS_FIELD')) {
+            currentSpd *= 0.8;
+        }
 
         // Apply Slow Factor (reset each frame by logic, or persistence?)
         // If we set e.slowFactor in the loop, we use it here.

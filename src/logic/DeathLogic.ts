@@ -4,6 +4,7 @@ import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultip
 import { trySpawnMeteorite } from './LootLogic';
 import { getChassisResonance } from './EfficiencyLogic';
 import { spawnFloatingNumber } from './ParticleLogic';
+import { trySpawnBlueprint } from './BlueprintLogic';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
@@ -87,6 +88,11 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     // Meteorite Drop Check
     trySpawnMeteorite(state, e.x, e.y);
+
+    // Blueprint Drop Check (5% from Elites)
+    if (e.isElite) {
+        trySpawnBlueprint(state, e.x, e.y);
+    }
 
     if (e.boss) {
         // Boss gives normal XP

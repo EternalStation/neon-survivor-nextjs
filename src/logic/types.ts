@@ -121,6 +121,8 @@ export interface Player {
     lastCosmicStrikeTime?: number; // For Cosmic Beam class tracking
     blackholeCooldown?: number; // Timestamp when next blackhole can be created (Event Horizon)
     deathCause?: string; // Reason for game over
+    // Blueprint System
+    temporalGuardActive?: boolean;
 }
 
 export interface ClassMetric {
@@ -569,6 +571,10 @@ export interface GameState {
     chassisDetailViewed: boolean;
     // Frame-based caches (Not persistent)
     legionLeads?: Record<string, Enemy>;
+
+    // Blueprint System
+    blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)
+    activeBlueprintBuffs: Partial<Record<BlueprintType, number>>; // End-time timestamps
 }
 
 export type MeteoriteRarity = 'scrap' | 'anomalous' | 'quantum' | 'astral' | 'radiant' | 'void' | 'eternal' | 'divine' | 'singularity';
@@ -602,4 +608,30 @@ export interface Meteorite {
         sameType?: number;
         hexType?: number;
     };
+    // Blueprint System
+    blueprintBoosted?: boolean;
+    isBlueprint?: boolean;
+    blueprintType?: BlueprintType;
+    name?: string; // For blueprints to show name instead of rarity
+}
+
+export type BlueprintType =
+    | 'METEOR_SHOWER'
+    | 'NEURAL_OVERCLOCK'
+    | 'STASIS_FIELD'
+    | 'PERK_RESONANCE'
+    | 'ARENA_SURGE'
+    | 'QUANTUM_SCRAPPER'
+    | 'MATRIX_OVERDRIVE'
+    | 'TEMPORAL_GUARD';
+
+export interface Blueprint {
+    id: number;
+    type: BlueprintType;
+    name: string;
+    desc: string;
+    cost: number;
+    duration: number; // in seconds
+    isBlueprint: boolean;
+    researched: boolean;
 }

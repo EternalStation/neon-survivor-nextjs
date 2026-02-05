@@ -10,6 +10,7 @@ import { calculateLegendaryBonus } from './LegendaryLogic';
 import { handleEnemyDeath } from './DeathLogic';
 import { spawnFloatingNumber } from './ParticleLogic';
 import { getDefenseReduction } from './MathUtils';
+import { isBuffActive } from './BlueprintLogic';
 
 
 
@@ -178,9 +179,21 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
             if (onEvent) onEvent('player_hit', { dmg: wallDmg });
 
             if (player.curHp <= 0) {
-                state.gameOver = true;
-                player.deathCause = 'Wall Impact';
-                if (onEvent) onEvent('game_over');
+                // Blueprint: Temporal Guard (Lethal Hit Block)
+                if (isBuffActive(state, 'TEMPORAL_GUARD')) {
+                    player.curHp = calcStat(player.hp);
+                    const randomArena = ARENA_CENTERS[Math.floor(Math.random() * ARENA_CENTERS.length)];
+                    player.x = randomArena.x;
+                    player.y = randomArena.y;
+                    state.activeBlueprintBuffs.TEMPORAL_GUARD = 0; // Consume
+                    player.temporalGuardActive = false;
+                    spawnFloatingNumber(state, player.x, player.y, "TEMPORAL GUARD ACTIVATED", '#60a5fa', true);
+                    playSfx('rare-spawn');
+                } else {
+                    state.gameOver = true;
+                    player.deathCause = 'Wall Impact';
+                    if (onEvent) onEvent('game_over');
+                }
             }
         }
     }
@@ -222,8 +235,9 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     let regenAmount = calcStat(player.reg) / 60;
 
     if (state.currentArena === 2) {
-        maxHp *= 1.2; // +20% Max HP in Defence Hex
-        regenAmount *= 1.2; // +20% Regen in Defence Hex
+        const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
+        maxHp *= (1 + 0.2 * surgeMult); // +20% (or +40%) Max HP in Defence Hex
+        regenAmount *= (1 + 0.2 * surgeMult); // +20% (or +40%) Regen in Defence Hex
     }
 
     if (player.buffs?.puddleRegen) {
@@ -438,27 +452,39 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
 
             // Check Game Over
             if (player.curHp <= 0 && !state.gameOver) {
-                state.gameOver = true;
+                // Blueprint: Temporal Guard (Lethal Hit Block)
+                if (isBuffActive(state, 'TEMPORAL_GUARD')) {
+                    player.curHp = calcStat(player.hp);
+                    const randomArena = ARENA_CENTERS[Math.floor(Math.random() * ARENA_CENTERS.length)];
+                    player.x = randomArena.x;
+                    player.y = randomArena.y;
+                    state.activeBlueprintBuffs.TEMPORAL_GUARD = 0; // Consume
+                    player.temporalGuardActive = false;
+                    spawnFloatingNumber(state, player.x, player.y, "TEMPORAL GUARD ACTIVATED", '#60a5fa', true);
+                    playSfx('rare-spawn');
+                } else {
+                    state.gameOver = true;
 
-                // Determine Death Cause
-                if (e.legionId) player.deathCause = 'Legion Swarm';
-                else if (e.isZombie) player.deathCause = 'Zombie Horde';
-                else if (e.shape === 'minion') player.deathCause = 'Pentagon Minion';
-                else if (e.boss) {
-                    const tier = e.bossTier || 1;
-                    const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
-                    player.deathCause = `Boss ${shape} (Lvl ${tier})`;
-                }
-                else if (e.isElite) {
-                    const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
-                    player.deathCause = `Collision with Elite ${shape}`;
-                }
-                else {
-                    const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
-                    player.deathCause = `Collision with ${shape}`;
-                }
+                    // Determine Death Cause
+                    if (e.legionId) player.deathCause = 'Legion Swarm';
+                    else if (e.isZombie) player.deathCause = 'Zombie Horde';
+                    else if (e.shape === 'minion') player.deathCause = 'Pentagon Minion';
+                    else if (e.boss) {
+                        const tier = e.bossTier || 1;
+                        const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
+                        player.deathCause = `Boss ${shape} (Lvl ${tier})`;
+                    }
+                    else if (e.isElite) {
+                        const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
+                        player.deathCause = `Collision with Elite ${shape}`;
+                    }
+                    else {
+                        const shape = e.shape.charAt(0).toUpperCase() + e.shape.slice(1);
+                        player.deathCause = `Collision with ${shape}`;
+                    }
 
-                if (onEvent) onEvent('game_over');
+                    if (onEvent) onEvent('game_over');
+                }
             }
         }
     });

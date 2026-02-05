@@ -1,4 +1,5 @@
 import type { GameState, Meteorite, LegendaryHex } from './types';
+import { isBuffActive } from './BlueprintLogic';
 
 export interface PerkResult {
     activeValue: number;
@@ -108,7 +109,13 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
         });
     }
 
-    return { totalBoost: totalActiveBoostPct / 100, perkResults };
+    const finalBoost = totalActiveBoostPct / 100;
+    const blueprintBoost = isBuffActive(state, 'MATRIX_OVERDRIVE') ? 0.15 : 0;
+
+    return {
+        totalBoost: finalBoost + blueprintBoost,
+        perkResults
+    };
 }
 
 import { calculateLegendaryBonus } from './LegendaryLogic';

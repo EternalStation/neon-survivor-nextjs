@@ -25,6 +25,10 @@ export const getMeteoriteImage = (m: Meteorite) => {
     return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
 };
 
+export const getBlueprintImage = (type: string) => {
+    return `/assets/Icons/Blueprint.png`;
+};
+
 export const getHexPoints = (x: number, y: number, r: number) => {
     const points = [];
     for (let i = 0; i < 6; i++) {

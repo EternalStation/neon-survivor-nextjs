@@ -11,6 +11,7 @@ import { updateProjectiles, spawnBullet } from '../logic/ProjectileLogic';
 import { spawnUpgrades, spawnSnitchUpgrades, applyUpgrade } from '../logic/UpgradeLogic';
 import { calcStat } from '../logic/MathUtils';
 import { updateLoot } from '../logic/LootLogic';
+import { isBuffActive, updateBlueprints } from '../logic/BlueprintLogic';
 import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/ParticleLogic'; // Added spawnParticles import
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/MapLogic';
 import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/AudioLogic';
@@ -79,6 +80,10 @@ export function useGameLoop(gameStarted: boolean) {
             img.src = `/assets/hexes/${hex}.${ext}`;
             (meteoriteImagesRef.current as any)[hex] = img; // Store in ref to keep alive/cached
         });
+
+        const bpImg = new Image();
+        bpImg.src = '/assets/Icons/Blueprint.png';
+        (meteoriteImagesRef.current as any).blueprint = bpImg;
 
         // Initialize Background Worker (Next.js/Turbopack compatible way)
         workerRef.current = new Worker(new URL('../logic/gameWorker.ts', import.meta.url), { type: 'module' });
@@ -281,9 +286,13 @@ export function useGameLoop(gameStarted: boolean) {
         // --- ACTIVE SKILL & AREA EFFECT LOGIC (Processed BEFORE Projectiles to apply Debuffs) ---
 
         // Cooldowns
+        const cooldownMult = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 1.428 : 1.0; // 1 / 0.7 approx 1.428 (30% faster)
         state.player.activeSkills.forEach(s => {
-            if (s.cooldown > 0) s.cooldown -= step;
+            if (s.cooldown > 0) s.cooldown -= step * cooldownMult;
         });
+
+        // Blueprint System Update
+        updateBlueprints(state);
 
         // Reset frame-based buffs
         if (state.player.buffs) {

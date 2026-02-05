@@ -15,6 +15,7 @@ interface InventoryPanelProps {
     onMassRecycle: (indices: number[]) => void;
     onSort: () => void;
     onToggleRecycle: () => void;
+    onResearch?: (index: number) => void;
     recyclingAnim?: boolean;
 }
 
@@ -42,6 +43,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     onMassRecycle,
     onSort,
     onToggleRecycle,
+    onResearch,
     recyclingAnim
 }) => {
     const [coreFilter, setCoreFilter] = React.useState({
@@ -535,8 +537,19 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     onMouseDown={(e) => {
                                         if (isRecycleMode) return;
                                         if (e.button === 0 && item && !movedItem) {
+                                            if (item.type === 'METEOR_SHOWER' || (item as any).isBlueprint) {
+                                                // Blueprints can only be researched or dropped
+                                                return;
+                                            }
+                                            e.preventDefault();
                                             setMovedItem({ item, source: 'inventory', index: idx });
                                             handleMouseLeaveItem(0);
+                                        }
+                                    }}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        if (item && ((item as any).isBlueprint || item.type === 'METEOR_SHOWER')) {
+                                            onResearch?.(idx);
                                         }
                                     }}
                                     onMouseUp={(e) => {
@@ -587,7 +600,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     )}
                                     {item && (
                                         <img
-                                            src={getMeteoriteImage(item)}
+                                            src={((item as any).isBlueprint || item.type === 'METEOR_SHOWER') ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
                                             style={{
                                                 width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
                                                 filter: isVisible ? 'none' : 'grayscale(100%)',

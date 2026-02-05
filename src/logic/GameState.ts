@@ -138,5 +138,9 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         center: selectedClass || null
     },
     chassisDetailViewed: false,
-    legionLeads: {}
+    legionLeads: {},
+
+    // Blueprint System Defaults
+    blueprints: Array(10).fill(null),
+    activeBlueprintBuffs: {}
 });

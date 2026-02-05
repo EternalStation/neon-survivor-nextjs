@@ -1182,27 +1182,44 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
         ctx.translate(0, Math.sin(state.gameTime * 3 + m.id) * 5);
         if (m.magnetized) ctx.translate((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
 
-        const imgKey = `M${m.visualIndex}${m.quality}`;
-        const img = meteoriteImages[imgKey];
-        if (img && img.complete && img.naturalWidth !== 0) {
-            const size = 32;
-            ctx.drawImage(img, -size / 2, -size / 2, size, size);
-            if (m.rarity !== 'scrap') {
+        if (m.isBlueprint) {
+            const img = (meteoriteImages as any).blueprint;
+            if (img && img.complete && img.naturalWidth !== 0) {
+                const size = 32;
+                ctx.drawImage(img, -size / 2, -size / 2, size, size);
+
+                // Blueprint Glow
                 ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.4;
-                ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
+                ctx.shadowColor = '#3b82f6';
+                ctx.shadowBlur = 15;
+                ctx.globalAlpha = 0.6;
+                ctx.drawImage(img, -size / 2 - 4, -size / 2 - 4, size + 8, size + 8);
                 ctx.globalAlpha = 1.0;
                 ctx.globalCompositeOperation = 'source-over';
             }
         } else {
-            let color = '#9ca3af';
-            if (m.rarity === 'anomalous') color = '#14b8a6';
-            else if (m.rarity === 'quantum') color = '#06b6d4';
-            else if (m.rarity === 'astral') color = '#a855f7';
-            else if (m.rarity === 'radiant') color = '#eab308';
-            ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.fillStyle = color;
-            ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -6); ctx.lineTo(12, 6); ctx.lineTo(0, 12); ctx.lineTo(-10.5, 7.5); ctx.lineTo(-9, -7.5); ctx.closePath(); ctx.fill();
-            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+            const imgKey = `M${m.visualIndex}${m.quality}`;
+            const img = meteoriteImages[imgKey];
+            if (img && img.complete && img.naturalWidth !== 0) {
+                const size = 32;
+                ctx.drawImage(img, -size / 2, -size / 2, size, size);
+                if (m.rarity !== 'scrap') {
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = 0.4;
+                    ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
+                    ctx.globalAlpha = 1.0;
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+            } else {
+                let color = '#9ca3af';
+                if (m.rarity === 'anomalous') color = '#14b8a6';
+                else if (m.rarity === 'quantum') color = '#06b6d4';
+                else if (m.rarity === 'astral') color = '#a855f7';
+                else if (m.rarity === 'radiant') color = '#eab308';
+                ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.fillStyle = color;
+                ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -6); ctx.lineTo(12, 6); ctx.lineTo(0, 12); ctx.lineTo(-10.5, 7.5); ctx.lineTo(-9, -7.5); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+            }
         }
         ctx.restore();
     });

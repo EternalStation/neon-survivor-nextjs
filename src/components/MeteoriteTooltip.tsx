@@ -150,188 +150,253 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                     background: ${rarityColor};
                 }
             `}</style>
-
-            {/* Header: Name + Symbol + Total Power */}
-            <div style={{
-                padding: '12px 10px',
-                borderBottom: `2px solid ${rarityColor}66`,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: `${rarityColor}11`
-            }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                    <span style={{
-                        fontSize: '14px',
-                        fontWeight: 900,
-                        color: '#fff',
-                        letterSpacing: '1px'
-                    }}>{info.name}</span>
+            {meteorite.isBlueprint ? (
+                <div style={{
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
+                    border: '2px solid #3b82f6',
+                    boxShadow: '0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 20px rgba(59, 130, 246, 0.2)',
+                    minHeight: '160px',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    {/* SCANLINE EFFECT */}
                     <div style={{
-                        marginTop: '2px',
-                        fontSize: '12px',
-                        fontWeight: 900,
-                        color: rarityColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
+                        position: 'absolute', inset: 0,
+                        background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(59, 130, 246, 0.05) 1px, rgba(59, 130, 246, 0.05) 2px)',
+                        pointerEvents: 'none'
+                    }} />
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', zIndex: 1 }}>
+                        <div style={{
+                            width: '55px', height: '55px',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid #3b82f6',
+                            borderRadius: '4px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)'
+                        }}>
+                            <img src="/assets/Icons/Blueprint.png" style={{
+                                width: '75%', height: '75%', objectFit: 'contain',
+                                filter: 'drop-shadow(0 0 5px #60a5fa)'
+                            }} alt="BP" />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 5px #3b82f6' }} />
+                                <span style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>ARCHIVE ANOMALY</span>
+                            </div>
+                            <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff', letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>ENCRYPTED DATASET</span>
+                        </div>
+                    </div>
+
+                    <p style={{
+                        fontSize: '11px', color: '#94a3b8', margin: '4px 0', lineHeight: '1.4', fontStyle: 'italic',
+                        borderLeft: '2px solid #3b82f6', paddingLeft: '10px', position: 'relative', zIndex: 1
                     }}>
-                        <span style={{ opacity: 0.6, fontSize: '10px' }}>ACTIVE POWER:</span>
-                        <span>+{Math.round(efficiency.totalBoost * 100)}%</span>
-                        {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>(UNPLACED)</span>}
+                        Deep-space telemetry recovered from an abandoned orbital station. The data appears to contain advanced chassis augmentation protocols, but requires local research processing to initialize.
+                    </p>
+
+                    <div style={{
+                        marginTop: '10px',
+                        padding: '10px',
+                        background: 'rgba(59, 130, 246, 0.05)',
+                        border: '1px dashed rgba(59, 130, 246, 0.4)',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        position: 'relative', zIndex: 1
+                    }}>
+                        <div style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', marginBottom: '2px' }}>INTERACTION PROTOCOL</div>
+                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff', letterSpacing: '0.5px' }}>RIGHT-CLICK TO BEGIN RESEARCH PHASE</span>
                     </div>
                 </div>
-                <span style={{
-                    fontSize: '19px',
-                    color: rarityColor,
-                    textShadow: `0 0 10px ${rarityColor}`
-                }}>{info.symbol}</span>
-            </div>
-
-            {/* Illustration Area (Unchanged) */}
-            <div style={{
-                flex: '0 0 140px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, width: '100%', height: '100%',
-                    opacity: 0.1,
-                    backgroundImage: `linear-gradient(${rarityColor} 1px, transparent 1px), linear-gradient(90deg, ${rarityColor} 1px, transparent 1px)`,
-                    backgroundSize: '20px 20px'
-                }} />
-                <img
-                    src={getMeteoriteImage(meteorite)}
-                    alt={meteorite.rarity}
-                    style={{
-                        width: '110px',
-                        height: '110px',
-                        objectFit: 'contain',
-                        filter: `drop-shadow(0 0 15px ${rarityColor})`
-                    }}
-                />
-            </div>
-
-            {/* Protocols Label */}
-            <div style={{
-                padding: '4px 10px',
-                fontSize: '10px',
-                color: rarityColor,
-                fontWeight: 900,
-                letterSpacing: '2px',
-                backgroundColor: `${rarityColor}22`,
-                textAlign: 'center',
-                textTransform: 'uppercase'
-            }}>
-                Augmentation Protocols
-            </div>
-
-            {/* Stats Area with Active/Inactive Logic */}
-            <div className="custom-scrollbar" style={{
-                flex: 1,
-                padding: '12px 15px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                background: 'rgba(0, 0, 0, 0.4)',
-                overflowY: 'auto',
-                minHeight: 0
-            }}>
-                {meteorite.perks && meteorite.perks.map((perk, idx) => {
-                    const perkResult = efficiency.perkResults[perk.id];
-                    const isActive = perkResult && perkResult.count > 0;
-
-                    const getPerkIcon = (id: string) => {
-                        if (id.includes('neighbor_any')) return '⚙';
-                        if (id.includes('neighbor_new') || id.includes('neighbor_dam') || id.includes('neighbor_bro')) return '◈';
-                        if (id.includes('_leg')) return '⌬';
-                        if (id.includes('pair')) return '🝔';
-                        return '◈';
-                    };
-
-                    const getPerkName = (id: string) => {
-                        if (id === 'base_efficiency') return 'METEORITIC PARTICLE';
-                        if (id === 'neighbor_any_all') return 'PROXIMITY RELAY';
-                        if (id.startsWith('neighbor_any_')) return 'SECTOR AMPLIFIER';
-                        if (id.startsWith('neighbor_new_') || id.startsWith('neighbor_dam_') || id.startsWith('neighbor_bro_')) return 'CONDITION LINK';
-                        if (id === 'neighbor_leg_any') return 'LEGENDARY LIAISON';
-                        if (id.startsWith('neighbor_leg_')) return 'ALPHA CONTROLLER';
-                        if (id.startsWith('pair_')) {
-                            if (id.endsWith('_lvl')) return 'HARMONY PAIR';
-                            return 'SYNERGY PAIR';
-                        }
-                        if (id === 'matrix_same_type_rarity') return 'SINGULARITY CORE';
-                        return 'METEORIC PROTOCOL';
-                    };
-
-                    return (
-                        <div key={idx} className="card-stat-line" style={{
-                            alignItems: 'flex-start',
-                            paddingRight: '6px'
-                        }}>
-                            <span className="bullet" style={{ color: isActive ? rarityColor : '#94a3b8', marginTop: '2px', opacity: isActive ? 1 : 0.6 }}>
-                                {getPerkIcon(perk.id)}
-                            </span>
-                            <div className="content" style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                        <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>{getPerkName(perk.id)}</span>
-                                        <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>({perk.range.min}-{perk.range.max}%)</span>
-                                    </div>
-                                    <span className="value" style={{
-                                        fontSize: '13px',
-                                        color: isActive ? '#fff' : '#94a3b8',
-                                        opacity: isActive ? 1 : 0.4,
-                                        fontWeight: 900,
-                                        marginLeft: '12px',
-                                        textAlign: 'right'
-                                    }}>
-                                        +{isActive ? perkResult.activeValue : perk.value}%
-                                    </span>
-                                </div>
-                                <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', marginTop: '1px', opacity: 0.9 }}>
-                                    {formatDescription(perk.description, rarityColor)}
-                                    {isActive && perkResult.count > 1 && <span style={{ color: '#FCD34D' }}> (x{perkResult.count})</span>}
-                                </div>
+            ) : (
+                <>
+                    {/* Header: Name + Symbol + Total Power */}
+                    <div style={{
+                        padding: '12px 10px',
+                        borderBottom: `2px solid ${rarityColor}66`,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: `${rarityColor}11`
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <span style={{
+                                fontSize: '14px',
+                                fontWeight: 900,
+                                color: '#fff',
+                                letterSpacing: '1px'
+                            }}>{info.name}</span>
+                            <div style={{
+                                marginTop: '2px',
+                                fontSize: '12px',
+                                fontWeight: 900,
+                                color: rarityColor,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}>
+                                <span style={{ opacity: 0.6, fontSize: '10px' }}>ACTIVE POWER:</span>
+                                <span>+{Math.round(efficiency.totalBoost * 100)}%</span>
+                                {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>(UNPLACED)</span>}
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                        <span style={{
+                            fontSize: '19px',
+                            color: rarityColor,
+                            textShadow: `0 0 10px ${rarityColor}`
+                        }}>{info.symbol}</span>
+                    </div>
 
-            {/* Footer / Info Panel */}
-            <div style={{
-                padding: '10px 15px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                marginTop: '10px', // Added spacing per request
-                borderTop: `1px solid ${rarityColor}33`,
-                background: 'rgba(0,0,0,0.5)',
-                fontSize: '11px',
-                letterSpacing: '0.5px',
-                fontWeight: 900,
-                textTransform: 'uppercase'
-            }}>
-                <div style={{ color: '#fff' }}>
-                    <span style={{ color: rarityColor, opacity: 0.8 }}>TYPE:</span> <span style={{
-                        color: meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'),
-                        fontSize: '12px',
-                        textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}66`
-                    }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}</span>
-                </div>
-                <div style={{ color: '#fff' }}>
-                    <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}
-                </div>
-            </div>
+                    {/* Illustration Area (Unchanged) */}
+                    <div style={{
+                        flex: '0 0 140px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: 0, left: 0, width: '100%', height: '100%',
+                            opacity: 0.1,
+                            backgroundImage: `linear-gradient(${rarityColor} 1px, transparent 1px), linear-gradient(90deg, ${rarityColor} 1px, transparent 1px)`,
+                            backgroundSize: '20px 20px'
+                        }} />
+                        <img
+                            src={getMeteoriteImage(meteorite)}
+                            alt={meteorite.rarity}
+                            style={{
+                                width: '110px',
+                                height: '110px',
+                                objectFit: 'contain',
+                                filter: `drop-shadow(0 0 15px ${rarityColor})`
+                            }}
+                        />
+                    </div>
 
-            {/* Remove Button if Applicable */}
-            {/* Remove Button removed as per request to move logic to drag interaction */}
+                    {/* Protocols Label */}
+                    <div style={{
+                        padding: '4px 10px',
+                        fontSize: '10px',
+                        color: rarityColor,
+                        fontWeight: 900,
+                        letterSpacing: '2px',
+                        backgroundColor: `${rarityColor}22`,
+                        textAlign: 'center',
+                        textTransform: 'uppercase'
+                    }}>
+                        Augmentation Protocols
+                    </div>
+
+                    {/* Stats Area with Active/Inactive Logic */}
+                    <div className="custom-scrollbar" style={{
+                        flex: 1,
+                        padding: '12px 15px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        overflowY: 'auto',
+                        minHeight: 0
+                    }}>
+                        {meteorite.perks && meteorite.perks.map((perk, idx) => {
+                            const perkResult = efficiency.perkResults[perk.id];
+                            const isActive = perkResult && perkResult.count > 0;
+
+                            const getPerkIcon = (id: string) => {
+                                if (id.includes('neighbor_any')) return '⚙';
+                                if (id.includes('neighbor_new') || id.includes('neighbor_dam') || id.includes('neighbor_bro')) return '◈';
+                                if (id.includes('_leg')) return '⌬';
+                                if (id.includes('pair')) return '🝔';
+                                return '◈';
+                            };
+
+                            const getPerkName = (id: string) => {
+                                if (id === 'base_efficiency') return 'METEORITIC PARTICLE';
+                                if (id === 'neighbor_any_all') return 'PROXIMITY RELAY';
+                                if (id.startsWith('neighbor_any_')) return 'SECTOR AMPLIFIER';
+                                if (id.startsWith('neighbor_new_') || id.startsWith('neighbor_dam_') || id.startsWith('neighbor_bro_')) return 'CONDITION LINK';
+                                if (id === 'neighbor_leg_any') return 'LEGENDARY LIAISON';
+                                if (id.startsWith('neighbor_leg_')) return 'ALPHA CONTROLLER';
+                                if (id.startsWith('pair_')) {
+                                    if (id.endsWith('_lvl')) return 'HARMONY PAIR';
+                                    return 'SYNERGY PAIR';
+                                }
+                                if (id === 'matrix_same_type_rarity') return 'SINGULARITY CORE';
+                                return 'METEORIC PROTOCOL';
+                            };
+
+                            return (
+                                <div key={idx} className="card-stat-line" style={{
+                                    alignItems: 'flex-start',
+                                    paddingRight: '6px'
+                                }}>
+                                    <span className="bullet" style={{ color: isActive ? rarityColor : '#94a3b8', marginTop: '2px', opacity: isActive ? 1 : 0.6 }}>
+                                        {getPerkIcon(perk.id)}
+                                    </span>
+                                    <div className="content" style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                                <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>{getPerkName(perk.id)}</span>
+                                                <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>({perk.range.min}-{perk.range.max}%)</span>
+                                            </div>
+                                            <span className="value" style={{
+                                                fontSize: '13px',
+                                                color: isActive ? '#fff' : '#94a3b8',
+                                                opacity: isActive ? 1 : 0.4,
+                                                fontWeight: 900,
+                                                marginLeft: '12px',
+                                                textAlign: 'right'
+                                            }}>
+                                                +{isActive ? perkResult.activeValue : perk.value}%
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', marginTop: '1px', opacity: 0.9 }}>
+                                            {formatDescription(perk.description, rarityColor)}
+                                            {isActive && perkResult.count > 1 && <span style={{ color: '#FCD34D' }}> (x{perkResult.count})</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Footer / Info Panel */}
+                    <div style={{
+                        padding: '10px 15px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        marginTop: '10px', // Added spacing per request
+                        borderTop: `1px solid ${rarityColor}33`,
+                        background: 'rgba(0,0,0,0.5)',
+                        fontSize: '11px',
+                        letterSpacing: '0.5px',
+                        fontWeight: 900,
+                        textTransform: 'uppercase'
+                    }}>
+                        <div style={{ color: '#fff' }}>
+                            <span style={{ color: rarityColor, opacity: 0.8 }}>TYPE:</span> <span style={{
+                                color: meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'),
+                                fontSize: '12px',
+                                textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}66`
+                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}</span>
+                        </div>
+                        <div style={{ color: '#fff' }}>
+                            <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}
+                        </div>
+                    </div>
+
+                </>
+            )}
         </div>
     );
 };

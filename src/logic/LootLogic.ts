@@ -1,6 +1,7 @@
 import type { GameState, Meteorite, MeteoriteRarity } from './types';
 import { playSfx } from './AudioLogic';
 import { calculateLegendaryBonus } from './LegendaryLogic';
+import { isBuffActive } from './BlueprintLogic';
 
 
 const MAGNET_RANGE = 200;
@@ -171,7 +172,7 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
         }
     }
 
-    return {
+    const item: Meteorite = {
         id: Math.random(),
         x,
         y,
@@ -186,6 +187,16 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
         spawnedAt: state.gameTime,
         stats
     };
+
+    // Blueprint: Perk Resonance (1.2x Perk Values)
+    if (isBuffActive(state, 'PERK_RESONANCE')) {
+        item.blueprintBoosted = true;
+        item.perks.forEach(p => {
+            p.value = Math.round(p.value * 1.2);
+        });
+    }
+
+    return item;
 }
 
 export function trySpawnMeteorite(state: GameState, x: number, y: number) {
@@ -199,6 +210,11 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
 
     // Add Legendary Bonus
     chance += calculateLegendaryBonus(state, 'met_drop_per_kill');
+
+    // Blueprint: Meteor Shower (+50% DROP RATE)
+    if (isBuffActive(state, 'METEOR_SHOWER')) {
+        chance *= 1.5;
+    }
 
     if (Math.random() > chance) return;
 
