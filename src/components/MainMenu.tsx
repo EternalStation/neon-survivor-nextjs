@@ -221,7 +221,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 {username && (
                     <div className="user-profile-tag" style={{ marginBottom: 20 }}>
                         <div className="user-status-dot" />
-                        PILOT_{username.toUpperCase()} // PROTOCOL_ACTIVE
+                        PILOT NAME: {username.toUpperCase()}
                     </div>
                 )}
 

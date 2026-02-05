@@ -56,7 +56,7 @@ export const getIcon = (type: string, color: string) => {
         case 'hp_f': // Flat Max Health: Red Outline Heart (Wider) + Growing Animation
             return (
                 <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: `drop-shadow(0 0 3px #EF4444)` }}>
-                    <path d={WIDE_HEART_PATH} fill="none" stroke="#EF4444" strokeWidth="4" transform-origin="50 50">
+                    <path d={WIDE_HEART_PATH} fill="none" stroke="#EF4444" strokeWidth="4" style={{ transformOrigin: '50% 50%' }}>
                         <animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="0.8s" repeatCount="indefinite" />
                     </path>
                 </svg>
@@ -65,7 +65,7 @@ export const getIcon = (type: string, color: string) => {
         case 'hp_m': // Health Multiplier: Red Outline Heart + X + Growing Animation
             return (
                 <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: `drop-shadow(0 0 3px #EF4444)` }}>
-                    <path d={WIDE_HEART_PATH} fill="none" stroke="#EF4444" strokeWidth="4" transform-origin="50 50">
+                    <path d={WIDE_HEART_PATH} fill="none" stroke="#EF4444" strokeWidth="4" style={{ transformOrigin: '50% 50%' }}>
                         <animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="0.8s" repeatCount="indefinite" />
                     </path>
                     <text x="50" y="65" textAnchor="middle" fill="#EF4444" fontSize="36" fontFamily="Orbitron, sans-serif" fontWeight="900">%</text>

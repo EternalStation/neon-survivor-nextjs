@@ -1215,6 +1215,8 @@ export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameSt
     }
     const dpr = window.devicePixelRatio || 1;
     const zoom = scaleFactor * 0.58 * dpr;
+
+    // Boss Indicators (Skull)
     state.enemies.filter(e => e.boss && !e.dead).forEach(e => {
         const screenX = (e.x - camera.x) * zoom + width / 2;
         const screenY = (e.y - camera.y) * zoom + height / 2;
@@ -1226,9 +1228,29 @@ export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameSt
             ctx.fillStyle = '#ef4444'; ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444';
             const size = 50;
             ctx.beginPath(); ctx.arc(0, -size * 0.2, size * 0.8, 0, Math.PI * 2); ctx.fill();
-            ctx.fillRect(-size * 0.4, size * 0.3, size * 0.8, size * 0.4);
+            // Rounded Jaw
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.4, size * 0.3, size * 0.8, size * 0.4, 4 * dpr);
+            ctx.fill();
             ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(-size * 0.3, 0, size * 0.2, 0, Math.PI * 2); ctx.arc(size * 0.3, 0, size * 0.2, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.moveTo(0, size * 0.2); ctx.lineTo(-size * 0.1, size * 0.4); ctx.lineTo(size * 0.1, size * 0.4); ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+    });
+
+    // Rare/Snitch Indicators (Circle Ping)
+    state.enemies.filter(e => e.isRare && !e.dead).forEach(e => {
+        const screenX = (e.x - camera.x) * zoom + width / 2;
+        const screenY = (e.y - camera.y) * zoom + height / 2;
+        const pad = 60 * dpr;
+        if (screenX < pad || screenX > width - pad || screenY < pad || screenY > height - pad) {
+            const ix = Math.max(pad, Math.min(width - pad, screenX));
+            const iy = Math.max(pad, Math.min(height - pad, screenY));
+            ctx.save(); ctx.translate(ix, iy);
+            const pulse = 1 + Math.sin(Date.now() / 100) * 0.2;
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; ctx.shadowBlur = 15; ctx.shadowColor = '#facc15';
+            ctx.beginPath(); ctx.arc(0, 0, 20 * pulse, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         }
     });

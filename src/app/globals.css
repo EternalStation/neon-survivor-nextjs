@@ -95,6 +95,20 @@ button:focus-visible {
 @keyframes pulse {
   0% {
     transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes card-pulse-gold {
+  0% {
+    transform: scale(1);
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1);
   }
 
@@ -331,9 +345,7 @@ button:focus-visible {
   }
 }
 
-.glitch-text {
-  animation: glitch 1s infinite;
-}
+
 
 .modal-overlay {
   position: absolute;
