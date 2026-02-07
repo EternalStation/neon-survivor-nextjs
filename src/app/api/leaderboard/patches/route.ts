@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Fetch patches error:', error);
         return NextResponse.json(
-            { patches: [{ patch_version: '1.0.0' }] },
+            { patches: [{ patch_version: '1.0.1' }] },
             { status: 200 } // Return default instead of failing
         );
     }

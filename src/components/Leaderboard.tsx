@@ -71,14 +71,14 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             const data = await api.getPatches();
             let patchVersions = (data.patches || []).map((p: any) => p.patch_version);
             if (patchVersions.length === 0) {
-                patchVersions = ['1.0.0'];
+                patchVersions = ['1.0.1'];
             }
             setPatches(patchVersions);
             setSelectedPatch(patchVersions[0]);
         } catch (err) {
             console.error('Failed to load patches:', err);
-            setPatches(['1.0.0']);
-            setSelectedPatch('1.0.0');
+            setPatches(['1.0.1']);
+            setSelectedPatch('1.0.1');
         }
     };
 

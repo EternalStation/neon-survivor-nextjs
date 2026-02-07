@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { startMenuMusic, preloadMusic } from '../logic/AudioLogic';
+import { CURRENT_PATCH_VERSION } from '../utils/leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';
 
@@ -254,7 +255,25 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 </div>
             </div>
 
+            {/* Patch Version Overlay */}
+            <div className="patch-version-overlay">
+                VER: {CURRENT_PATCH_VERSION}
+            </div>
+
             <style>{`
+                .patch-version-overlay {
+                    position: absolute;
+                    bottom: 20px;
+                    right: 20px;
+                    color: rgba(34, 211, 238, 0.4);
+                    font-size: 10px;
+                    font-weight: 800;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    pointer-events: none;
+                    text-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+                    z-index: 10;
+                }
                 .user-profile-tag {
                     color: #00ffff;
                     font-size: 14px;
