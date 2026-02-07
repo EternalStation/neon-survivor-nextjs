@@ -57,8 +57,8 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
             const center = ARENA_CENTERS.find(c => c.id === currentArena);
 
             if (center) {
-                // Flash if warn, Solid if open
-                const shouldDraw = portalState === 'open' || (portalState === 'warn' && Math.floor(Date.now() / 200) % 2 === 0);
+                // Solid for both open and warn states (Removed flashing per user request)
+                const shouldDraw = portalState === 'open' || portalState === 'warn';
 
                 if (shouldDraw) {
                     ctx.beginPath();
@@ -76,6 +76,28 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
             }
         }
 
+
+        // Draw Extraction LZ (Pulsating Red Dot)
+        if (gameState.extractionShipPos) {
+            const t = gameState.gameTime;
+            const pulse = 0.5 + 0.5 * Math.sin(t * 6);
+            const baseR = 450;
+
+            ctx.save();
+            ctx.globalAlpha = 0.5 + 0.5 * pulse;
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(gameState.extractionShipPos.x, gameState.extractionShipPos.y, baseR + 150 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = 0.9;
+            ctx.strokeStyle = '#fca5a5';
+            ctx.lineWidth = 200;
+            ctx.beginPath();
+            ctx.arc(gameState.extractionShipPos.x, gameState.extractionShipPos.y, baseR * 0.7 + 120 * pulse, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
 
         // Draw Player
         ctx.fillStyle = '#22d3ee';
@@ -97,7 +119,7 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
         */
 
         ctx.restore();
-    }, [player.x, player.y, enemies]); // Update on frame (actually driven by parent render, useEffect might lag behind 60fps loop if not carefully managed. But for minimap 60fps react render is okay-ish or we can refactor to direct hook)
+    }, [player.x, player.y, enemies, gameState.extractionShipPos, gameState.gameTime]); // Update on frame (actually driven by parent render, useEffect might lag behind 60fps loop if not carefully managed. But for minimap 60fps react render is okay-ish or we can refactor to direct hook)
 
     // Note: Parent updates state 60fps? 
     // `useGameLoop` uses `setUiState` to force re-render components. So this receives fresh `gameState`.

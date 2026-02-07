@@ -11,6 +11,7 @@ export interface Particle {
     type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void';
     alpha?: number;
     decay?: number;
+    maxLife?: number;
 }
 
 export interface FloatingNumber {
@@ -32,6 +33,7 @@ export interface PlayerStats {
     mult: number;
     hexFlat?: number;
     hexMult?: number;
+    hexMult2?: number;
 }
 
 export interface ShieldChunk {
@@ -107,6 +109,7 @@ export interface Player {
     shield?: number; // @deprecated: Use shieldChunks
     shieldExpiry?: number; // @deprecated: Use shieldChunks
     shieldChunks?: ShieldChunk[];
+    shotAccumulator?: number;
     shotsFired?: number;
     lastDeathMark?: number;
     activeSkills: ActiveSkill[];
@@ -123,6 +126,18 @@ export interface Player {
     deathCause?: string; // Reason for game over
     // Blueprint System
     temporalGuardActive?: boolean;
+    phaseShiftUntil?: number; // Timestamp for ghost state (no dmg dealt/taken)
+
+    // Boss Capabilities
+    kineticBattery?: boolean; // Arena 2 Boss Drop
+    radCore?: boolean;        // Arena 1 Boss Drop
+    radCoreTick?: number;     // Accumulator for Rad Core damage
+    chronoPlating?: boolean;  // Arena 0 Boss Drop
+    lastKineticShockwave?: number;
+    kineticShieldTimer?: number;
+    cooldownReduction?: number;
+    lastChronoDoubleIndex?: number;
+    chronoArmorBonus?: number;
 }
 
 export interface ClassMetric {
@@ -195,7 +210,7 @@ export interface Bullet {
     bounceSpeedBonus?: number;
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'minion' | 'snitch';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'minion' | 'snitch' | 'hexagon';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -276,6 +291,7 @@ export interface Enemy {
     parentId?: number; // For decoys to know their master
     teleported?: boolean; // Flag for Phase 2 entry
     longTrail?: { x: number; y: number }[]; // Long paint trail
+    forceTeleport?: boolean; // Signal to force teleport logic (Snitch)
 
     // Event Horizon Blackhole Effects
     voidAmplified?: boolean; // Is enemy in blackhole vortex?
@@ -329,6 +345,11 @@ export interface Enemy {
     isNeutral?: boolean; // If true, ignored by auto-aim (e.g. Barrels)
     baseColor?: string; // Immutable spawn color for projectiles
     spiralDelay?: number; // Delay in seconds before starting spiral motion (Minions)
+    isFlanker?: boolean; // New: Smart AI Flanking role
+    flankAngle?: number; // Current target angle for flanking
+    flankDistance?: number; // Desired distance for flanking
+    flankStatus?: number; // 0=Flanking, 1=Striking
+    flankTimer?: number; // Timer for state transitions
 
 
     // Minion / Pentagon Guard Props
@@ -373,6 +394,7 @@ export interface Enemy {
     infectionDmg?: number;
     infectionAccumulator?: number;
     isNecroticZombie?: boolean;
+    isGhost?: boolean;
     legionId?: string;
     legionLeadId?: number;
     legionSlot?: { x: number; y: number }; // Index in the grid (e.g. 0-4, 0-3 for 20 enemies)
@@ -436,7 +458,8 @@ export type LegendaryType =
     | 'ComLife' | 'ComCrit' | 'ComWave'
     | 'DefPuddle' | 'DefEpi' | 'CombShield'
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
-    | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive';
+    | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
+    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating';
 
 export interface LegendaryHex {
     id: string;
@@ -548,7 +571,6 @@ export interface GameState {
     runSubmitted?: boolean;
 
     // Inventory System
-    meteoriteDust: number; // Currency from recycling
     meteorites: Meteorite[]; // Dropped items in the world
     inventory: (Meteorite | null)[];  // Collected items (30 slots)
 
@@ -575,10 +597,31 @@ export interface GameState {
     // Blueprint System
     blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)
     activeBlueprintBuffs: Partial<Record<BlueprintType, number>>; // End-time timestamps
+    activeBlueprintCharges: Partial<Record<BlueprintType, number>>; // Remaining use counts
+    arenaBuffMult: number; // Mult-based Arena Buff scale
+
+    // Extraction System
+    extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';
+    extractionTimer: number;
+    extractionMessageIndex: number;
+    extractionMessageTimes?: number[];
+    extractionDialogTime?: number;
+    extractionTargetArena: number;
+    extractionShipPos?: { x: number, y: number };
+    extractionStartTime?: number;
+    extractionPowerMult: number;
+    extractionSectorLabel?: string;
+
+    // UI Delays
+    pendingLevelUps: number;
+    levelUpTimer: number;
+    pendingBossKills: number;
+    bossKillTimer: number;
+    pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, history: { x1: number; y1: number; x2: number; y2: number }[] }>;
 }
 
 export type MeteoriteRarity = 'scrap' | 'anomalous' | 'quantum' | 'astral' | 'radiant' | 'void' | 'eternal' | 'divine' | 'singularity';
-export type MeteoriteQuality = 'Broken' | 'Damaged' | 'New';
+export type MeteoriteQuality = 'Broken' | 'Damaged' | 'New' | 'Corrupted';
 
 export interface MeteoritePerk {
     id: string;
@@ -629,9 +672,13 @@ export interface Blueprint {
     id: number;
     type: BlueprintType;
     name: string;
+    serial: string;
     desc: string;
     cost: number;
     duration: number; // in seconds
     isBlueprint: boolean;
     researched: boolean;
+    status: 'ready' | 'active' | 'broken' | 'researching';
+    researchRemainingTime?: number;
+    researchFinishTime?: number;
 }

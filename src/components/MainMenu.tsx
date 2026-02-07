@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { startMenuMusic } from '../logic/AudioLogic';
+import { startMenuMusic, preloadMusic } from '../logic/AudioLogic';
 
 import { SettingsMenu } from './SettingsMenu';
 
@@ -13,12 +13,16 @@ interface MainMenuProps {
 export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, username, onLogout }) => {
     const [fading, setFading] = useState(false);
     const [showBlueprint, setShowBlueprint] = useState(false);
+    const [showPatchNotes, setShowPatchNotes] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
-    // Start Menu Music on mount
+    const mouseRef = React.useRef({ x: 0, y: 0 });
+
+    // Start Menu Music on mount (Reverted)
     useEffect(() => {
         startMenuMusic();
+        preloadMusic();
     }, []);
 
     // Handle ESC key to close modals
@@ -26,20 +30,21 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 if (showBlueprint) setShowBlueprint(false);
+                if (showPatchNotes) setShowPatchNotes(false);
                 if (showSettings) setShowSettings(false);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showBlueprint, showSettings]);
+    }, [showBlueprint, showPatchNotes, showSettings]);
 
     // Mouse movement for parallax
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
-            setMouse({
-                x: (e.clientX / window.innerWidth) - 0.5,
-                y: (e.clientY / window.innerHeight) - 0.5
-            });
+            const x = (e.clientX / window.innerWidth) - 0.5;
+            const y = (e.clientY / window.innerHeight) - 0.5;
+            setMouse({ x, y });
+            mouseRef.current = { x, y };
         };
         window.addEventListener('mousemove', handleMouseMove);
         return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -157,7 +162,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 if (!ctx) return;
                 ctx.beginPath();
                 for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 3) * i;
+                    const angle = (Math.PI / 3) * i - Math.PI / 6;
                     ctx.lineTo(this.x + this.size * Math.cos(angle), this.y + this.size * Math.sin(angle));
                 }
                 ctx.closePath();
@@ -168,7 +173,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
         }
 
         const stars = Array.from({ length: 150 }, () => new Star());
-        const meteors = Array.from({ length: 3 }, () => new Meteor());
+        const meteors = Array.from({ length: 8 }, () => new Meteor());
         const hexes: Hex[] = [];
         const hexSize = 40;
         const hexW = hexSize * Math.sqrt(3);
@@ -189,8 +194,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
             stars.forEach(s => { s.update(); s.draw(); });
             meteors.forEach(m => { m.update(); m.draw(); });
 
-            const mx = (mouse.x + 0.5) * w;
-            const my = (mouse.y + 0.5) * h;
+            const mx = (mouseRef.current.x + 0.5) * w;
+            const my = (mouseRef.current.y + 0.5) * h;
             hexes.forEach(hex => { hex.update(mx, my); hex.draw(); });
 
             animId = requestAnimationFrame(loop);
@@ -201,7 +206,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
             cancelAnimationFrame(animId);
             window.removeEventListener('resize', handleResize);
         };
-    }, [mouse]);
+    }, []);
 
     return (
         <div className="main-menu" style={{ transition: 'opacity 1s', opacity: fading ? 0 : 1 }}>
@@ -216,7 +221,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 transform: `translate(${mouse.x * -20}px, ${mouse.y * -20}px)`,
                 transition: 'transform 0.1s ease-out'
             }}>
-                <div className="menu-title">NEON SURVIVOR</div>
+                <div className="menu-title">VOID NEXUS</div>
 
                 {username && (
                     <div className="user-profile-tag" style={{ marginBottom: 20 }}>
@@ -237,6 +242,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                     </button>
                     <button className="btn-logic" onClick={() => setShowBlueprint(true)}>
                         DATABASE
+                    </button>
+                    <button className="btn-logic" onClick={() => setShowPatchNotes(true)}>
+                        PATCH NOTES
                     </button>
                     {onLogout && (
                         <button className="btn-logout" onClick={onLogout}>
@@ -303,10 +311,22 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 <div className="blueprint-modal" onClick={() => setShowBlueprint(false)}>
                     <div className="blueprint-container" onClick={(e) => e.stopPropagation()}>
                         <div className="blueprint-header">
-                            <div className="blueprint-title">NEON SURVIVOR - ARCHIVE</div>
+                            <div className="blueprint-title">VOID NEXUS - ARCHIVE</div>
                             <button className="btn-close-blueprint" onClick={() => setShowBlueprint(false)}>CLOSE [ESC]</button>
                         </div>
                         <iframe src="/blueprint.html" className="blueprint-iframe" title="Game Archive" />
+                    </div>
+                </div>
+            )}
+
+            {showPatchNotes && (
+                <div className="blueprint-modal" onClick={() => setShowPatchNotes(false)}>
+                    <div className="blueprint-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="blueprint-header">
+                            <div className="blueprint-title">VOID NEXUS - PATCH NOTES</div>
+                            <button className="btn-close-blueprint" onClick={() => setShowPatchNotes(false)}>CLOSE [ESC]</button>
+                        </div>
+                        <iframe src="/patch-notes.html" className="blueprint-iframe" title="Patch Notes" />
                     </div>
                 </div>
             )}

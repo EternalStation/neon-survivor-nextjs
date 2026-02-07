@@ -11,9 +11,10 @@ import { updateNormalCircle, updateNormalTriangle, updateNormalSquare, updateNor
 import { updateEliteCircle, updateEliteTriangle, updateEliteSquare, updateEliteDiamond, updateElitePentagon } from './enemies/EliteEnemyLogic';
 import { updateBossEnemy } from './enemies/BossEnemyLogic';
 import { GAME_CONFIG } from './GameConfig';
-import { getProgressionParams, spawnEnemy, manageRareSpawnCycles } from './enemies/EnemySpawnLogic';
+import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette } from './enemies/EnemySpawnLogic';
 import { scanForMerges, manageMerges } from './enemies/EnemyMergeLogic';
 import { updateZombie, updateSnitch, updateMinion } from './enemies/UniqueEnemyLogic';
+import { getFlankingVelocity } from './enemies/EnemyAILogic';
 
 // Helper to determine current game era params
 export { spawnEnemy, spawnRareEnemy } from './enemies/EnemySpawnLogic';
@@ -25,21 +26,48 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
     // Spawning Logic
     const minutes = gameTime / 60;
-    const baseSpawnRate = GAME_CONFIG.ENEMY.BASE_SPAWN_RATE + (minutes * GAME_CONFIG.ENEMY.SPAWN_RATE_PER_MINUTE);
+
+    // Tiered Spawn Rate Scaling (User Request)
+    // 0-10m: +0.2/min
+    // 10-20m: +0.3/min (+2.0 total from previous)
+    // 20m+: +0.4/min (+5.0 total from previous)
+    let addedRate = 0;
+    if (minutes <= 10) {
+        addedRate = minutes * 0.2;
+    } else if (minutes <= 20) {
+        addedRate = (10 * 0.2) + ((minutes - 10) * 0.3);
+    } else {
+        addedRate = (10 * 0.2) + (10 * 0.3) + ((minutes - 20) * 0.4);
+    }
+
+    const baseSpawnRate = GAME_CONFIG.ENEMY.BASE_SPAWN_RATE + addedRate;
     let actualRate = baseSpawnRate * shapeDef.spawnWeight;
+
+    // Extraction Rage Spawn Growth
+    if (['active', 'arriving', 'arrived'].includes(state.extractionStatus) && state.extractionStartTime) {
+        const extractionElapsed = state.gameTime - state.extractionStartTime;
+        const rageGrowth = Math.floor(extractionElapsed / 15) * 0.15; // +0.15 spawn rate every 15s
+        actualRate += rageGrowth;
+    }
+
     if (state.currentArena === 1) actualRate *= 1.15; // +15% Spawn Rate in Combat Hex
+
+    // Extraction Spawn Scaling (Faster and faster)
+    if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+        actualRate *= (state.extractionPowerMult || 1.0);
+    }
 
     if (Math.random() < actualRate / 60 && state.portalState !== 'transferring') {
         spawnEnemy(state);
     }
 
     // Rare Spawning Logic
-    if (state.portalState !== 'transferring') {
+    if (state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         manageRareSpawnCycles(state);
     }
 
     // Boss Spawning
-    if (gameTime >= state.nextBossSpawnTime && state.portalState !== 'transferring') {
+    if (gameTime >= state.nextBossSpawnTime && state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         // Fix: Pass arguments correctly (x, y, shape, isBoss)
         spawnEnemy(state, undefined, undefined, undefined, true);
         state.nextBossSpawnTime += GAME_CONFIG.ENEMY.BOSS_SPAWN_INTERVAL; // 2 Minutes
@@ -140,11 +168,11 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         const minutes = state.gameTime / 60;
         const cycleCount = Math.floor(minutes / 5);
         const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-        const hpMult = Math.pow(1.2, cycleCount) * shapeDef.hpMult;
-        const baseHp = 60 * Math.pow(1.186, minutes) * difficultyMult;
+        const hpMult = Math.pow(1.65, cycleCount) * shapeDef.hpMult;
+        const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, 1.65 cycle multiplier
         const finalHp = baseHp * hpMult;
 
-        const sharedShield = (finalHp * 30) * 20.0; // 20x of combined HP (User Request)
+        const sharedShield = (finalHp * 30) * 1.0; // 100% of combined HP (User Request)
 
         for (let i = 0; i < 30; i++) {
             const slotX = i % 6 - 2.5; // Center the 6 columns (-2.5 to 2.5)
@@ -153,8 +181,8 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
             const newUnit: Enemy = {
                 id: Math.random(),
-                type: shapeDef.type as any,
-                shape: shapeDef.type as any,
+                type: 'hexagon', // Legion is always hexagon
+                shape: 'hexagon',
                 x: formationCenterX + (slotX * spacing),
                 y: formationCenterY + (slotY * spacing),
                 size: 20 * shapeDef.sizeMult,
@@ -164,7 +192,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 boss: false,
                 bossType: 0,
                 bossAttackPattern: 0,
-                lastAttack: Date.now(),
+                lastAttack: state.gameTime,
                 dead: false,
                 shellStage: 2,
                 palette: eraPalette.colors,
@@ -241,15 +269,20 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         e.fluxState = params.fluxState;
 
         if (!e.isNeutral && !e.isRare && !e.isNecroticZombie) {
-            e.eraPalette = params.eraPalette.colors;
+            const eventPalette = getEventPalette(state);
+            e.eraPalette = eventPalette || params.eraPalette.colors;
         }
 
-        // Particle Leakage (Starts at 30m, increases at 60m)
+        // Particle Leakage (Starts at 30m, stronger at 60m+)
         const minutes = gameTime / 60;
         if (minutes > 30 && !e.isNeutral) {
-            const chance = minutes > 60 ? 10 : 30; // Every 10 or 30 frames
+            const isLate = minutes > 60;
+            const chance = isLate ? 8 : 24; // More frequent later
             if (state.frameCount % chance === 0) {
-                spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 1, 15, 0, 'void');
+                const count = isLate ? 3 : 1;
+                const size = isLate ? 20 : 15;
+                const life = isLate ? 26 : 18;
+                spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], count, size, life, 'void');
             }
         }
 
@@ -281,13 +314,33 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     if (e.infectionAccumulator >= 1) {
                         const actualDmg = Math.floor(e.infectionAccumulator);
                         if (actualDmg > 0) { // Only show if damage is actually dealt
-                            e.hp -= actualDmg;
-                            player.damageDealt += actualDmg;
-                            e.infectionAccumulator -= actualDmg;
+                            let dmgDealt = actualDmg;
 
-                            const themeColor = getPlayerThemeColor(state);
-                            spawnFloatingNumber(state, e.x, e.y, actualDmg.toString(), themeColor, false);
-                            spawnParticles(state, e.x, e.y, themeColor, 1); // Reduced count for higher frequency
+                            // --- LEGION SHIELD LOGIC FOR DOT ---
+                            if (e.legionId) {
+                                const lead = state.legionLeads?.[e.legionId];
+                                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                                    const shieldAbsorp = Math.min(dmgDealt, lead.legionShield || 0);
+                                    lead.legionShield = (lead.legionShield || 0) - shieldAbsorp;
+                                    dmgDealt -= shieldAbsorp;
+
+                                    if (shieldAbsorp > 0) {
+                                        const themeColor = getPlayerThemeColor(state);
+                                        spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
+                                        spawnParticles(state, e.x, e.y, '#60a5fa', 1);
+                                    }
+                                }
+                            }
+
+                            if (dmgDealt > 0) {
+                                e.hp -= dmgDealt;
+                                player.damageDealt += dmgDealt;
+                                const themeColor = getPlayerThemeColor(state);
+                                spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
+                                spawnParticles(state, e.x, e.y, themeColor, 1);
+                            }
+
+                            e.infectionAccumulator -= actualDmg;
                         }
                     }
                 }
@@ -320,6 +373,18 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     handleEnemyDeath(state, e, onEvent);
                     return;
                 }
+            } else if (e.shape === 'snitch') {
+                // Snitch enemies don't die from walls
+                const { dist, normal } = getHexDistToWall(e.x, e.y);
+                e.x += normal.x * (Math.abs(dist) + 50);
+                e.y += normal.y * (Math.abs(dist) + 50);
+                return;
+            } else if (e.legionId) {
+                // Legion members don't die from walls
+                const { dist, normal } = getHexDistToWall(e.x, e.y);
+                e.x += normal.x * (Math.abs(dist) + 50);
+                e.y += normal.y * (Math.abs(dist) + 50);
+                return;
             } else {
                 e.dead = true;
                 e.hp = 0;
@@ -476,11 +541,24 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             }
         } else {
             switch (e.shape) {
-                case 'circle': v = updateNormalCircle(e, dx, dy, currentSpd, pushX, pushY); break;
-                case 'triangle': v = updateNormalTriangle(e, dx, dy, pushX, pushY); break;
+                case 'circle': v = updateNormalCircle(e, state, dx, dy, currentSpd, pushX, pushY); break;
+                case 'triangle': v = updateNormalTriangle(e, state, dx, dy, pushX, pushY); break;
                 case 'square': v = updateNormalSquare(currentSpd, dx, dy, pushX, pushY); break;
+                case 'hexagon': v = updateNormalSquare(currentSpd, dx, dy, pushX, pushY); break; // Hexagons use square movement (steady chase)
                 case 'diamond': v = updateNormalDiamond(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
                 case 'pentagon': v = updateNormalPentagon(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
+            }
+        }
+
+        // --- SMART AI: FLANKING LOGIC ---
+        if (e.isFlanker && !e.boss && !e.legionId && !e.isRare && e.shape !== 'minion' && !e.isZombie) {
+            // Only override if not already in a special maneuver (like triangle dash or elite skill)
+            const isSpecialManeuver = e.dashState === 1 || (e.isElite && e.eliteState && e.eliteState > 0) || e.summonState === 1;
+
+            if (!isSpecialManeuver) {
+                const flankV = getFlankingVelocity(e, state, targetX, targetY, currentSpd, pushX, pushY);
+                v.vx = flankV.vx;
+                v.vy = flankV.vy;
             }
         }
 
@@ -573,9 +651,20 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
                 if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
             } else if (e.shape === 'snitch' && e.rareReal) {
+                // Real snitches get special center-bouncing behavior
                 const c = ARENA_CENTERS[0];
                 const a = Math.atan2(c.y - e.y, c.x - e.x);
                 e.x += Math.cos(a) * 50; e.y += Math.sin(a) * 50;
+            } else if (e.shape === 'snitch') {
+                // Regular snitch enemies don't die from walls - bounce them back
+                const { dist, normal } = getHexDistToWall(e.x, e.y);
+                e.x += normal.x * (Math.abs(dist) + 50);
+                e.y += normal.y * (Math.abs(dist) + 50);
+            } else if (e.legionId) {
+                // Double check for legion wall safety (e.g. lead chase logic)
+                const { dist, normal } = getHexDistToWall(e.x, e.y);
+                e.x += normal.x * (Math.abs(dist) + 50);
+                e.y += normal.y * (Math.abs(dist) + 50);
             } else {
                 // User: Legion enemies are invincible until shield is destroyed
                 if (e.legionId && e.legionLeadId) {
@@ -595,18 +684,14 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
     });
 }
 
-/**
- * Resets the attack states and timers of all elite and boss enemies.
- * This is called when the game is unpaused to prevent immediate hits
- * from telegraphed attacks that were mid-animation.
- */
+// ... (context)
 export function resetEnemyAggro(state: GameState) {
     state.enemies.forEach(e => {
         // Reset Elite States
         if (e.isElite) {
             e.eliteState = 0;
-            e.timer = Date.now() + 1000; // Force a delay before stalking again
-            e.lastAttack = Date.now();
+            e.timer = state.gameTime + 1.0; // Force a delay before stalking again
+            e.lastAttack = state.gameTime;
             e.lockedTargetX = undefined;
             e.lockedTargetY = undefined;
             e.hasHitThisBurst = false;
@@ -622,10 +707,9 @@ export function resetEnemyAggro(state: GameState) {
             e.dashTimer = 0;
             e.beamTimer = 0;
             e.berserkTimer = 0;
-            e.lastAttack = Date.now();
+            e.lastAttack = state.gameTime;
             e.hasHitThisBurst = false;
         }
     });
 }
-
 

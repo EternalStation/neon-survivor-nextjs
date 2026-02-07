@@ -30,7 +30,7 @@ interface HUDProps {
 }
 
 export const HUD: React.FC<HUDProps> = ({
-    gameState, upgradeChoices, onUpgradeSelect, gameOver, bossWarning,
+    gameState, upgradeChoices, onUpgradeSelect, gameOver, onRestart, bossWarning,
     fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail
 }) => {
     const { player, activeEvent } = gameState;
@@ -41,7 +41,7 @@ export const HUD: React.FC<HUDProps> = ({
         maxHp *= 1.2; // +20% Max HP in Defence Hex
     }
 
-    if (gameOver) return null;
+    if (gameOver && gameState.extractionStatus !== 'complete') return null;
 
     // Calculate time remaining for active event
     // timeRemaining removed (was used for event timer)
@@ -69,7 +69,7 @@ export const HUD: React.FC<HUDProps> = ({
                         animation: activeEvent.type === 'necrotic_surge' ? 'glitchText 0.5s ease-in-out infinite' : 'none'
                     }}>
 
-                        {activeEvent.type === 'necrotic_surge' && 'NECROTIC SURGE'}
+                        {activeEvent.type === 'necrotic_surge' && 'GHOST HORDE'}
                         {activeEvent.type === 'legion_formation' && (
                             <div style={{ animation: 'glitchText 0.2s ease-in-out infinite' }}>
                                 <div style={{ fontSize: 32, color: '#ff0000', fontWeight: 900, textShadow: '0 0 15px #ff0000, 0 0 30px #ff0000' }}>
@@ -146,12 +146,92 @@ export const HUD: React.FC<HUDProps> = ({
 
             <Minimap gameState={gameState} />
 
+            {/* EXTRACTION COORDINATES PERSISTENCE */}
+            {['waiting', 'active', 'arriving', 'arrived'].includes(gameState.extractionStatus) && (
+                <div style={{
+                    position: 'absolute',
+                    top: '50px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 95,
+                    pointerEvents: 'none',
+                    animation: 'pulse-slow 2s infinite ease-in-out'
+                }}>
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.6)',
+                        padding: '10px 30px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)',
+                        backdropFilter: 'blur(5px)'
+                    }}>
+                        <div style={{ color: '#ef4444', fontSize: '10px', fontWeight: 900, letterSpacing: '2px' }}>
+                            EXTRACTION POINT IDENTIFIED
+                        </div>
+                        <div style={{ color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px', textShadow: '0 0 10px #ef4444' }}>
+                            {SECTOR_NAMES[gameState.extractionTargetArena] || 'UNKNOWN'}
+                        </div>
+                        <div style={{ color: '#60a5fa', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
+                            {gameState.extractionShipPos ?
+                                `COORD: [${Math.round(gameState.extractionShipPos.x)} : ${Math.round(gameState.extractionShipPos.y)}]` :
+                                ' LZ COORDINATES: PENDING SIGNAL...'}
+                        </div>
+                    </div>
+                    <style>{`
+                        @keyframes pulse-slow {
+                            0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+                            50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+                        }
+                    `}</style>
+                </div>
+            )}
+
             {upgradeChoices && (
                 <UpgradeMenu
                     upgradeChoices={upgradeChoices}
                     onUpgradeSelect={onUpgradeSelect}
                     gameState={gameState}
                 />
+            )}
+
+            {gameState.extractionStatus === 'complete' && (
+                <div style={{
+                    position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)',
+                    zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px'
+                }}>
+                    <button
+                        onClick={() => onRestart()}
+                        style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            border: '2px solid #3b82f6',
+                            color: '#fff',
+                            padding: '15px 40px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontFamily: 'Orbitron, sans-serif',
+                            fontSize: '20px',
+                            fontWeight: 900,
+                            letterSpacing: '4px',
+                            textShadow: '0 0 10px #3b82f6',
+                            boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)',
+                            transition: 'all 0.3s ease'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                    >
+                        MAIN MENU
+                    </button>
+                </div>
             )}
 
             {/* CSS Animations */}

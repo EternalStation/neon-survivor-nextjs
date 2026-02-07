@@ -1,5 +1,6 @@
 import type { GameState, Player, PlayerClass } from './types';
 import { ARENA_CENTERS } from './MapLogic';
+import { GAME_CONFIG } from './GameConfig';
 
 export const createInitialPlayer = (selectedClass?: PlayerClass, startingArenaId: number = 0): Player => {
     const p: Player = {
@@ -98,7 +99,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     nextBossId: 0,
     rareSpawnCycle: 0,
     rareSpawnActive: false,
-    spawnTimer: 3.0, // 3 Second animation
+    spawnTimer: GAME_CONFIG.PLAYER.SPAWN_DURATION,
     unpauseDelay: 0,
     hasPlayedSpawnSound: false,
     bossPresence: 0,
@@ -117,7 +118,6 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     nextArenaId: null,
 
     // Inventory Defaults
-    meteoriteDust: 0,
     meteorites: [],
     inventory: Array(300).fill(null), // 300 slots for extended storage
 
@@ -142,5 +142,22 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
     // Blueprint System Defaults
     blueprints: Array(10).fill(null),
-    activeBlueprintBuffs: {}
+    activeBlueprintBuffs: {},
+    activeBlueprintCharges: {},
+    arenaBuffMult: 1.0,
+
+    // Extraction System
+    extractionStatus: 'none',
+    extractionTimer: 0,
+    extractionMessageIndex: -1,
+    extractionMessageTimes: [],
+    extractionDialogTime: 0,
+    extractionTargetArena: 0,
+    extractionPowerMult: 1.0,
+
+    // UI Delays
+    pendingLevelUps: 0,
+    levelUpTimer: 0,
+    pendingBossKills: 0,
+    bossKillTimer: 0
 });

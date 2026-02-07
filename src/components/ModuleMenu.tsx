@@ -1,14 +1,23 @@
 
 import React, { useState, useRef } from 'react';
 import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/types';
-import { MeteoriteTooltip } from './MeteoriteTooltip';
+
 import { HexGrid } from './modules/HexGrid';
-import { LegendaryDetail } from './LegendaryDetail';
-import { InventoryPanel } from './modules/InventoryPanel';
+
+import { InventoryPanel, PerkFilter } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
+import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
 import { getMeteoriteImage, getDustValue, RARITY_ORDER } from './modules/ModuleUtils';
 import { isBuffActive, researchBlueprint } from '../logic/BlueprintLogic';
 import { BlueprintBay } from './BlueprintBay';
+import { Blueprint } from '../logic/types';
+import { spawnFloatingNumber } from '../logic/ParticleLogic';
+import { RemovalConfirmationModal } from './modules/RemovalConfirmationModal';
+import { CorruptionWarningModal } from './modules/CorruptionWarningModal';
+import { ARENA_DATA } from '../logic/MapLogic';
+import { EXTRACTION_MESSAGES } from '../logic/ExtractionLogic';
+import './modules/ModuleMenu.css';
+
 
 interface ModuleMenuProps {
     gameState: GameState;
@@ -27,13 +36,36 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number } | null>(null);
     const [hoveredItem, setHoveredItem] = useState<{ item: Meteorite | any, x: number, y: number } | null>(null);
     const [hoveredHex, setHoveredHex] = useState<{ hex: LegendaryHex, index: number, x: number, y: number } | null>(null);
+    const [hoveredBlueprint, setHoveredBlueprint] = useState<Blueprint | null>(null);
     const [selectedClassDetail, setSelectedClassDetail] = useState<PlayerClass | null>(null);
     const [isRecycleMode, setIsRecycleMode] = useState(false);
     const [recyclingAnim, setRecyclingAnim] = useState(false); // Used for visual feedback on button
+    const [dustIndicators, setDustIndicators] = useState<{ id: number, baseValue: number, bonusValue: number }[]>([]);
+
+    // Persistent Filter State (Lifted from InventoryPanel)
+    const [coreFilter, setCoreFilter] = useState({
+        quality: 'All',
+        rarity: 'All',
+        arena: 'All'
+    });
+
+    const [perkFilters, setPerkFilters] = useState<Record<number, PerkFilter>>({
+        1: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        2: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        3: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        4: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        5: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        6: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        7: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        8: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        9: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+    });
 
     // Removal Confirmation State
     const [removalCandidate, setRemovalCandidate] = useState<{ index: number, item: any, replaceWith?: { item: any, source: string, index: number } } | null>(null);
+    const [corruptionCandidate, setCorruptionCandidate] = useState<{ index: number, item: any, source: string, sourceIndex: number } | null>(null);
     const [placementAlert, setPlacementAlert] = useState(false);
+    const [archiveFullAlert, setArchiveFullAlert] = useState(false);
     const [, setRefresh] = useState(0);
 
     const hoverTimeout = useRef<number | null>(null);
@@ -46,7 +78,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             setSelectedClassDetail(null);
             setHoveredItem(null);
             setLockedItem(null);
+            setLockedItem(null);
             setHoveredHex(null);
+            setHoveredBlueprint(null);
             setMovedItem(null);
         }
 
@@ -79,13 +113,37 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     };
 
     const handleAttemptRemove = (index: number, item: any, replaceWith?: { item: any, source: string, index: number }) => {
+        if (item?.quality === 'Corrupted') {
+            // Cannot remove corrupted items
+            setPlacementAlert(true);
+            setTimeout(() => setPlacementAlert(false), 2000);
+            return;
+        }
         setLockedItem(null); // Clear tooltip lock so popup is visible
         setRemovalCandidate({ index, item, replaceWith });
     };
 
     const confirmRemoval = () => {
         if (removalCandidate) {
-            if (spendDust(5)) {
+            // Check if WE ARE ABOUT TO PLACE a corrupted item via replacement
+            if (removalCandidate.replaceWith?.item?.quality === 'Corrupted') {
+                setCorruptionCandidate({
+                    index: removalCandidate.index,
+                    item: removalCandidate.replaceWith.item,
+                    source: removalCandidate.replaceWith.source,
+                    sourceIndex: removalCandidate.replaceWith.index
+                });
+                // We don't clear the removalCandidate yet, OR we clear it and let corruption modal finish it.
+                // Better approach: If they confirm removal, but the replacement is corrupted, 
+                // we should have warned them about the corruption FIRST or SIMULTANEOUSLY.
+                // Actually, the UX is: "You want to replace X with Y (Corrupted)".
+                // Let's modify the RemovalConfirmationModal later or just chain them.
+                // For now, let's assume they confirmed the removal (paid the dust), 
+                // then if the new item is corrupted, we warn them BEFORE finalizing the swap into the socket.
+            }
+
+            const removalCost = Math.floor(1 + (gameState.gameTime / 60)); // User Request: 1 + 1 per minute
+            if (spendDust(removalCost)) {
                 const { index, item, replaceWith } = removalCandidate;
                 const newItem = { ...item, isNew: false };
 
@@ -106,13 +164,38 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
                 // 3. Place new item in target socket if replacing
                 if (replaceWith) {
-                    onSocketUpdate('diamond', index, replaceWith.item);
+                    if (replaceWith.item.quality === 'Corrupted') {
+                        // Delay final placement for corruption confirmation
+                        setCorruptionCandidate({
+                            index,
+                            item: replaceWith.item,
+                            source: replaceWith.source,
+                            sourceIndex: replaceWith.index // This index might be invalid if it was inventory and we already set it to null...
+                            // Actually, in confirmRemoval step 1, we set it to null.
+                        });
+                    } else {
+                        onSocketUpdate('diamond', index, replaceWith.item);
+                    }
                 } else {
                     onSocketUpdate('diamond', index, null);
                 }
 
                 setRemovalCandidate(null);
             }
+        }
+    };
+
+    const confirmCorruptionPlacement = () => {
+        if (corruptionCandidate) {
+            const { index, item, source, sourceIndex } = corruptionCandidate;
+            // Finalize placement
+            onSocketUpdate('diamond', index, item);
+            if (source === 'inventory') {
+                onInventoryUpdate(sourceIndex, null);
+            } else if (source === 'diamond') {
+                onSocketUpdate('diamond', sourceIndex, null);
+            }
+            setCorruptionCandidate(null);
         }
     };
 
@@ -126,24 +209,56 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         const item = gameState.inventory[idx];
         if (item) {
             let dustAmount = getDustValue(item.rarity);
+            let isBonus = false;
 
             // Blueprint: Quantum Scrapper
+            let bonusAmount = 0;
             if (isBuffActive(gameState, 'QUANTUM_SCRAPPER')) {
-                if (Math.random() < 0.25) {
-                    dustAmount *= 2;
+                const charges = gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] || 0;
+                if (charges > 0) {
+                    // Consume charge
+                    const newCharges = charges - 1;
+                    gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] = newCharges;
+
+                    // If charges hit 0, immediately mark blueprint as broken
+                    if (newCharges <= 0) {
+                        const bp = gameState.blueprints.find(b => b && b.type === 'QUANTUM_SCRAPPER');
+                        if (bp && bp.status === 'active') {
+                            bp.status = 'broken';
+                        }
+                        delete gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'];
+                    }
+
+                    if (Math.random() < 0.25) {
+                        bonusAmount = dustAmount; // Double means adding the amount again
+                    }
                 }
             }
 
-            onRecycle('inventory', idx, dustAmount);
-            // Visual feedback for successful recycle (maybe sound too if I could)
+            onRecycle('inventory', idx, dustAmount + bonusAmount);
+
+            // Spawn indicator
+            const id = Date.now() + Math.random();
+            setDustIndicators(prev => [...prev.slice(-8), { id, baseValue: Math.round(dustAmount), bonusValue: Math.round(bonusAmount) }]);
+            setTimeout(() => setDustIndicators(prev => prev.filter(ind => ind.id !== id)), 1200);
+
+            // Visual feedback for successful recycle
             setRecyclingAnim(true);
-            setTimeout(() => setRecyclingAnim(false), 200);
+            setTimeout(() => setRecyclingAnim(false), 400);
         }
     };
 
     const handleResearch = (idx: number) => {
         if (researchBlueprint(gameState, idx)) {
             setRefresh(p => p + 1);
+        } else {
+            // Check if it failed due to full slots
+            const emptySlot = gameState.blueprints.find(b => b === null);
+            if (emptySlot === undefined) {
+                // If no empty slot is found (all occupied), trigger full alert
+                setArchiveFullAlert(true);
+                setTimeout(() => setArchiveFullAlert(false), 2000);
+            }
         }
     };
 
@@ -151,20 +266,65 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         if (indices.length === 0) return;
 
         let totalDust = 0;
+        let bonusActive = isBuffActive(gameState, 'QUANTUM_SCRAPPER');
+        let bonusTriggeredCount = 0; // Keeping track for logic but not needed for display anymore (using amounts)
+        let totalBase = 0;
+        let totalBonus = 0;
+
         indices.forEach(idx => {
+            if (idx < 10) return; // Skip Safe Slots
             const item = gameState.inventory[idx];
             if (item) {
-                totalDust += getDustValue(item.rarity);
+                let amount = getDustValue(item.rarity);
+                let currentBonus = 0;
+
+                if (bonusActive) {
+                    const charges = gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] || 0;
+                    if (charges > 0) {
+                        const newCharges = charges - 1;
+                        gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] = newCharges;
+
+                        // If charges hit 0, immediately mark blueprint as broken
+                        if (newCharges <= 0) {
+                            const bp = gameState.blueprints.find(b => b && b.type === 'QUANTUM_SCRAPPER');
+                            if (bp && bp.status === 'active') {
+                                bp.status = 'broken';
+                            }
+                            delete gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'];
+                            bonusActive = false;
+                        }
+
+                        if (Math.random() < 0.25) {
+                            currentBonus = amount;
+                            bonusTriggeredCount++;
+                        }
+                    } else {
+                        bonusActive = false; // Charges depleted during bulk
+                    }
+                }
+
+                totalBase += amount;
+                totalBonus += currentBonus;
+                totalDust += (amount + currentBonus);
             }
         });
 
         // Loop backwards to preserve indices? No, the onRecycle for inventory just sets it to null at that index.
         indices.forEach(idx => {
-            onRecycle('inventory', idx, 0); // Amount 0 here because we'll update player dust separately or let the parent handle it
+            onRecycle('inventory', idx, 0);
         });
 
-        // Use the game logic to reward dust
+        // Award dust
         gameState.player.dust += totalDust;
+
+        // Spawn UI indicator for the recycled batch
+        const id = Date.now() + Math.random();
+        setDustIndicators(prev => [...prev.slice(-8), {
+            id,
+            baseValue: Math.round(totalBase),
+            bonusValue: Math.round(totalBonus)
+        }]);
+        setTimeout(() => setDustIndicators(prev => prev.filter(ind => ind.id !== id)), 1500);
 
         setRecyclingAnim(true);
         setTimeout(() => setRecyclingAnim(false), 500);
@@ -203,11 +363,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const { moduleSockets } = gameState;
     const meteoriteDust = gameState.player.dust;
 
+    const extractionFocusActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
+
     return (
         <div
             onMouseMove={(e) => {
-                if (!movedItem) return;
+                if (!movedItem || ['requested', 'waiting'].includes(gameState.extractionStatus)) return;
                 const rect = e.currentTarget.getBoundingClientRect();
+
                 const scaleX = e.currentTarget.offsetWidth / rect.width;
                 const scaleY = e.currentTarget.offsetHeight / rect.height;
                 const x = (e.clientX - rect.left) * scaleX;
@@ -215,7 +378,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 setMousePos({ x, y });
             }}
             onMouseUp={() => {
-                if (movedItem) {
+                if (movedItem && !['requested', 'waiting'].includes(gameState.extractionStatus)) {
                     // Cancel Drag / Drop back to source
                     if (movedItem.source === 'diamond') {
                         onSocketUpdate('diamond', movedItem.index, movedItem.item);
@@ -229,7 +392,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                 background: 'radial-gradient(circle, rgb(10, 10, 30) 0%, rgb(2, 2, 5) 100%)',
                 zIndex: 2000, color: 'white', fontFamily: 'Orbitron, sans-serif',
-                overflow: 'hidden',
                 userSelect: 'none'
             }}>
 
@@ -278,6 +440,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             }
                             handleAttemptRemove(index, item, replaceWith);
                         }}
+                        onAttemptPlace={(index, item, source, sourceIndex) => {
+                            setCorruptionCandidate({ index, item, source, sourceIndex });
+                        }}
                     />
                 </div>
 
@@ -288,7 +453,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     display: 'flex',
                     flexDirection: 'row',
                     borderLeft: '2px solid rgba(59, 130, 246, 0.3)',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    position: 'relative'
                 }}>
 
                     <div style={{
@@ -300,68 +466,22 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         borderRight: 'none' // Remove separator line to use empty space as divider
                     }}>
                         {/* DATA PANEL (Top - 9:16 tactical area) */}
-                        <div style={{
-                            flex: 1,
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            // padding: '10px 0 10px 15px', // Adjust padding -> CHANGED back to uniform
-                            padding: '10px',
-                            background: 'radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6) 0%, rgba(2, 2, 5, 0.2) 100%)',
-                            // overflow: 'hidden' -> REMOVED to show borders
-                        }}>
-                            <div className="data-panel" style={{
-                                width: '100%',
-                                height: '100%',
-                                background: 'rgba(5, 5, 15, 0.95)',
-                                border: '2px solid #3b82f6',
-                                borderRadius: '8px',
-                                boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
-                                display: 'flex',
-                                overflow: 'hidden',
-                                boxSizing: 'border-box',
-                                position: 'relative'
-                            }}>
-                                {gameState.pendingLegendaryHex ? (
-                                    <LegendaryDetail
-                                        hex={gameState.pendingLegendaryHex}
-                                        gameState={gameState}
-                                        hexIdx={-1}
-                                        pending={true}
-                                        placementAlert={placementAlert}
-                                    />
-                                ) : (hoveredHex && !movedItem) ? (
-                                    <LegendaryDetail
-                                        hex={hoveredHex.hex}
-                                        gameState={gameState}
-                                        hexIdx={hoveredHex.index}
-                                    />
-                                ) : (hoveredItem || lockedItem) && !movedItem ? (
-                                    <MeteoriteTooltip
-                                        meteorite={(lockedItem?.item || hoveredItem?.item) as Meteorite}
-                                        gameState={gameState}
-                                        x={0} y={0}
-                                        meteoriteIdx={moduleSockets.diamonds.indexOf((lockedItem?.item || hoveredItem?.item))}
-                                        isEmbedded={true}
-                                        isInteractive={true}
-                                        onMouseEnter={() => { if (hoverTimeout.current) clearTimeout(hoverTimeout.current); }}
-                                        onMouseLeave={() => handleMouseLeaveItem(100)}
-                                    />
-                                ) : (
-                                    <div style={{
-                                        width: '100%', height: '100%',
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                        color: '#3b82f6', opacity: 0.5, gap: '6px'
-                                    }}>
-                                        <div style={{ fontSize: '20px', animation: 'spin-slow 10s infinite linear' }}>⬡</div>
-                                        <div style={{ fontWeight: 900, letterSpacing: '1px', fontSize: '12px' }}>SYSTEM IDLE</div>
-                                        <div style={{ fontSize: '8px' }}>HOVER OVER MODULE TO SCAN</div>
-                                        <style>{`@keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <ModuleDetailPanel
+                            gameState={gameState}
+                            placementAlert={placementAlert}
+                            hoveredHex={hoveredHex}
+                            movedItem={movedItem}
+                            hoveredItem={hoveredItem}
+                            lockedItem={lockedItem}
+                            hoveredBlueprint={hoveredBlueprint}
+                            onCancelHoverTimeout={() => {
+                                if (hoverTimeout.current) {
+                                    clearTimeout(hoverTimeout.current);
+                                    hoverTimeout.current = null;
+                                }
+                            }}
+                            onMouseLeaveItem={handleMouseLeaveItem}
+                        />
 
                         {/* BUTTON CLUSTER (Bottom - Metadata & Recycler) */}
                         <div style={{
@@ -392,53 +512,52 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                     padding: '6px 10px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                                    minHeight: '36px'
+                                    minHeight: '36px',
+                                    position: 'relative' // Added for indicator positioning
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{ width: '20px', height: '20px', filter: 'drop-shadow(0 0 5px #22d3ee)' }} />
+                                        <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{
+                                            width: '20px',
+                                            height: '20px',
+                                            filter: 'drop-shadow(0 0 5px #22d3ee)',
+                                        }} />
                                         <span style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', fontWeight: 700 }}>DUST:</span>
                                         <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>{Number(meteoriteDust.toFixed(1)).toLocaleString()}</span>
+
+                                        {/* EVACUATION COST LABEL */}
+                                        <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '5px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '15px' }}>
+                                            <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: 900, letterSpacing: '1px' }}>EVACUATION PROTOCOL:</span>
+                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#f87171' }}>4,000 DUST</span>
+                                        </div>
+
+                                        {/* DUST FLOW INDICATORS (Relocated) */}
+                                        <div style={{ position: 'relative', marginLeft: '30px', width: 0, height: 0, overflow: 'visible' }}>
+                                            {dustIndicators.map((ind, i) => (
+                                                <div key={ind.id} className="float-up-fade" style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    top: '-10px',
+                                                    color: '#fff',
+                                                    fontSize: '18px',
+                                                    fontWeight: 900,
+                                                    textShadow: '0 0 5px #000, 0 0 10px rgba(34, 211, 238, 0.8)',
+                                                    whiteSpace: 'nowrap',
+                                                    pointerEvents: 'none',
+                                                    zIndex: 1000,
+                                                    display: 'flex', alignItems: 'center', gap: '5px'
+                                                }}>
+                                                    <span>+{ind.baseValue}</span>
+                                                    {ind.bonusValue > 0 && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '5px' }}>
+                                                            <span style={{ color: '#fbbf24', textShadow: '0 0 10px #fbbf24' }}>+{ind.bonusValue}</span>
+                                                            <span style={{ fontSize: '9px', background: '#fbbf24', color: '#000', padding: '1px 3px', borderRadius: '2px' }}>CRIT</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* EXTRACTION BUTTON (Future Level Warp) */}
-                                <button
-                                    onClick={() => {
-                                        if (meteoriteDust >= 5000) {
-                                            alert("EXTRACTION SUCCESSFUL: Warp Drive Engaged. (To be continued in next Sector)");
-                                            onClose();
-                                        }
-                                    }}
-                                    disabled={meteoriteDust < 5000}
-                                    style={{
-                                        flex: '0 0 120px',
-                                        background: meteoriteDust >= 5000
-                                            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
-                                            : 'rgba(30, 41, 59, 0.4)',
-                                        border: `1px solid ${meteoriteDust >= 5000 ? '#60a5fa' : '#475569'}`,
-                                        borderRadius: '4px',
-                                        color: meteoriteDust >= 5000 ? '#fff' : '#64748b',
-                                        fontSize: '10px',
-                                        fontWeight: 900,
-                                        letterSpacing: '1.5px',
-                                        cursor: meteoriteDust >= 5000 ? 'pointer' : 'not-allowed',
-                                        transition: 'all 0.3s',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        boxShadow: meteoriteDust >= 5000 ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none'
-                                    }}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '2px' }}>
-                                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-                                        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-                                        <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
-                                        <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
-                                    </svg>
-                                    <span style={{ fontSize: '9px', fontWeight: 900 }}>EXTRACTION</span>
-                                    <span style={{ fontSize: '8px', opacity: 0.8, marginTop: '1px' }}>COST: 5,000</span>
-                                </button>
                             </div>
 
                         </div>
@@ -482,207 +601,103 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             onToggleRecycle={() => setIsRecycleMode(!isRecycleMode)}
                             onResearch={handleResearch}
                             recyclingAnim={recyclingAnim}
+                            coreFilter={coreFilter}
+                            setCoreFilter={setCoreFilter}
+                            perkFilters={perkFilters}
+                            setPerkFilters={setPerkFilters}
                         />
 
                         <BlueprintBay
                             gameState={gameState}
                             spendDust={spendDust}
                             onUpdate={() => setRefresh(prev => prev + 1)}
+                            onHoverBlueprint={setHoveredBlueprint}
                         />
                     </div>
+
+                    {/* EXTRACTION FOCUS DIMMER (Right: Inventory/Sorting Only) */}
+                    {extractionFocusActive && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            width: 'calc(100% - (40% + 50px))',
+                            height: '100%',
+                            background: 'rgba(0, 0, 0, 0.75)',
+                            zIndex: 2500,
+                            pointerEvents: 'auto'
+                        }} />
+                    )}
                 </div>
             </div>
 
             {/* Ghost Item Rendering */}
-            {movedItem && (
-                <div style={{
-                    position: 'absolute',
-                    top: mousePos.y,
-                    left: mousePos.x,
-                    width: '60px',
-                    height: '60px',
-                    pointerEvents: 'none',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 9999,
-                    filter: 'drop-shadow(0 0 15px cyan)'
-                }}>
-                    <img
-                        src={getMeteoriteImage(movedItem.item)}
-                        alt="moved"
-                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                </div>
-            )}
+            {
+                movedItem && (
+                    <div style={{
+                        position: 'absolute',
+                        top: mousePos.y,
+                        left: mousePos.x,
+                        width: '60px',
+                        height: '60px',
+                        pointerEvents: 'none',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 9999,
+                        filter: 'drop-shadow(0 0 15px cyan)'
+                    }}>
+                        <img
+                            src={getMeteoriteImage(movedItem.item)}
+                            alt="moved"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                    </div>
+                )
+            }
 
             {/* REMOVAL CONFIRMATION MODAL */}
-            {removalCandidate && (
+            {
+                removalCandidate && (
+                    <RemovalConfirmationModal
+                        candidate={removalCandidate}
+                        dust={meteoriteDust}
+                        cost={Math.floor(1 + (gameState.gameTime / 60))}
+                        onCancel={() => setRemovalCandidate(null)}
+                        onConfirm={confirmRemoval}
+                    />
+                )
+            }
+
+            {
+                selectedClassDetail && (
+                    <ChassisDetail
+                        gameState={gameState}
+                        playerClass={selectedClassDetail}
+                        onClose={() => setSelectedClassDetail(null)}
+                    />
+                )
+            }
+
+            {
+                corruptionCandidate && (
+                    <CorruptionWarningModal
+                        onCancel={() => setCorruptionCandidate(null)}
+                        onConfirm={confirmCorruptionPlacement}
+                    />
+                )
+            }
+
+
+            {/* EXTRACTION FOCUS DIMMER (Left: Matrix Only) */}
+            {extractionFocusActive && (
                 <div style={{
-                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    background: 'rgba(0,0,0,0.6)',
-                    backdropFilter: 'blur(4px)',
+                    position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
+                    background: 'rgba(0, 0, 0, 0.75)',
                     zIndex: 2500,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}
-                    onClick={() => setRemovalCandidate(null)} // Click outside to cancel
-                >
-                    <div style={{
-                        background: 'rgba(15, 23, 42, 0.95)',
-                        border: '2px solid #ef4444',
-                        padding: '20px',
-                        borderRadius: '8px',
-                        boxShadow: '0 0 30px rgba(239, 68, 68, 0.3)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
-                        minWidth: '300px'
-                    }}
-                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
-                    >
-                        <div style={{ fontSize: '18px', fontWeight: 900, color: '#ef4444', letterSpacing: '1px' }}>
-                            {removalCandidate.replaceWith ? 'REPLACE MODULE?' : 'UNSOCKET MODULE?'}
-                        </div>
-                        <div style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px' }}>
-                            {removalCandidate.replaceWith
-                                ? 'Replacing this module will move the current one to your inventory.'
-                                : 'Removing this module requires energy to safely extract.'}
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px 16px', borderRadius: '4px' }}>
-                            <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>COST: 5</span>
-                            <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{ width: '20px', height: '20px' }} />
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '5px' }}>
-                            <button
-                                onClick={() => setRemovalCandidate(null)}
-                                style={{
-                                    flex: 1, padding: '10px', background: 'rgba(255, 255, 255, 0.1)',
-                                    border: '1px solid #475569', color: '#fff', borderRadius: '4px', cursor: 'pointer',
-                                    fontWeight: 'bold', fontSize: '12px'
-                                }}
-                            >
-                                CANCEL
-                            </button>
-                            <button
-                                onClick={confirmRemoval}
-                                disabled={meteoriteDust < 5}
-                                style={{
-                                    flex: 1, padding: '10px',
-                                    background: meteoriteDust >= 5 ? '#ef4444' : 'rgba(239, 68, 68, 0.3)',
-                                    border: '1px solid #ef4444', color: meteoriteDust >= 5 ? '#fff' : '#fecaca',
-                                    borderRadius: '4px', cursor: meteoriteDust >= 5 ? 'pointer' : 'not-allowed',
-                                    fontWeight: 'bold', fontSize: '12px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
-                                }}
-                            >
-                                {meteoriteDust >= 5
-                                    ? (removalCandidate.replaceWith ? 'REPLACE' : 'EXTRACT')
-                                    : 'NO DUST'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    pointerEvents: 'auto'
+                }} />
             )}
 
-            {selectedClassDetail && (
-                <ChassisDetail
-                    gameState={gameState}
-                    playerClass={selectedClassDetail}
-                    onClose={() => setSelectedClassDetail(null)}
-                />
-            )}
 
-            <style>{`
-                .glow-cyan { filter: drop-shadow(0 0 10px #22d3ee); }
-                .glow-yellow { filter: drop-shadow(0 0 7px rgba(250, 204, 21, 0.7)); }
-                .glow-gold { filter: drop-shadow(0 0 15px #fbbf24); }
-                .glow-pink { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.9)); }
-                .glow-hex { filter: drop-shadow(0 0 15px var(--hex-color)); }
-                
-                .pulse-gold { animation: pulseGold 1.5s infinite; }
-                @keyframes pulseGold {
-                    0% { opacity: 0.2; transform: scale(1); }
-                    50% { opacity: 0.5; transform: scale(1.05); }
-                    100% { opacity: 0.2; transform: scale(1); }
-                }
-
-                .pulse-purple { animation: pulsePurple 3s infinite ease-in-out; }
-                .pulse-crimson { animation: pulseCrimson 3s infinite ease-in-out; }
-                .synergy-trail { animation: trailPulse 3s infinite ease-in-out; }
-
-                .pulse-slow { animation: pulseSlow 4s infinite ease-in-out; transform-box: fill-box; transform-origin: center; }
-                .rotate-fast { animation: rotateFast 2s infinite linear; transform-box: fill-box; transform-origin: center; }
-                
-                .glow-purple { filter: drop-shadow(0 0 8px #c084fc); }
-                .glow-rose { filter: drop-shadow(0 0 8px #fb7185); }
-                .glow-gold { filter: drop-shadow(0 0 8px #fbbf24); }
-
-                @keyframes pulseSlow {
-                    0%, 100% { opacity: 0.5; transform: scale(1); }
-                    50% { opacity: 1; transform: scale(1.1); }
-                }
-                @keyframes rotateFast {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-
-                .energy-dot-forward { animation: moveDotForward 10s infinite linear; }
-                .energy-dot-reverse { animation: moveDotReverse 10s infinite linear; }
-                
-                @keyframes moveDotForward { 0% { stroke-dashoffset: 1000; } 100% { stroke-dashoffset: 0; } }
-                @keyframes moveDotReverse { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 1000; } }
-
-                @keyframes pulsePurple {
-                    0%, 100% { stroke: #A855F7; filter: drop-shadow(0 0 5px #A855F7); }
-                    50% { stroke: #D8B4FE; filter: drop-shadow(0 0 20px #A855F7); }
-                }
-                @keyframes pulseCrimson {
-                    0%, 100% { stroke: #EF4444; filter: drop-shadow(0 0 5px #EF4444); }
-                    50% { stroke: #F87171; filter: drop-shadow(0 0 20px #EF4444); }
-                }
-                @keyframes trailPulse {
-                    0%, 100% { stroke: #6366F1; filter: drop-shadow(0 0 5px #6366F1); }
-                    50% { stroke: #818CF8; filter: drop-shadow(0 0 20px #6366F1); }
-                }
-
-                .pulse-cyan-glow { animation: pulseCyanGlow 2s infinite ease-in-out; }
-                @keyframes pulseCyanGlow {
-                    0% { stroke: #22d3ee; opacity: 0.3; filter: drop-shadow(0 0 5px #22d3ee); stroke-dashoffset: 0; }
-                    50% { stroke: #ffffff; opacity: 1; filter: drop-shadow(0 0 20px #22d3ee); stroke-dashoffset: 20; }
-                    100% { stroke: #22d3ee; opacity: 0.3; filter: drop-shadow(0 0 5px #22d3ee); stroke-dashoffset: 40; }
-                }
-
-                .pulse-legendary-glow { animation: pulseLegendaryGlow 2s infinite ease-in-out; }
-                @keyframes pulseLegendaryGlow {
-                    0% { stroke: #fbbf24; opacity: 0.3; filter: drop-shadow(0 0 5px #fbbf24); transform: scale(1); }
-                    50% { stroke: #ffffff; opacity: 0.8; filter: drop-shadow(0 0 20px #fbbf24); transform: scale(1.08); }
-                    100% { stroke: #fbbf24; opacity: 0.3; filter: drop-shadow(0 0 5px #fbbf24); transform: scale(1); }
-                }
-                @keyframes upgradePulse {
-                    0% { transform: scale(1); opacity: 1; stroke-width: 2; }
-                    100% { transform: scale(1.5); opacity: 0; stroke-width: 10; }
-                }
-                .pulse-upgrade-ring {
-                    animation: upgradePulse 1s 3 linear;
-                    transform-origin: center;
-                    transform-box: fill-box;
-                }
-                @keyframes attentionPulse {
-                    0% { transform: scale(1); opacity: 0.1; stroke-width: 1; }
-                    50% { transform: scale(1.1); opacity: 0.6; stroke-width: 3; }
-                    100% { transform: scale(1); opacity: 0.1; stroke-width: 1; }
-                }
-                .pulse-attention {
-                    animation: attentionPulse 2s infinite ease-in-out;
-                    transform-origin: center;
-                    transform-box: fill-box;
-                }
-                @keyframes floatUpFade {
-                    0% { transform: translateY(0); opacity: 1; }
-                    100% { transform: translateY(-40px); opacity: 0; }
-                }
-                .float-up-fade {
-                    animation: floatUpFade 1.5s forwards ease-out;
-                }
-            `}</style>
         </div >
     );
 };

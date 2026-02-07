@@ -31,6 +31,9 @@ export function getEventPalette(state: GameState): [string, string, string] | nu
     if (state.activeEvent?.type === 'solar_emp') {
         return ['#f59e0b', '#d97706', '#92400e']; // Amber/Warning
     }
+    if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+        return ['#9ca3af', '#4b5563', '#1f2937']; // Brighter Black/Grey (Onyx/Slate)
+    }
     return null;
 }
 
@@ -77,8 +80,14 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     const minutes = gameTime / 60;
     const cycleCount = Math.floor(minutes / 5);
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-    const hpMult = Math.pow(1.2, cycleCount) * SHAPE_DEFS[chosenShape].hpMult;
-    const baseHp = 60 * Math.pow(1.186, minutes) * difficultyMult; // Tuned for 20k HP @ 20min, 250M HP @ 60min
+    const hpMult = Math.pow(1.65, cycleCount) * SHAPE_DEFS[chosenShape].hpMult;
+    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, 1.65 cycle multiplier
+
+    // Extraction Rage scaling (Fast growth)
+    if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+        // Apply the dynamic power multiplier from ExtractionLogic
+        baseHp *= (state.extractionPowerMult || 1.0);
+    }
 
     const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1)); // 10-20 min
     const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)); // 20+ min
@@ -110,17 +119,21 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         fluxState: fluxState,
         pulsePhase: 0,
         rotationPhase: Math.random() * Math.PI * 2,
-        lastAttack: Date.now() + Math.random() * 2000,
+        lastAttack: state.gameTime + Math.random() * 2.0,
         timer: 0,
         summonState: 0,
         dodgeDir: Math.random() > 0.5 ? 1 : -1,
         wobblePhase: isBoss ? Math.random() * Math.PI * 2 : 0,
         jitterX: 0, jitterY: 0,
-        glitchPhase: 0, crackPhase: 0, particleOrbit: 0,
+        glitchPhase: 0, crackPhase: 0,
         knockback: { x: 0, y: 0 },
         isRare: false,
         isElite: false,
-        spawnedAt: state.gameTime
+        spawnedAt: state.gameTime,
+        isFlanker: !isBoss && Math.random() < 0.10,
+        flankAngle: Math.random() * Math.PI * 2,
+        flankDistance: 400 + Math.random() * 200,
+        particleOrbit: ['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0
     };
 
     state.enemies.push(newEnemy);
@@ -163,7 +176,7 @@ export function spawnRareEnemy(state: GameState) {
         palette: ['#FACC15', '#EAB308', '#CA8A04'],
         eraPalette: ['#FACC15', '#EAB308', '#CA8A04'],
         fluxState: 0,
-        pulsePhase: 0, rotationPhase: 0, timer: Date.now(),
+        pulsePhase: 0, rotationPhase: 0, timer: state.gameTime,
         isRare: true, size: 18,
         rarePhase: 0, rareTimer: state.gameTime, rareIntent: 0, rareReal: true, canBlock: false,
         trails: [], longTrail: [{ x, y }], wobblePhase: 0,

@@ -6,7 +6,9 @@ import { createInitialGameState } from '../logic/GameState';
 import { updatePlayer } from '../logic/PlayerLogic';
 import { updateEnemies, resetEnemyAggro } from '../logic/EnemyLogic';
 import { getChassisResonance } from '../logic/EfficiencyLogic';
-import { updateProjectiles, spawnBullet } from '../logic/ProjectileLogic';
+import { updateProjectiles } from '../logic/ProjectileLogic';
+import { spawnBullet } from '../logic/ProjectileSpawning';
+import { GAME_CONFIG } from '../logic/GameConfig';
 
 import { spawnUpgrades, spawnSnitchUpgrades, applyUpgrade } from '../logic/UpgradeLogic';
 import { calcStat } from '../logic/MathUtils';
@@ -15,8 +17,9 @@ import { isBuffActive, updateBlueprints } from '../logic/BlueprintLogic';
 import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/ParticleLogic'; // Added spawnParticles import
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/MapLogic';
 import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/AudioLogic';
-import { syncLegendaryHex, applyLegendarySelection, syncAllLegendaries } from '../logic/LegendaryLogic';
+import { syncLegendaryHex, applyLegendarySelection, syncAllLegendaries, getLegendaryOptions } from '../logic/LegendaryLogic';
 import { updateDirector } from '../logic/DirectorLogic';
+import { updateExtraction } from '../logic/ExtractionLogic';
 
 
 // Refactored Modules
@@ -72,7 +75,7 @@ export function useGameLoop(gameStarted: boolean) {
         (meteoriteImagesRef.current as any).deathMark = dmImg;
 
         // Preload Hex Icons for UI stability
-        ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife'].forEach(hex => {
+        ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'].forEach(hex => {
             const img = new Image();
             // Handle both .png and .PNG if needed, but classes.ts uses specific ones.
             // For simplicity in preloading, we'll try to match what's in classes.ts
@@ -84,6 +87,10 @@ export function useGameLoop(gameStarted: boolean) {
         const bpImg = new Image();
         bpImg.src = '/assets/Icons/Blueprint.png';
         (meteoriteImagesRef.current as any).blueprint = bpImg;
+
+        const shipImg = new Image();
+        shipImg.src = '/assets/Enteties/Ship.png';
+        (meteoriteImagesRef.current as any).ship = shipImg;
 
         // Initialize Background Worker (Next.js/Turbopack compatible way)
         workerRef.current = new Worker(new URL('../logic/gameWorker.ts', import.meta.url), { type: 'module' });
@@ -135,12 +142,24 @@ export function useGameLoop(gameStarted: boolean) {
     }, [showModuleMenu]);
 
     const triggerPortal = useCallback(() => {
-        const cost = 3 + Math.floor(gameState.current.gameTime / 60);
+        const cost = 0;
+
+        // Block portal use during evacuation (One way trip only)
+        if (['active', 'arriving', 'arrived', 'departing'].includes(gameState.current.extractionStatus)) {
+            setPortalError(true);
+            setUiState(p => p + 1);
+            setTimeout(() => {
+                setPortalError(false);
+                setUiState(p => p + 1);
+            }, 1000);
+            return false;
+        }
+
         if (gameState.current.portalState === 'closed') {
             if (gameState.current.player.dust >= cost) {
                 gameState.current.player.dust -= cost;
                 gameState.current.portalState = 'warn';
-                gameState.current.portalTimer = 10; // 10s warning period
+                gameState.current.portalTimer = 10;
                 playSfx('warning');
                 setPortalError(false);
                 setUiState(p => p + 1);
@@ -164,7 +183,8 @@ export function useGameLoop(gameStarted: boolean) {
         setShowStats,
         setShowModuleMenu,
         setGameOver,
-        triggerPortal
+        triggerPortal,
+        refreshUI: () => setUiState(p => p + 1)
     });
 
     const restartGame = (selectedClass?: PlayerClass, startingArenaId: number = 0) => {
@@ -229,15 +249,15 @@ export function useGameLoop(gameStarted: boolean) {
     const updateLogic = useCallback((state: GameState, step: number) => {
         const eventHandler = (event: string, _data?: any) => {
             if (event === 'level_up') {
-                const choices = spawnUpgrades(state, false);
-                setUpgradeChoices(choices);
-                state.isPaused = true; // Force immediate pause to stop further steps this frame
-                playSfx('level');
+                state.pendingLevelUps++;
+                // If not already waiting, start timer
+                if (state.levelUpTimer <= 0) state.levelUpTimer = 1.0;
             }
             if (event === 'boss_kill') {
+                state.pendingBossKills++;
                 state.bossKills = (state.bossKills || 0) + 1;
-                state.isPaused = true; // Force immediate pause
-                setShowLegendarySelection(true);
+                // If not already waiting, start timer
+                if (state.bossKillTimer <= 0) state.bossKillTimer = 1.0;
             }
             if (event === 'snitch_kill') {
                 const choices = spawnSnitchUpgrades(state);
@@ -253,7 +273,7 @@ export function useGameLoop(gameStarted: boolean) {
         };
         state.legionLeads = state.legionLeads || {};
 
-        if (state.portalState !== 'transferring') {
+        if (state.extractionStatus !== 'departing' && state.portalState !== 'transferring') {
             const canvas = canvasRef.current;
             if (canvas && mousePos.current) {
                 const rect = canvas.getBoundingClientRect();
@@ -272,7 +292,7 @@ export function useGameLoop(gameStarted: boolean) {
             }
         }
 
-        if (state.spawnTimer > 0.95 && !state.hasPlayedSpawnSound) {
+        if (state.spawnTimer > (GAME_CONFIG.PLAYER.SPAWN_DURATION * 0.9) && !state.hasPlayedSpawnSound) {
             playSfx('spawn');
             state.hasPlayedSpawnSound = true;
         }
@@ -280,19 +300,21 @@ export function useGameLoop(gameStarted: boolean) {
         state.camera.x = state.player.x;
         state.camera.y = state.player.y;
 
-        updateEnemies(state, eventHandler, step);
-        updateDirector(state, step);
+        if (state.extractionStatus !== 'departing') {
+            updateEnemies(state, eventHandler, step);
+            updateDirector(state, step);
+        }
+        updateExtraction(state, step);
 
         // --- ACTIVE SKILL & AREA EFFECT LOGIC (Processed BEFORE Projectiles to apply Debuffs) ---
 
         // Cooldowns
-        const cooldownMult = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 1.428 : 1.0; // 1 / 0.7 approx 1.428 (30% faster)
         state.player.activeSkills.forEach(s => {
-            if (s.cooldown > 0) s.cooldown -= step * cooldownMult;
+            if (s.cooldown > 0) s.cooldown -= step;
         });
 
         // Blueprint System Update
-        updateBlueprints(state);
+        updateBlueprints(state, step);
 
         // Reset frame-based buffs
         if (state.player.buffs) {
@@ -313,7 +335,7 @@ export function useGameLoop(gameStarted: boolean) {
                     spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 1.5, effect.y + (Math.random() - 0.5) * effect.radius * 1.5, '#4ade80', 1, 2, 60, 'bubble');
                 }
                 if (Math.random() < 0.02) {
-                    spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius, effect.y + (Math.random() - 0.5) * effect.radius, '#10b981', 1, 4, 100, 'vapor');
+                    spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 1.3, effect.y + (Math.random() - 0.5) * effect.radius * 1.3, '#10b981', 1, 4, 100, 'vapor');
                 }
             } else if (effect.type === 'epicenter') {
                 if (Math.random() < 0.4) {
@@ -361,7 +383,7 @@ export function useGameLoop(gameStarted: boolean) {
                             let appliedDmg = dotDmg;
                             if (e.legionId) {
                                 const lead = state.legionLeads?.[e.legionId];
-                                if (lead && (lead.legionShield || 0) > 0) {
+                                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
                                     const shieldHit = Math.min(appliedDmg, lead.legionShield || 0);
                                     lead.legionShield = (lead.legionShield || 0) - shieldHit;
                                     appliedDmg -= shieldHit;
@@ -372,6 +394,7 @@ export function useGameLoop(gameStarted: boolean) {
 
                             if (appliedDmg > 0) {
                                 e.hp -= appliedDmg;
+                                state.player.damageDealt += appliedDmg;
                                 if (e.hp <= 0) e.hp = 0; // Death handled in updateEnemies
                             }
 
@@ -417,7 +440,7 @@ export function useGameLoop(gameStarted: boolean) {
                             // --- LEGION SHIELD BLOCK ---
                             if (e.legionId) {
                                 const lead = state.legionLeads?.[e.legionId];
-                                if (lead && (lead.legionShield || 0) > 0) {
+                                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
                                     const shieldHit = Math.min(appliedDmg, lead.legionShield || 0);
                                     lead.legionShield = (lead.legionShield || 0) - shieldHit;
                                     appliedDmg -= shieldHit;
@@ -427,6 +450,7 @@ export function useGameLoop(gameStarted: boolean) {
 
                             if (appliedDmg > 0) {
                                 e.hp -= appliedDmg;
+                                state.player.damageDealt += appliedDmg;
                             }
 
                             // Visual Feedback (50% chance to reduce lag, but good feedback)
@@ -476,14 +500,17 @@ export function useGameLoop(gameStarted: boolean) {
                                 // --- LEGION SHIELD BLOCK ---
                                 if (e.legionId) {
                                     const lead = state.legionLeads?.[e.legionId];
-                                    if (lead && (lead.legionShield || 0) > 0) {
+                                    if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
                                         const shieldHit = Math.min(appliedDmg, lead.legionShield || 0);
                                         lead.legionShield = (lead.legionShield || 0) - shieldHit;
                                         appliedDmg -= shieldHit;
                                     }
                                 }
 
-                                if (appliedDmg > 0) e.hp -= appliedDmg;
+                                if (appliedDmg > 0) {
+                                    e.hp -= appliedDmg;
+                                    state.player.damageDealt += appliedDmg;
+                                }
                             } else {
                                 // Instantly kill non-bosses (UNLESS they have legion shield)
                                 if (e.legionId) {
@@ -497,7 +524,7 @@ export function useGameLoop(gameStarted: boolean) {
                                 }
 
                                 e.hp = 0;
-                                spawnParticles(state, e.x, e.y, '#000000', 5);
+                                // spawnParticles(state, e.x, e.y, '#000000', 5);
                                 return;
                             }
                         }
@@ -579,7 +606,7 @@ export function useGameLoop(gameStarted: boolean) {
                             // --- LEGION SHIELD BLOCK ---
                             if (e.legionId) {
                                 const lead = state.legionLeads?.[e.legionId];
-                                if (lead && (lead.legionShield || 0) > 0) {
+                                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
                                     const shieldHit = Math.min(appliedDmg, lead.legionShield || 0);
                                     lead.legionShield = (lead.legionShield || 0) - shieldHit;
                                     appliedDmg -= shieldHit;
@@ -589,6 +616,7 @@ export function useGameLoop(gameStarted: boolean) {
 
                             if (appliedDmg > 0) {
                                 e.hp -= appliedDmg;
+                                state.player.damageDealt += appliedDmg;
                             }
 
                             // Visual Feedback
@@ -633,7 +661,7 @@ export function useGameLoop(gameStarted: boolean) {
                 }
             } else if (state.portalState === 'open') {
                 state.portalTimer -= step;
-                if (state.portalTimer <= 0) {
+                if (false && state.portalTimer <= 0) { // Disabled time limit
                     state.portalState = 'closed';
                     state.portalTimer = 0;
                     stopPortalAmbience();
@@ -651,7 +679,7 @@ export function useGameLoop(gameStarted: boolean) {
                         const wallLen = den;
                         if (dist < 100 && distToCenter < wallLen / 2 + 50) {
                             state.portalState = 'transferring';
-                            state.transferTimer = 5.0; // 5s fade out
+                            state.transferTimer = 2.0; // 2s hyperspace jump
                             state.nextArenaId = p.to;
                             state.portalsUsed++;
 
@@ -663,7 +691,8 @@ export function useGameLoop(gameStarted: boolean) {
 
                             playSfx('rare-despawn');
                             stopPortalAmbience();
-                            fadeOutMusic(5.0); // Slow fade out
+                            stopPortalAmbience();
+                            fadeOutMusic(0.1); // Immediate silence per user request
                             break;
                         }
                     }
@@ -696,8 +725,12 @@ export function useGameLoop(gameStarted: boolean) {
                 state.portalState = 'closed';
                 state.portalTimer = 0;
 
-                // Switch BGM for the new arena
-                switchBGM(newArena, 5.0);
+                // Switch BGM for the new arena (unless evacuation overrides)
+                if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+                    switchBGM('evacuation', 1.0);
+                } else if (!['requested', 'waiting'].includes(state.extractionStatus)) {
+                    switchBGM(newArena, 7.0); // 7s fade in per user request
+                }
 
                 playSfx('spawn');
             }
@@ -709,26 +742,32 @@ export function useGameLoop(gameStarted: boolean) {
         const { player } = state;
         const atkScore = calcStat(player.atk);
 
-        // Logarithmic + Linear Scaling (Updated v6)
-        // 2.0 SPS @ 300 (Base)
-        // 1.35 SPS @ 240 (Cosmic Beam Start)
-        // ~4.4 SPS @ 700
-        // Fit: SPS = 2.8 * ln(Atk) - 14.0 + (Atk / 150,000)
-
-        let shotsPerSec = Math.max(1.0, 2.8 * Math.log(atkScore) - 14.0 + atkScore / 150000);
+        // Updated formula: 300 atk = 1.65/s, 500 atk = 3/s, 20000 atk = ~10/s
+        let shotsPerSec = 2.64 * Math.log(atkScore / 100) - 1.25;
 
         // Cap max SPS to avoid infinity/physics breaks if stats go wild (e.g. 60 FPS limit)
         // 60 SPS = ~3 Million Atk with this formula
 
-        const fireDelay = 1000 / shotsPerSec;
+        // --- Shooting Logic (Fixed-Step) ---
+        const fireDelaySec = 1 / shotsPerSec;
+        player.shotAccumulator = (player.shotAccumulator || 0) + step;
 
-        if (Date.now() - player.lastShot > fireDelay && state.spawnTimer <= 0 && state.portalState !== 'transferring') {
+        const phaseShifted = player.phaseShiftUntil && state.gameTime < player.phaseShiftUntil;
+
+        if (player.shotAccumulator >= fireDelaySec && state.spawnTimer <= 0 && state.portalState !== 'transferring' && !phaseShifted
+            && !['departing', 'complete'].includes(state.extractionStatus)) {
             const d = calcStat(player.dmg);
-            for (let i = 0; i < player.multi; i++) {
-                const offset = (i - (player.multi - 1) / 2) * 0.15;
-                spawnBullet(state, player.x, player.y, player.targetAngle, d, player.pierce, offset);
+            // Limit catch-up to prevent infinite bullets in a single frame
+            let maxBursts = 5;
+            while (player.shotAccumulator >= fireDelaySec && maxBursts > 0) {
+                for (let i = 0; i < player.multi; i++) {
+                    const offset = (i - (player.multi - 1) / 2) * 0.15;
+                    spawnBullet(state, player.x, player.y, player.targetAngle, d, player.pierce, offset);
+                }
+                player.shotAccumulator -= fireDelaySec;
+                maxBursts--;
             }
-            player.lastShot = Date.now();
+            player.lastShot = state.gameTime;
             playSfx('shoot');
         }
 
@@ -750,6 +789,47 @@ export function useGameLoop(gameStarted: boolean) {
         }
         state.gameTime += step;
         state.frameCount++;
+        // --- DELAYED UI LOGIC ---
+        // Level Up Delay
+        if (state.levelUpTimer > 0) {
+            state.levelUpTimer -= step;
+            if (state.levelUpTimer <= 0 && state.pendingLevelUps > 0) {
+                // Time to show upgrade!
+                const choices = spawnUpgrades(state, false);
+                setUpgradeChoices(choices);
+                state.isPaused = true;
+                state.pendingLevelUps--; // Consume one pending level
+                playSfx('level');
+            }
+        } else if (state.pendingLevelUps > 0 && !state.isPaused) {
+            // Immediate trigger if no timer but pending levels exist (e.g. unpaused and still have levels)
+            const choices = spawnUpgrades(state, false);
+            setUpgradeChoices(choices);
+            state.isPaused = true;
+            state.pendingLevelUps--;
+            playSfx('level');
+        } else {
+            // Boss Kill Delay (Only check if Level Up didn't trigger)
+            if (state.bossKillTimer > 0) {
+                state.bossKillTimer -= step;
+                if (state.bossKillTimer <= 0 && state.pendingBossKills > 0) {
+                    state.legendaryOptions = getLegendaryOptions(state);
+                    setShowLegendarySelection(true); // Sync React State
+                    state.showLegendarySelection = true; // Sync Game State
+                    state.isPaused = true;
+                    state.pendingBossKills--;
+                    playSfx('rare-spawn');
+                }
+            } else if (state.pendingBossKills > 0 && !state.isPaused) {
+                // Immediate trigger if pending but no timer (or timer finished previously but blocked)
+                state.legendaryOptions = getLegendaryOptions(state);
+                setShowLegendarySelection(true);
+                state.showLegendarySelection = true;
+                state.isPaused = true;
+                state.pendingBossKills--;
+                playSfx('rare-spawn');
+            }
+        }
 
         const timeLeft = state.nextBossSpawnTime - state.gameTime;
         if (timeLeft <= 10 && timeLeft > 0) {
@@ -805,7 +885,7 @@ export function useGameLoop(gameStarted: boolean) {
 
             // Detect transition from paused to unpaused
             if (!isMenuOpen && state.isPaused) {
-                state.unpauseDelay = 1.0; // 1s grace period
+                state.unpauseDelay = 0.2; // 0.2s grace period
                 resetEnemyAggro(state); // Reset all elite/boss attack animations
             }
 
@@ -870,6 +950,12 @@ export function useGameLoop(gameStarted: boolean) {
             // Panic Button: If we are still behind after 20 steps, drop the accumulator.
             if (accRef.current > FIXED_STEP * 20) {
                 accRef.current = 0;
+            }
+
+            // Update Extraction Logic (Runs even when paused for menu dialogue)
+            if (['requested', 'waiting'].includes(state.extractionStatus)) {
+                updateExtraction(state, safeDt);
+                setUiState(p => p + 1); // Ensure terminal dialogue updates in UI
             }
 
             // Update BGM phase (runs even when paused)
@@ -1028,7 +1114,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerPortal,
         fps,
         portalError,
-        portalCost: 3 + Math.floor(gameState.current.gameTime / 60),
+        portalCost: 0,
         onViewChassisDetail: () => {
             gameState.current.chassisDetailViewed = true;
             setUiState(p => p + 1);
