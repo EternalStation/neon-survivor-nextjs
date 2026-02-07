@@ -283,7 +283,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             zIndex: 10,
                             textAlign: 'center',
                             width: '90%',
-                            height: extractionDialogActive ? '85%' : 'auto'
+                            height: extractionDialogActive ? 'calc(100% + 40px)' : 'auto',
+                            marginTop: extractionDialogActive ? '-20px' : 0
                         }}>
                             {extractionDialogActive ? (
                                 <div

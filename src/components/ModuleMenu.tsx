@@ -363,7 +363,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const { moduleSockets } = gameState;
     const meteoriteDust = gameState.player.dust;
 
-    const extractionFocusActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
+    const extractionFocusActive = gameState.extractionStatus !== 'none' && gameState.extractionStatus !== 'complete';
 
     return (
         <div
