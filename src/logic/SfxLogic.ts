@@ -5,8 +5,23 @@ let shootBuffer: AudioBuffer | null = null;
 let laserBuffer: AudioBuffer | null = null;
 let iceBuffer: AudioBuffer | null = null;
 
+// Ghost System
+let ghostBuffer: AudioBuffer | null = null;
+let alertBuffer: AudioBuffer | null = null;
+let shipDepartureBuffer: AudioBuffer | null = null;
+
 export async function loadSfxAssets() {
     if (!audioCtx) return;
+
+    if (!ghostBuffer) {
+        try {
+            const response = await fetch('/audio/Ghost.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            ghostBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch (e) {
+            console.error(`Failed to load ghost sfx:`, e);
+        }
+    }
     if (!shootBuffer) {
         try {
             const response = await fetch('/audio/pleasant_neon_ding.wav');
@@ -34,6 +49,26 @@ export async function loadSfxAssets() {
             iceBuffer = await audioCtx.decodeAudioData(arrayBuffer);
         } catch (e) {
             console.error(`Failed to load ice sfx:`, e);
+        }
+    }
+
+    if (!alertBuffer) {
+        try {
+            const response = await fetch('/audio/Alert.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            alertBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch (e) {
+            console.error(`Failed to load alert sfx:`, e);
+        }
+    }
+
+    if (!shipDepartureBuffer) {
+        try {
+            const response = await fetch('/audio/ShipDeparture.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            shipDepartureBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch (e) {
+            console.error(`Failed to load ship departure sfx:`, e);
         }
     }
 }
@@ -182,7 +217,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -209,6 +244,31 @@ export function playSfx(type: SfxType) {
         g.gain.linearRampToValueAtTime(0, t + 0.05);
         osc.start(t);
         osc.stop(t + 0.05);
+        return;
+    }
+
+    if (type === 'alert') {
+        if (alertBuffer) {
+            // Play 2 times with a slight gap
+            const playOnce = (delay: number) => {
+                const source = audioCtx.createBufferSource();
+                source.buffer = alertBuffer;
+                source.connect(masterSfxGain as AudioNode);
+                source.start(t + delay);
+            };
+            playOnce(0);
+            playOnce(0.8); // 0.8s later
+        }
+        return;
+    }
+
+    if (type === 'ship-departure') {
+        if (shipDepartureBuffer) {
+            const source = audioCtx.createBufferSource();
+            source.buffer = shipDepartureBuffer;
+            source.connect(masterSfxGain as AudioNode);
+            source.start(t);
+        }
         return;
     }
 
@@ -570,4 +630,39 @@ export function playSfx(type: SfxType) {
             osc.start(t); osc.stop(t + 0.8);
         }
     }
+    else if (type === 'ghost-horde') {
+        if (ghostBuffer) {
+            const source = audioCtx.createBufferSource();
+            source.buffer = ghostBuffer;
+            source.connect(masterSfxGain as AudioNode);
+            source.start(t);
+        }
+    }
+    else if (type === 'zombie-consume') {
+        playShootDing();
+    }
+}
+
+export function playTypewriterClick() {
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+
+    const t = audioCtx.currentTime;
+    const sfxVolume = getSfxVolume();
+    const masterSfxGain = getSfxGain();
+    if (!masterSfxGain) return;
+
+    // High pitched short click
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(3500 + Math.random() * 500, t);
+
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(sfxVolume * 0.05, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+    osc.connect(g);
+    g.connect(masterSfxGain as AudioNode);
+    osc.start(t);
+    osc.stop(t + 0.05);
 }
