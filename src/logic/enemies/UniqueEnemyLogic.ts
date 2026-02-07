@@ -3,6 +3,7 @@ import { ARENA_CENTERS, isInMap } from '../MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../ParticleLogic';
 import { playSfx } from '../AudioLogic';
 import { handleEnemyDeath } from '../DeathLogic';
+import { getHexLevel } from '../LegendaryLogic';
 
 export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, count: number) {
     for (let i = 0; i < count; i++) {
@@ -256,7 +257,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     takeZombieDamage(1);
 
                     // Kinetic Battery: Trigger Zap on Zombie Collision
-                    const kinLvl = (state as any).getHexLevel ? (state as any).getHexLevel(state, 'KineticBattery') : 0;
+                    const kinLvl = getHexLevel(state, 'KineticBattery');
                     if (kinLvl >= 1) {
                         const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
                         if (triggerZap) triggerZap(state, player, kinLvl);
@@ -373,7 +374,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     takeZombieDamage(1);
 
                     // Kinetic Battery: Trigger Zap on Zombie Collision
-                    const kinLvl = (state as any).getHexLevel ? (state as any).getHexLevel(state, 'KineticBattery') : 0;
+                    const kinLvl = getHexLevel(state, 'KineticBattery');
                     if (kinLvl >= 1) {
                         const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
                         if (triggerZap) triggerZap(state, player, kinLvl);

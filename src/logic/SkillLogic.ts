@@ -61,4 +61,16 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.cooldown = skill.cooldownMax; // Start cooldown
         skill.inUse = true;
     }
+
+    if (skill.type === 'KineticBattery') {
+        const kinLvl = getHexLevel(state, 'KineticBattery');
+        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+        if (kinLvl >= 1 && triggerZap) {
+            triggerZap(state, state.player, kinLvl);
+
+            // Short cooldown for manual zap
+            skill.cooldownMax = 5 * cdMod;
+            skill.cooldown = skill.cooldownMax;
+        }
+    }
 }

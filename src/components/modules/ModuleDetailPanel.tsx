@@ -372,7 +372,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                     </div>
 
                                     {/* DUST COST FOR EXTRACTION (If any) */}
-                                    {gameState.killCount >= 1 && (
+                                    {gameState.player.dust >= 4000 && (
                                         <button
                                             className="evac-button"
                                             onClick={() => {

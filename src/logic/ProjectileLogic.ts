@@ -13,7 +13,7 @@ import { getDefenseReduction } from './MathUtils';
 
 export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void) {
     const { bullets, enemyBullets, player } = state;
-    const now = Date.now();
+    const now = state.gameTime;
 
     // --- PLAYER BULLETS ---
     for (let i = bullets.length - 1; i >= 0; i--) {
@@ -434,15 +434,21 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                             if (!player.shieldChunks) player.shieldChunks = [];
 
-                            const currentTotalShield = player.shieldChunks.reduce((s, c) => s + c.amount, 0);
+                            const currentLifestealShield = player.shieldChunks
+                                .filter(c => (c as any).source === 'lifesteal')
+                                .reduce((s, c) => s + c.amount, 0);
 
                             const effMult = getHexMultiplier(state, 'ComLife');
-                            const dynamicMaxShield = maxHp * effMult;
+                            const lifestealCap = maxHp * effMult;
 
-                            if (currentTotalShield < dynamicMaxShield) {
-                                // Cap to dynamicMaxShield
-                                shieldGain = Math.min(shieldGain, dynamicMaxShield - currentTotalShield);
-                                player.shieldChunks.push({ amount: shieldGain, expiry: now + 3000 });
+                            if (currentLifestealShield < lifestealCap) {
+                                // Cap to lifestealCap
+                                shieldGain = Math.min(shieldGain, lifestealCap - currentLifestealShield);
+                                player.shieldChunks.push({
+                                    amount: shieldGain,
+                                    expiry: now + 3.0,
+                                    source: 'lifesteal'
+                                });
                             }
                         }
                     }
@@ -450,7 +456,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                 // Crit Visuals
                 if (b.isCrit) {
-                    e.critGlitchUntil = now + 100; // Set glitch timer (100ms)
+                    e.critGlitchUntil = now + 0.1; // Set glitch timer (100ms)
                     state.critShake = Math.min(state.critShake + 8, 20); // Add heavy shake
 
                 } else {
@@ -550,7 +556,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                         // Phase 3 Stats
                         e.spd = state.player.speed * 1.4; // 1.4x Player Speed
-                        e.invincibleUntil = Date.now() + 2000; // 2s Immunity
+                        e.invincibleUntil = now + 2.0; // 2s Immunity
 
                         // Refresh Skills
                         e.shieldCd = 0; // Reset Barrels
@@ -573,7 +579,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         return; // Skip death check
                     } else if (e.rarePhase === 2) {
                         // Phase 3: Check Immunity
-                        if (e.invincibleUntil && Date.now() < e.invincibleUntil) {
+                        if (e.invincibleUntil && now < e.invincibleUntil) {
                             spawnParticles(state, e.x, e.y, '#FFFFFF', 5); // Immune feedback
                             b.life = 0;
                             return;
@@ -667,6 +673,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             // Check Shield Chunks
             let absorbedDmg = 0;
             if (player.shieldChunks && player.shieldChunks.length > 0) {
+                // Sort by soonest expiring
+                player.shieldChunks.sort((a, b) => a.expiry - b.expiry);
                 let remainingToAbsorb = dmg;
                 for (let k = 0; k < player.shieldChunks.length; k++) {
                     const chunk = player.shieldChunks[k];
@@ -691,26 +699,26 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             // I'll keep the breakdown separate as requested.
 
             if (dmg > 0) {
+                // Kinetic Battery: Trigger Zap on Hit (even if shielded)
+                const kinLvl = getHexLevel(state, 'KineticBattery');
+                if (kinLvl >= 1) {
+                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                    if (triggerZap) triggerZap(state, player, kinLvl);
+                }
+
                 if (finalDmg > 0) {
                     player.curHp -= finalDmg;
                     player.damageTaken += finalDmg;
                     if (onEvent) onEvent('player_hit', { dmg: finalDmg });
-
-                    // Kinetic Battery: Trigger Zap on Projectile Hit
-                    const kinLvl = getHexLevel(state, 'KineticBattery');
-                    if (kinLvl >= 1) {
-                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                        if (triggerZap) triggerZap(state, player, kinLvl);
-                    }
-
-                    if (player.curHp <= 0 && !state.gameOver) {
-                        state.gameOver = true;
-                        player.deathCause = 'Enemy Projectile';
-                        if (onEvent) onEvent('game_over');
-                    }
                 }
-                spawnFloatingNumber(state, player.x, player.y, Math.round(dmg).toString(), '#ef4444', false);
+
+                if (player.curHp <= 0 && !state.gameOver) {
+                    state.gameOver = true;
+                    player.deathCause = 'Enemy Projectile';
+                    if (onEvent) onEvent('game_over');
+                }
             }
+            spawnFloatingNumber(state, player.x, player.y, Math.round(dmg).toString(), '#ef4444', false);
 
             enemyBullets.splice(i, 1);
             continue;

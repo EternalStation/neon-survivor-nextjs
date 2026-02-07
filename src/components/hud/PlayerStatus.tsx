@@ -5,6 +5,7 @@ import { CANVAS_WIDTH } from '../../logic/constants';
 import { getHexMultiplier, getHexLevel } from '../../logic/LegendaryLogic';
 import { PLAYER_CLASSES } from '../../logic/classes';
 import { isBuffActive } from '../../logic/BlueprintLogic';
+import { calcStat } from '../../logic/MathUtils';
 
 interface PlayerStatusProps {
     gameState: GameState;
@@ -420,14 +421,27 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
             {(() => {
                 const totalShield = (player.shieldChunks || []).reduce((sum, c) => sum + c.amount, 0);
                 if (totalShield <= 0) return null;
-                const effMult = getHexMultiplier(gameState, 'ComLife');
-                const dynamicMaxShield = maxHp * effMult;
+
+                const lifeLvl = getHexLevel(gameState, 'ComLife');
+                const kinLvl = getHexLevel(gameState, 'KineticBattery');
+
+                let lifeCapacity = 0;
+                if (lifeLvl >= 2) {
+                    lifeCapacity = maxHp * getHexMultiplier(gameState, 'ComLife');
+                }
+
+                let kinCapacity = 0;
+                if (kinLvl >= 2) {
+                    kinCapacity = calcStat(player.arm) * 5;
+                }
+
+                const dynamicMaxShield = lifeCapacity + kinCapacity;
                 const shieldPct = (totalShield / dynamicMaxShield) * 100;
                 return (
                     <div style={{
                         width: '100%', height: 10, background: 'rgba(15, 23, 42, 0.8)',
                         border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: 2, overflow: 'hidden',
-                        position: 'relative'
+                        position: 'relative', marginTop: -4
                     }}>
                         <div style={{
                             width: `${Math.min(100, shieldPct)}%`,

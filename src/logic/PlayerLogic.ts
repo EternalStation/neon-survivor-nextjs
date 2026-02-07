@@ -16,6 +16,12 @@ import { isBuffActive } from './BlueprintLogic';
 
 export function updatePlayer(state: GameState, keys: Record<string, boolean>, onEvent?: (type: string, data?: any) => void, inputVector?: { x: number, y: number }, mouseOffset?: { x: number, y: number }) {
     const { player } = state;
+    const now = state.gameTime;
+
+    // Shield Cleanup
+    if (player.shieldChunks) {
+        player.shieldChunks = player.shieldChunks.filter(c => now < c.expiry && c.amount > 0);
+    }
 
     // Track player position history for laser prediction (last 60 frames = ~1 second at 60fps)
     if (!state.playerPosHistory) state.playerPosHistory = [];
@@ -308,11 +314,19 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     if (kinLvl >= 1) {
         // Lvl 2: Gain Shield (500% Armor) refreshing every minute
         if (kinLvl >= 2) {
-            if (!player.kineticShieldTimer || state.gameTime > player.kineticShieldTimer) {
+            if (!player.kineticShieldTimer || state.gameTime >= player.kineticShieldTimer) {
                 const totalArmor = calcStat(player.arm);
                 const shieldAmount = totalArmor * 5;
                 if (!player.shieldChunks) player.shieldChunks = [];
-                player.shieldChunks.push({ amount: shieldAmount, expiry: state.gameTime + 60 });
+
+                // Refresh: remove any previous kinetic chunk to prevent infinite stacking
+                player.shieldChunks = player.shieldChunks.filter(c => (c as any).source !== 'kinetic');
+
+                player.shieldChunks.push({
+                    amount: shieldAmount,
+                    expiry: state.gameTime + 60,
+                    source: 'kinetic' as any // Using as any until types are updated
+                });
                 player.kineticShieldTimer = state.gameTime + 60;
                 spawnFloatingNumber(state, player.x, player.y, "SHIELD RECHARGE", '#3b82f6', true);
             }
@@ -646,6 +660,8 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
                 // Check Shield Chunks
                 let absorbed = 0;
                 if (player.shieldChunks && player.shieldChunks.length > 0) {
+                    // Sort by expiry: use soonest expiring chunks first
+                    player.shieldChunks.sort((a, b) => a.expiry - b.expiry);
                     let rem = finalDmg;
                     for (const chunk of player.shieldChunks) {
                         if (chunk.amount >= rem) {
@@ -830,7 +846,10 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     }
 }
 
-export function triggerKineticBatteryZap(state: GameState, source: { x: number, y: number }, kinLvl: number) {
+export function triggerKineticBatteryZap(state: GameState, source: { x: number, y: number }, _kinLvl: number) {
+    // Ensure the player actually has the Kinetic Battery hex socketed
+    const actualKinLvl = getHexLevel(state, 'KineticBattery');
+    if (actualKinLvl < 1) return;
     const now = state.gameTime;
     if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + 5.0) return;
 

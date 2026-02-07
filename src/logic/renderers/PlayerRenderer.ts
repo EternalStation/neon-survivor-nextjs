@@ -10,8 +10,9 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
     ctx.save();
 
     // Ghost Mode (Temporal Guard)
-    const ghostAlpha = (player.phaseShiftUntil && Date.now() < player.phaseShiftUntil)
-        ? (0.5 + Math.sin(Date.now() / 50) * 0.3) // Rapid blink
+    const now = state.gameTime;
+    const ghostAlpha = (player.phaseShiftUntil && now < player.phaseShiftUntil)
+        ? (0.5 + Math.sin(now * 20) * 0.3) // Rapid blink
         : 1.0;
 
     // Apply ghost alpha to context initially, but internal overrides must also respect it
@@ -228,8 +229,57 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
 
     ctx.restore();
 
+    // --- SHIELD RIPPLE (Active Shield Chunks) ---
+    const totalShield = (player.shieldChunks || []).reduce((sum, c) => sum + c.amount, 0);
+    if (totalShield > 0) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        const time = state.gameTime;
+        const pulse = 0.8 + Math.sin(time * 6) * 0.2;
+        const shieldColor = '#3b82f6'; // Bright Blue
+
+        ctx.strokeStyle = shieldColor;
+        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = shieldColor;
+        ctx.globalAlpha = 0.4 * pulse;
+
+        // Draw multiple expanding hexagonal rings
+        for (let i = 0; i < 2; i++) {
+            const ringProgress = (time * 1.5 + i * 0.5) % 1.0;
+            const r = cellSize * (1.8 + ringProgress * 0.6);
+            ctx.globalAlpha = 0.3 * (1 - ringProgress) * pulse;
+
+            ctx.beginPath();
+            for (let j = 0; j < 6; j++) {
+                const ang = (Math.PI / 3) * j - Math.PI / 2;
+                const px = Math.cos(ang) * r;
+                const py = Math.sin(ang) * r;
+                if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Inner solid-ish barrier
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = shieldColor;
+        ctx.beginPath();
+        for (let j = 0; j < 6; j++) {
+            const ang = (Math.PI / 3) * j - Math.PI / 2;
+            const r = cellSize * 2.0;
+            const px = Math.cos(ang) * r;
+            const py = Math.sin(ang) * r;
+            if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+    }
+
     // Stun VFX
-    if (player.stunnedUntil && Date.now() < player.stunnedUntil) {
+    if (player.stunnedUntil && now < player.stunnedUntil) {
         ctx.save();
         ctx.translate(player.x, player.y);
         ctx.strokeStyle = '#00FFFF';

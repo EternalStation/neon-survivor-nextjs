@@ -36,7 +36,8 @@ export const createInitialPlayer = (selectedClass?: PlayerClass, startingArenaId
         faceAngle: 0,
         knockback: { x: 0, y: 0 },
         activeSkills: [],
-        playerClass: selectedClass?.id
+        playerClass: selectedClass?.id,
+        kineticShieldTimer: 0
     };
 
     if (selectedClass) {

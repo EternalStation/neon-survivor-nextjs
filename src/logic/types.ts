@@ -39,6 +39,7 @@ export interface PlayerStats {
 export interface ShieldChunk {
     amount: number;
     expiry: number;
+    source?: 'kinetic' | 'lifesteal' | 'skill';
 }
 
 export interface ActiveSkill {

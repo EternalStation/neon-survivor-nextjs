@@ -63,19 +63,30 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.moveTo(e.x, e.y);
 
                     const angle = Math.atan2(target.y - e.y, target.x - e.x);
+                    const dist = Math.hypot(target.x - e.x, target.y - e.y);
 
                     // Bezier Curve with sine wave offset
                     const midX = (e.x + target.x) / 2;
                     const midY = (e.y + target.y) / 2;
 
                     // Animate the curve "snaking"
-                    const offset = Math.sin(time * 10 + i) * 30;
-                    // Perpendicular vector
+                    const offset = Math.sin(time * 8 + i) * 20;
                     const perpX = Math.cos(angle + Math.PI / 2) * offset;
                     const perpY = Math.sin(angle + Math.PI / 2) * offset;
 
                     ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
                     ctx.stroke();
+
+                    // Energy Flow Particles
+                    const particleCount = 2;
+                    for (let p = 0; p < particleCount; p++) {
+                        const t = (time * 1.5 + (p / particleCount) + (i * 0.3)) % 1.0;
+                        const px = e.x + (target.x - e.x) * t + Math.sin(t * Math.PI + time * 5) * offset * 0.5;
+                        const py = e.y + (target.y - e.y) * t + Math.cos(t * Math.PI + time * 5) * offset * 0.5;
+                        ctx.fillStyle = '#FFF';
+                        ctx.globalAlpha = 0.8 * (1 - Math.abs(t - 0.5) * 2);
+                        ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+                    }
                 }
             });
             ctx.restore();
@@ -190,7 +201,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             // Internal Pulse
             if (isLocked) {
                 ctx.fillStyle = '#FFFFFF';
-                ctx.globalAlpha = 0.3 + Math.sin(Date.now() / 50) * 0.2;
+                ctx.globalAlpha = 0.3 + Math.sin(state.gameTime * 20) * 0.2;
                 ctx.beginPath();
                 ctx.arc(e.x, e.y, chargeSize * 0.6, 0, Math.PI * 2);
                 ctx.fill();
@@ -253,35 +264,39 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         // DIAMOND LVL 3 SATELLITE (Orbiting UI indicator)
         if (e.shape === 'diamond' && e.boss && (e.bossTier === 3 || (state.gameTime > 1200 && e.bossTier !== 1))) {
             ctx.save();
-            // Orbit around boss
             const orbitRadius = e.size * 2.5;
-            const orbitSpeed = state.gameTime * 1.5; // Slow orbit
+            const orbitSpeed = state.gameTime * 2.0;
             const satX = Math.cos(orbitSpeed) * orbitRadius;
             const satY = Math.sin(orbitSpeed) * orbitRadius;
 
             ctx.translate(satX, satY);
+            const satSize = 10;
+            const color = e.eraPalette?.[0] || e.palette[0];
 
-            // Draw small satellite
-            const satSize = 8;
-            ctx.fillStyle = e.eraPalette?.[0] || e.palette[0];
-            ctx.shadowColor = e.eraPalette?.[0] || e.palette[0];
-            ctx.shadowBlur = 10;
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
 
-            // Diamond shape for satellite
+            // Sharp Satellite Design
             ctx.beginPath();
             ctx.moveTo(0, -satSize);
-            ctx.lineTo(satSize * 0.7, 0);
+            ctx.lineTo(satSize * 0.4, -satSize * 0.2);
+            ctx.lineTo(satSize, 0);
+            ctx.lineTo(satSize * 0.4, satSize * 0.2);
             ctx.lineTo(0, satSize);
-            ctx.lineTo(-satSize * 0.7, 0);
+            ctx.lineTo(-satSize * 0.4, satSize * 0.2);
+            ctx.lineTo(-satSize, 0);
+            ctx.lineTo(-satSize * 0.4, -satSize * 0.2);
             ctx.closePath();
             ctx.fill();
 
-            // Glow ring
-            ctx.strokeStyle = e.eraPalette?.[0] || e.palette[0];
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.5;
+            // Rotating Ring
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.4;
+            ctx.rotate(state.gameTime * 4);
             ctx.beginPath();
-            ctx.arc(0, 0, satSize * 1.5, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, satSize * 1.8, satSize * 0.6, 0, 0, Math.PI * 2);
             ctx.stroke();
 
             ctx.restore();
@@ -293,20 +308,50 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.save();
         ctx.translate(e.x, e.y);
 
-        // SLOW VFX
-        if (e.slowFactor && e.slowFactor > 0.5) {
+        // SLOW VFX - Frosted Crystalline Shell
+        if (e.slowFactor && e.slowFactor > 0.4) {
             ctx.save();
-            ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth = 2;
-            ctx.globalAlpha = 0.6;
+            const slowAmt = Math.min(1, (e.slowFactor - 0.4) * 2);
+            ctx.strokeStyle = '#67e8f9';
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.5 * slowAmt;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#06b6d4';
+
+            // Draw a slightly larger frozen shell
             ctx.beginPath();
-            ctx.arc(0, 0, e.size * 1.3, 0, Math.PI * 2);
+            ctx.arc(0, 0, e.size * 1.2, 0, Math.PI * 2);
             ctx.stroke();
-            for (let i = 0; i < 4; i++) {
-                const ang = (i * Math.PI / 2) + state.gameTime * 2;
+
+            // Ice shards/spikes around the shell
+            for (let i = 0; i < 6; i++) {
+                const ang = (i * Math.PI / 3) + state.gameTime;
                 ctx.beginPath();
-                ctx.moveTo(Math.cos(ang) * e.size, Math.sin(ang) * e.size);
-                ctx.lineTo(Math.cos(ang) * e.size * 1.5, Math.sin(ang) * e.size * 1.5);
+                ctx.moveTo(Math.cos(ang) * e.size * 1.1, Math.sin(ang) * e.size * 1.1);
+                ctx.lineTo(Math.cos(ang) * e.size * 1.4, Math.sin(ang) * e.size * 1.4);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // BERSERK / ENRAGED VFX (Triangle Elites / Enraged Zombies)
+        if ((e.shape === 'triangle' && e.isElite && e.eliteState === 1) || e.isEnraged) {
+            ctx.save();
+            const time = state.gameTime;
+            const rageColor = '#ef4444';
+            ctx.strokeStyle = rageColor;
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = rageColor;
+            ctx.globalAlpha = 0.4 + Math.sin(time * 15) * 0.2;
+
+            // Violent pulsing spikes
+            for (let i = 0; i < 6; i++) {
+                const ang = (i * Math.PI / 3) + time * 5;
+                const len = e.size * (1.2 + Math.random() * 0.3);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(ang) * len, Math.sin(ang) * len);
                 ctx.stroke();
             }
             ctx.restore();
@@ -321,23 +366,27 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.shadowColor = '#4ade80';
                 const zSize = e.size * 2;
                 if (e.zombieState === 'rising') {
-                    const timeLeft = (e.zombieTimer || 0) - (state.gameTime * 1000);
+                    const now = state.gameTime * 1000;
+                    const timeLeft = (e.zombieTimer || 0) - now;
                     const totalRiseTime = 1500;
                     const progress = 1 - Math.max(0, timeLeft / totalRiseTime);
-                    const shake = (1 - progress) * 8;
+                    const shake = (1 - progress) * 12;
                     ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
-                    ctx.fillStyle = '#5d4037';
-                    const particleCount = progress < 0.4 ? 10 : 5;
+
+                    // Improved Dirt Particles
+                    ctx.fillStyle = '#451a03';
+                    const particleCount = progress < 0.3 ? 15 : 5;
                     for (let i = 0; i < particleCount; i++) {
-                        const dr = Math.sin(i * 123 + state.gameTime * 20) * e.size * (1 + progress);
+                        const dr = Math.sin(i * 123 + state.gameTime * 20) * e.size * (1.2 + progress);
                         const da = i * (Math.PI * 2 / particleCount);
-                        ctx.fillRect(Math.cos(da) * dr, Math.sin(da) * dr, 4, 4);
+                        ctx.fillRect(Math.cos(da) * dr, Math.sin(da) * dr, 5, 5);
                     }
-                    if (progress > 0.4) {
-                        const zProgress = (progress - 0.4) / 0.6;
+
+                    if (progress > 0.3) {
+                        const zProgress = (progress - 0.3) / 0.7;
                         ctx.globalAlpha = zProgress;
-                        ctx.translate(0, (1 - zProgress) * 25);
-                        ctx.scale(zProgress, zProgress);
+                        ctx.translate(0, (1 - zProgress) * 35);
+                        ctx.scale(0.8 + 0.2 * zProgress, 0.8 + 0.2 * zProgress);
                         ctx.drawImage(zombieImg, -zSize / 2, -zSize / 2, zSize, zSize);
                     }
                 } else if (e.zombieState !== 'dead') {
@@ -412,8 +461,49 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // ELITE AURA - Disabled to fix visual leaks
-        // if (e.isElite) { ... }
+        // ELITE AURA - High Fidelity Digital Halo
+        if (e.isElite && !e.dead) {
+            ctx.save();
+            const time = state.gameTime;
+            const auraColor = e.eraPalette?.[0] || e.palette[0];
+            const pulse = 0.8 + Math.sin(time * 3) * 0.2;
+
+            ctx.strokeStyle = auraColor;
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = auraColor;
+            ctx.globalAlpha = 0.4 * pulse;
+
+            // Draw rotating hexagonal aura
+            ctx.save();
+            ctx.rotate(time * 0.5);
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const ang = (Math.PI / 3) * i;
+                const r = e.size * 1.8;
+                const px = Math.cos(ang) * r;
+                const py = Math.sin(ang) * r;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Subtle inner glow
+            ctx.globalAlpha = 0.1 * pulse;
+            ctx.fillStyle = auraColor;
+            ctx.fill();
+            ctx.restore();
+
+            // Decorative bits
+            for (let i = 0; i < 3; i++) {
+                const ang = (time * 2) + (i * Math.PI * 2 / 3);
+                const r = e.size * 2.2;
+                ctx.beginPath();
+                ctx.arc(Math.cos(ang) * r, Math.sin(ang) * r, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
 
         const pulse = 1.0 + (Math.sin(e.pulsePhase || 0) * 0.05);
         ctx.scale(pulse, pulse);
@@ -510,17 +600,17 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.closePath();
             } else if (e.shape === 'square') {
                 if (e.isElite && !isCore) {
-                    // Elite Square (Thorns): Draw Spiked Corners
-                    const spike = size * 0.4;
-                    const p1 = wp(-size, -size); const p1a = wp(0, -size - spike); // Top Spike
-                    const p2 = wp(size, -size); const p2a = wp(size + spike, 0); // Right Spike
-                    const p3 = wp(size, size); const p3a = wp(0, size + spike); // Bottom Spike
-                    const p4 = wp(-size, size); const p4a = wp(-size - spike, 0); // Left Spike
+                    // Elite Square (Thorns): Draw 8-pointed aggressive spiked corners
+                    const spike = size * 0.5;
+                    const inner = size * 0.7;
 
-                    ctx.moveTo(p1.x, p1.y); ctx.lineTo(p1a.x, p1a.y);
-                    ctx.lineTo(p2.x, p2.y); ctx.lineTo(p2a.x, p2a.y);
-                    ctx.lineTo(p3.x, p3.y); ctx.lineTo(p3a.x, p3a.y);
-                    ctx.lineTo(p4.x, p4.y); ctx.lineTo(p4a.x, p4a.y);
+                    for (let i = 0; i < 8; i++) {
+                        const ang = (i * Math.PI / 4) - Math.PI / 2;
+                        const isCorner = i % 2 === 0;
+                        const r = isCorner ? size * 1.3 : size + spike;
+                        const p = wp(Math.cos(ang) * r, Math.sin(ang) * r);
+                        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                    }
                     ctx.closePath();
                 } else {
                     const p1 = wp(-size, -size); const p2 = wp(size, -size); const p3 = wp(size, size); const p4 = wp(-size, size);
@@ -602,7 +692,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
 
 
-        if (e.critGlitchUntil && Date.now() < e.critGlitchUntil) {
+        if (e.critGlitchUntil && state.gameTime < e.critGlitchUntil) {
             ctx.save();
             const shift = 4 + Math.random() * 4;
             ctx.save(); ctx.translate(shift, 0); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#FF0000'; drawShape(e.size * 1.05); ctx.stroke(); ctx.restore();

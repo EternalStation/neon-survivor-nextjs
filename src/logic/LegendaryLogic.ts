@@ -387,6 +387,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
         }
 
         // Kinetic Battery Level 2: Immediate Shield
+        // Kinetic Battery Level 2+: Immediate Shield Refresh
         if (selection.type === 'KineticBattery' && selection.level >= 2) {
             state.player.kineticShieldTimer = 0;
         }
