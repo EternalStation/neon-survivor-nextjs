@@ -4,6 +4,7 @@ import type { GameState } from '../../logic/types';
 import { CANVAS_WIDTH } from '../../logic/constants';
 import { getHexMultiplier, getHexLevel } from '../../logic/LegendaryLogic';
 import { PLAYER_CLASSES } from '../../logic/classes';
+import { isBuffActive } from '../../logic/BlueprintLogic';
 
 interface PlayerStatusProps {
     gameState: GameState;
@@ -62,6 +63,8 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
                     if (!pClass) return null;
 
+                    const cdMod = isBuffActive(gameState, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+
                     let cdPct = 0; // 0 = Ready, 1 = Max Cooldown
                     let remainingDisplay = '';
                     let isReady = false;
@@ -73,7 +76,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     // Logic for specific classes
                     if (player.playerClass === 'stormstrike') {
                         show = true;
-                        const maxCd = 8000;
+                        const maxCd = 8000 * cdMod; // Apply reduction
                         const last = player.lastCosmicStrikeTime || 0;
                         const diff = nowMs - last;
                         if (diff >= maxCd) {
@@ -87,13 +90,14 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     } else if (player.playerClass === 'eventhorizon') {
                         show = true;
                         // blackholeCooldown is a timestamp in SECONDS
+                        // If logic sets it with reduction, we just need accurate maxCd for bar
                         const nextReady = player.blackholeCooldown || 0;
                         if (nowSec >= nextReady) {
                             cdPct = 0;
                             isReady = true;
                         } else {
                             const remaining = nextReady - nowSec;
-                            const maxCd = 10; // 10s static
+                            const maxCd = 10 * cdMod; // 10s static * mod
                             cdPct = Math.min(1, remaining / maxCd);
                             remainingDisplay = remaining.toFixed(1);
                         }
@@ -147,7 +151,23 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 </div>
                             </div>
 
-
+                            {/* CD Reduced Icon */}
+                            {cdMod < 1.0 && (
+                                <div style={{
+                                    position: 'absolute', top: -5, left: -5,
+                                    width: 14, height: 14,
+                                    background: '#22d3ee',
+                                    borderRadius: '50%',
+                                    border: '1px solid #fff',
+                                    boxShadow: '0 0 5px #22d3ee',
+                                    zIndex: 20,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }} title="Neural Overclock Active">
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                    </svg>
+                                </div>
+                            )}
                         </div>
                     );
                 })()}
@@ -211,8 +231,124 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         }}>
                             {skill.keyBind}
                         </div>
+
+                        {/* CD Reduced Icon */}
+                        {isBuffActive(gameState, 'NEURAL_OVERCLOCK') && (
+                            <div style={{
+                                position: 'absolute', top: -4, left: -4,
+                                width: 14, height: 14,
+                                background: '#22d3ee',
+                                borderRadius: '50%',
+                                border: '1px solid #fff',
+                                boxShadow: '0 0 5px #22d3ee',
+                                zIndex: 20,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }} title="Neural Overclock Active">
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                </svg>
+                            </div>
+                        )}
                     </div>
                 ))}
+
+                {(() => {
+                    const kinLvl = getHexLevel(gameState, 'KineticBattery');
+                    if (kinLvl <= 0) return null;
+
+                    const boltElapsed = gameState.gameTime - (player.lastKineticShockwave || 0);
+                    const boltCD = Math.max(0, 5.0 - boltElapsed);
+                    const boltPct = (boltCD / 5.0);
+
+                    const shieldTimeLeft = Math.max(0, (player.kineticShieldTimer || 0) - gameState.gameTime);
+                    const shieldPct = shieldTimeLeft / 60;
+
+                    return (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            {/* BOLT TIMER */}
+                            <div style={{ position: 'relative', width: 44, height: 44 }}>
+                                <div style={{
+                                    width: '100%', height: '100%',
+                                    backgroundColor: boltCD <= 0 ? '#3b82f6' : '#475569',
+                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: boltCD <= 0 ? '0 0 10px #3b82f6' : 'none'
+                                }}>
+                                    <div style={{
+                                        width: 'calc(100% - 3px)', height: 'calc(100% - 3px)',
+                                        backgroundColor: '#0f172a',
+                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                        position: 'relative'
+                                    }}>
+                                        <img src="/assets/hexes/DefBattery.png" alt="Kinetic Bolt" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+
+                                        {/* Cooldown Overlay */}
+                                        {boltCD > 0 && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${boltPct * 100}%`,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                                            }} />
+                                        )}
+
+                                        {/* Lightning Icon Overlay */}
+                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #3b82f6)' }}>
+                                            ⚡
+                                        </div>
+
+                                        {boltCD > 0 && (
+                                            <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                                {boltCD.toFixed(1)}s
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SHIELD TIMER (Lvl 2+) */}
+                            {kinLvl >= 2 && (
+                                <div style={{ position: 'relative', width: 44, height: 44 }}>
+                                    <div style={{
+                                        width: '100%', height: '100%',
+                                        backgroundColor: shieldTimeLeft <= 0 ? '#60a5fa' : '#475569',
+                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: shieldTimeLeft <= 0 ? '0 0 10px #60a5fa' : 'none'
+                                    }}>
+                                        <div style={{
+                                            width: 'calc(100% - 3px)', height: 'calc(100% - 3px)',
+                                            backgroundColor: '#0f172a',
+                                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                            position: 'relative'
+                                        }}>
+                                            <img src="/assets/hexes/DefBattery.png" alt="Kinetic Shield" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
+
+                                            {/* Cooldown Overlay */}
+                                            {shieldTimeLeft > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                    height: `${shieldPct * 100}%`,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                                                }} />
+                                            )}
+
+                                            {/* Shield Icon Overlay */}
+                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #60a5fa)' }}>
+                                                🛡️
+                                            </div>
+
+                                            {shieldTimeLeft > 0 && (
+                                                <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                                    {Math.ceil(shieldTimeLeft)}s
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* PASSIVE SKILLS (Example: Sonic Wave Counter) */}
                 {(() => {

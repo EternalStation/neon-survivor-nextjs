@@ -94,7 +94,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         trySpawnBlueprint(state, e.x, e.y);
     }
 
-    if (e.boss) {
+    if (e.boss && state.extractionStatus === 'none') {
         // Boss gives normal XP
         const xpBase = state.player.xp_per_kill.base;
         const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
@@ -105,131 +105,122 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         const finalXp = totalFlat * normalMult * hexMult;
         state.player.xp.current += finalXp;
 
-        state.legendaryOptions = getLegendaryOptions(state);
-        state.showLegendarySelection = true;
-        state.isPaused = true;
-        playSfx('rare-spawn');
         if (onEvent) onEvent('boss_kill');
     }
 
-    if (e.isRare && e.rareReal) {
-        playSfx('rare-kill');
-        state.rareSpawnActive = false;
-        state.snitchCaught++;
-        if (onEvent) onEvent('snitch_kill');
-    } else {
-        // Consolidated XP Logic (Matches PlayerLogic/ProjectileLogic advanced formula)
-        let xpBase = state.player.xp_per_kill.base;
+    if (state.extractionStatus === 'none') {
+        if (e.isRare && e.rareReal) {
+            playSfx('rare-kill');
+            state.rareSpawnActive = false;
+            state.snitchCaught++;
+            if (onEvent) onEvent('snitch_kill');
+        } else {
+            // Consolidated XP Logic (Matches PlayerLogic/ProjectileLogic advanced formula)
+            let xpBase = state.player.xp_per_kill.base;
 
-        if (e.xpRewardMult !== undefined) {
-            xpBase *= e.xpRewardMult;
-        } else if (e.isElite) {
-            xpBase *= 14; // Elite = 14x XP
+            if (e.xpRewardMult !== undefined) {
+                xpBase *= e.xpRewardMult;
+            } else if (e.isElite) {
+                xpBase *= 14; // Elite = 14x XP
+            }
+
+            if (state.currentArena === 0) xpBase *= 1.15; // +15% XP in Economic Hex
+
+            // Legendary XP Bonuses
+            const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
+            const hexPct = calculateLegendaryBonus(state, 'xp_pct_per_kill');
+
+            const totalFlat = xpBase + state.player.xp_per_kill.flat + hexFlat;
+            const normalMult = 1 + (state.player.xp_per_kill.mult / 100);
+            const hexMult = 1 + (hexPct / 100);
+
+            const finalXp = totalFlat * normalMult * hexMult;
+
+            state.player.xp.current += finalXp;
         }
-
-        if (state.currentArena === 0) xpBase *= 1.15; // +15% XP in Economic Hex
-
-        // Legendary XP Bonuses
-        const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
-        const hexPct = calculateLegendaryBonus(state, 'xp_pct_per_kill');
-
-        const totalFlat = xpBase + state.player.xp_per_kill.flat + hexFlat;
-        const normalMult = 1 + (state.player.xp_per_kill.mult / 100);
-        const hexMult = 1 + (hexPct / 100);
-
-        const finalXp = totalFlat * normalMult * hexMult;
-
-        state.player.xp.current += finalXp;
     }
 
-    // Necromancy: Only ComLife Lvl 4+ (10% Chance) - No Infection recycling
-    let shouldSpawnZombie = false;
-
-    // Direct check for ComLife level to ensure robustness
+    // Necromancy (Friendly): ComLife Lvl 4+ (10% Chance)
     let comLifeLevel = 0;
     if (state.moduleSockets && state.moduleSockets.hexagons) {
         const hex = state.moduleSockets.hexagons.find(h => h && (h.type === 'ComLife'));
         if (hex) comLifeLevel = hex.level;
-    }
-    // Fallback
-    if (comLifeLevel === 0) {
+    } else {
         comLifeLevel = getHexLevel(state, 'ComLife');
     }
 
-    if (!e.isZombie && !e.boss && !e.isRare) {
+    if (!e.isZombie && !e.isGhost && !e.boss && !e.isRare) {
+        // 1. Check for Friendly Zombie (ComLife)
         if (comLifeLevel >= 4) {
             if (Math.random() < 0.10) { // 10% Chance
-                shouldSpawnZombie = true;
+                const speedBoost = 1.0;
+                const crimsonRiseDelay = 5000;
+                const now = state.gameTime * 1000;
+                const zombie: Enemy = {
+                    id: Math.random(),
+                    type: e.type,
+                    shape: e.shape,
+                    x: e.x, y: e.y,
+                    size: e.size,
+                    hp: Math.floor(e.maxHp * 0.5),
+                    maxHp: Math.floor(e.maxHp * 0.5),
+                    spd: 1.92 * speedBoost,
+                    boss: false,
+                    bossType: 0,
+                    bossAttackPattern: 0,
+                    lastAttack: 0,
+                    dead: false,
+                    shellStage: 0,
+                    zombieTimer: now + crimsonRiseDelay,
+                    zombieSpd: 1.92 * speedBoost,
+                    palette: ['#4ade80', '#22c55e', '#166534'], // Undead Green
+                    pulsePhase: 0,
+                    rotationPhase: 0,
+                    isZombie: true, // Friendly
+                    zombieState: 'dead',
+                    vx: 0,
+                    vy: 0,
+                    knockback: { x: 0, y: 0 },
+                    frozen: 0,
+                    isElite: false,
+                    isRare: false,
+                    eraPalette: ['#4ade80', '#22c55e', '#166534'],
+                    fluxState: 0
+                } as any;
+                state.enemies.push(zombie);
+                // playSfx('zombie-consume'); // Removed per user request (no spawn sound)
             }
-        } else if (state.activeEvent?.type === 'necrotic_surge') {
-            shouldSpawnZombie = true; // 100% chance during surge
         }
-    }
 
-    if (shouldSpawnZombie) {
-        const isEventZombie = state.activeEvent?.type === 'necrotic_surge';
-        const riseDelay = isEventZombie ? 3000 : 2000; // 3s for event, 2s for normal
-        const speedBoost = isEventZombie ? 1.1 : 1.0; // 10% speed boost for event zombies
-
-        if (isEventZombie) {
-            // SCHEDULE HOSTILE EVENT ZOMBIE (Necrotic Surge)
-            // Instead of spawning immediately, schedule it to spawn after 3 seconds
-            if (!state.activeEvent!.pendingZombieSpawns) {
-                state.activeEvent!.pendingZombieSpawns = [];
+        // 2. Check for Hostile Ghost (Ghost Horde Event)
+        // MUST happen independently of friendlies
+        if (state.activeEvent?.type === 'necrotic_surge') {
+            // Schedule GHOST spawn
+            if (!state.activeEvent.pendingZombieSpawns) {
+                state.activeEvent.pendingZombieSpawns = [];
             }
-            state.activeEvent!.pendingZombieSpawns.push({
+            const riseDelay = 3000; // 3s delay
+            const speedBoost = 1.1; // 10% faster
+
+            state.activeEvent.pendingZombieSpawns.push({
                 x: e.x,
                 y: e.y,
                 shape: e.shape as ShapeType,
                 spd: e.spd * speedBoost,
                 maxHp: e.maxHp,
                 size: e.size,
-                spawnAt: state.gameTime + (riseDelay / 1000) // Spawn after 3 seconds
+                spawnAt: state.gameTime + (riseDelay / 1000)
             });
-        } else {
-            // FRIENDLY ZOMBIE (ComLife Legendary)
-            const crimsonRiseDelay = 5000; // 5 Seconds per request
-            const now = state.gameTime * 1000;
-            const zombie: Enemy = {
-                id: Math.random(),
-                type: e.type,
-                shape: e.shape, // Preserve shape of fallen enemy
-                x: e.x, y: e.y,
-                size: e.size,
-                hp: Math.floor(e.maxHp * 0.5), // 50% HP
-                maxHp: Math.floor(e.maxHp * 0.5),
-                spd: 1.92 * speedBoost,
-                boss: false,
-                bossType: 0,
-                bossAttackPattern: 0,
-                lastAttack: 0,
-                dead: false,
-                shellStage: 0,
-                zombieTimer: now + crimsonRiseDelay,
-                zombieSpd: 1.92 * speedBoost,
-                palette: ['#4ade80', '#22c55e', '#166534'], // Undead Green for ComLife
-                pulsePhase: 0,
-                rotationPhase: 0,
-                isZombie: true,
-                zombieState: 'dead', // Starts as corpse (Invisible/Waiting)
-                vx: 0,
-                vy: 0,
-                knockback: { x: 0, y: 0 },
-                frozen: 0,
-                isElite: false,
-                isRare: false,
-                eraPalette: ['#4ade80', '#22c55e', '#166534'],
-                fluxState: 0
-            } as any;
-            state.enemies.push(zombie);
         }
     }
 
     // Level Up Loop
-    while (state.player.xp.current >= state.player.xp.needed) {
-        state.player.xp.current -= state.player.xp.needed;
-        state.player.level++;
-        state.player.xp.needed *= 1.10;
-        if (onEvent) onEvent('level_up');
+    if (state.extractionStatus === 'none') {
+        while (state.player.xp.current >= state.player.xp.needed) {
+            state.player.xp.current -= state.player.xp.needed;
+            state.player.level++;
+            state.player.xp.needed *= 1.10;
+            if (onEvent) onEvent('level_up');
+        }
     }
 }

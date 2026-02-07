@@ -59,31 +59,29 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
 
 export function renderMapBoundaries(ctx: CanvasRenderingContext2D) {
     ctx.save();
+
+    // Defensive Reset: Ensure no leaked shadows or styles cause "blinking"
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.globalAlpha = 1.0;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    ctx.filter = 'none';
+
+    // Set Map Boundary Styles
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 30;
     ctx.globalAlpha = 0.3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Defensive Reset: Ensure no leaked shadows cause "blinking"
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = 'transparent';
-    ctx.filter = 'none';
+    ctx.beginPath();
+    ARENA_CENTERS.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
+    ctx.stroke();
 
-    ARENA_CENTERS.forEach(c => {
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const ang = Math.PI / 3 * i;
-            const hx = c.x + ARENA_RADIUS * Math.cos(ang);
-            const hy = c.y + ARENA_RADIUS * Math.sin(ang);
-            if (i === 0) ctx.moveTo(hx, hy);
-            else ctx.lineTo(hx, hy);
-        }
-        ctx.closePath();
-        ctx.stroke();
-    });
     ctx.restore();
 }
+
 
 
 // Reusable path builder for performance
@@ -121,6 +119,9 @@ export function renderArenaVignette(ctx: CanvasRenderingContext2D) {
     // Using 2 layers for better quality
 
     // Single pass "Glow"
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.setLineDash([]);
     ctx.lineWidth = 120;
     ctx.strokeStyle = 'rgba(2, 6, 23, 0.6)';
     ctx.beginPath();
@@ -152,12 +153,14 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.lineCap = 'round';
 
         if (state.portalState === 'warn') {
-            ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 10) * 0.5;
+            // Subtle pulse instead of aggressive flashing
+            ctx.globalAlpha = 0.7 + Math.sin(state.gameTime * 5) * 0.2;
             ctx.setLineDash([50, 50]);
             ctx.lineWidth = 10;
         } else {
+            // Solid, thick line for open state
             ctx.globalAlpha = 1.0;
-            ctx.lineWidth = 15 + Math.sin(state.gameTime * 20) * 5;
+            ctx.lineWidth = 18;
         }
 
         ctx.beginPath();

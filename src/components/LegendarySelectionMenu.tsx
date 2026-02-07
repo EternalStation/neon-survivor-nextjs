@@ -44,12 +44,12 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
         }}>
             <h1 style={{
                 fontSize: '3rem', color: '#fbbf24', textShadow: '0 0 20px #fbbf24',
-                letterSpacing: '10px', marginBottom: '50px'
+                letterSpacing: '10px', marginBottom: '50px', marginTop: '-60px'
             }}>
                 LEGENDARY UPGRADE
             </h1>
 
-            <div style={{ display: 'flex', gap: '30px' }}>
+            <div style={{ display: 'flex', gap: '20px' }}>
                 {options.map((opt, i) => {
                     const info = getLegendaryInfo(opt.category);
                     const isSelected = i === selectedIndex;
@@ -59,7 +59,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                             key={i}
                             onClick={() => onSelect(opt)}
                             style={{
-                                width: '320px', height: '480px',
+                                width: '280px', height: '510px',
                                 background: 'linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(10, 10, 20, 0.98) 100%)',
                                 border: isSelected ? `4px solid #fff` : `3px solid ${info.color}`,
                                 borderRadius: '15px',
@@ -83,7 +83,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                             </div>
 
                             <div style={{
-                                width: '220px', height: '220px',
+                                width: '180px', height: '180px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 marginBottom: '20px',
                                 position: 'relative',
@@ -104,7 +104,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                 )}
                             </div>
 
-                            <h2 style={{ color: info.color, fontSize: '1.4rem', textAlign: 'center', marginBottom: '15px', textShadow: `0 0 10px ${info.color}aa` }}>
+                            <h2 style={{ color: info.color, fontSize: '1.2rem', textAlign: 'center', marginBottom: '15px', textShadow: `0 0 10px ${info.color}aa` }}>
                                 {opt.name}
                             </h2>
 
@@ -118,9 +118,9 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                             justifyContent: 'center',
                                             gap: '8px',
                                             color: isNew ? '#fbbf24' : '#64748b',
-                                            fontSize: '0.85rem',
+                                            fontSize: '0.75rem',
                                             fontWeight: isNew ? '900' : '500',
-                                            padding: '6px 12px',
+                                            padding: '6px 8px',
                                             background: isNew ? 'rgba(251, 191, 36, 0.15)' : 'rgba(0,0,0,0.2)',
                                             borderRadius: '6px',
                                             border: isNew ? '1px solid rgba(251, 191, 36, 0.4)' : '1px solid rgba(255,255,255,0.05)',
@@ -158,9 +158,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                 })}
             </div>
 
-            <p style={{ marginTop: '40px', color: '#64748b', fontSize: '0.9rem' }}>
-                Recovered technology must be manually integrated in the Module Matrix.
-            </p>
+
 
             <style>{`
                 @keyframes legendaryPulse {
@@ -172,6 +170,6 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                     animation: legendaryPulse 2s infinite ease-in-out;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };

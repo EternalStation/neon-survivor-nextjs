@@ -63,7 +63,7 @@ export function updateParticles(state: GameState) {
         if (p.type === 'bubble' || p.type === 'vapor') {
             p.vy -= 0.01; // Acceleration up
             p.vx += (Math.random() - 0.5) * 0.05; // Jitter
-            p.alpha = p.life / 50; // Fade out
+            if (p.type === 'vapor') p.alpha = p.life / 50;
         } else if (p.type === 'void') {
             p.vx *= 0.9;
             p.vy *= 0.9;

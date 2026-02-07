@@ -188,7 +188,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                     minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
                     fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
                     background: 'transparent', border: '1px solid #334155', color: '#94a3b8', boxShadow: 'none'
-                }}>EXIT</button>
+                }}>MAIN MENU</button>
             </div>
 
             {/* Header Section - Shrinked title */}
@@ -196,10 +196,12 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 <div className="death-title" style={{
                     fontSize: 54,
                     marginBottom: 10,
-                    background: 'linear-gradient(to bottom, #fff 0%, #334155 100%)',
+                    background: gameState.extractionStatus === 'complete'
+                        ? 'linear-gradient(to bottom, #fff 0%, #10b981 100%)'
+                        : 'linear-gradient(to bottom, #fff 0%, #334155 100%)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                     fontWeight: 900, letterSpacing: 4, textAlign: 'center'
-                }}>SESSION TERMINATED</div>
+                }}>{gameState.extractionStatus === 'complete' ? 'MISSION COMPLETED' : 'SESSION TERMINATED'}</div>
 
                 <div className="death-tabs" style={{ marginBottom: 5, display: 'flex', justifyContent: 'center' }}>
                     <button className={`death-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')} style={{ padding: '6px 20px', fontSize: 14 }}>Overview</button>
@@ -241,8 +243,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                 <div style={{ width: 4, height: 16, background: '#10b981' }} /> SYSTEM FINALIZED
                             </div>
                             <StatItem label="Damage" value={Math.round(calcStat(gameState.player.dmg))} color="#fff" />
-                            <StatItem label="Attack Speed" value={(calcStat(gameState.player.atk) / 200).toFixed(1) + '/s'} color="#fff" />
-                            <StatItem label="XP Kill" value={finalXpPerKill} color="#fff" />
+                            <StatItem label="Attack Speed" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#fff" />
+                            <StatItem label="XP per Kill" value={finalXpPerKill} color="#fff" />
                             <StatItem label="Max HP" value={maxHp} color="#fff" />
                             <StatItem label="Regen" value={regen + '/s'} color="#10b981" />
                             <StatItem label="Armor" value={calcStat(gameState.player.arm).toFixed(1)} color="#3b82f6" subValue={`${armRed}% Reduc`} />

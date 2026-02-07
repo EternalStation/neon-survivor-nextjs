@@ -5,8 +5,8 @@ import { isInMap, ARENA_CENTERS, PORTALS, getHexWallLine, ARENA_RADIUS } from '.
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './constants';
 import { GAME_CONFIG } from './GameConfig';
 import { calcStat } from './MathUtils';
-import { playSfx } from './AudioLogic';
-import { calculateLegendaryBonus } from './LegendaryLogic';
+import { playSfx, fadeOutMusic } from './AudioLogic';
+import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from './LegendaryLogic';
 import { handleEnemyDeath } from './DeathLogic';
 import { spawnFloatingNumber } from './ParticleLogic';
 import { getDefenseReduction } from './MathUtils';
@@ -19,19 +19,20 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
 
     // Track player position history for laser prediction (last 60 frames = ~1 second at 60fps)
     if (!state.playerPosHistory) state.playerPosHistory = [];
-    state.playerPosHistory.unshift({ x: player.x, y: player.y, timestamp: Date.now() });
+    state.playerPosHistory.unshift({ x: player.x, y: player.y, timestamp: state.gameTime });
     if (state.playerPosHistory.length > GAME_CONFIG.PLAYER.HISTORY_LENGTH) state.playerPosHistory.pop();
 
     // Spawn Animation Logic
     if (state.spawnTimer > 0) {
         state.spawnTimer -= 1 / 60;
-        return;
+        if (state.spawnTimer > 0.3) return; // Allow movement in last 0.3s
     }
 
     // Movement
     let vx = 0, vy = 0;
 
-    const isStunned = player.stunnedUntil && Date.now() < player.stunnedUntil;
+    const chronoLvl = getHexLevel(state, 'ChronoPlating');
+    const isStunned = (player.stunnedUntil && state.gameTime < player.stunnedUntil) && !(chronoLvl >= 1); // Chrono Lvl 1: Cannot be Stunned
 
     // Movement Cancel Logic for Channeling (Epicenter)
     if (player.immobilized && !isStunned) {
@@ -136,13 +137,18 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
             const maxHp = calcStat(player.hp);
             const rawWallDmg = maxHp * GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
             const armor = calcStat(player.arm);
-            const armRedMult = 1 - getDefenseReduction(armor);
+            const drCap = chronoLvl >= 1 ? 0.97 : 0.95; // Chrono Lvl 1: 97% DR Cap
+            const armRedMult = 1 - getDefenseReduction(armor, drCap);
             let wallDmgAfterArmor = rawWallDmg * armRedMult;
 
             player.damageBlockedByArmor += (rawWallDmg - wallDmgAfterArmor);
             player.damageBlocked += (rawWallDmg - wallDmgAfterArmor);
 
             let wallDmg = wallDmgAfterArmor;
+
+            // Kinetic Battery: Trigger Zap on Wall Hit
+            const kinLvl = getHexLevel(state, 'KineticBattery');
+            if (kinLvl >= 1) triggerKineticBatteryZap(state, player, kinLvl);
 
             // Check Shield Chunks
             let absorbed = 0;
@@ -182,11 +188,40 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
                 // Blueprint: Temporal Guard (Lethal Hit Block)
                 if (isBuffActive(state, 'TEMPORAL_GUARD')) {
                     player.curHp = calcStat(player.hp);
-                    const randomArena = ARENA_CENTERS[Math.floor(Math.random() * ARENA_CENTERS.length)];
-                    player.x = randomArena.x;
-                    player.y = randomArena.y;
+
+                    // Teleport to random safe location (min 2500u offset)
+                    let foundSafe = false;
+                    let safeX = player.x;
+                    let safeY = player.y;
+                    let attempts = 0;
+                    while (!foundSafe && attempts < 20) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 2500 + Math.random() * 1500; // 2500-4000
+                        const cx = player.x + Math.cos(angle) * dist;
+                        const cy = player.y + Math.sin(angle) * dist;
+                        if (isInMap(cx, cy)) {
+                            safeX = cx;
+                            safeY = cy;
+                            foundSafe = true;
+                        }
+                        attempts++;
+                    }
+                    if (!foundSafe) {
+                        // Fallback to center if map is too tight or bad luck
+                        const center = ARENA_CENTERS.find(c => c.id === state.currentArena) || ARENA_CENTERS[0];
+                        safeX = center.x;
+                        safeY = center.y;
+                    }
+
+                    player.x = safeX;
+                    player.y = safeY;
                     state.activeBlueprintBuffs.TEMPORAL_GUARD = 0; // Consume
                     player.temporalGuardActive = false;
+
+                    const now = state.gameTime;
+                    player.invincibleUntil = now + 1.5;
+                    player.phaseShiftUntil = now + 1.5;
+
                     spawnFloatingNumber(state, player.x, player.y, "TEMPORAL GUARD ACTIVATED", '#60a5fa', true);
                     playSfx('rare-spawn');
                 } else {
@@ -221,24 +256,36 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     // Calculate and assign Hex bonuses to player stats for this frame
     player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill');
     player.hp.hexMult = calculateLegendaryBonus(state, 'hp_pct_per_kill');
+    player.hp.hexMult2 = 0;
+
     player.reg.hexFlat = calculateLegendaryBonus(state, 'reg_per_kill');
     player.reg.hexMult = calculateLegendaryBonus(state, 'reg_pct_per_kill');
-    player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill'); // Assuming arm hex exists? If not, 0 is fine.
+    player.reg.hexMult2 = 0;
+
+    player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill') + (player.chronoArmorBonus || 0);
     player.arm.hexMult = calculateLegendaryBonus(state, 'arm_pct_per_kill');
+    player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_missing_hp');
+
     player.dmg.hexFlat = calculateLegendaryBonus(state, 'dmg_per_kill');
-    player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill');
+    player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill') + calculateLegendaryBonus(state, 'dmg_pct_per_hp');
+    player.dmg.hexMult2 = 0;
+
     player.atk.hexFlat = calculateLegendaryBonus(state, 'ats_per_kill');
     player.atk.hexMult = calculateLegendaryBonus(state, 'ats_pct_per_kill');
+    player.atk.hexMult2 = 0;
 
-    // Regen
-    let maxHp = calcStat(player.hp);
-    let regenAmount = calcStat(player.reg) / 60;
-
+    // Arena Buffs (Multiplier based)
+    let arenaBuff = 1.0;
     if (state.currentArena === 2) {
         const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
-        maxHp *= (1 + 0.2 * surgeMult); // +20% (or +40%) Max HP in Defence Hex
-        regenAmount *= (1 + 0.2 * surgeMult); // +20% (or +40%) Regen in Defence Hex
+        const stasisDebuff = isBuffActive(state, 'STASIS_FIELD') ? 0.8 : 1.0; // Enemy speed handled in EnemyLogic, but maybe relevant here? No.
+        arenaBuff = 1 + (0.2 * surgeMult);
     }
+    state.arenaBuffMult = arenaBuff;
+
+    // Regen
+    let maxHp = calcStat(player.hp, state.arenaBuffMult);
+    let regenAmount = (calcStat(player.reg, state.arenaBuffMult) / 60);
 
     if (player.buffs?.puddleRegen) {
         maxHp *= 1.25; // +25% Max HP in Puddle (Lvl 3)
@@ -248,12 +295,205 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     // Overclocker System Surge Buff decaying is handled in useGame loop usually, 
     // but we check for it in stat calcs if we modify them there.
     // Actually we'll modify PlayerLogic to apply surge bonuses here.
-    if (player.buffs?.systemSurge && Date.now() < player.buffs.systemSurge.end) {
+    if (player.buffs?.systemSurge && state.gameTime < player.buffs.systemSurge.end) {
         const surge = player.buffs.systemSurge;
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
-        // Speed is multiplied directly in some places, but we can't easily mult it here without compounding.
-        // We'll handle speed by adding to a temporary mult if we had one.
-        // For now let's just use the current logic.
+    }
+
+    // --- BOSS ARTIFACTS (Arena Drops) ---
+    // --- LEGENDARY HEX LOGIC (New System) ---
+
+    // KINETIC BATTERY (Defense - Arena 2)
+    const kinLvl = getHexLevel(state, 'KineticBattery');
+    if (kinLvl >= 1) {
+        // Lvl 2: Gain Shield (500% Armor) refreshing every minute
+        if (kinLvl >= 2) {
+            if (!player.kineticShieldTimer || state.gameTime > player.kineticShieldTimer) {
+                const totalArmor = calcStat(player.arm);
+                const shieldAmount = totalArmor * 5;
+                if (!player.shieldChunks) player.shieldChunks = [];
+                player.shieldChunks.push({ amount: shieldAmount, expiry: state.gameTime + 60 });
+                player.kineticShieldTimer = state.gameTime + 60;
+                spawnFloatingNumber(state, player.x, player.y, "SHIELD RECHARGE", '#3b82f6', true);
+            }
+        }
+        // Lvl 4: 0.5% of armour goes to hp/sec
+        if (kinLvl >= 4) {
+            const totalArmor = calcStat(player.arm);
+            const bonusRegen = totalArmor * 0.005;
+
+            // Note: We use hexMult2 to show this in the UI
+            const baseRegenSum = player.reg.base + player.reg.flat + (player.reg.hexFlat || 0);
+            if (baseRegenSum > 0) {
+                player.reg.hexMult2 = (bonusRegen / baseRegenSum) * 100;
+            } else {
+                player.reg.hexFlat = (player.reg.hexFlat || 0) + bonusRegen;
+            }
+        }
+    }
+
+    // CHRONO PLATING (Economic - Arena 0)
+
+
+    // Lvl 3: Double Armor every 5 minutes (Handled here)
+    if (chronoLvl >= 3) {
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
+        const startTime = chronoHex?.timeAtLevel?.[3] ?? state.gameTime;
+        const elapsed = state.gameTime - startTime;
+        const index = Math.floor(elapsed / 300);
+
+        // Initialize if undefined
+        if (player.lastChronoDoubleIndex === undefined) {
+            player.lastChronoDoubleIndex = 0;
+        }
+
+        if (index > player.lastChronoDoubleIndex) {
+            player.lastChronoDoubleIndex = index;
+            const currentTotal = calcStat(player.arm);
+            player.chronoArmorBonus = (player.chronoArmorBonus || 0) + currentTotal;
+            spawnFloatingNumber(state, player.x, player.y, "ARMOR DOUBLED!", '#60a5fa', true);
+            playSfx('level');
+        }
+    }
+
+    // Lvl 4: Cooldown Reduction
+    if (chronoLvl >= 4) {
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
+        const startTime = chronoHex?.timeAtLevel?.[4] ?? state.gameTime;
+        const elapsed = state.gameTime - startTime;
+        const minutes = Math.floor(elapsed / 60);
+        const m = getHexMultiplier(state, 'ChronoPlating');
+        player.cooldownReduction = minutes * 0.0025 * m;
+    } else {
+        player.cooldownReduction = 0;
+    }
+
+    // --- Kinetic Battery Skill Sync ---
+    const kinSkill = player.activeSkills.find(s => s.type === 'KineticBattery');
+    if (kinSkill) {
+        // We have two cooldowns: Bolt (5s) and Shield (60s)
+        // Let's use the bolt cooldown for the main progress if it's counting down, 
+        // otherwise show the shield maybe?
+        // User said: "as those both are same skill we can use same png... shield icon will mean shield and a lightin icon will mean bolt"
+        // I will handle this in HUD/PlayerStatus. For now, just sync the numbers.
+        const boltElapsed = state.gameTime - (player.lastKineticShockwave || 0);
+        const boltCD = Math.max(0, 5.0 - boltElapsed);
+        kinSkill.cooldown = boltCD;
+        kinSkill.cooldownMax = 5.0;
+    }
+
+
+
+    // RADIATION CORE (Combat - Arena 1)
+    const radLvl = getHexLevel(state, 'RadiationCore');
+    if (radLvl >= 1) {
+        // Run Logic every 10 frames (0.16s)
+        if (state.frameCount % 10 === 0) {
+            const m = getHexMultiplier(state, 'RadiationCore');
+            const range = 500;
+            // Lvl 1: 5-25% Max HP/sec
+            // Lvl 3: +1% Dmg per 1% Missing HP
+            let dmgAmp = 1.0 * m;
+            if (radLvl >= 3) {
+                const missing = 1 - (player.curHp / maxHp);
+                if (missing > 0) dmgAmp += missing; // +100% at 0 HP
+            }
+
+            const maxDmgPct = 0.10 * dmgAmp;
+            const minDmgPct = 0.05 * dmgAmp;
+            const playerMaxHp = calcStat(player.hp);
+            const enemiesInAura: Enemy[] = [];
+
+            state.enemies.forEach(e => {
+                if (e.dead || e.isNeutral) return;
+
+                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                let tickDmg = 0;
+
+                // Level 4: Global Decay (1% ENEMY Max HP/sec map-wide - Consistent with Lvl 1 Aura)
+                if (radLvl >= 4) {
+                    const globalDmgPerSec = e.maxHp * 0.01 * dmgAmp;
+                    const globalDmgPerTick = globalDmgPerSec / 6;
+                    tickDmg += globalDmgPerTick;
+                }
+
+                if (d < range) {
+                    enemiesInAura.push(e);
+                    const distFactor = 1 - (d / range);
+                    const auraPct = minDmgPct + (distFactor * (maxDmgPct - minDmgPct));
+
+                    // Level 1: Aura damage is based on PLAYER Max HP
+                    const auraDmgPerSec = playerMaxHp * auraPct;
+                    const auraDmgPerTick = auraDmgPerSec / 6;
+
+                    tickDmg += auraDmgPerTick;
+                }
+
+                if (tickDmg > 0) {
+                    // Respect Legion Shields
+                    let finalTickDmg = tickDmg;
+                    if (e.legionId) {
+                        const lead = state.legionLeads?.[e.legionId];
+                        if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                            const shieldAbsorp = Math.min(finalTickDmg, lead.legionShield || 0);
+                            lead.legionShield = (lead.legionShield || 0) - shieldAbsorp;
+                            finalTickDmg -= shieldAbsorp;
+                            if (shieldAbsorp > 0 && d < 1000 && Math.random() < 0.1) {
+                                spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
+                            }
+                        }
+                    }
+
+                    if (finalTickDmg > 0) {
+                        e.hp -= finalTickDmg;
+                        player.damageDealt += finalTickDmg;
+
+                        // Unified Floating Damage Numbers (Aura + Global Decay)
+                        // Stagger visibility: show total per-second dmg every 0.5s or if it's the proximity aura
+                        const isAuraSource = d < range;
+                        const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (Math.floor(state.gameTime * 2) > Math.floor((state.gameTime - 1 / 60) * 2));
+
+                        if (shouldShowText) {
+                            // Map-wide decay shows up as a lighter green or with a "Decay" tint if outside aura
+                            const color = isAuraSource ? '#22c55e' : '#4ade80';
+                            spawnFloatingNumber(state, e.x, e.y, Math.round(tickDmg * 6).toString(), color, false);
+                        }
+
+                        if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
+                    }
+                }
+            });
+
+            // Lvl 2: Heal 0.2% Player Max HP/sec per enemy in aura
+            if (radLvl >= 2 && enemiesInAura.length > 0) {
+                const healPerEnemy = playerMaxHp * (0.002 * m) / 6; // 0.2% per sec
+                const totalHeal = healPerEnemy * enemiesInAura.length;
+                player.curHp = Math.min(maxHp, player.curHp + totalHeal);
+            }
+        }
+
+        // Spawn Boiling Bubbles (World-space particles)
+        // Amount reduced by 50% (every 10 frames instead of every frame)
+        if (state.frameCount % 10 === 0) {
+            const range = 500;
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * range;
+            const bx = player.x + Math.cos(angle) * dist;
+            const by = player.y + Math.sin(angle) * dist;
+
+            state.particles.push({
+                x: bx,
+                y: by,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                life: 60,
+                maxLife: 60,
+                color: '#bef264',
+                size: 6 + Math.random() * 8,
+                type: 'bubble',
+                alpha: 0.5
+            });
+        }
     }
 
     player.curHp = Math.min(maxHp, player.curHp + regenAmount);
@@ -296,7 +536,7 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
 
         if (dToE < contactDist) {
             // Check collision cooldown (prevent damage every frame)
-            const now = Date.now();
+            const now = state.gameTime;
             // Apply Contact Damage to Player
             // Default: 15% of enemy max HP, or custom if set. Neutral objects (barrels) deal 0 dmg.
             let rawDmg = 0;
@@ -350,7 +590,12 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
                     // Scale custom damage by current health percentage if it was originally based on maxHp
                     rawDmg = (e.hp / e.maxHp) * e.customCollisionDmg;
                 } else {
-                    rawDmg = e.hp * GAME_CONFIG.ENEMY.CONTACT_DAMAGE_PERCENT;
+                    // NEW COLLISION FORMULA: Power Scaling
+                    // Damage scales with Enemy HP but diminishingly (Square Root-ish)
+                    // Min 0 (60 HP) -> ~12 Dmg
+                    // Min 30 (50k HP) -> ~660 Dmg
+                    // Boss (500k HP) -> ~2600 Dmg
+                    rawDmg = Math.pow(e.maxHp, GAME_CONFIG.ENEMY.COLLISION_POWER_SCALING);
                 }
             }
 
@@ -359,7 +604,13 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
             }
 
             const armorValue = calcStat(player.arm);
-            const armRedMult = 1 - getDefenseReduction(armorValue);
+            const drCap = 0.95;
+            const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
+
+            // Kinetic Battery Lvl 1: Retaliation Shockwave
+            if (kinLvl >= 1 && dToE < contactDist) {
+                triggerKineticBatteryZap(state, player, kinLvl);
+            }
 
             const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill');
             const colRed = Math.min(80, colRedRaw); // Cap at 80% reduction
@@ -380,6 +631,12 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
             if (player.buffs?.epicenterShield && player.buffs.epicenterShield > 0) {
                 player.damageBlocked += reducedDmg;
                 player.damageBlockedByCollisionReduc += reducedDmg;
+                reducedDmg = 0;
+            }
+
+            // Invincibility (Temporal Guard, etc.)
+            if (player.invincibleUntil && state.gameTime < player.invincibleUntil) {
+                player.damageBlocked += reducedDmg;
                 reducedDmg = 0;
             }
 
@@ -420,8 +677,8 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
 
             // Stun Logic
             if (e.stunOnHit) {
-                const currentStunEnd = Math.max(Date.now(), player.stunnedUntil || 0);
-                player.stunnedUntil = currentStunEnd + 1000; // Stack 1 second
+                const currentStunEnd = Math.max(state.gameTime, player.stunnedUntil || 0);
+                player.stunnedUntil = currentStunEnd + 1.0; // Stack 1 second
                 playSfx('stun-disrupt'); // "Engine Disabled" sound
             }
 
@@ -455,11 +712,40 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
                 // Blueprint: Temporal Guard (Lethal Hit Block)
                 if (isBuffActive(state, 'TEMPORAL_GUARD')) {
                     player.curHp = calcStat(player.hp);
-                    const randomArena = ARENA_CENTERS[Math.floor(Math.random() * ARENA_CENTERS.length)];
-                    player.x = randomArena.x;
-                    player.y = randomArena.y;
+
+                    // Teleport to random safe location (min 2500u offset)
+                    let foundSafe = false;
+                    let safeX = player.x;
+                    let safeY = player.y;
+                    let attempts = 0;
+                    while (!foundSafe && attempts < 20) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 2500 + Math.random() * 1500; // 2500-4000
+                        const cx = player.x + Math.cos(angle) * dist;
+                        const cy = player.y + Math.sin(angle) * dist;
+                        if (isInMap(cx, cy)) {
+                            safeX = cx;
+                            safeY = cy;
+                            foundSafe = true;
+                        }
+                        attempts++;
+                    }
+                    if (!foundSafe) {
+                        // Fallback to center
+                        const center = ARENA_CENTERS.find(c => c.id === state.currentArena) || ARENA_CENTERS[0];
+                        safeX = center.x;
+                        safeY = center.y;
+                    }
+
+                    player.x = safeX;
+                    player.y = safeY;
                     state.activeBlueprintBuffs.TEMPORAL_GUARD = 0; // Consume
                     player.temporalGuardActive = false;
+
+                    const now = state.gameTime;
+                    player.invincibleUntil = now + 1.5;
+                    player.phaseShiftUntil = now + 1.5;
+
                     spawnFloatingNumber(state, player.x, player.y, "TEMPORAL GUARD ACTIVATED", '#60a5fa', true);
                     playSfx('rare-spawn');
                 } else {
@@ -484,10 +770,169 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
                     }
 
                     if (onEvent) onEvent('game_over');
+                    fadeOutMusic(7.0);
                 }
             }
         }
     });
+
+    // --- PROCESS PENDING ZAPS (Kinetic Battery) ---
+    if (state.pendingZaps && state.pendingZaps.length > 0) {
+        for (let i = state.pendingZaps.length - 1; i >= 0; i--) {
+            const zap = state.pendingZaps[i];
+            if (state.gameTime >= zap.nextZapTime) {
+                const targetId = zap.targetIds[zap.currentIndex];
+                const target = state.enemies.find(e => e.id === targetId);
+
+                if (target && !target.dead) {
+                    // Apply Damage
+                    target.hp -= zap.dmg;
+                    spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
+                    if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
+
+                    // Visual: Straight Lightning with 10-frame life
+                    spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 10);
+
+                    if (!zap.history) zap.history = [];
+                    zap.history.push({ x1: zap.sourcePos.x, y1: zap.sourcePos.y, x2: target.x, y2: target.y });
+
+                    // Impact visuals
+                    state.particles.push({
+                        x: target.x, y: target.y, vx: 0, vy: 0, life: 10,
+                        color: '#60a5fa', size: 20, type: 'shockwave', alpha: 0.8
+                    });
+
+                    // Prepare for next target
+                    zap.currentIndex++;
+                    zap.nextZapTime = state.gameTime + 0.016; // ~1 frame at 60fps
+                    zap.sourcePos = { x: target.x, y: target.y }; // Jump from this enemy center
+
+                    if (zap.currentIndex >= zap.targetIds.length) {
+                        state.pendingZaps.splice(i, 1);
+                    }
+                } else {
+                    // Target lost or dead, skip to next in chain immediately
+                    zap.currentIndex++;
+                    if (zap.currentIndex >= zap.targetIds.length) {
+                        state.pendingZaps.splice(i, 1);
+                    } else {
+                        zap.nextZapTime = state.gameTime;
+                    }
+                }
+            }
+        }
+    }
+
+    // Attach trigger function for other modules (Projectile/UniqueEnemy)
+    if (!(state as any).triggerKineticBatteryZap) {
+        (state as any).triggerKineticBatteryZap = triggerKineticBatteryZap;
+        (window as any).triggerKineticBatteryZap = triggerKineticBatteryZap;
+    }
+}
+
+export function triggerKineticBatteryZap(state: GameState, source: { x: number, y: number }, kinLvl: number) {
+    const now = state.gameTime;
+    if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + 5.0) return;
+
+    state.player.lastKineticShockwave = now;
+    const totalArmor = calcStat(state.player.arm);
+    const shockDmg = totalArmor * 5;
+
+    // Find first target
+    let first: Enemy | null = null;
+    let minD = Infinity;
+    state.enemies.forEach(target => {
+        if (target.dead || target.isNeutral) return;
+        const d = Math.hypot(target.x - source.x, target.y - source.y);
+        if (d < minD) { minD = d; first = target; }
+    });
+
+    if (first) {
+        if (!state.pendingZaps) state.pendingZaps = [];
+        const targetIds: number[] = [(first as Enemy).id];
+        let currentInChain: Enemy = first;
+        for (let i = 0; i < 9; i++) {
+            let best: Enemy | null = null;
+            let bestD = Infinity;
+            state.enemies.forEach((cand: Enemy) => {
+                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id)) return;
+                const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
+                if (d < bestD) { bestD = d; best = cand; }
+            });
+            if (best) {
+                targetIds.push((best as Enemy).id);
+                currentInChain = best;
+            } else break;
+        }
+
+        state.pendingZaps.push({
+            targetIds,
+            dmg: shockDmg,
+            nextZapTime: now,
+            currentIndex: 0,
+            sourcePos: { x: source.x, y: source.y },
+            history: []
+        });
+        playSfx('wall-shock');
+    }
+}
+
+function spawnLightning(state: GameState, x1: number, y1: number, x2: number, y2: number, color: string, isBranch: boolean = false, isStraight: boolean = false, lifeOverride?: number) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    // Fewer segments for straight lines, more for branches
+    const segments = isStraight ? Math.max(1, Math.floor(dist / 80)) : Math.max(2, Math.floor(dist / 40));
+
+    let lastX = x1;
+    let lastY = y1;
+
+    for (let i = 1; i <= segments; i++) {
+        const t = i / segments;
+        let targetX = x1 + (x2 - x1) * t;
+        let targetY = y1 + (y2 - y1) * t;
+
+        if (i < segments && !isStraight) {
+            const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2;
+            const jitterAmount = (Math.random() - 0.5) * (isBranch ? 30 : 60);
+            targetX += Math.cos(angle) * jitterAmount;
+            targetY += Math.sin(angle) * jitterAmount;
+        }
+
+        // Spawn visual segments
+        const segDist = Math.hypot(targetX - lastX, targetY - lastY);
+        const dots = Math.floor(segDist / 2);
+        for (let j = 0; j < dots; j++) {
+            const tt = j / dots;
+            const px = lastX + (targetX - lastX) * tt;
+            const py = lastY + (targetY - lastY) * tt;
+
+            state.particles.push({
+                x: px, y: py, vx: 0, vy: 0,
+                life: lifeOverride || 6, color: '#fff',
+                size: 0.2, type: 'spark', alpha: 1.0
+            });
+
+            state.particles.push({
+                x: px, y: py, vx: 0, vy: 0,
+                life: lifeOverride ? lifeOverride + 2 : 8, color: color,
+                size: isBranch ? 0.8 : 1.5, type: 'spark', alpha: 0.4
+            });
+        }
+
+        // Decorative tiny branches (only on main straight lines)
+        if (isStraight && !isBranch) {
+            const branchCount = Math.floor(Math.random() * 5) + 2; // 2-6 branches per segment
+            for (let b = 0; b < branchCount; b++) {
+                if (Math.random() < 0.9) {
+                    const angle = Math.atan2(y2 - y1, x2 - x1) + (Math.random() - 0.5) * 4.0;
+                    const len = 15 + Math.random() * 45;
+                    spawnLightning(state, targetX, targetY, targetX + Math.cos(angle) * len, targetY + Math.sin(angle) * len, color, true, false, 6);
+                }
+            }
+        }
+
+        lastX = targetX;
+        lastY = targetY;
+    }
 }
 
 // Helper to check if point is inside an active portal trigger zone (ignoring wall collision)

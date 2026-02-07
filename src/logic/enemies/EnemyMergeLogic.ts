@@ -83,7 +83,10 @@ export function manageMerges(state: GameState) {
             if (!host) return;
             host.mergeState = 'none'; host.isElite = true; host.eliteState = 0;
             host.spawnedAt = state.gameTime;
-            host.lastAttack = Date.now() + 3000;
+            host.lastAttack = state.gameTime + 3.0;
+            host.isFlanker = Math.random() < 0.10; // Re-roll or ensure 10% for elites
+            host.flankAngle = Math.random() * Math.PI * 2;
+            host.flankDistance = 450 + Math.random() * 200; // Elites stay a bit further?
             host.size *= GAME_CONFIG.ENEMY.MERGE_SIZE_MULT;
             const mult = host.shape === 'pentagon' ? GAME_CONFIG.ENEMY.MERGE_HP_MULT_PENTAGON : GAME_CONFIG.ENEMY.MERGE_HP_MULT_DEFAULT;
             const xpMult = host.shape === 'pentagon' ? GAME_CONFIG.ENEMY.MERGE_XP_MULT_PENTAGON : GAME_CONFIG.ENEMY.MERGE_XP_MULT_DEFAULT;

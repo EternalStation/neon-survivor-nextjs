@@ -18,7 +18,7 @@ interface PerkDef {
 
 const PERK_POOLS: Record<number, PerkDef[]> = {
     1: [
-        { id: 'base_efficiency', description: 'Base Efficiency Boost', min: 2, max: 5 }
+        { id: 'base_efficiency', description: 'Base Efficiency Boost', min: 3, max: 5 }
     ],
     2: [
         { id: 'neighbor_any_all', description: 'Efficiency per neighboring meteorite (Any)', min: 3, max: 6 }
@@ -37,7 +37,10 @@ const PERK_POOLS: Record<number, PerkDef[]> = {
         { id: 'neighbor_bro_com', description: 'Efficiency per neighboring BROKEN meteorite from COM arena', min: 4, max: 10 },
         { id: 'neighbor_new_def', description: 'Efficiency per neighboring PRISTINE meteorite from DEF arena', min: 4, max: 10 },
         { id: 'neighbor_dam_def', description: 'Efficiency per neighboring DAMAGED meteorite from DEF arena', min: 4, max: 10 },
-        { id: 'neighbor_bro_def', description: 'Efficiency per neighboring BROKEN meteorite from DEF arena', min: 4, max: 10 }
+        { id: 'neighbor_bro_def', description: 'Efficiency per neighboring BROKEN meteorite from DEF arena', min: 4, max: 10 },
+        { id: 'neighbor_cor_eco', description: 'Efficiency per neighboring CORRUPTED meteorite from ECO arena', min: 6, max: 12 },
+        { id: 'neighbor_cor_com', description: 'Efficiency per neighboring CORRUPTED meteorite from COM arena', min: 6, max: 12 },
+        { id: 'neighbor_cor_def', description: 'Efficiency per neighboring CORRUPTED meteorite from DEF arena', min: 6, max: 12 }
     ],
     5: [
         { id: 'neighbor_leg_any', description: 'Efficiency per (Any) neighboring Legendary Hex', min: 6, max: 15 }
@@ -73,20 +76,20 @@ import { SECTOR_NAMES } from './MapLogic';
 // Time-based Rarity Weights (Percentages)
 // [MinTime, MaxTime, [Lvl1, Lvl2, ..., Lvl9]]
 // Time in Minutes
-const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
-    { min: 0, max: 5, weights: [1.33, 0.83, 0.33, 0, 0, 0, 0, 0, 0] },
-    { min: 5, max: 10, weights: [1.08, 0.74, 0.41, 0.17, 0, 0, 0, 0, 0] },
-    { min: 10, max: 15, weights: [0.82, 0.66, 0.49, 0.25, 0.08, 0, 0, 0, 0] },
-    { min: 15, max: 20, weights: [0.57, 0.57, 0.49, 0.33, 0.16, 0.08, 0, 0, 0] },
-    { min: 20, max: 25, weights: [0.32, 0.48, 0.48, 0.40, 0.24, 0.09, 0.09, 0, 0] },
-    { min: 25, max: 30, weights: [0, 0.40, 0.48, 0.48, 0.32, 0.16, 0.12, 0.04, 0] },
-    { min: 30, max: 35, weights: [0, 0, 0.40, 0.47, 0.40, 0.24, 0.20, 0.12, 0.08] },
-    { min: 35, max: 40, weights: [0, 0, 0, 0.38, 0.38, 0.31, 0.27, 0.19, 0.12] },
-    { min: 40, max: 45, weights: [0, 0, 0, 0, 0.39, 0.35, 0.35, 0.35, 0.27] },
-    { min: 45, max: 50, weights: [0, 0, 0, 0, 0.30, 0.34, 0.38, 0.34, 0.23] },
-    { min: 50, max: 55, weights: [0, 0, 0, 0, 0, 0.30, 0.37, 0.41, 0.41] },
-    { min: 55, max: 60, weights: [0, 0, 0, 0, 0, 0.22, 0.32, 0.40, 0.36] },
-    { min: 60, max: 9999, weights: [0, 0, 0, 0, 0, 0, 0.27, 0.40, 0.33] }
+export const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
+    { min: 0, max: 5, weights: [5.3, 3.4, 1.3, 0, 0, 0, 0, 0, 0] },
+    { min: 5, max: 10, weights: [4.5, 3.1, 1.7, 0.7, 0, 0, 0, 0, 0] },
+    { min: 10, max: 15, weights: [3.5, 2.9, 2.1, 1.1, 0.4, 0, 0, 0, 0] },
+    { min: 15, max: 20, weights: [2.6, 2.6, 2.2, 1.5, 0.7, 0.4, 0, 0, 0] },
+    { min: 20, max: 25, weights: [1.5, 2.3, 2.3, 1.9, 1.1, 0.5, 0.4, 0, 0] },
+    { min: 25, max: 30, weights: [0, 2.0, 2.4, 2.4, 1.6, 0.8, 0.6, 0.2, 0] },
+    { min: 30, max: 35, weights: [0, 0, 2.1, 2.5, 2.1, 1.3, 1.0, 0.6, 0.4] },
+    { min: 35, max: 40, weights: [0, 0, 0, 2.3, 2.3, 1.9, 1.6, 1.2, 0.7] },
+    { min: 40, max: 45, weights: [0, 0, 0, 0, 2.3, 2.0, 2.0, 2.0, 1.7] },
+    { min: 45, max: 50, weights: [0, 0, 0, 0, 1.9, 2.1, 2.4, 2.1, 1.5] },
+    { min: 50, max: 55, weights: [0, 0, 0, 0, 0, 2.0, 2.5, 2.75, 2.75] },
+    { min: 55, max: 60, weights: [0, 0, 0, 0, 0, 1.7, 2.5, 3.1, 2.7] },
+    { min: 60, max: 9999, weights: [0, 0, 0, 0, 0, 0, 2.7, 4.0, 3.3] }
 ];
 
 const RARITY_LIST: MeteoriteRarity[] = ['scrap', 'anomalous', 'quantum', 'astral', 'radiant', 'void', 'eternal', 'divine', 'singularity'];
@@ -126,8 +129,17 @@ function getRandomRarity(state: GameState): MeteoriteRarity {
 export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: number = 0, y: number = 0): Meteorite {
     const stats: Meteorite['stats'] = {};
 
-    const qualities: import('./types').MeteoriteQuality[] = ['Broken', 'Damaged', 'New'];
-    const quality = qualities[Math.floor(Math.random() * qualities.length)];
+    const rand = Math.random();
+    let quality: import('./types').MeteoriteQuality = 'Broken';
+    if (rand < 0.03) {
+        quality = 'Corrupted';
+    } else if (rand < 0.15) {
+        quality = 'New';
+    } else if (rand < 0.50) {
+        quality = 'Damaged';
+    } else {
+        quality = 'Broken';
+    }
 
     // Mapping: Scrap=1 ... Singularity=9
     const rarityMap: Record<MeteoriteRarity, number> = {
@@ -145,7 +157,9 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
     const visualIndex = rarityLevel;
 
     // Quality adjustment: New +2, Damaged +0, Broken -2
-    const qualityAdj = quality === 'New' ? 2 : (quality === 'Broken' ? -2 : 0);
+    // HARM-V Blueprint: +2 shift to all perks
+    const blueprintActive = isBuffActive(state, 'PERK_RESONANCE');
+    const qualityAdj = (quality === 'Corrupted' ? 6 : (quality === 'New' ? 3 : (quality === 'Broken' ? -3 : 0))) + (blueprintActive ? 2 : 0);
 
     const perks: Meteorite['perks'] = [];
 
@@ -156,9 +170,8 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
         if (pool) {
             const def = pool[Math.floor(Math.random() * pool.length)];
 
-            // Quality Mod: Broken -2%, New +2%, Damaged 0%
-            // Apply straight to the range boundaries
-            const min = Math.max(0, def.min + qualityAdj); // Ensure min doesn't go below 0 (though -2 on 2 is 0)
+            // Quality Mod: applies straight to the range boundaries
+            const min = Math.max(0, def.min + qualityAdj);
             const max = def.max + qualityAdj;
 
             const value = min + Math.floor(Math.random() * (max - min + 1));
@@ -185,16 +198,9 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
         discoveredIn: SECTOR_NAMES[state.currentArena] || "UNKNOWN SECTOR",
         perks,
         spawnedAt: state.gameTime,
-        stats
+        stats,
+        blueprintBoosted: blueprintActive
     };
-
-    // Blueprint: Perk Resonance (1.2x Perk Values)
-    if (isBuffActive(state, 'PERK_RESONANCE')) {
-        item.blueprintBoosted = true;
-        item.perks.forEach(p => {
-            p.value = Math.round(p.value * 1.2);
-        });
-    }
 
     return item;
 }
@@ -204,16 +210,18 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     const entry = DROP_TABLE.find(e => minutes >= e.min && minutes < e.max) || DROP_TABLE[DROP_TABLE.length - 1];
 
     // Base chance is the sum of the weights (e.g. 1.6 + 1.0 + 0.4 = 3.0 -> 3%)
-    let chance = entry.weights.reduce((a, b) => a + b, 0) / 100;
+    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.7; // User Request: Lower from 10% to 7%
 
-    if (state.currentArena === 0) chance *= 1.15; // +15% Drop Chance in Economic Hex
+    const surge = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
+    if (state.currentArena === 0) chance *= (1 + (0.15 * surge)); // +15% (or +30%) Drop Chance in Economic Hex
 
     // Add Legendary Bonus
     chance += calculateLegendaryBonus(state, 'met_drop_per_kill');
 
-    // Blueprint: Meteor Shower (+50% DROP RATE)
+    // Blueprint: Meteor Shower (+50% DROP RATE) - Boosted by Surge
     if (isBuffActive(state, 'METEOR_SHOWER')) {
-        chance *= 1.5;
+        const surge = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
+        chance *= (1 + (0.5 * surge));
     }
 
     if (Math.random() > chance) return;
@@ -267,7 +275,15 @@ export function updateLoot(state: GameState) {
             // Pickup Logic
             if (dist < PICKUP_RANGE) {
                 // Try to add to inventory
-                const emptySlotIndex = inventory.findIndex(slot => slot === null);
+                // User Request: Skip Row 1 (Safe Slots: 0-9) and Row 2 (Removed: 10-19)
+                // Items go directly into Row 3 (Index 20+)
+                let emptySlotIndex = -1;
+                for (let j = 20; j < inventory.length; j++) {
+                    if (inventory[j] === null) {
+                        emptySlotIndex = j;
+                        break;
+                    }
+                }
 
                 if (emptySlotIndex !== -1) {
                     // Add to inventory

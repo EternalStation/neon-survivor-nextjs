@@ -1,4 +1,5 @@
 import type { GameState, LegendaryHex, LegendaryType } from './types';
+import { calcStat } from './MathUtils';
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {
@@ -100,14 +101,50 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     CombShield: {
         id: 'comb_shield',
         name: 'AEGIS PROTOCOL',
-        desc: 'Log-Scaling Defense per Kill',
-        description: 'Adaptive plating algorithms that strengthen structural integrity logarithmically based on combat data.',
+        desc: '0.1% Resist per Kill',
+        description: 'Adaptive plating algorithms that strengthen structural integrity based on combat data.',
         lore: 'The Aegis is a living shield. It learns from every hit taken and every enemy destroyed, reinforcing your chassis until it becomes an impenetrable fortress.',
         category: 'Defensive',
         type: 'CombShield',
         level: 1,
         killsAtAcquisition: 0,
         customIcon: '/assets/hexes/DefShield.png'
+    },
+    KineticBattery: {
+        id: 'kin_bat',
+        name: 'KINETIC BATTERY',
+        desc: 'Converts Armor to Shockwaves',
+        description: 'Experimental capacitor bank that stores kinetic impact energy and releases it as devastating shockwaves.',
+        lore: 'Why simply deflect a blow when you can catch it, amplify it, and send it back tenfold? The Kinetic Battery turns your defense into the ultimate offense.',
+        category: 'Defensive',
+        type: 'KineticBattery',
+        level: 1,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/DefBattery.png'
+    },
+    RadiationCore: {
+        id: 'rad_core',
+        name: 'RADIATION CORE',
+        desc: 'Global Decay Aura',
+        description: 'Unstable isotope reactor that emits a lethal 500px radiation aura. Damage intensity scales with proximity; the closer an enemy is to your core, the faster they decay.',
+        lore: 'Harvested from a dying star, this core pulses with entropy. To stand near you is to age a thousand years in a second.',
+        category: 'Combat',
+        type: 'RadiationCore',
+        level: 1,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/ComRad.png'
+    },
+    ChronoPlating: {
+        id: 'chrono_plate',
+        name: 'CHRONO PLATING',
+        desc: 'Time-Scaling Defense',
+        description: 'Temporal alloy plating that hardening over time, becoming virtually indestructible the longer you survive.',
+        lore: 'Forged outside of time, this armor doesn\'t just resist damage; it denies the very event of impact, rewriting history to keep you intact.',
+        category: 'Economic',
+        type: 'ChronoPlating',
+        level: 1,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/EcoPlating.png'
     }
 };
 
@@ -120,7 +157,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
 
     const formatPerk = (p: string, lvl: number) => {
         const souls = getSouls(lvl);
-        if (souls !== null && (p.includes("per kill") || p.includes("per 20 kills") || p.includes("per 50 kills") || p.includes("Resist"))) {
+        if (souls !== null && (p.toLowerCase().includes("kill") || p.includes("Resist"))) {
             return `${p} (${souls} Souls)`;
         }
         return p;
@@ -128,24 +165,24 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
 
     const perks: Record<string, string[][]> = {
         EcoDMG: [
-            ["+0.2 DMG per kill"],
-            ["+0.2 ATS per kill"],
-            ["+0.2 DMG% per kill"],
-            ["+0.2 ATS% per kill"],
+            ["+0.1 DMG per kill"],
+            ["+0.1 ATS per kill"],
+            ["+0.1 DMG% per kill"],
+            ["+0.1 ATS% per kill"],
             ["MAX LEVEL"]
         ],
         EcoXP: [
-            ["+1 XP per kill"],
+            ["+0.1 XP per kill"],
             ["+1 Dust per 50 kills"],
-            ["+0.1% Perk Power per 100 kills"],
-            ["+1% XP Gain per kill"],
+            ["+0.1% Perk Power for 100 kills"],
+            ["+0.1% XP Gain per kill"],
             ["MAX LEVEL"]
         ],
         EcoHP: [
-            ["+0.2 Max HP per kill"],
+            ["+0.1 Max HP per kill"],
             ["+0.1 HP/sec per kill"],
-            ["+0.2% Max HP per kill"],
-            ["+0.2% Regen per kill"],
+            ["+0.1% Max HP per kill"],
+            ["+0.1% Regen per kill"],
             ["MAX LEVEL"]
         ],
         ComLife: [
@@ -185,10 +222,31 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         ],
         CombShield: [
             ["+1 Armor per kill"],
-            ["Log-scaling Collision Resist"],
-            ["Log-scaling Projectile Resist"],
+            ["0.1% Log-Scaling Collision Resist per kill"],
+            ["0.1% Log-Scaling Projectile Resist per kill"],
             ["+1% Armor Multiplier per kill"],
             ["MAX LEVEL"]
+        ],
+        KineticBattery: [
+            ["On-Hit Shockwave (500% Armor Dmg, 10 Targets, 5s CD)"],
+            ["Gain Shield (500% Armor, Refresh 1min)"],
+            ["+1% Armor per 1% Missing HP"],
+            ["0.5% of armour goes to hp/sec"],
+            ["MAX LEVEL"]
+        ],
+        RadiationCore: [
+            ["Deals 5.0-10.0% Player Max HP/sec in 500 AOE (Closer = More Dmg)"],
+            ["Heal 0.2% Max HP/sec per Aura Enemy"],
+            ["+1% Radiation Aura Dmg per 1% Missing HP"],
+            ["Global Decay: Enemies lose 1.0% Max HP/sec Map-wide"],
+            ["MAX LEVEL"]
+        ],
+        ChronoPlating: [
+            ["15% Dmg & ATS from Armour as %"],
+            ["+1% Damage per 100 HP"],
+            ["Double Armor every 5 minutes"],
+            ["+0.25% Cooldown Reduction per minute"],
+            ["MERGABLE"]
         ]
     };
     const list = perks[type];
@@ -207,17 +265,20 @@ export function getLegendaryPerkDesc(type: string, level: number, state?: GameSt
 export function getLegendaryOptions(state: GameState): LegendaryHex[] {
     let pool: (keyof typeof LEGENDARY_UPGRADES)[] = ['EcoDMG', 'EcoXP', 'EcoHP'];
 
-    // Arena 1 is Combat Hex
-    if (state.currentArena === 1) {
-        pool = ['ComLife', 'ComCrit', 'ComWave'];
+    // Arena 0 (Economic / Chrono)
+    if (state.currentArena === 0) {
+        pool = ['ChronoPlating', 'EcoDMG', 'EcoXP', 'EcoHP'];
+        // Ensure ChronoPlating is always an option if not maxed
     }
 
-    // Arena 2 is Defense Hex (Assuming Arena 2 is where they drop)
-    // Or if currentArena is vague, we might add them to pool if specific condition met?
-    // User said "drop from bosses in defenece arena". I'll assume Arena 2 or 3.
-    // Let's assume Arena 2.
+    // Arena 1 (Combat / Radiation)
+    if (state.currentArena === 1) {
+        pool = ['RadiationCore', 'ComLife', 'ComCrit', 'ComWave'];
+    }
+
+    // Arena 2 (Defense / Kinetic)
     if (state.currentArena === 2) {
-        pool = ['DefPuddle', 'DefEpi', 'CombShield'];
+        pool = ['KineticBattery', 'DefPuddle', 'DefEpi', 'CombShield'];
     }
 
     return pool.map(typeKey => {
@@ -246,8 +307,8 @@ export function getLegendaryOptions(state: GameState): LegendaryHex[] {
             timeAtAcquisition,
             killsAtLevel,
             timeAtLevel,
-            desc: getLegendaryPerkDesc(base.type, level, state, existing || undefined),
-            perks: getLegendaryPerksArray(base.type, level, state, existing || undefined)
+            desc: getLegendaryPerkDesc(base.type, level, undefined, undefined),
+            perks: getLegendaryPerksArray(base.type, level, undefined, undefined)
         };
     });
 }
@@ -263,7 +324,7 @@ export function syncAllLegendaries(state: GameState) {
     });
 }
 
-const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi'];
+const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'KineticBattery'];
 
 export function applyLegendarySelection(state: GameState, selection: LegendaryHex) {
     // Check if we already have this hex type
@@ -315,7 +376,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                 if (key) {
                     state.player.activeSkills.push({
                         type: selection.type,
-                        cooldownMax: selection.type === 'DefPuddle' ? 25000 : 30000, // 25s for Puddle, 30s for Epi
+                        cooldownMax: selection.type === 'DefPuddle' ? 25000 : (selection.type === 'DefEpi' ? 30000 : 5000), // 25s, 30s, or 5s for Zap
                         cooldown: 0,
                         inUse: false,
                         keyBind: key,
@@ -323,6 +384,11 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                     });
                 }
             }
+        }
+
+        // Kinetic Battery Level 2: Immediate Shield
+        if (selection.type === 'KineticBattery' && selection.level >= 2) {
+            state.player.kineticShieldTimer = 0;
         }
     }
 }
@@ -368,13 +434,13 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         };
 
         if (hex.type === 'EcoDMG') {
-            if (statKey === 'dmg_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.2 * multiplier;
-            if (statKey === 'ats_per_kill' && hex.level >= 2) total += getKillsSinceLevel(2) * 0.2 * multiplier;
-            if (statKey === 'dmg_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.2 * multiplier;
-            if (statKey === 'ats_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.2 * multiplier;
+            if (statKey === 'dmg_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
+            if (statKey === 'ats_per_kill' && hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
+            if (statKey === 'dmg_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.1 * multiplier;
+            if (statKey === 'ats_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
         }
         if (hex.type === 'EcoXP') {
-            if (statKey === 'xp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 1 * multiplier;
+            if (statKey === 'xp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
             if (statKey === 'dust_extraction' && hex.level >= 2) {
                 // Return total dust earned since reaching level 2
                 total += Math.floor(getKillsSinceLevel(2) / 50) * multiplier;
@@ -383,25 +449,27 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
                 // Return total % bonus to apply to perks
                 total += (getKillsSinceLevel(3) / 100) * 0.1 * multiplier;
             }
-            if (statKey === 'xp_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 1 * multiplier;
+            if (statKey === 'xp_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
         }
         if (hex.type === 'EcoHP') {
-            if (statKey === 'hp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.2 * multiplier;
+            if (statKey === 'hp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
             if (statKey === 'reg_per_kill' && hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
-            if (statKey === 'hp_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.2 * multiplier;
-            if (statKey === 'reg_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.2 * multiplier;
+            if (statKey === 'hp_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.1 * multiplier;
+            if (statKey === 'reg_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
         }
 
-        // CombShield Logic (Logarithmic scaling for reductions)
+        // CombShield Logic
         if (hex.type === 'CombShield') {
             if (statKey === 'arm_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 1 * multiplier;
             if (statKey === 'col_red_per_kill' && hex.level >= 2) {
                 const stacks = getKillsSinceLevel(2) * multiplier;
-                total += 80 * (stacks / (stacks + 350));
+                // Target: 200->~10%, 5000->~50%, 15000->~70%, 100k->~80%
+                // 85 * (x^0.75 / (x^0.75 + 400))
+                total += 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
             }
             if (statKey === 'proj_red_per_kill' && hex.level >= 3) {
                 const stacks = getKillsSinceLevel(3) * multiplier;
-                total += 80 * (stacks / (stacks + 350));
+                total += 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
             }
             if (statKey === 'arm_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.01 * multiplier;
         }
@@ -409,6 +477,44 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         // ComLife Logic
         if (hex.type === 'ComLife') {
             if (statKey === 'lifesteal' && hex.level >= 1) total += 3 * multiplier;
+        }
+
+        // Kinetic Battery Logic
+        if (hex.type === 'KineticBattery') {
+            if (statKey === 'arm_pct_missing_hp' && hex.level >= 3) {
+                const missing = 1 - (state.player.curHp / Math.max(1, (state.player.hp.base + state.player.hp.flat) * state.player.hp.mult));
+                const pctMissing = Math.max(0, missing * 100);
+                total += pctMissing * multiplier;
+            }
+            if (statKey === 'reg_from_armor' && hex.level >= 4) {
+                // Return the % of armor that is added to regen
+                total += 0.5 * multiplier;
+            }
+        }
+
+        // Radiation Core Logic
+        if (hex.type === 'RadiationCore') {
+            // Lvl 3: Aura damage increases by 1% for every 1% of missing HP
+            if (statKey === 'aura_dmg_missing_hp' && hex.level >= 3) {
+                const missing = 1 - (state.player.curHp / Math.max(1, state.player.hp.flat + state.player.hp.base));
+                const pctMissing = Math.max(0, missing * 100);
+                total += pctMissing * 0.01 * multiplier;
+            }
+        }
+
+        // Chrono Plating Logic
+        if (hex.type === 'ChronoPlating') {
+            // Lvl 1: +15% Flat Damage and ATS based on Armor
+            if (hex.level >= 1) {
+                const totalArmor = calcStat(state.player.arm);
+                if (statKey === 'dmg_pct_per_kill') total += totalArmor * 0.15 * multiplier;
+                if (statKey === 'ats_pct_per_kill') total += totalArmor * 0.15 * multiplier;
+            }
+            // Lvl 2: +1% Damage for every 100 HP
+            if (statKey === 'dmg_pct_per_hp' && hex.level >= 2) {
+                const maxHp = (state.player.hp.base + state.player.hp.flat) * state.player.hp.mult;
+                total += (maxHp / 100) * 1.0 * multiplier;
+            }
         }
     });
     return total;

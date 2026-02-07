@@ -1,8 +1,7 @@
-import { PLAYER_CLASSES } from './classes';
 import { isInMap, getHexDistToWall } from './MapLogic';
 import { GAME_CONFIG } from './GameConfig';
-import { PALETTES } from './constants';
 import { getChassisResonance } from './EfficiencyLogic';
+import { isBuffActive } from './BlueprintLogic';
 import { playSfx } from './AudioLogic';
 import { calcStat } from './MathUtils';
 import type { GameState, Enemy } from './types';
@@ -11,288 +10,6 @@ import { getHexMultiplier, getHexLevel, calculateLegendaryBonus } from './Legend
 import { handleEnemyDeath } from './DeathLogic';
 import { getPlayerThemeColor } from './helpers';
 import { getDefenseReduction } from './MathUtils';
-
-
-
-
-// Helper: Trigger Shockwave
-function triggerShockwave(state: GameState, angle: number, level: number) {
-    // Lvl 1: 75% dmg, 450 range (was 2500, then 500)
-    // Lvl 3: 125% dmg, 600 range (was 3750, then 750)
-    // Lvl 4: Backwards wave too
-
-    const range = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_RANGE.LVL3 : GAME_CONFIG.SKILLS.WAVE_RANGE.LVL1;
-    const damageMult = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL3 : GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL1;
-    const coneHalfAngle = 0.7; // ~80 degrees total
-
-    const playerDmg = calcStat(state.player.dmg);
-    const waveDmg = playerDmg * damageMult;
-
-    const castWave = (waveAngle: number) => {
-        // Visuals: Echolocation Wave (Single clean arc)
-        // We use a special 'shockwave' particle type that the renderer draws as a bent line
-        const speed = GAME_CONFIG.SKILLS.WAVE_SPEED; // Even Faster (was 18) to ensure it disappears quickly at destination
-
-        state.particles.push({
-            x: state.player.x,
-            y: state.player.y,
-            vx: Math.cos(waveAngle) * speed,
-            vy: Math.sin(waveAngle) * speed,
-            life: range / speed, // Live just long enough to reach max range (approx 18-24 frames)
-            color: '#38BDF8', // Epic Light Blue
-            size: 300, // Larger radius for "flatter" look
-            type: 'shockwave',
-            alpha: 1.0,
-            decay: 0.05
-        });
-
-        // Add "Epic" Debris / Energy particles
-        for (let k = 0; k < 12; k++) {
-            const debrisAngle = waveAngle + (Math.random() - 0.5) * coneHalfAngle;
-            const debrisSpeed = speed * (0.9 + Math.random() * 0.2);
-            state.particles.push({
-                x: state.player.x,
-                y: state.player.y,
-                vx: Math.cos(debrisAngle) * debrisSpeed,
-                vy: Math.sin(debrisAngle) * debrisSpeed,
-                life: (range / speed) * (0.8 + Math.random() * 0.2), // Die with wave
-                color: Math.random() > 0.5 ? '#BAE6FD' : '#60A5FA', // Mix of blues
-                size: 2 + Math.random() * 4,
-                type: 'spark',
-                alpha: 1.0,
-                decay: 0.1 // Faster decay
-            });
-        }
-
-        playSfx('sonic-wave');
-
-        // Damage Logic (Instant Hitscan for gameplay feel, visualization catches up)
-        state.enemies.forEach(e => {
-            if (e.dead || e.isFriendly || e.isZombie) return;
-            const dx = e.x - state.player.x;
-            const dy = e.y - state.player.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (dist < range) {
-                const angleToEnemy = Math.atan2(dy, dx);
-                const diff = Math.abs(angleToEnemy - waveAngle);
-                // Normalized diff
-                const normDiff = Math.min(diff, Math.abs(diff - Math.PI * 2));
-
-                if (normDiff < coneHalfAngle) {
-                    // Hit!
-                    e.hp -= waveDmg;
-                    state.player.damageDealt += waveDmg;
-                    spawnFloatingNumber(state, e.x, e.y, Math.round(waveDmg).toString(), '#38BDF8', false);
-                    // Flash hit effect
-                    spawnParticles(state, e.x, e.y, '#EF4444', 3);
-
-                    // Lvl 2: Fear
-                    if (level >= 2) {
-                        e.fearedUntil = state.gameTime + 1.5; // 1.5s
-                    }
-                }
-            }
-        });
-    };
-
-    castWave(angle);
-
-    if (level >= 4) {
-        castWave(angle + Math.PI);
-    }
-}
-
-export function spawnBullet(state: GameState, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
-    if (state.player.immobilized) return;
-    const spd = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
-
-    // --- ComCrit Logic ---
-    const critLevel = getHexLevel(state, 'ComCrit');
-    let isCrit = false;
-    let finalDmg = dmg;
-    let mult = 1.0;
-
-    if (critLevel > 0) {
-        let chance = GAME_CONFIG.SKILLS.CRIT_BASE_CHANCE;
-        mult = GAME_CONFIG.SKILLS.CRIT_BASE_MULT;
-        if (state.moduleSockets.hexagons.some(h => h?.type === 'ComCrit' && h.level >= 4)) {
-            chance = GAME_CONFIG.SKILLS.CRIT_LVL4_CHANCE;
-            mult = GAME_CONFIG.SKILLS.CRIT_LVL4_MULT;
-        }
-
-        if (Math.random() < chance) {
-            isCrit = true;
-            finalDmg *= mult;
-        } else {
-            mult = 1.0;
-        }
-    }
-
-    let isHyperPulse = false;
-    let bulletSize = 4;
-    let pClass = PLAYER_CLASSES.find(c => c.id === state.player.playerClass);
-    let bulletColor: string | undefined = pClass?.themeColor;
-    let bulletPierce = pierce;
-    // Malware pierce logic is now handled in player.pierce initialization in GameState.ts
-
-    // --- ComWave Logic ---
-    const waveLevel = getHexLevel(state, 'ComWave');
-    if (waveLevel > 0) {
-        state.player.shotsFired = (state.player.shotsFired || 0) + 1;
-        if (state.player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
-            triggerShockwave(state, angle + offsetAngle, waveLevel);
-        }
-    }
-
-    // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
-    if (state.player.playerClass === 'stormstrike') {
-        const now = Date.now();
-        // Initialize if undefined
-        if (!state.player.lastCosmicStrikeTime) {
-            state.player.lastCosmicStrikeTime = 0; // Ready immediately? Or start on cooldown? Usually ready.
-        }
-
-        const cooldown = 8000; // 8 Seconds Static
-        if (now - state.player.lastCosmicStrikeTime >= cooldown) {
-            // Orbital Strike Trigger
-            playSfx('lock-on'); // Targeting sound
-            state.player.lastCosmicStrikeTime = now;
-
-            // Determine Impact Point
-            let tx = state.player.targetX;
-            let ty = state.player.targetY;
-
-            // Range-limited Targeting Logic (1000px)
-            const maxRange = 1000;
-            const liveEnemies = state.enemies.filter(e => {
-                if (e.dead || e.isFriendly) return false;
-                const d = Math.hypot(e.x - x, e.y - y);
-                return d <= maxRange;
-            });
-
-            if (liveEnemies.length > 0) {
-                const randomEnemy = liveEnemies[Math.floor(Math.random() * liveEnemies.length)];
-                tx = randomEnemy.x;
-                ty = randomEnemy.y;
-            } else {
-                // Fallback if no enemies within range: Project out from cursor/aim up to maxRange
-                const angleToUse = (tx !== undefined && ty !== undefined)
-                    ? Math.atan2(ty - state.player.y, tx - state.player.x)
-                    : (angle + offsetAngle);
-
-                tx = x + Math.cos(angleToUse) * maxRange;
-                ty = y + Math.sin(angleToUse) * maxRange;
-            }
-
-            // Apply Resonance to Radius
-            const resonance = getChassisResonance(state);
-            const baseRadius = 100;
-            // 100% + Resonance% (e.g. 50% resonance -> 1.5 multiplier)
-            const radius = baseRadius * (1 + resonance);
-
-            state.areaEffects.push({
-                id: Date.now() + Math.random(),
-                type: 'orbital_strike',
-                x: tx,
-                y: ty,
-                radius: radius,
-                duration: 0.3, // 0.3s delay (Reverted to ensure hits)
-                creationTime: Date.now(),
-                level: 1,
-                casterId: state.player.playerClass === 'stormstrike' ? 1 : 0
-            });
-
-            // Visual Marker immediately
-            // spawnParticles(state, tx, ty, '#38bdf8', 1, 150, 0, 'shockwave'); // Removed as per request
-
-            return; // STOP! Do not spawn a bullet.
-        }
-    }
-
-    // --- CLASS MODIFIERS: Stinger -> Stinger id is gone, replaced by others. 
-    // Wait, I should use the new IDs.
-    const classStats = PLAYER_CLASSES.find(c => c.id === state.player.playerClass);
-    const resonance = getChassisResonance(state);
-
-    const bulletId = Math.random();
-    const b: any = {
-        id: bulletId,
-        x, y,
-        vx: Math.cos(angle + offsetAngle) * spd,
-        vy: Math.sin(angle + offsetAngle) * spd,
-        dmg: finalDmg,
-        pierce: bulletPierce,
-        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance)
-        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance),
-        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
-        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
-        isEnemy: false,
-        hits: new Set(),
-        size: bulletSize,
-        isCrit,
-        critMult: mult,
-        isHyperPulse,
-        color: bulletColor,
-        spawnTime: Date.now()
-    };
-
-    // --- CLASS MODIFIERS: Aigis-Vortex Initial State ---
-    if (state.player.playerClass === 'aigis') {
-        b.vortexState = 'orbiting';
-        b.orbitAngle = angle + offsetAngle;
-        b.orbitDist = 125;
-        b.life = 999999; // Orbit indefinitely until hit
-
-        state.bullets.push(b);
-
-        // Multi-Ring Logic
-        const resonance = getChassisResonance(state);
-
-        // Ring II: 10% Base + Resonance
-        const chance2 = 0.10 * (1 + resonance);
-        if (Math.random() < chance2) {
-            const b2 = { ...b, id: Math.random(), orbitDist: 175 };
-            state.bullets.push(b2);
-        }
-
-        // Ring III: 5% Base + Resonance
-        const chance3 = 0.05 * (1 + resonance);
-        if (Math.random() < chance3) {
-            const b3 = { ...b, id: Math.random(), orbitDist: 225 };
-            state.bullets.push(b3);
-        }
-
-        return; // Already pushed, return to avoid double push of 'b' or duplicate logic
-    }
-
-    state.bullets.push(b);
-
-}
-
-export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
-    const spd = 6;
-
-    // Always use the bright color from the current 15-minute era palette
-    const minutes = state.gameTime / 60;
-    const eraIndex = Math.floor(minutes / 15);
-    const eraPalette = PALETTES[eraIndex % PALETTES.length];
-    const brightColor = eraPalette.colors[0];
-
-    state.enemyBullets.push({
-        id: Math.random(),
-        x, y,
-        vx: Math.cos(angle) * spd,
-        vy: Math.sin(angle) * spd,
-        dmg,
-        pierce: 0,
-        life: 300,
-        isEnemy: true,
-        hits: new Set(),
-        color: brightColor, // Ignore passed color, use bright era color
-        size: 6
-    });
-}
 
 export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void) {
     const { bullets, enemyBullets, player } = state;
@@ -424,6 +141,21 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     b.vx = Math.cos(reflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
                     b.vy = Math.sin(reflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
 
+                    // --- MALWARE BOUNCE LOGIC (Color Shift) ---
+                    if (player.playerClass === 'malware') {
+                        b.bounceCount = (b.bounceCount || 0) + 1;
+                        if (b.bounceCount === 1) {
+                            b.color = '#fb923c';
+                        } else {
+                            const redProgress = Math.min(1, (b.bounceCount - 1) / 6);
+                            const green = Math.floor(146 * (1 - redProgress));
+                            b.color = `rgb(255, ${green}, 0)`;
+                        }
+                        // Increase Damage (Bounce Logic)
+                        const dmgMult = 1 + (b.bounceDmgMult || 0.2);
+                        b.dmg *= dmgMult;
+                    }
+
                     // Visual feedback - removed particles to avoid fountain effect
                     playSfx('impact');
 
@@ -469,6 +201,21 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                         b.vx = Math.cos(deflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
                         b.vy = Math.sin(deflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
+
+                        // --- MALWARE BOUNCE LOGIC (Deflection counts as bounce) ---
+                        if (player.playerClass === 'malware') {
+                            b.bounceCount = (b.bounceCount || 0) + 1;
+                            if (b.bounceCount === 1) {
+                                b.color = '#fb923c';
+                            } else {
+                                const redProgress = Math.min(1, (b.bounceCount - 1) / 6);
+                                const green = Math.floor(146 * (1 - redProgress));
+                                b.color = `rgb(255, ${green}, 0)`;
+                            }
+                            // Increase Damage (Bounce Logic)
+                            const dmgMult = 1 + (b.bounceDmgMult || 0.2);
+                            b.dmg *= dmgMult;
+                        }
 
                         // Extend life so it can fly away
                         b.life = 120;
@@ -608,7 +355,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 // --- CLASS MODIFIER: Event-Horizon Gravimetric Pull ---
                 if (player.playerClass === 'eventhorizon') {
                     const now = state.gameTime;
-                    const cooldownDuration = 10; // 10 seconds
+                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+                    const cooldownDuration = 10 * cdMod; // 10 seconds * reduction
                     const blackholeDuration = 3; // 3 seconds
 
                     // Check if blackhole is off cooldown
@@ -655,7 +403,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 // --- ComCrit Lvl 3: Apply Death Mark ---
                 // "Death marks enemy you hit every 10second"
                 if (critLevel >= 3) {
-                    if (!player.lastDeathMark || state.gameTime - player.lastDeathMark > 10) {
+                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+                    const dmCooldown = 10 * cdMod;
+
+                    if (!player.lastDeathMark || state.gameTime - player.lastDeathMark > dmCooldown) {
                         e.deathMarkExpiry = state.gameTime + 3; // 3 seconds
                         player.lastDeathMark = state.gameTime;
                         // Visual for Mark?
@@ -714,10 +465,14 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     if (reflectDmg > 0) {
                         // Thorns are reduced by armor
                         const armorValue = calcStat(player.arm);
-                        const reduction = getDefenseReduction(armorValue);
-                        reflectDmg *= (1 - reduction);
+                        const drCap = 0.95;
+                        const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
 
-                        // Cap damage to never kill player (leave at least 1 HP)
+                        // Correct Placement: Inside the contactDist check (happened above)
+                        // But we already have it here. Let's make sure it's only if kinLvl >= 1
+                        const kinLvl = getHexLevel(state, 'KineticBattery');
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (kinLvl >= 1 && triggerZap) triggerZap(state, player, kinLvl);
                         const safeDmg = Math.min(reflectDmg, player.curHp - 1);
 
                         if (safeDmg > 0) {
@@ -784,14 +539,11 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
                 // 2. Handle Rare Transitions (These may shift phase)
+                // 2. Handle Rare Transitions (These may shift phase)
                 if (e.isRare) {
-                    if (e.rarePhase === 0) {
-                        // PHASE 1 is now PROJECTILE IMMUNE (User Request)
-                        // Can only be triggered by proximity (Player coming close)
-                        b.hits.add(e.id); // Register hit so it doesn't try again next frame
-                        // No phase change here
-                    } else if (e.rarePhase === 1) {
-                        // Stage 2 -> 3 (Orange -> Red)
+                    if (e.rarePhase === 0 || e.rarePhase === 1) {
+                        // First Hit Trigger: Escape Sequence (Phase 0 -> 2 or 1 -> 2)
+                        // This ensures Snitch doesn't die on first hit, even if sniped from afar.
                         e.rarePhase = 2;
                         e.rareTimer = state.gameTime;
                         e.palette = ['#EF4444', '#DC2626', '#B91C1C']; // Red Shift
@@ -812,6 +564,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         e.hp = 1000; e.maxHp = 1000; // Ensure survival
                         e.knockback = { x: 0, y: 0 };
                         b.life = 0; // Consume bullet
+
+                        // Signal Teleport Logic (handled in UniqueEnemyLogic.ts)
+                        e.forceTeleport = true;
 
                         // Don't die yet
                         if (onEvent) onEvent('hit');
@@ -940,6 +695,13 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     player.curHp -= finalDmg;
                     player.damageTaken += finalDmg;
                     if (onEvent) onEvent('player_hit', { dmg: finalDmg });
+
+                    // Kinetic Battery: Trigger Zap on Projectile Hit
+                    const kinLvl = getHexLevel(state, 'KineticBattery');
+                    if (kinLvl >= 1) {
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (triggerZap) triggerZap(state, player, kinLvl);
+                    }
 
                     if (player.curHp <= 0 && !state.gameOver) {
                         state.gameOver = true;

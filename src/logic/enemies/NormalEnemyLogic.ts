@@ -1,10 +1,10 @@
 import type { GameState, Enemy } from '../types';
 import { ARENA_CENTERS, ARENA_RADIUS } from '../MapLogic';
 import { spawnParticles } from '../ParticleLogic';
-import { spawnEnemyBullet } from '../ProjectileLogic';
+import { spawnEnemyBullet } from '../ProjectileSpawning';
 
-export function updateNormalCircle(e: Enemy, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
-    if (e.timer && Date.now() < e.timer) return { vx: 0, vy: 0 };
+export function updateNormalCircle(e: Enemy, state: GameState, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
+    if (e.timer && state.gameTime < e.timer) return { vx: 0, vy: 0 };
 
 
     const a = Math.atan2(dy, dx);
@@ -13,20 +13,20 @@ export function updateNormalCircle(e: Enemy, dx: number, dy: number, currentSpd:
     return { vx, vy };
 }
 
-export function updateNormalTriangle(e: Enemy, dx: number, dy: number, pushX: number, pushY: number) {
-    if (!e.timer) e.timer = Date.now();
+export function updateNormalTriangle(e: Enemy, state: GameState, dx: number, dy: number, pushX: number, pushY: number) {
+    if (!e.timer) e.timer = state.gameTime;
 
     // Dash Trigger Check
-    if (e.dashState !== 1 && Date.now() - (e.lastAttack || 0) > 5000) {
+    if (e.dashState !== 1 && state.gameTime - (e.lastAttack || 0) > 5.0) {
         e.dashState = 1;
-        e.timer = Date.now() + 200; // 0.2s Dash Duration
-        e.lastAttack = Date.now();
+        e.timer = state.gameTime + 0.2; // 0.2s Dash Duration
+        e.lastAttack = state.gameTime;
         e.dashAngle = Math.atan2(dy, dx);
     }
 
     // Dashing State
     if (e.dashState === 1) {
-        if (Date.now() < e.timer) {
+        if (state.gameTime < e.timer) {
             // Dash Speed: Cover ~150px in 0.2s (approx 12 frames) -> ~12.5 px/frame
             const dashSpeed = 12.5;
             const angle = e.dashAngle || Math.atan2(dy, dx);
@@ -36,7 +36,7 @@ export function updateNormalTriangle(e: Enemy, dx: number, dy: number, pushX: nu
         } else {
             // End Dash
             e.dashState = 0;
-            e.lastAttack = Date.now(); // Reset cooldown from end of dash? Or start? usually start.
+            e.lastAttack = state.gameTime; // Reset cooldown from end of dash? Or start? usually start.
             // Resetting here means 5s AFTER dash. Previous code was 5s from START.
             // I'll keep the start time tracking (managed by Trigger Check above), but simple reset here is fine.
         }
@@ -170,10 +170,9 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
         vx += (Math.random() - 0.5) * 8; // Extra violent shake
         vy += (Math.random() - 0.5) * 8;
     } else if (isWarning) {
-        // High-Visibility Warning (Blink Red)
-        const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
-        e.palette = isBlink ? ['#EF4444', '#F87171', '#7F1D1D'] : (e.originalPalette || e.palette);
-        if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE DURING BLINK
+        // High-Visibility Warning (Solid Red instead of blinking)
+        e.palette = ['#EF4444', '#F87171', '#7F1D1D'];
+        e.eraPalette = undefined; // OVERRIDE ERA PALETTE
 
         vx += (Math.random() - 0.5) * 6; // Increased shake
         vy += (Math.random() - 0.5) * 6;
@@ -193,9 +192,9 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
             }
             // Pulsate White/Red while dying (Only if NOT in aggro red state)
             if (!isAngry) {
-                const isBlink = Math.floor(Date.now() / 100) % 2 === 0;
-                e.palette = isBlink ? ['#FFFFFF', '#EF4444', '#7F1D1D'] : (e.originalPalette || e.palette);
-                if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+                // Pulsate White/Red while dying (Removed blinking per user request)
+                e.palette = ['#FFFFFF', '#EF4444', '#7F1D1D'];
+                e.eraPalette = undefined; // OVERRIDE ERA PALETTE
             }
         } else {
             // DIE
@@ -210,10 +209,9 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
     if (!isAngry && !isWarning) {
         // Normal State / Spawning Logic
         if (e.summonState === 1) {
-            // Charging Blink (Green)
-            const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
-            e.palette = isBlink ? ['#4ade80', '#22c55e', '#166534'] : (e.originalPalette || e.palette);
-            if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+            // Charging (No Blink per user request)
+            // e.palette = ['#4ade80', '#22c55e', '#166534']; // No longer swapping color to avoid flashing
+            // if (e.originalPalette) e.palette = e.originalPalette; 
 
             if (Date.now() > (e.timer || 0)) {
                 spawnMinion(state, e, false, 3);

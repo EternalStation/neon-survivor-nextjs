@@ -6,9 +6,9 @@ export interface PerkResult {
     count: number;
 }
 
-export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: number): { totalBoost: number, perkResults: Record<string, PerkResult> } {
+export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: number): { totalBoost: number, perkResults: Record<string, PerkResult>, blueprintBoost: number } {
     const meteorite = state.moduleSockets.diamonds[meteoriteIdx];
-    if (!meteorite) return { totalBoost: 0, perkResults: {} };
+    if (!meteorite) return { totalBoost: 0, perkResults: {}, blueprintBoost: 0 };
 
     let totalActiveBoostPct = 0;
     const perkResults: Record<string, PerkResult> = {};
@@ -72,6 +72,15 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                 case 'neighbor_bro_def':
                     count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'Broken').length;
                     break;
+                case 'neighbor_cor_eco':
+                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'Corrupted').length;
+                    break;
+                case 'neighbor_cor_com':
+                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX' && m.quality === 'Corrupted').length;
+                    break;
+                case 'neighbor_cor_def':
+                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'Corrupted').length;
+                    break;
                 case 'neighbor_leg_any':
                     count = hexConnections.length;
                     break;
@@ -109,12 +118,13 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
         });
     }
 
-    const finalBoost = totalActiveBoostPct / 100;
-    const blueprintBoost = isBuffActive(state, 'MATRIX_OVERDRIVE') ? 0.15 : 0;
+    const matrixActive = isBuffActive(state, 'MATRIX_OVERDRIVE');
+    const finalBoost = (totalActiveBoostPct / 100) * (matrixActive ? 1.15 : 1.0);
 
     return {
-        totalBoost: finalBoost + blueprintBoost,
-        perkResults
+        totalBoost: finalBoost,
+        perkResults,
+        blueprintBoost: matrixActive ? (totalActiveBoostPct / 100) * 0.15 : 0
     };
 }
 

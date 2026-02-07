@@ -18,18 +18,18 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
     let vx = 0, vy = 0;
     if (!e.eliteState) e.eliteState = 0;
     if (e.eliteState === 0) {
-        if (dist < 600 && (!e.timer || Date.now() > e.timer)) {
-            e.eliteState = 1; e.timer = Date.now() + 500;
+        if (dist < 600 && (!e.timer || state.gameTime > e.timer)) {
+            e.eliteState = 1; e.timer = state.gameTime + 0.5;
 
         }
         const a = Math.atan2(dy, dx);
         vx = Math.cos(a) * currentSpd + pushX; vy = Math.sin(a) * currentSpd + pushY;
     } else if (e.eliteState === 1) {
         vx = 0; vy = 0; e.rotationPhase = (e.rotationPhase || 0) + 0.2;
-        if (Date.now() > (e.timer || 0)) {
+        if (state.gameTime > (e.timer || 0)) {
             const ta = Math.atan2(player.y - e.y, player.x - e.x);
             e.lockedTargetX = player.x + Math.cos(ta) * 200; e.lockedTargetY = player.y + Math.sin(ta) * 200;
-            e.dashState = ta; e.eliteState = 2; e.timer = Date.now() + 500;
+            e.dashState = ta; e.eliteState = 2; e.timer = state.gameTime + 0.5;
         }
     } else if (e.eliteState === 2) {
         if (e.lockedTargetX !== undefined && e.lockedTargetY !== undefined) {
@@ -40,7 +40,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
                 const pColor = e.palette ? e.palette[0] : '#EF4444';
                 spawnParticles(state, e.x, e.y, pColor, 1);
             } else {
-                e.eliteState = 0; e.timer = Date.now() + 5000;
+                e.eliteState = 0; e.timer = state.gameTime + 5.0;
                 e.lockedTargetX = undefined; e.lockedTargetY = undefined;
             }
         }
@@ -52,19 +52,19 @@ export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx
     let vx = 0, vy = 0;
     if (!e.eliteState) e.eliteState = 0;
     if (e.eliteState === 0) {
-        if ((!e.timer || Date.now() > e.timer) && dist < 600) {
-            e.eliteState = 1; e.timer = Date.now() + 2500; // 2.5s Berserk Duration
+        if ((!e.timer || state.gameTime > e.timer) && dist < 600) {
+            e.eliteState = 1; e.timer = state.gameTime + 2.5; // 2.5s Berserk Duration
         }
         const a = Math.atan2(dy, dx);
         vx = Math.cos(a) * e.spd + pushX; vy = Math.sin(a) * e.spd + pushY;
     } else {
         e.rotationPhase = (e.rotationPhase || 0) + 0.5;
-        const a = Math.atan2(dy, dx) + Math.sin(Date.now() / 100) * 0.5;
+        const a = Math.atan2(dy, dx) + Math.sin(state.gameTime * 20) * 0.5;
         const fast = currentSpd * 1.75;
         vx = Math.cos(a) * fast + pushX; vy = Math.sin(a) * fast + pushY;
         spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 1);
-        if (Date.now() > (e.timer || 0)) {
-            e.eliteState = 0; e.timer = Date.now() + 5000;
+        if (state.gameTime > (e.timer || 0)) {
+            e.eliteState = 0; e.timer = state.gameTime + 5.0;
         }
     }
     return { vx, vy };
@@ -104,17 +104,17 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 
     if (e.eliteState === 0) {
         // Kiting Phase
-        if (veryCloseToWall && (!e.lastDodge || Date.now() - (e.lastDodge || 0) > 3000)) {
+        if (veryCloseToWall && (!e.lastDodge || state.gameTime - (e.lastDodge || 0) > 3.0)) {
             const angleToCenter = Math.atan2(nearestCenter.y - e.y, nearestCenter.x - e.x);
             const angleAwayFromPlayer = angleToPlayerD + Math.PI;
             e.dashState = (angleToCenter + angleAwayFromPlayer) / 2;
             e.lockedTargetX = 0; // Escape flag
-            e.lockedTargetY = Date.now() + 2000;
-            e.lastDodge = Date.now();
+            e.lockedTargetY = state.gameTime + 2.0;
+            e.lastDodge = state.gameTime;
         }
 
         if (e.lockedTargetX === 0) {
-            if (Date.now() > (e.lockedTargetY || 0)) {
+            if (state.gameTime > (e.lockedTargetY || 0)) {
                 e.lockedTargetX = undefined;
                 e.lockedTargetY = undefined;
             } else {
@@ -129,17 +129,28 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
         }
 
         // Charge Transition (Every 5 seconds)
-        if (Date.now() - (e.lastAttack || 0) > 5000) {
+        if (state.gameTime - (e.lastAttack || 0) > 5.0) {
             e.eliteState = 1;
-            e.timer = Date.now() + 1200; // 1.2s Charge
-            e.dashState = angleToPlayerD; // Lock angle
+            e.timer = state.gameTime + 1.4; // 1.4s Total Charge (0.8s Track + 0.6s Lock)
+            e.dashState = angleToPlayerD; // Initial angle
         }
     } else if (e.eliteState === 1) {
-        // Charging (Waiting)
+        // Charging Phase
         vx = 0; vy = 0;
-        if (Date.now() > (e.timer || 0)) {
+
+        // Sub-Phase 1: Tracking (First 0.6s)
+        // Sub-Phase 2: Locked (Last 0.8s)
+        const remaining = (e.timer || 0) - state.gameTime;
+        if (remaining > 0.8) {
+            // Tracking
+            e.dashState = angleToPlayerD;
+        } else {
+            // Locked - DashState remains fixed
+        }
+
+        if (state.gameTime > (e.timer || 0)) {
             e.eliteState = 2;
-            e.timer = Date.now() + 800; // Firing animation
+            e.timer = state.gameTime + 0.8; // Firing animation
             e.hasHitThisBurst = false; // Reset burst hit flag
             playSfx('laser');
         }
@@ -192,6 +203,10 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
                 player.damageTaken += finalActualDmg;
                 const beamColor = e.palette ? e.palette[0] : '#f87171';
                 spawnFloatingNumber(state, player.x, player.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
+
+                // Kinetic Battery: Trigger Zap on Laser Hit
+                const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                if (triggerZap) triggerZap(state, player, 1);
             }
 
             if (player.curHp <= 0 && !state.gameOver) {
@@ -217,9 +232,9 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
         });
     }
 
-    if (e.eliteState !== 0 && Date.now() > (e.timer || 0)) {
+    if (e.eliteState !== 0 && state.gameTime > (e.timer || 0)) {
         e.eliteState = 0;
-        e.lastAttack = Date.now();
+        e.lastAttack = state.gameTime;
         e.lockedTargetX = undefined;
         e.lockedTargetY = undefined;
     }
@@ -295,11 +310,11 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     if (distToPlayer <= 350 && orbitingMinions.length > 0) {
         orbitingMinions.forEach(m => m.minionState = 1);
         playSfx('stun-disrupt');
-        e.angryUntil = Date.now() + 2000; // Stay red for 2 seconds
+        e.angryUntil = state.gameTime + 2.0; // Stay red for 2 seconds
     }
 
     // 2. Visual Feedback
-    const isAngry = !!(e.angryUntil && Date.now() < e.angryUntil);
+    const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
     const isWarning = !!(distToPlayer <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
@@ -309,10 +324,9 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         vx += (Math.random() - 0.5) * 8; // Extra violent shake
         vy += (Math.random() - 0.5) * 8;
     } else if (isWarning) {
-        // High-Visibility Warning (Blink Red)
-        const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
-        e.palette = isBlink ? ['#EF4444', '#F87171', '#7F1D1D'] : (e.originalPalette || e.palette);
-        if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE DURING BLINK
+        // High-Visibility Warning (Solid Red)
+        e.palette = ['#EF4444', '#F87171', '#7F1D1D'];
+        e.eraPalette = undefined; // OVERRIDE ERA PALETTE
 
         vx += (Math.random() - 0.5) * 6; // Increased shake
         vy += (Math.random() - 0.5) * 6;
@@ -323,18 +337,18 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     if (age > 60) {
         if (orbitingMinions.length > 0) {
             // RELEASE ONE BY ONE
-            if (!e.lastAttack) e.lastAttack = Date.now();
-            if (Date.now() - e.lastAttack > 2000) {
+            if (!e.lastAttack) e.lastAttack = state.gameTime;
+            if (state.gameTime - e.lastAttack > 2.0) {
                 const victim = orbitingMinions[0];
                 victim.minionState = 1;
                 playSfx('stun-disrupt');
-                e.lastAttack = Date.now();
+                e.lastAttack = state.gameTime;
             }
             // Pulsate White/Red while dying (Only if NOT in aggro red state)
             if (!isAngry) {
-                const isBlink = Math.floor(Date.now() / 100) % 2 === 0;
-                e.palette = isBlink ? ['#FFFFFF', '#EF4444', '#7F1D1D'] : (e.originalPalette || e.palette);
-                if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+                // Pulsate White/Red while dying (Removed blinking per user request)
+                e.palette = ['#FFFFFF', '#EF4444', '#7F1D1D'];
+                e.eraPalette = undefined; // OVERRIDE ERA PALETTE
             }
         } else {
             // DIE
@@ -349,24 +363,24 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     if (!isAngry && !isWarning) {
         // Normal State / Spawning Logic
         if (e.summonState === 1) {
-            // Charging Blink (Green)
-            const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
-            e.palette = isBlink ? ['#4ade80', '#22c55e', '#166534'] : (e.originalPalette || e.palette);
-            if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+            // Charging Blink (Removed per user request to prevent wall-flashing perception)
+            // const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
+            // e.palette = isBlink ? ['#4ade80', '#22c55e', '#166534'] : (e.originalPalette || e.palette);
+            // if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
 
-            if (Date.now() > (e.timer || 0)) {
+            if (state.gameTime > (e.timer || 0)) {
                 spawnMinion(state, e, true, 3);
-                e.lastAttack = Date.now();
+                e.lastAttack = state.gameTime;
                 e.summonState = 0;
                 if (e.originalPalette) e.palette = e.originalPalette;
             }
         } else {
             if (e.originalPalette) e.palette = e.originalPalette;
-            const spawnInterval = 20000;
-            if (!e.lastAttack) e.lastAttack = Date.now();
-            if (Date.now() - e.lastAttack > spawnInterval && myMinions.length < 9) {
+            const spawnInterval = 20.0;
+            if (!e.lastAttack) e.lastAttack = state.gameTime;
+            if (state.gameTime - e.lastAttack > spawnInterval && myMinions.length < 9) {
                 e.summonState = 1;
-                e.timer = Date.now() + 3000;
+                e.timer = state.gameTime + 3.0;
                 playSfx('warning');
             }
         }

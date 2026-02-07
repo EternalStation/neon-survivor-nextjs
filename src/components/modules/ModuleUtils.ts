@@ -22,7 +22,8 @@ export const getDustValue = (rarity: MeteoriteRarity) => {
 };
 
 export const getMeteoriteImage = (m: Meteorite) => {
-    return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
+    const assetQuality = m.quality === 'Corrupted' ? 'New' : m.quality;
+    return `/assets/meteorites/M${m.visualIndex}${assetQuality}.png`;
 };
 
 export const getBlueprintImage = (type: string) => {

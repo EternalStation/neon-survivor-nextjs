@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
 import type { GameState, Blueprint, BlueprintType } from '../logic/types';
-import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint } from '../logic/BlueprintLogic';
+import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/BlueprintLogic';
 
 interface BlueprintBayProps {
     gameState: GameState;
     spendDust: (amount: number) => boolean;
     onUpdate: () => void;
+    onHoverBlueprint: (bp: Blueprint | null) => void;
 }
 
-export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust, onUpdate }) => {
+export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust, onUpdate, onHoverBlueprint }) => {
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
+    const [, setTick] = useState(0);
+
+    React.useEffect(() => {
+        const hasResearch = gameState.blueprints.some(bp => bp?.status === 'researching');
+        if (hasResearch) {
+            const interval = setInterval(() => {
+                const finished = checkResearchProgress(gameState);
+                if (finished) {
+                    onUpdate();
+                } else {
+                    setTick(t => t + 1);
+                }
+            }, 100);
+            return () => clearInterval(interval);
+        }
+    }, [gameState.blueprints, onUpdate]);
 
     const handleConfirmActivate = () => {
         if (promptBlueprint) {
@@ -24,6 +41,17 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
         }
     };
 
+    const handleScrap = () => {
+        if (promptBlueprint) {
+            const slotIdx = gameState.blueprints.findIndex(b => b?.id === promptBlueprint.id);
+            if (slotIdx !== -1) {
+                scrapBlueprint(gameState, slotIdx);
+                setPromptBlueprint(null);
+                onUpdate();
+            }
+        }
+    };
+
     return (
         <div className="blueprint-bay">
             <div className="bay-header">
@@ -33,19 +61,28 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
             <div className="blueprint-grid">
                 {gameState.blueprints.map((bp, idx) => {
                     const isLocked = idx >= 8;
-                    const isActive = bp && gameState.activeBlueprintBuffs[bp.type];
+                    const isActive = bp && bp.status === 'active';
+                    const isBroken = bp && bp.status === 'broken';
 
                     return (
                         <div
                             key={idx}
-                            className={`blueprint-slot ${isLocked ? 'locked' : bp ? 'occupied' : 'empty'} ${isActive ? 'active' : ''}`}
-                            onMouseEnter={() => !isLocked && setHoveredIdx(idx)}
-                            onMouseLeave={() => setHoveredIdx(null)}
+                            className={`blueprint-slot ${isLocked ? 'locked' : bp ? 'occupied' : 'empty'} ${isActive ? 'active' : ''} ${isBroken ? 'broken' : ''}`}
+                            onMouseEnter={() => {
+                                if (!isLocked) {
+                                    setHoveredIdx(idx);
+                                    if (bp) onHoverBlueprint(bp);
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                setHoveredIdx(null);
+                                onHoverBlueprint(null);
+                            }}
                             onClick={() => {
-                                if (bp && !isActive) setPromptBlueprint(bp);
+                                if (bp && bp.status !== 'researching') setPromptBlueprint(bp);
                             }}
                             style={{
-                                cursor: bp && !isActive ? 'pointer' : 'default',
+                                cursor: bp ? 'pointer' : 'default',
                                 position: 'relative'
                             }}
                         >
@@ -63,11 +100,11 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                                     <div style={{
                                         position: 'absolute',
                                         inset: 0,
-                                        backgroundImage: "url('/assets/Icons/Blueprint.png')",
+                                        backgroundImage: isBroken ? "url('/assets/Icons/BlueprintBroken.png')" : "url('/assets/Icons/Blueprint.png')",
                                         backgroundSize: 'cover',
                                         backgroundPosition: 'center',
-                                        opacity: isActive ? 0.4 : 0.8,
-                                        filter: isActive ? 'sepia(1) hue-rotate(180deg) brightness(1.2)' : 'none',
+                                        opacity: isActive ? 0.4 : isBroken ? 0.6 : 0.8,
+                                        filter: isActive ? 'sepia(1) hue-rotate(180deg) brightness(1.2)' : isBroken ? 'grayscale(1)' : 'none',
                                         zIndex: 0
                                     }}></div>
 
@@ -80,51 +117,110 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                                         display: 'flex',
                                         flexDirection: 'column',
                                         justifyContent: 'space-between',
-                                        padding: '4px'
+                                        padding: '0' // REMOVED PADDING to allow full-width bottom
                                     }}>
-                                        <span className="bp-name" style={{
-                                            fontSize: '0.5rem',
-                                            fontWeight: 900,
-                                            background: 'rgba(0,0,0,0.7)',
-                                            padding: '1px 2px',
-                                            borderRadius: '2px',
-                                            color: '#fff',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            textTransform: 'uppercase'
-                                        }}>{bp.name}</span>
-
-                                        {!isActive && (
-                                            <div style={{
-                                                background: 'rgba(59, 130, 246, 0.85)',
-                                                border: '1px solid #60a5fa',
-                                                borderRadius: '2px',
-                                                fontSize: '0.5rem',
-                                                fontWeight: 900,
-                                                padding: '2px 0',
-                                                color: '#fff',
-                                                letterSpacing: '0.5px',
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                            }}>
-                                                ACTIVATE
-                                            </div>
-                                        )}
-
-                                        {isActive && (
-                                            <div style={{
-                                                fontSize: '0.6rem',
+                                        {/* NAME (Padded) */}
+                                        <div style={{ padding: '4px' }}>
+                                            <span className="bp-name" style={{
+                                                fontSize: '0.65rem',
                                                 fontWeight: 900,
                                                 color: '#60a5fa',
-                                                textShadow: '0 0 5px rgba(0,0,0,1)',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center'
-                                            }}>
-                                                <span style={{ fontSize: '0.4rem', opacity: 0.8 }}>ACTIVE</span>
-                                                <span>{Math.ceil((gameState.activeBlueprintBuffs[bp.type]! - Date.now()) / 1000)}s</span>
-                                            </div>
-                                        )}
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                display: 'block',
+                                                textShadow: '0 0 8px rgba(59, 130, 246, 0.8), 0 0 4px rgba(0, 0, 0, 1), 1px 1px 2px rgba(0, 0, 0, 0.9)'
+                                            }}>{bp.status === 'researching' ? '??-???' : (bp.serial || bp.name.substring(0, 5))}</span>
+                                        </div>
+
+                                        {/* STATUS / BUTTONS (Full Width) */}
+                                        <div style={{ width: '100%' }}>
+                                            {!isActive && !isBroken && bp.status !== 'researching' && (
+                                                <div style={{
+                                                    background: 'rgba(59, 130, 246, 0.85)',
+                                                    borderTop: '1px solid #60a5fa',
+                                                    borderBottom: '1px solid #60a5fa', // Ensure borders are clean
+                                                    fontSize: '0.45rem',
+                                                    fontWeight: 900,
+                                                    padding: '2px 0',
+                                                    color: '#fff',
+                                                    letterSpacing: '0.5px',
+                                                    boxShadow: '0 -2px 4px rgba(0,0,0,0.3)',
+                                                    textAlign: 'center',
+                                                    width: '100%',
+                                                    marginBottom: '4px' // Add margin to float it slightly from bottom or keep 0 if desired? User wanted "to the edge".
+                                                    // Actually, if I want it to the edge of the SLOT, I should remove margin bottom.
+                                                    // But the slot has `overflow: hidden` (Line 342).
+                                                    // Let's keep marginBottom 4px to match previous design aesthetics but ensure width is full.
+                                                    // User said "on left it has some space left". Removing parent padding fixes this.
+                                                    // I will add horizontal margin: 0.
+                                                }}>
+                                                    DEPLOY
+                                                </div>
+                                            )}
+
+                                            {bp.status === 'researching' && (
+                                                <div style={{
+                                                    fontSize: '0.6rem',
+                                                    fontWeight: 900,
+                                                    color: '#fbbf24',
+                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    padding: '2px 0',
+                                                    marginBottom: '4px',
+                                                    width: '100%',
+                                                    background: 'rgba(0, 0, 0, 0.4)'
+                                                }}>
+                                                    <span style={{ fontSize: '0.35rem', opacity: 0.8, letterSpacing: '1px' }}>DECRYPTING</span>
+                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.5rem' }}>ANALYZING...</span>
+                                                </div>
+                                            )}
+
+                                            {isActive && (
+                                                <div style={{
+                                                    fontSize: '0.6rem',
+                                                    fontWeight: 900,
+                                                    color: '#60a5fa',
+                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    marginBottom: '4px',
+                                                    width: '100%',
+                                                    background: 'rgba(0, 0, 0, 0.4)',
+                                                    padding: '2px 0'
+                                                }}>
+                                                    <span style={{ fontSize: '0.35rem', opacity: 0.8 }}>RUNNING</span>
+                                                    {bp.type === 'QUANTUM_SCRAPPER' ? (
+                                                        <span style={{ fontSize: '0.5rem' }}>USES: {Math.max(0, gameState.activeBlueprintCharges[bp.type] || 0)}</span>
+                                                    ) : (
+                                                        <span>{Math.max(0, Math.ceil(gameState.activeBlueprintBuffs[bp.type]! - gameState.gameTime) - 1)}s</span>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {isBroken && (
+                                                <div style={{
+                                                    fontSize: '0.6rem',
+                                                    fontWeight: 900,
+                                                    color: '#ef4444',
+                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    marginBottom: '4px',
+                                                    width: '100%',
+                                                    background: 'rgba(0, 0, 0, 0.4)',
+                                                    padding: '2px 0'
+                                                }}>
+                                                    <span style={{ fontSize: '0.45rem', opacity: 0.8 }}>BROKEN</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
@@ -149,82 +245,115 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                     <div style={{
                         background: 'rgba(15, 23, 42, 0.95)',
                         border: '2px solid #3b82f6',
-                        padding: '20px',
+                        padding: '15px',
                         borderRadius: '8px',
                         boxShadow: '0 0 40px rgba(59, 130, 246, 0.4)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
-                        minWidth: '320px',
-                        maxWidth: '400px'
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+                        minWidth: '250px',
+                        maxWidth: '300px'
                     }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+                        <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, marginBottom: '5px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '5px' }}>
-                                <span style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #3b82f6)' }} />
-                                <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '3px', textShadow: '0 0 10px #3b82f6' }}>SYSTEM INITIALIZATION</div>
-                                <span style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, #3b82f6, transparent)' }} />
+                                <span style={{ width: '30px', height: '1px', background: 'linear-gradient(90deg, transparent, #3b82f6)' }} />
+                                <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', textShadow: '0 0 10px #3b82f6' }}>SYSTEM INITIALIZATION</div>
+                                <span style={{ width: '30px', height: '1px', background: 'linear-gradient(90deg, #3b82f6, transparent)' }} />
                             </div>
-                            <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff', letterSpacing: '2px', textShadow: '0 0 20px rgba(59, 130, 246, 0.5)' }}>{promptBlueprint.name}</div>
-                        </div>
-
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(5, 5, 15, 0.6)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                            borderRadius: '4px',
-                            color: '#e2e8f0',
-                            fontSize: '13px',
-                            textAlign: 'left',
-                            lineHeight: '1.5',
-                            position: 'relative',
-                            zIndex: 1,
-                            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)'
-                        }}>
-                            <div style={{ fontSize: '9px', color: '#3b82f6', fontWeight: 900, marginBottom: '8px', opacity: 0.8 }}>// FUNCTIONAL_OVERVIEW_LOG</div>
-                            {promptBlueprint.desc}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(59, 130, 246, 0.1)', padding: '8px 15px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                <span style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '1px' }}>RUNTIME_LIMIT</span>
-                                <span style={{ fontSize: '16px', color: '#fff', fontWeight: 900 }}>{promptBlueprint.duration}s</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(251, 191, 36, 0.1)', padding: '8px 15px', borderRadius: '4px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-                                <span style={{ fontSize: '9px', color: '#fbbf24', fontWeight: 900, letterSpacing: '1px' }}>REQUISITION_COST</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ fontSize: '20px', color: '#fff', fontWeight: 900 }}>{promptBlueprint.cost}</span>
-                                    <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '18px', height: '18px', filter: 'drop-shadow(0 0 5px #fbbf24)' }} />
-                                </div>
+                            <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff', letterSpacing: '2px', textShadow: '0 0 20px rgba(59, 130, 246, 0.5)' }}>
+                                {promptBlueprint.serial || promptBlueprint.name}
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px', width: '100%', marginTop: '5px', position: 'relative', zIndex: 1 }}>
+                        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '5px', position: 'relative', zIndex: 1 }}>
                             <button
                                 onClick={() => setPromptBlueprint(null)}
                                 style={{
-                                    flex: 1, padding: '12px', background: 'rgba(255, 255, 255, 0.05)',
+                                    flex: 1, padding: '10px', background: 'rgba(255, 255, 255, 0.05)',
                                     border: '1px solid #475569', color: '#94a3b8', borderRadius: '4px', cursor: 'pointer',
-                                    fontWeight: 900, fontSize: '12px', letterSpacing: '2px', transition: 'all 0.2s'
+                                    fontWeight: 900, fontSize: '11px', letterSpacing: '1px', transition: 'all 0.2s'
                                 }}
                             >
-                                ABORT
+                                CLOSE
                             </button>
-                            <button
-                                onClick={handleConfirmActivate}
-                                disabled={gameState.player.dust < promptBlueprint.cost}
-                                style={{
-                                    flex: 1.5, padding: '12px',
-                                    background: gameState.player.dust >= promptBlueprint.cost ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : 'rgba(59, 130, 246, 0.1)',
-                                    border: '1px solid #60a5fa', color: '#fff',
-                                    borderRadius: '4px', cursor: gameState.player.dust >= promptBlueprint.cost ? 'pointer' : 'not-allowed',
-                                    fontWeight: 900, fontSize: '13px', letterSpacing: '2px',
-                                    boxShadow: gameState.player.dust >= promptBlueprint.cost ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none',
-                                    transition: 'all 0.2s',
-                                    textTransform: 'uppercase'
-                                }}
-                            >
-                                {gameState.player.dust >= promptBlueprint.cost ? 'INITIALIZE_PROTOCOL' : 'LOW_RESOURCE_STATE'}
-                            </button>
+                            {promptBlueprint.status !== 'active' && promptBlueprint.status !== 'broken' && (
+                                <>
+                                    {isBuffActive(gameState, promptBlueprint.type) ? (
+                                        <button
+                                            disabled
+                                            style={{
+                                                flex: 2, padding: '10px',
+                                                background: 'rgba(59, 130, 246, 0.1)',
+                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                color: '#60a5fa',
+                                                borderRadius: '4px', cursor: 'not-allowed',
+                                                fontWeight: 900, fontSize: '10px', letterSpacing: '1px',
+                                                textTransform: 'uppercase',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                            }}
+                                        >
+                                            PROTOCOL ALREADY ACTIVE
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleConfirmActivate}
+                                            disabled={gameState.player.dust < promptBlueprint.cost}
+                                            style={{
+                                                flex: 2, padding: '10px',
+                                                background: gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#ef4444',
+                                                border: `1px solid ${gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? '#60a5fa' : '#f87171'}`,
+                                                color: '#fff',
+                                                borderRadius: '4px', cursor: gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? 'pointer' : 'not-allowed',
+                                                fontWeight: 900, fontSize: '12px', letterSpacing: '1px',
+                                                boxShadow: gameState.player.dust >= promptBlueprint.cost ? '0 0 15px rgba(59, 130, 246, 0.5)' : '0 5px 10px rgba(239, 68, 68, 0.4)',
+                                                transition: 'all 0.2s',
+                                                textTransform: 'uppercase',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                            }}
+                                        >
+                                            <span>DEPLOY</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                <span style={{ fontSize: '12px' }}>{promptBlueprint.cost}</span>
+                                                <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '16px', height: '16px' }} />
+                                            </div>
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            {promptBlueprint.status === 'active' && (
+                                <div style={{
+                                    flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '4px',
+                                    background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontWeight: 900,
+                                    letterSpacing: '1px', fontSize: '12px'
+                                }}>
+                                    DEPLOYED
+                                </div>
+                            )}
+
+                            {promptBlueprint.status === 'broken' && (
+                                <button
+                                    onClick={handleScrap}
+                                    style={{
+                                        flex: 2, padding: '10px',
+                                        background: '#334155',
+                                        border: '1px solid #475569',
+                                        color: '#94a3b8',
+                                        borderRadius: '4px', cursor: 'pointer',
+                                        fontWeight: 900, fontSize: '12px', letterSpacing: '1px',
+                                        boxShadow: '0 5px 10px rgba(0,0,0,0.3)',
+                                        transition: 'all 0.2s',
+                                        textTransform: 'uppercase',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                    }}
+                                >
+                                    <span>SCRAP (Recycle)</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
+                                        <span style={{ fontSize: '12px' }}>+5</span>
+                                        <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '16px', height: '16px' }} />
+                                    </div>
+                                </button>
+                            )}
                         </div>
 
                         {/* DECORATIVE CORNER ACCENTS */}
@@ -330,6 +459,6 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                     text-align: center;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };

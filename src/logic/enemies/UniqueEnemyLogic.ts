@@ -100,14 +100,28 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         }
         const tdx = (e.lockedTargetX || 0) - e.x, tdy = (e.lockedTargetY || 0) - e.y, tdist = Math.hypot(tdx, tdy);
         if (tdist > 1) { vx = (tdx / tdist) * e.spd; vy = (tdy / tdist) * e.spd; }
-        if (dToP < 350 && (!e.tacticalTimer || timeS > e.tacticalTimer)) {
+        if (e.forceTeleport || (dToP < 350 && (!e.tacticalTimer || timeS > e.tacticalTimer))) {
             const target = state.enemies.find(o => !o.dead && !o.boss && !o.legionId && o.shape !== 'snitch' && Math.hypot(o.x - player.x, o.y - player.y) > dToP + 200);
             if (target) {
                 const ox = e.x, oy = e.y; e.x = target.x; e.y = target.y; target.x = ox; target.y = oy;
                 spawnParticles(state, ox, oy, ['#F0F0F0', '#808080'], 20);
                 spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 20);
                 playSfx('smoke-puff'); e.tacticalTimer = timeS + 4.0; e.panicCooldown = timeS + 1.0;
+            } else if (e.forceTeleport) {
+                // Fallback: Random Blink if no swap target
+                const a = Math.random() * Math.PI * 2;
+                const d = 800 + Math.random() * 200;
+                const oldX = e.x, oldY = e.y;
+                e.x = player.x + Math.cos(a) * d;
+                e.y = player.y + Math.sin(a) * d;
+
+                spawnParticles(state, oldX, oldY, ['#F0F0F0', '#808080'], 20);
+                spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 20);
+                playSfx('smoke-puff');
+                e.tacticalTimer = timeS + 4.0;
+                e.panicCooldown = timeS + 1.0;
             }
+            e.forceTeleport = undefined;
         }
     }
     if (dToP < 250) {
@@ -144,7 +158,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         if (now >= (e.zombieTimer || 0)) {
             e.zombieState = 'rising';
             e.zombieTimer = now + 1500;
-            playSfx('zombie-rise');
+            // playSfx('zombie-rise'); // Removed per user request (digging sound)
         }
         return;
     }
@@ -202,15 +216,30 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
             target.vy = 0;
         }
 
-        // 4. Boss Damage Over Time (2% per second)
-        if (target.boss) {
+        // 4. Boss & Legion Damage Over Time (2% Boss HP or 10% Legion HP per second)
+        if (target.boss || target.legionId) {
             if ((state.frameCount % 60) === 0) { // Approx every second
-                const dmg = target.maxHp * 0.02;
-                target.hp -= dmg;
+                const dmg = target.boss ? target.maxHp * 0.02 : target.maxHp * 0.1;
+                let appliedDmg = dmg;
+
+                // --- LEGION SHIELD LOGIC ---
+                if (target.legionId) {
+                    const lead = state.legionLeads?.[target.legionId];
+                    if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                        const shieldHit = Math.min(appliedDmg, lead.legionShield || 0);
+                        lead.legionShield = (lead.legionShield || 0) - shieldHit;
+                        appliedDmg -= shieldHit;
+                        spawnParticles(state, target.x, target.y, '#60a5fa', 2);
+                    }
+                }
+
+                if (appliedDmg > 0) {
+                    target.hp -= appliedDmg;
+                    if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
+                }
+
                 spawnFloatingNumber(state, target.x, target.y, Math.round(dmg).toString(), '#4ade80', true);
                 spawnParticles(state, target.x, target.y, '#4ade80', 5);
-
-                if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
             }
         }
 
@@ -225,6 +254,14 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                 const d = Math.hypot(other.x - e.x, other.y - e.y);
                 if (d < e.size + other.size) {
                     takeZombieDamage(1);
+
+                    // Kinetic Battery: Trigger Zap on Zombie Collision
+                    const kinLvl = (state as any).getHexLevel ? (state as any).getHexLevel(state, 'KineticBattery') : 0;
+                    if (kinLvl >= 1) {
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (triggerZap) triggerZap(state, player, kinLvl);
+                    }
+
                     if (e.dead) return; // Stop if died
                 }
             }
@@ -241,11 +278,24 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                 handleEnemyDeath(state, target, onEvent);
                 takeZombieDamage(3);
             } else {
-                // Normal: Eat (3s passed). Kill Target. Zombie Loses 1 Heart.
-                target.hp = 0;
-                handleEnemyDeath(state, target, onEvent);
-                playSfx('rare-kill'); // Crunch sound
-                spawnParticles(state, target.x, target.y, '#ef4444', 20); // Blood/Parts
+                // Normal & Legion Completion Logic
+                let canKill = true;
+                if (target.legionId) {
+                    const lead = state.legionLeads?.[target.legionId];
+                    if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                        // Damage shield instead of kill
+                        lead.legionShield = Math.max(0, (lead.legionShield || 0) - (target.maxHp * 0.5));
+                        canKill = false;
+                    }
+                }
+
+                if (canKill) {
+                    // Normal/Defenseless Legion Unit
+                    target.hp = 0;
+                    handleEnemyDeath(state, target, onEvent);
+                    playSfx('zombie-consume');
+                    spawnParticles(state, target.x, target.y, '#ef4444', 20); // Blood/Parts
+                }
 
                 takeZombieDamage(1);
 
@@ -316,11 +366,18 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     const eatDuration = (target.boss || target.isElite) ? 5000 : 3000;
                     e.timer = now + eatDuration;
 
-                    playSfx('zombie-rise'); // Grunt/Attack sound
+                    // playSfx('zombie-consume'); // Removed per user request (no start eat sound)
                     return; // Stop processing active state
                 } else {
                     // Collision with OBSTACLE
                     takeZombieDamage(1);
+
+                    // Kinetic Battery: Trigger Zap on Zombie Collision
+                    const kinLvl = (state as any).getHexLevel ? (state as any).getHexLevel(state, 'KineticBattery') : 0;
+                    if (kinLvl >= 1) {
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (triggerZap) triggerZap(state, player, kinLvl);
+                    }
 
                     // Bounce off
                     const pushAngle = Math.atan2(e.y - other.y, e.x - other.x);

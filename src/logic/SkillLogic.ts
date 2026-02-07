@@ -1,5 +1,6 @@
 import type { GameState } from './types';
 import { getHexLevel } from './LegendaryLogic';
+import { isBuffActive } from './BlueprintLogic';
 
 export function castSkill(state: GameState, skillIndex: number) {
     // 0-indexed skill slot
@@ -7,6 +8,8 @@ export function castSkill(state: GameState, skillIndex: number) {
 
     const skill = state.player.activeSkills[skillIndex];
     if (skill.cooldown > 0) return;
+
+    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (state.player.cooldownReduction || 0));
 
     if (skill.type === 'DefPuddle') {
         const level = getHexLevel(state, 'DefPuddle');
@@ -24,8 +27,8 @@ export function castSkill(state: GameState, skillIndex: number) {
         });
 
         // Cooldown
-        skill.cooldown = 25; // 25 seconds (using logic seconds, handled in update loop)
-        skill.cooldownMax = 25;
+        skill.cooldownMax = 25 * cdMod;
+        skill.cooldown = skill.cooldownMax;
         skill.inUse = true; // Visuals?
         // Auto-disable inUse after duration? Handled in loop.
     }
@@ -54,8 +57,8 @@ export function castSkill(state: GameState, skillIndex: number) {
 
         // playSfx('ice-loop'); // Handled by pulse logic now for consistency
 
-        skill.cooldown = 30;
-        skill.cooldownMax = 30;
+        skill.cooldownMax = 30 * cdMod;
+        skill.cooldown = skill.cooldownMax; // Start cooldown
         skill.inUse = true;
     }
 }

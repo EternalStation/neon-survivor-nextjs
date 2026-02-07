@@ -79,6 +79,30 @@ export function spawnUpgrades(state: GameState, isBoss: boolean = false): Upgrad
     const choices: UpgradeChoice[] = [];
 
     if (isBoss) {
+        // --- ARENA SPECIFIC BOSS DROPS ---
+        if (state.currentArena === 2 && !state.player.kineticBattery) {
+            choices.push({
+                type: { id: 'force_battery', name: 'KINETIC BATTERY', desc: 'Gain +15% of Armor as Damage and Attack Speed.', icon: 'special' },
+                rarity: { id: 'boss', label: 'Defense Tech', color: '#ef4444', mult: 0 },
+                isSpecial: true
+            });
+        }
+        if (state.currentArena === 1 && !state.player.radCore) {
+            choices.push({
+                type: { id: 'rad_core', name: 'RADIATION CORE', desc: 'Deal 5-25% Max HP/sec to nearby enemies.', icon: 'special' },
+                rarity: { id: 'boss', label: 'Combat Tech', color: '#ef4444', mult: 0 },
+                isSpecial: true
+            });
+        }
+        if (state.currentArena === 0 && !state.player.chronoPlating) {
+            choices.push({
+                type: { id: 'chrono_plate', name: 'CHRONO PLATING', desc: 'Gain +1 Armor and +10 HP per Minute survived.', icon: 'special' },
+                rarity: { id: 'boss', label: 'Eco Tech', color: '#ef4444', mult: 0 },
+                isSpecial: true
+            });
+        }
+
+        // Standard Boss Drops
         choices.push(
             { type: { id: 'm', name: 'Dual Pulse', desc: '+1 Projectile per Shot', icon: 'special' }, rarity: { id: 'boss', label: 'Anomaly Tech', color: '#ef4444', mult: 0 }, isSpecial: true },
             { type: { id: 'p', name: 'Vortex Point', desc: '+1 Enemy Penetration', icon: 'special' }, rarity: { id: 'boss', label: 'Anomaly Tech', color: '#ef4444', mult: 0 }, isSpecial: true },
@@ -166,6 +190,10 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
                 state.drones.push({ a: Math.random() * 6.28, last: 0, x: player.x, y: player.y });
             }
         }
+        // New Arena Boss Drops
+        if (choice.type.id === 'force_battery') player.kineticBattery = true;
+        if (choice.type.id === 'rad_core') player.radCore = true;
+        if (choice.type.id === 'chrono_plate') player.chronoPlating = true;
     } else {
         const baseValue = BASE_UPGRADE_VALUES[choice.type.id] || 0;
         const multiplier = choice.rarity.mult || 1;

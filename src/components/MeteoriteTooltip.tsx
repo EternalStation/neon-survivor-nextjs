@@ -40,14 +40,15 @@ const RARITY_INFO: Record<MeteoriteRarity, { name: string, symbol: string }> = {
 };
 
 const getMeteoriteImage = (m: Meteorite) => {
-    return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
+    const assetQuality = m.quality === 'Corrupted' ? 'New' : m.quality;
+    return `/assets/meteorites/M${m.visualIndex}${assetQuality}.png`;
 };
 
 const formatDescription = (text: string, highlightColor: string) => {
     // Keywords to highlight - Order matters (longest first to avoid partial matches)
     const keywords = [
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
-        'Legendary Hex', 'PRISTINE', 'DAMAGED', 'BROKEN',
+        'Legendary Hex', 'PRISTINE', 'DAMAGED', 'BROKEN', 'CORRUPTED',
         'Type', 'Rarity', 'Arena',
         'ECO', 'COM', 'DEF',
         '\\(Any\\)', 'same level'
@@ -56,9 +57,25 @@ const formatDescription = (text: string, highlightColor: string) => {
     // Case-insensitive regex
     const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
     return text.split(regex).filter(Boolean).map((part, i) => {
+        const upperPart = part.toUpperCase();
         // Check if this part matches one of the keywords (ignoring case)
         if (keywords.some(k => new RegExp(`^${k}$`, 'i').test(part))) {
-            return <span key={i} style={{ color: highlightColor, fontWeight: 'bold' }}>{part}</span>;
+            const isCorrupted = upperPart === 'CORRUPTED';
+            return (
+                <span key={i} style={{
+                    color: highlightColor,
+                    fontWeight: 'bold',
+                    background: isCorrupted ? `${highlightColor}15` : 'transparent',
+                    padding: isCorrupted ? '0 4px' : '0',
+                    borderRadius: '3px',
+                    border: isCorrupted ? `1px solid ${highlightColor}33` : 'none',
+                    textShadow: `0 0 8px ${highlightColor}44`,
+                    display: isCorrupted ? 'inline-block' : 'inline',
+                    lineHeight: isCorrupted ? '1.2' : 'normal'
+                }}>
+                    {upperPart}
+                </span>
+            );
         }
         return <span key={i}>{part}</span>;
     });
@@ -77,7 +94,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
     // ... efficiency logic remains ...
     const efficiency = meteoriteIdx !== -1
         ? calculateMeteoriteEfficiency(gameState, meteoriteIdx)
-        : { totalBoost: 0, perkResults: {} };
+        : { totalBoost: 0, perkResults: {} as Record<string, any>, blueprintBoost: 0 };
 
     // Calculate how many stats we have
     const activeStatsCount = meteorite.perks ? meteorite.perks.length : 0;
@@ -120,6 +137,12 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
         boxShadow: `0 0 30px ${rarityColor}44`,
         ['--rarity-color' as any]: rarityColor,
         // Animation removed
+    };
+
+    const formatPct = (val: number, isDirectPct: boolean = false) => {
+        const raw = isDirectPct ? val : val * 100;
+        const rounded = Math.round(raw * 10) / 10;
+        return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
     };
 
     return (
@@ -210,8 +233,15 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                         textAlign: 'center',
                         position: 'relative', zIndex: 1
                     }}>
-                        <div style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', marginBottom: '2px' }}>INTERACTION PROTOCOL</div>
-                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff', letterSpacing: '0.5px' }}>RIGHT-CLICK TO BEGIN RESEARCH PHASE</span>
+                        <div style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', marginBottom: '2px' }}>RESEARCH ANALYSIS</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '10px', color: '#94a3b8' }}>DECRYPTION COMPLEXITY:</span>
+                            <span style={{ fontSize: '10px', color: '#fff', fontWeight: 900 }}>UNKNOWN (PROCESSING...)</span>
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '8px', textAlign: 'center', opacity: 0.7 }}>
+                            *Decryption duration varies based on encryption complexity
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#fbbf24', letterSpacing: '0.5px' }}>RIGHT-CLICK TO BEGIN DECRYPTION</span>
                     </div>
                 </div>
             ) : (
@@ -242,7 +272,27 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                 gap: '4px'
                             }}>
                                 <span style={{ opacity: 0.6, fontSize: '10px' }}>ACTIVE POWER:</span>
-                                <span>+{Math.round(efficiency.totalBoost * 100)}%</span>
+                                <span>+{formatPct(efficiency.totalBoost)}%</span>
+                                {meteorite.blueprintBoosted && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px',
+                                        background: 'rgba(59, 130, 246, 0.2)', padding: '1px 6px', borderRadius: '4px',
+                                        border: '1px solid rgba(59, 130, 246, 0.4)',
+                                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)'
+                                    }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', letterSpacing: '0.5px' }}>HARM-V +2%</span>
+                                    </div>
+                                )}
+                                {efficiency.blueprintBoost > 0 && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px',
+                                        background: 'rgba(249, 115, 22, 0.2)', padding: '1px 6px', borderRadius: '4px',
+                                        border: '1px solid rgba(249, 115, 22, 0.4)',
+                                        boxShadow: '0 0 10px rgba(249, 115, 22, 0.3)'
+                                    }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#fb923c', letterSpacing: '0.5px' }}>MATR-X +{formatPct(efficiency.blueprintBoost)}%</span>
+                                    </div>
+                                )}
                                 {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>(UNPLACED)</span>}
                             </div>
                         </div>
@@ -252,6 +302,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             textShadow: `0 0 10px ${rarityColor}`
                         }}>{info.symbol}</span>
                     </div>
+
 
                     {/* Illustration Area (Unchanged) */}
                     <div style={{
@@ -312,10 +363,6 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             const isActive = perkResult && perkResult.count > 0;
 
                             const getPerkIcon = (id: string) => {
-                                if (id.includes('neighbor_any')) return '⚙';
-                                if (id.includes('neighbor_new') || id.includes('neighbor_dam') || id.includes('neighbor_bro')) return '◈';
-                                if (id.includes('_leg')) return '⌬';
-                                if (id.includes('pair')) return '🝔';
                                 return '◈';
                             };
 
@@ -332,6 +379,11 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                 }
                                 if (id === 'matrix_same_type_rarity') return 'SINGULARITY CORE';
                                 return 'METEORIC PROTOCOL';
+                            };
+
+                            const formatVal = (val: number) => {
+                                const rounded = Math.round(val * 10) / 10;
+                                return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
                             };
 
                             return (
@@ -356,9 +408,11 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                                 marginLeft: '12px',
                                                 textAlign: 'right'
                                             }}>
-                                                +{isActive ? perkResult.activeValue : perk.value}%
+                                                +{formatPct(isActive ? perkResult.activeValue : perk.value, true)}%
                                             </span>
                                         </div>
+
+
                                         <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', marginTop: '1px', opacity: 0.9 }}>
                                             {formatDescription(perk.description, rarityColor)}
                                             {isActive && perkResult.count > 1 && <span style={{ color: '#FCD34D' }}> (x{perkResult.count})</span>}
@@ -385,10 +439,10 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                     }}>
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>TYPE:</span> <span style={{
-                                color: meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'),
+                                color: meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')),
                                 fontSize: '12px',
-                                textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}66`
-                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}</span>
+                                textShadow: `0 0 10px ${meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'))}66`
+                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}{meteorite.quality === 'Corrupted' && <span style={{ fontSize: '9px', marginLeft: '6px', opacity: 0.8, color: '#ef4444' }}>(CANNOT BE REMOVED)</span>}</span>
                         </div>
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}

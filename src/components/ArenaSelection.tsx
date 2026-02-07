@@ -152,7 +152,6 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                                     borderRadius: '6px',
                                     border: '1px solid rgba(74, 222, 128, 0.1)'
                                 }}>
-                                    <span style={{ fontSize: '1.2rem' }}>+</span>
                                     <span>{buff}</span>
                                 </div>
                             ))}
@@ -171,7 +170,6 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                                     borderRadius: '6px',
                                     border: '1px solid rgba(248, 113, 113, 0.1)'
                                 }}>
-                                    <span style={{ fontSize: '1.2rem' }}>−</span>
                                     <span>{debuff}</span>
                                 </div>
                             ))}
@@ -193,7 +191,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                                 paddingBottom: '4px',
                                 transition: 'all 0.3s'
                             }}>
-                                {i === selectedIndex ? 'PRESS [ENTER] TO DEPLOY' : 'CLICK TO SELECT'}
+                                {i === selectedIndex ? 'PRESS [SPACE] TO DEPLOY' : 'CLICK TO SELECT'}
                             </div>
                         </div>
                     </div>

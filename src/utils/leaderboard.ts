@@ -1,5 +1,9 @@
 import type { GameState } from '../logic/types';
 import api from '../api/client';
+import { calcStat } from '../logic/MathUtils';
+import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
+import { getArenaIndex } from '../logic/MapLogic';
+import { isBuffActive } from '../logic/BlueprintLogic';
 
 // Current game version - update this when you release new patches
 export const CURRENT_PATCH_VERSION = '1.0.0';
@@ -26,7 +30,17 @@ export interface RunSubmissionData {
     hexLevelupOrder: Array<{ hexId: string; level: number; killCount: number; gameTime?: number }>;
     snitchesCaught: number;
     deathCause?: string;
+    finalStats?: {
+        dmg: number;
+        hp: number;
+        xp: number;
+        atkSpd: number;
+        regen: number;
+        armor: number;
+        speed: number;
+    };
 }
+
 
 /**
  * Prepares game state data for submission to the leaderboard
@@ -113,9 +127,38 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         legendaryHexes,
         hexLevelupOrder,
         snitchesCaught: gameState.snitchCaught || 0,
-        deathCause: gameState.player.deathCause || 'Unknown'
+        deathCause: gameState.player.deathCause || 'Unknown',
+        finalStats: (() => {
+            const player = gameState.player;
+            const arenaIdx = getArenaIndex(player.x, player.y);
+            const surgeMult = isBuffActive(gameState, 'ARENA_SURGE') ? 2.0 : 1.0;
+
+            let hpMult = arenaIdx === 2 ? 1 + (0.2 * surgeMult) : 1;
+            let regMult = arenaIdx === 2 ? 1 + (0.2 * surgeMult) : 1;
+            if (player.buffs?.puddleRegen) {
+                hpMult *= 1.25;
+                regMult *= 1.25;
+            }
+
+            const xpBase = 40 + (player.level * 3) + player.xp_per_kill.flat;
+            const xpHexFlat = calculateLegendaryBonus(gameState, 'xp_per_kill');
+            const xpNormalMult = 1 + player.xp_per_kill.mult / 100;
+            const xpHexMult = 1 + calculateLegendaryBonus(gameState, 'xp_pct_per_kill') / 100;
+            const finalXp = (xpBase + xpHexFlat) * xpNormalMult * xpHexMult;
+
+            return {
+                dmg: Math.round(calcStat(player.dmg)),
+                hp: Math.round(calcStat(player.hp, hpMult)),
+                xp: Math.round(finalXp),
+                atkSpd: Math.round(calcStat(player.atk)),
+                regen: Number(calcStat(player.reg, regMult).toFixed(1)),
+                armor: Math.round(calcStat(player.arm)),
+                speed: Number(player.speed.toFixed(1))
+            };
+        })()
     };
 }
+
 
 /**
  * Calculate final score based on game performance

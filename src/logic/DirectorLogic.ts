@@ -5,7 +5,7 @@ const CHECK_INTERVAL = 120; // Check every 2 minutes (120s)
 const MIN_TIME_FOR_EVENTS = 60; // Start events after 1 minute
 
 export function updateDirector(state: GameState, step: number) {
-    if (state.gameOver || state.isPaused) return;
+    if (state.gameOver || state.isPaused || state.extractionStatus !== 'none') return;
 
     // Ensure state tracking exists
     if (!state.directorState) state.directorState = { necroticCycle: -1, legionCycle: -1 };
@@ -99,7 +99,7 @@ function startEvent(state: GameState, type: GameEventType) {
     // Event Specific Initialization
     switch (type) {
         case 'necrotic_surge':
-            playSfx('rare-spawn');
+            playSfx('ghost-horde');
             break;
         case 'solar_emp':
             playSfx('warning');
@@ -137,8 +137,8 @@ function updateActiveEvent(state: GameState, _step: number) {
                 lastAttack: 0,
                 dead: false,
                 shellStage: 0,
-                palette: ['#0f172a', '#4f46e5', '#818cf8'], // Void Indigo
-                eraPalette: ['#0f172a', '#4f46e5', '#818cf8'],
+                palette: ['#1e3a8a', '#3b82f6', '#93c5fd'], // Dark Blue Ghost
+                eraPalette: ['#1e3a8a', '#3b82f6', '#93c5fd'],
                 fluxState: 0,
                 pulsePhase: 0,
                 rotationPhase: 0,
@@ -148,13 +148,14 @@ function updateActiveEvent(state: GameState, _step: number) {
                 spawnedAt: state.gameTime,
                 frozen: 1.0, // Digging for 1 second
                 summonState: 1, // Trigger digging animation in renderer
-                isNecroticZombie: true // Prevent palette overrides
+                isGhost: true, // Mark as Ghost
+                isNecroticZombie: true // Keep for legacy particle compatibility if needed
             };
             state.enemies.push(eventZombie);
 
             // Visual feedback - Void particles
             import('./ParticleLogic').then(({ spawnParticles }) => {
-                spawnParticles(state, zombieData.x, zombieData.y, '#818cf8', 20);
+                spawnParticles(state, zombieData.x, zombieData.y, '#3b82f6', 20);
             });
         });
 

@@ -109,7 +109,7 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
 
                         // Logic to extract numeric value: +15%, 0.2, etc.
                         const baseMatch = p.match(/(\d+\.?\d*)/);
-                        const baseValue = baseMatch ? parseFloat(baseMatch[1]) : 0;
+                        let baseValue = baseMatch ? parseFloat(baseMatch[1]) : 0;
                         const hasPercent = p.includes('%');
 
                         let displayValue = "";
@@ -137,6 +137,21 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                             }
                         }
 
+                        let isStatic = false;
+                        if (hex.type === 'ChronoPlating' && p.includes('Double Armor')) {
+                            isStatic = true;
+                            if (gameState.player.chronoArmorBonus && gameState.player.chronoArmorBonus > 0) {
+                                isNumeric = true;
+                                baseValue = parseFloat(gameState.player.chronoArmorBonus.toFixed(1));
+                                displayValue = `+${baseValue}`;
+                            }
+                        }
+
+                        if (hex.type === 'ChronoPlating' && p.includes('Cooldown Reduction')) {
+                            const curCDR = (gameState.player.cooldownReduction || 0) * 100;
+                            cleanLabel = `Cooldown Reduction [${curCDR.toFixed(2)}%]`;
+                        }
+
                         return (
                             <div key={i} className="hex-stat-column" style={{ display: 'flex', flexDirection: 'column', gap: '2px', borderBottom: i < hex.perks!.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', paddingBottom: '4px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -150,11 +165,19 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     {isNumeric ? (
                                         <>
-                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', fontSize: '10px' }}>
-                                                <span style={{ color: '#fff', fontWeight: 900, opacity: 0.6 }}>{baseValue}{hasPercent ? '%' : ''}</span>
-                                                <span style={{ color: '#94a3b8', fontSize: '7px' }}>×</span>
-                                                <span style={{ color: color, fontWeight: 900 }}>{multiplier.toFixed(2)}</span>
-                                            </div>
+                                            {isNumeric && !isStatic && (
+                                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', fontSize: '10px' }}>
+                                                    <span style={{ color: '#fff', fontWeight: 900, opacity: 0.6 }}>{baseValue}{hasPercent ? '%' : ''}</span>
+                                                    <span style={{ color: '#94a3b8', fontSize: '7px' }}>×</span>
+                                                    <span style={{ color: color, fontWeight: 900 }}>{multiplier.toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            {isNumeric && isStatic && (
+                                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    <span style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 900 }}>STATIC</span>
+                                                    <span style={{ color: '#fff', fontWeight: 900, opacity: 0.6, fontSize: '10px' }}>{baseValue}</span>
+                                                </div>
+                                            )}
                                             <div style={{ fontSize: '12px', color: '#fff', fontWeight: 900, textShadow: `0 0 10px ${color}66` }}>
                                                 {displayValue}
                                             </div>

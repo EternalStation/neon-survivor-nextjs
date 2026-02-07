@@ -2,6 +2,7 @@ import React from 'react';
 import type { GameState, LegendaryHex, PlayerClass } from '../../logic/types';
 import { calculateMeteoriteEfficiency } from '../../logic/EfficiencyLogic';
 import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices, RARITY_COLORS } from './ModuleUtils';
+import { isBuffActive } from '../../logic/BlueprintLogic';
 
 interface HexGridProps {
     gameState: GameState;
@@ -16,6 +17,7 @@ interface HexGridProps {
     setHoveredHex: (hex: { hex: LegendaryHex, index: number, x: number, y: number } | null) => void;
     onShowClassDetail: (playerClass: PlayerClass) => void;
     onAttemptRemove: (index: number, item: any, replaceWith?: any) => void;
+    onAttemptPlace: (index: number, item: any, source: string, sourceIndex: number) => void;
 }
 
 export const HexGrid: React.FC<HexGridProps> = ({
@@ -30,7 +32,8 @@ export const HexGrid: React.FC<HexGridProps> = ({
     handleMouseLeaveItem,
     setHoveredHex,
     onShowClassDetail,
-    onAttemptRemove
+    onAttemptRemove,
+    onAttemptPlace
 }) => {
     const { moduleSockets } = gameState;
     const centerX = 432; // Centered in 45% of 1920 (864px wide)
@@ -453,6 +456,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
                             }
 
                             // Handle Drop on Empty Socket
+                            if (movedItem.item.quality === 'Corrupted') {
+                                // Intercept for corruption warning
+                                onAttemptPlace(i, movedItem.item, movedItem.source, movedItem.index);
+                                setMovedItem(null);
+                                return;
+                            }
+
                             if (movedItem.source === 'inventory') {
                                 onSocketUpdate('diamond', i, movedItem.item);
                                 onInventoryUpdate(movedItem.index, null);
@@ -551,12 +561,31 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     y={pos.y + 38}
                                     textAnchor="middle"
                                     fill={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
-                                    fontSize="11"
+                                    fontSize={isBuffActive(gameState, 'MATRIX_OVERDRIVE') ? "10" : "11"}
                                     fontWeight="900"
                                     style={{ letterSpacing: '0.5px' }}
                                 >
                                     +{Math.round(calculateMeteoriteEfficiency(gameState, i).totalBoost * 100)}%
                                 </text>
+
+                                {moduleSockets.diamonds[i]!.quality === 'Corrupted' && (
+                                    <g transform={`translate(${pos.x + 22}, ${pos.y - 24})`}>
+                                        <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
+                                        <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>C</text>
+                                    </g>
+                                )}
+                                {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                    <g transform={`translate(${pos.x + 22}, ${pos.y + 24})`}>
+                                        <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
+                                        <text x="0" y="4" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>M</text>
+                                    </g>
+                                )}
+                                {moduleSockets.diamonds[i]!.blueprintBoosted && (
+                                    <g transform={`translate(${pos.x - 22}, ${pos.y + 24})`}>
+                                        <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
+                                        <text x="0" y="4" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>H</text>
+                                    </g>
+                                )}
                             </g>
                         </>
                     )}

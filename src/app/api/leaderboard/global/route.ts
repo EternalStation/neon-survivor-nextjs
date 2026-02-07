@@ -24,17 +24,21 @@ const LEADERBOARD_FIELDS = `
   gr.hex_levelup_order,
   gr.snitches_caught,
   gr.death_cause,
-  gr.patch_version
+  gr.patch_version,
+  gr.final_stats
 `;
+
 
 // GET /api/leaderboard/global
 export async function GET(request: NextRequest) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const limit = parseInt(searchParams.get('limit') || '100');
-        const offset = parseInt(searchParams.get('offset') || '0');
+  try {
+    const { searchParams } = new URL(request.url);
 
-        const results = await sql`
+
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    const results = await sql`
       SELECT 
         gr.id,
         gr.score,
@@ -58,24 +62,26 @@ export async function GET(request: NextRequest) {
         gr.hex_levelup_order,
         gr.snitches_caught,
         gr.death_cause,
-        gr.patch_version
+        gr.patch_version,
+        gr.final_stats
       FROM game_runs gr
+
       JOIN players p ON gr.player_id = p.id
       ORDER BY gr.survival_time DESC
       LIMIT ${limit}
       OFFSET ${offset}
     `;
 
-        return NextResponse.json({
-            leaderboard: results,
-            count: results.length,
-            offset,
-        });
-    } catch (error) {
-        console.error('Global leaderboard error:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch leaderboard' },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json({
+      leaderboard: results,
+      count: results.length,
+      offset,
+    });
+  } catch (error) {
+    console.error('Global leaderboard error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch leaderboard' },
+      { status: 500 }
+    );
+  }
 }

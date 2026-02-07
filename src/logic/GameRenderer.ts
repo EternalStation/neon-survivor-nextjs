@@ -1,6 +1,9 @@
 import type { GameState } from './types';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';
-import { renderPlayer, renderEnemies, renderProjectiles, renderDrones, renderMeteorites, renderBossIndicator } from './renderers/EntityRenderer';
+import { renderPlayer } from './renderers/PlayerRenderer';
+import { renderEnemies } from './renderers/EnemyRenderer';
+import { renderDrones, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
+import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
 
 export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1) {
@@ -9,6 +12,12 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
     // Pixel Art Rendering
     ctx.imageSmoothingEnabled = false;
+
+    // Global Reset: Ensure no leaked state from previous frame persists
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.globalAlpha = 1.0;
+    ctx.setLineDash([]);
 
     const dpr = window.devicePixelRatio || 1;
     const logicalWidth = (width / dpr) / scaleFactor;
@@ -94,11 +103,32 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         renderParticles(ctx, state, 'non-void');
         renderFloatingNumbers(ctx, state);
 
+        // 10. Extraction Ship
+        renderExtractionShip(ctx, state, meteoriteImages);
+
         ctx.restore(); // Restores zoom/camera for screen-space/ui elements
 
         // --- OVERLAYS (Screen Space) ---
         renderBossIndicator(ctx, state, width, height, camera, scaleFactor);
         renderScreenEffects(ctx, state, width, height);
+
+        // Extraction Blackout
+        if (state.extractionStatus === 'departing' || state.extractionStatus === 'complete') {
+            const opacity = state.extractionStatus === 'complete' ? 1.0 : (1 - state.extractionTimer / 5.0);
+            ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+            ctx.fillRect(0, 0, width, height);
+
+            if (state.extractionStatus === 'complete') {
+                ctx.fillStyle = '#fff';
+                ctx.font = `italic 900 ${80 * dpr}px Orbitron, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#60a5fa';
+                ctx.shadowBlur = 40;
+                ctx.fillText("MISSION COMPLETED", width / 2, height / 2);
+
+                // Add "Back to Menu" hint (actual button in React UI later)
+            }
+        }
 
         // Atmospheric Vignette (Tunnel Vision)
         renderVignette(ctx, width, height);

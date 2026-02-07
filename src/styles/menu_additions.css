@@ -217,7 +217,7 @@ body {
 }
 
 .menu-title::before {
-    content: "NEON SURVIVOR";
+    content: "VOID NEXUS";
     position: absolute;
     top: 0;
     left: -2px;
@@ -276,10 +276,10 @@ body {
     background: var(--neon-cyan);
     color: #020617;
     border-color: #fff;
-    letter-spacing: 10px;
-    /* Reduced from 12px to prevent tension */
+    /* letter-spacing: 10px;  Removed to prevent text shift */
     box-shadow: 0 0 50px rgba(6, 182, 212, 0.6);
-    transform: scale(1.05) translateY(-5px);
+    transform: scale(1.1);
+    /* Pure zoom */
 }
 
 /* Game Logic & Settings Button */

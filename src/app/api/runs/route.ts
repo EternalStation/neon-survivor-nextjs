@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
             hexLevelupOrder,
             snitchesCaught,
             deathCause,
+            finalStats,
         } = body;
+
 
         // Validation
         if (
@@ -53,13 +55,15 @@ export async function POST(request: NextRequest) {
         }
 
         // Insert run
+
+
         const result = await sql`
       INSERT INTO game_runs (
         player_id, score, survival_time, kills, boss_kills, class_used,
         patch_version, damage_dealt, damage_taken, damage_blocked,
         damage_blocked_armor, damage_blocked_collision, damage_blocked_projectile,
         damage_blocked_shield, radar_counts, meteorites_collected, portals_used,
-        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause
+        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats
       ) VALUES (
         ${user.id}, ${score}, ${survivalTime}, ${kills}, ${bossKills || 0},
         ${classUsed}, ${patchVersion}, ${damageDealt || 0}, ${damageTaken || 0},
@@ -68,8 +72,9 @@ export async function POST(request: NextRequest) {
         ${JSON.stringify(radarCounts || {})}, ${meteoritesCollected || 0},
         ${portalsUsed || 0}, ${JSON.stringify(arenaTimes || { 0: 0, 1: 0, 2: 0 })},
         ${JSON.stringify(legendaryHexes || [])}, ${JSON.stringify(hexLevelupOrder || [])},
-        ${snitchesCaught || 0}, ${deathCause || 'Unknown'}
+        ${snitchesCaught || 0}, ${deathCause || 'Unknown'}, ${JSON.stringify(finalStats || {})}
       )
+
       RETURNING id, score, completed_at, survival_time
     `;
 

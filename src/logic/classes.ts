@@ -12,17 +12,17 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Quantum Ricochet Rounds'
         ],
         capabilityName: 'QUANTUM FRAGMENTATION',
-        capabilityDesc: 'Manual Targeting. Projectiles have 300% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage, Increased Speed, and intense Heat Trail.',
+        capabilityDesc: 'Manual Targeting. Projectiles have 150% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage, 5% Speed, and intense Heat Trail.',
         capabilityMetrics: [
-            { label: 'RANGE', value: 300, unit: '%', isPercentage: true, description: 'Base projectile range multiplier' },
+            { label: 'RANGE', value: 150, unit: '%', isPercentage: true, description: 'Base projectile range multiplier' },
             { label: 'DMG/WALL', value: 20, unit: '%', isPercentage: true, description: 'Damage gain per bounce' },
-            { label: 'SPD/WALL', value: 20, unit: '%', isPercentage: true, description: 'Speed gain per bounce' },
+            { label: 'SPD/WALL', value: 5, unit: '%', isPercentage: true, description: 'Speed gain per bounce' },
         ],
         stats: {
             hpMult: -0.15,
             bounceDmgMult: 0.2,
-            bounceSpeedBonus: 0.2, // +20%
-            projLifeMult: 3.0,
+            bounceSpeedBonus: 0.05, // +5%
+            projLifeMult: 1.5,
             pierce: 1,
         },
         icon: '#d946ef', // Pink-Purple
@@ -72,7 +72,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         capabilityMetrics: [
             { label: 'Frequency', value: 8, unit: 's', isPercentage: false, description: 'Static cooldown (Every 8s)' },
             { label: 'Strike DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage multiplier' },
-            { label: 'AOE Radius', value: 100, unit: 'px', isPercentage: true, description: 'Strike radius' }
+            { label: 'AOE', value: 100, unit: 'px', isPercentage: true, description: 'Strike radius' }
         ],
         stats: {
             dmgMult: 0.40,
@@ -94,11 +94,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Enhanced vitality systems'
         ],
         capabilityName: 'Magnetic Vortex',
-        capabilityDesc: 'Projectiles orbit the player in a tight ring indefinitely until they hit an enemy. Chance to spawn additional layers.',
+        capabilityDesc: 'Projectiles orbit the player in a tight ring indefinitely until they hit an enemy. Chance to spawn additional layers on additional orbits.',
         capabilityMetrics: [
-            { label: 'Ring II', value: 10, unit: '%', isPercentage: true, description: 'Chance for 2nd Layer' },
-            { label: 'Ring III', value: 5, unit: '%', isPercentage: true, description: 'Chance for 3rd Layer' },
-            { label: 'Targeting', value: 0, unit: '', isPercentage: false, isStatic: true, description: 'Indefinite Orbit' }
+            { label: 'Ring II', value: 15, unit: '%', isPercentage: true, description: 'Chance for 2nd Layer' },
+            { label: 'Ring III', value: 10, unit: '%', isPercentage: true, description: 'Chance for 3rd Layer' },
+            { label: 'Ring IV', value: 5, unit: '%', isPercentage: true, description: 'Chance for 4th Layer' }
         ],
         stats: {
             hpMult: 0.20,

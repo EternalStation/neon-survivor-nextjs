@@ -17,13 +17,17 @@ interface InventoryPanelProps {
     onToggleRecycle: () => void;
     onResearch?: (index: number) => void;
     recyclingAnim?: boolean;
+    coreFilter: { quality: string, rarity: string, arena: string };
+    setCoreFilter: React.Dispatch<React.SetStateAction<{ quality: string, rarity: string, arena: string }>>;
+    perkFilters: Record<number, PerkFilter>;
+    setPerkFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
 }
 
 const PAIR_COMBOS = ['All', 'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF'];
-const QUALITIES = ['All', 'Pristine', 'Damaged', 'Broken'];
+const QUALITIES = ['All', 'PRI', 'DAM', 'BRO', 'COR'];
 const ARENAS = ['All', 'ECO', 'COM', 'DEF'];
 
-type PerkFilter = {
+export type PerkFilter = {
     active: boolean;
     val: number;
     arena: string;
@@ -44,34 +48,21 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     onSort,
     onToggleRecycle,
     onResearch,
-    recyclingAnim
+    recyclingAnim,
+    coreFilter,
+    setCoreFilter,
+    perkFilters,
+    setPerkFilters
 }) => {
-    const [coreFilter, setCoreFilter] = React.useState({
-        quality: 'All',
-        rarity: 'All',
-        arena: 'All'
-    });
-
-    // Individual state for all 9 perk levels
-    const [perkFilters, setPerkFilters] = React.useState<Record<number, PerkFilter>>({
-        1: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        2: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        3: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        4: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        5: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        6: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        7: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        8: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        9: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-    });
+    // State lifted to ModuleMenu for persistence
 
     const matchesFilter = (item: Meteorite | null): boolean => {
         if (!item) return true;
 
         // Core Checks
-        // Map UI 'Pristine' to Internal 'New'
-        const targetQuality = coreFilter.quality === 'Pristine' ? 'New' : coreFilter.quality;
-        if (coreFilter.quality !== 'All' && item.quality !== targetQuality) return false;
+        // Map UI labels to internal quality types
+        const qualityMap: Record<string, string> = { 'PRI': 'New', 'DAM': 'Damaged', 'BRO': 'Broken', 'COR': 'Corrupted' };
+        if (coreFilter.quality !== 'All' && item.quality !== qualityMap[coreFilter.quality]) return false;
 
         if (coreFilter.rarity !== 'All' && item.rarity !== coreFilter.rarity) return false;
         if (coreFilter.arena !== 'All' && !item.discoveredIn.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
@@ -107,8 +98,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 case 4: {
                     const a = f.arena.toLowerCase();
                     // Match Quality Mapping
-                    let q = f.matchQuality.toLowerCase().slice(0, 3);
-                    if (f.matchQuality === 'Pristine') q = 'new';
+                    const qMap: Record<string, string> = { 'PRI': 'new', 'DAM': 'dam', 'BRO': 'bro', 'COR': 'cor' };
+                    let q = qMap[f.matchQuality] || 'any';
 
                     const p = perks.find((x: any) => {
                         const pts = x.id.split('_');
@@ -157,6 +148,141 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
         }
 
         return true;
+    };
+
+    const renderSlot = (item: Meteorite | null, idx: number, isAnyFilterActive: boolean) => {
+        const matches = matchesFilter(item);
+        if (isAnyFilterActive && item && item.isNew && !matches) {
+            item.isNew = false;
+        }
+        const isVisible = matches || (!isAnyFilterActive && (item?.isNew ?? false));
+
+        return (
+            <div key={idx}
+                onClick={() => {
+                    if (isRecycleMode && item) {
+                        onRecycleClick(idx);
+                    }
+                }}
+                onMouseMove={(e) => {
+                    if (item && !movedItem) {
+                        handleMouseEnterItem(item, e.clientX, e.clientY);
+                        if (item.isNew) {
+                            item.isNew = false;
+                            onInventoryUpdate(idx, item);
+                        }
+                    }
+                }}
+                onMouseLeave={() => handleMouseLeaveItem(0)}
+                onMouseDown={(e) => {
+                    if (isRecycleMode) return;
+                    if (e.button === 0 && item && !movedItem) {
+                        if (item.isBlueprint) {
+                            return;
+                        }
+                        e.preventDefault();
+                        setMovedItem({ item, source: 'inventory', index: idx });
+                        handleMouseLeaveItem(0);
+                    }
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (item && item.isBlueprint) {
+                        onResearch?.(idx);
+                    }
+                }}
+                onMouseUp={(e) => {
+                    if (isRecycleMode) return;
+                    e.stopPropagation();
+                    if (movedItem) {
+                        if (movedItem.source === 'diamond') {
+                            const itemAtTarget = inventory[idx];
+                            onInventoryUpdate(idx, { ...movedItem.item });
+                            onSocketUpdate('diamond', movedItem.index, itemAtTarget);
+                        } else if (movedItem.source === 'inventory') {
+                            const itemAtTarget = inventory[idx];
+                            onInventoryUpdate(idx, { ...movedItem.item });
+                            onInventoryUpdate(movedItem.index, itemAtTarget);
+                        }
+                        setMovedItem(null);
+                    }
+                }}
+                style={{
+                    width: '100%', height: 'auto',
+                    aspectRatio: '1/1',
+                    background: '#0f172a',
+                    border: isRecycleMode && item
+                        ? `2px dashed #ef4444`
+                        : `2px solid ${movedItem?.index === idx && movedItem.source === 'inventory' ? '#3b82f6' : (item && isVisible ? (RARITY_COLORS as any)[item.rarity] : '#1e293b')}`,
+                    borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    position: 'relative',
+                    cursor: isRecycleMode ? (item ? 'crosshair' : 'default') : 'pointer',
+                    opacity: (movedItem?.index === idx && movedItem.source === 'inventory') || (isRecycleMode && idx < 10) ? 0.3 : 1, // Dim safe slots in recycle mode
+                    pointerEvents: (isVisible || !item || item?.isNew) ? 'auto' : 'none',
+                    animation: isRecycleMode && item && idx >= 10 ? 'shake 0.5s infinite' : 'none',
+                    transition: 'all 0.2s',
+                    filter: isRecycleMode && idx < 10 ? 'grayscale(1)' : 'none' // Gray out safe slots in recycle mode
+                }}>
+                {isRecycleMode && item && idx >= 10 && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(239, 68, 68, 0.2)', zIndex: 5, pointerEvents: 'none' }} />
+                )}
+                {item?.isNew && (
+                    <div style={{
+                        position: 'absolute', top: '-2px', right: '-2px',
+                        background: '#ef4444', color: 'white', fontSize: '7px', fontWeight: 900,
+                        padding: '1px 3px', borderRadius: '3px', boxShadow: '0 0 10px #ef4444', zIndex: 10,
+                        animation: 'pulse-red 1s infinite',
+                        filter: isVisible ? 'none' : 'grayscale(100%)',
+                        opacity: isVisible ? 1 : 0.5
+                    }}>
+                        {idx < 10 ? 'SAFE' : 'NEW'}
+                    </div>
+                )}
+                {(item as any)?.blueprintBoosted && (
+                    <div style={{
+                        position: 'absolute', bottom: '2px', left: '2px',
+                        width: '8px', height: '8px',
+                        background: '#1e293b',
+                        border: '0.5px solid #60a5fa',
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 3px rgba(96, 165, 250, 0.5)',
+                        zIndex: 5,
+                        filter: isVisible ? 'none' : 'grayscale(100%)',
+                        opacity: isVisible ? 1 : 0.5
+                    }}>
+                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#60a5fa', lineHeight: 1, marginTop: '0.5px' }}>H</span>
+                    </div>
+                )}
+                {item?.quality === 'Corrupted' && (
+                    <div style={{
+                        position: 'absolute', top: '2px', left: '2px',
+                        width: '8px', height: '8px',
+                        background: '#1e293b',
+                        border: '0.5px solid #a855f7',
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 3px rgba(168, 85, 247, 0.5)',
+                        zIndex: 5,
+                        filter: isVisible ? 'none' : 'grayscale(100%)',
+                        opacity: isVisible ? 1 : 0.5
+                    }}>
+                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#a855f7', lineHeight: 1, marginTop: '0.5px' }}>C</span>
+                    </div>
+                )}
+                {item && (
+                    <img
+                        src={item.isBlueprint ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
+                        style={{
+                            width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
+                            filter: isVisible ? 'none' : 'grayscale(100%)',
+                            opacity: isVisible ? 1 : 0.2
+                        }}
+                        alt="meteorite"
+                    />
+                )}
+            </div>
+        );
     };
 
     const isFilterActive =
@@ -244,7 +370,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         <div style={{ gridColumn: 'span 2' }}>
                             <span style={labelStyle}>TYPE</span>
                             <select style={selectStyle} value={coreFilter.quality} onChange={e => setCoreFilter({ ...coreFilter, quality: e.target.value })}>
-                                {QUALITIES.map(q => <option key={q} value={q}>{q.toUpperCase().slice(0, 3)}</option>)}
+                                {QUALITIES.map(q => <option key={q} value={q}>{q}</option>)}
                             </select>
                         </div>
                         {/* RARITY */}
@@ -357,7 +483,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                             if (!isRecycleMode) return;
                                             const targets: number[] = [];
                                             inventory.forEach((item, i) => {
-                                                if (item && matchesFilter(item)) targets.push(i);
+                                                if (i >= 10 && item && matchesFilter(item)) targets.push(i);
                                             });
                                             if (targets.length > 0) onMassRecycle(targets);
                                         }}
@@ -383,7 +509,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                             if (!isRecycleMode) return;
                                             const discards: number[] = [];
                                             inventory.forEach((item, i) => {
-                                                if (item && !matchesFilter(item)) discards.push(i);
+                                                if (i >= 10 && item && !matchesFilter(item)) discards.push(i);
                                             });
                                             if (discards.length > 0) onMassRecycle(discards);
                                         }}
@@ -507,111 +633,60 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             coreFilter.arena !== 'All' ||
                             Object.values(perkFilters).some(f => f.active);
 
-                        return displayInventory.map((item, idx) => {
-                            const matches = matchesFilter(item);
-                            // User Request: If filtering is active, and the NEW item doesn't match, 
-                            // it should lose the NEW status and become ghosted.
-                            if (isAnyFilterActive && item && item.isNew && !matches) {
-                                item.isNew = false;
-                                // Optionally sync to parent, but next matrix open will show it as seen regardless
-                            }
+                        const elements: React.ReactNode[] = [];
 
-                            const isVisible = matches || (!isAnyFilterActive && (item?.isNew ?? false));
-                            return (
-                                <div key={idx}
-                                    onClick={() => {
-                                        if (isRecycleMode && item) {
-                                            onRecycleClick(idx);
-                                        }
-                                    }}
-                                    onMouseMove={(e) => {
-                                        if (item && !movedItem) {
-                                            handleMouseEnterItem(item, e.clientX, e.clientY);
-                                            if (item.isNew) {
-                                                item.isNew = false;
-                                                onInventoryUpdate(idx, item);
-                                            }
-                                        }
-                                    }}
-                                    onMouseLeave={() => handleMouseLeaveItem(0)}
-                                    onMouseDown={(e) => {
-                                        if (isRecycleMode) return;
-                                        if (e.button === 0 && item && !movedItem) {
-                                            if (item.type === 'METEOR_SHOWER' || (item as any).isBlueprint) {
-                                                // Blueprints can only be researched or dropped
-                                                return;
-                                            }
-                                            e.preventDefault();
-                                            setMovedItem({ item, source: 'inventory', index: idx });
-                                            handleMouseLeaveItem(0);
-                                        }
-                                    }}
-                                    onContextMenu={(e) => {
-                                        e.preventDefault();
-                                        if (item && ((item as any).isBlueprint || item.type === 'METEOR_SHOWER')) {
-                                            onResearch?.(idx);
-                                        }
-                                    }}
-                                    onMouseUp={(e) => {
-                                        if (isRecycleMode) return;
-                                        e.stopPropagation();
-                                        if (movedItem) {
-                                            if (movedItem.source === 'diamond') {
-                                                const itemAtTarget = inventory[idx];
-                                                onInventoryUpdate(idx, { ...movedItem.item });
-                                                onSocketUpdate('diamond', movedItem.index, itemAtTarget);
-                                            } else if (movedItem.source === 'inventory') {
-                                                const itemAtTarget = inventory[idx];
-                                                onInventoryUpdate(idx, { ...movedItem.item });
-                                                onInventoryUpdate(movedItem.index, itemAtTarget);
-                                            }
-                                            setMovedItem(null);
-                                        }
-                                    }}
-                                    style={{
-                                        width: '100%', height: 'auto',
-                                        aspectRatio: '1/1',
-                                        background: '#0f172a',
-                                        border: isRecycleMode && item
-                                            ? `2px dashed #ef4444`
-                                            : `2px solid ${movedItem?.index === idx && movedItem.source === 'inventory' ? '#3b82f6' : (item && isVisible ? (RARITY_COLORS as any)[item.rarity] : '#1e293b')}`,
-                                        borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        position: 'relative',
-                                        cursor: isRecycleMode ? (item ? 'crosshair' : 'default') : 'pointer',
-                                        opacity: movedItem?.index === idx && movedItem.source === 'inventory' ? 0.3 : 1,
-                                        pointerEvents: (isVisible || !item || item?.isNew) ? 'auto' : 'none',
-                                        animation: isRecycleMode && item ? 'shake 0.5s infinite' : 'none',
-                                        transition: 'all 0.2s',
-                                    }}>
-                                    {isRecycleMode && item && (
-                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(239, 68, 68, 0.2)', zIndex: 5, pointerEvents: 'none' }} />
-                                    )}
-                                    {item?.isNew && (
-                                        <div style={{
-                                            position: 'absolute', top: '-5px', right: '-5px',
-                                            background: '#ef4444', color: 'white', fontSize: '8px', fontWeight: 900,
-                                            padding: '2px 4px', borderRadius: '4px', boxShadow: '0 0 10px #ef4444', zIndex: 10,
-                                            animation: 'pulse-red 1s infinite',
-                                            filter: isVisible ? 'none' : 'grayscale(100%)',
-                                            opacity: isVisible ? 1 : 0.5
-                                        }}>
-                                            NEW
-                                        </div>
-                                    )}
-                                    {item && (
-                                        <img
-                                            src={((item as any).isBlueprint || item.type === 'METEOR_SHOWER') ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
-                                            style={{
-                                                width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
-                                                filter: isVisible ? 'none' : 'grayscale(100%)',
-                                                opacity: isVisible ? 1 : 0.2
-                                            }}
-                                            alt="meteorite"
-                                        />
-                                    )}
-                                </div>
-                            );
-                        });
+                        // 1. SAFE SLOTS HEADER
+                        elements.push(
+                            <div key="safe-header" style={{
+                                gridColumn: 'span 10',
+                                padding: '5px 0 5px 0',
+                                borderBottom: '1px solid rgba(168, 85, 247, 0.3)',
+                                marginBottom: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
+                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic' }}>(PROTECTED FROM MASS SCANNER RECYCLING)</span>
+                            </div>
+                        );
+
+                        // 2. SAFE SLOTS (0-9)
+                        for (let i = 0; i < 10; i++) {
+                            elements.push(renderSlot(displayInventory[i], i, isAnyFilterActive));
+                        }
+
+                        // 3. REMOVED ROW SPACER
+                        elements.push(
+                            <div key="removed-header" style={{
+                                gridColumn: 'span 10',
+                                height: '2px',
+                                borderBottom: '1px dashed rgba(148, 163, 184, 0.1)',
+                                margin: '0px 0 0 0'
+                            }} />
+                        );
+
+                        // 4. STORAGE HEADER
+                        elements.push(
+                            <div key="storage-header" style={{
+                                gridColumn: 'span 10',
+                                padding: '0px 0 5px 0',
+                                borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+                                marginBottom: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE UNIT / PICKUP ZONE</span>
+                            </div>
+                        );
+
+                        // 5. STORAGE SLOTS (20+)
+                        for (let i = 20; i < 300; i++) {
+                            elements.push(renderSlot(displayInventory[i], i, isAnyFilterActive));
+                        }
+
+                        return elements;
                     })()
                 }
             </div >

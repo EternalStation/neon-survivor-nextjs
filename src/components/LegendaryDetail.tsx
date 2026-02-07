@@ -143,10 +143,15 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                     {hex.perks && hex.perks.map((p, i) => {
                         const soulsMatch = p.match(/\((\d+) Souls\)/);
                         const levelKills = soulsMatch ? parseInt(soulsMatch[1]) : 0;
-                        const baseMatch = p.match(/(\d+\.?\d*)/);
-                        const baseValue = baseMatch ? parseFloat(baseMatch[1]) : 0;
-                        const hasPercent = p.includes('%');
-                        const isEconomic = hex.category === 'Economic';
+
+                        // Strip souls count for base number parsing to avoid picking up souls as the value
+                        const strippedForBase = p.replace(/\(\d+ Souls\)/, '');
+                        const baseMatch = strippedForBase.match(/(\d+\.?\d*)/);
+                        let baseValue: number | string = baseMatch ? parseFloat(baseMatch[1]) : 0;
+
+                        let hasPercent = p.includes('%');
+                        const isEconomic = (hex.category === 'Economic' && p.toLowerCase().includes('kill')) || (hex.type === 'CombShield' && p.includes('Armor'));
+                        const isCurve = hex.type === 'CombShield' && (p.includes('Collision') || p.includes('Projectile'));
 
                         let displayValue = "";
                         let cleanLabel = p;
@@ -154,44 +159,132 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
 
                         const tacticalKeywords = ['DMG', 'HP', 'Lifesteal', 'Crit', 'Slow', 'Taken', 'Resist', 'Range', 'Duration', 'Uptime', 'Regen'];
 
-                        if (isEconomic) {
+                        if (isCurve) {
+                            // Aegis Protocol Curve: 85 * (x^0.75 / (x^0.75 + 400))
+                            const stacks = levelKills * multiplier;
+                            const val = 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
+                            displayValue = `+${val.toFixed(1)}%`;
+                            isNumeric = true;
+                            // Remove number at start and "per kill" but KEEP the (Souls)
+                            cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '')
+                                .replace('per kill', '')
+                                .trim();
+                        } else if (hex.type === 'RadiationCore' && p.includes('Deals') && p.includes('-')) {
+                            const matches = p.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                            if (matches) {
+                                const low = parseFloat(matches[1]);
+                                const high = parseFloat(matches[2]);
+                                // Left Side: No brackets, 5-10
+                                (baseValue as any) = `${low.toFixed(0)}-${high.toFixed(0)}%`;
+                                const finalLow = (low * multiplier).toFixed(1);
+                                const finalHigh = (high * multiplier).toFixed(1);
+                                // Right Side: Brackets with buffed percent
+                                displayValue = `[${finalLow}-${finalHigh}%]`;
+                                isNumeric = true;
+                                cleanLabel = "DPS of your MAX HP as a Radiation Aura (500 AOE)";
+                            }
+                        } else if (hex.type === 'RadiationCore' && p.includes('Heal')) {
+                            const match = p.match(/(\d+\.?\d*)%/);
+                            if (match) {
+                                baseValue = parseFloat(match[1]);
+                                (baseValue as any) = baseValue.toFixed(1);
+                                const amp = (parseFloat(match[1]) * multiplier).toFixed(2);
+                                displayValue = `[+${amp}%]`;
+                                isNumeric = true;
+                                cleanLabel = "Adaptive Bio-Regen (Per Enemy)";
+                            }
+                        } else if (hex.type === 'RadiationCore' && p.includes('Global Decay')) {
+                            const match = p.match(/(\d+\.?\d*)%/);
+                            if (match) {
+                                baseValue = parseFloat(match[1]);
+                                (baseValue as any) = baseValue.toFixed(1);
+                                const amp = (parseFloat(match[1]) * multiplier).toFixed(1);
+                                displayValue = `[-${amp}%]`;
+                                isNumeric = true;
+                                cleanLabel = "Global Entropy Decay (Map-wide)";
+                            }
+                        } else if (hex.type === 'RadiationCore' && p.includes('Missing HP')) {
+                            const match = p.match(/(\d+\.?\d*)%/);
+                            if (match) {
+                                baseValue = parseFloat(match[1]);
+                                (baseValue as any) = baseValue.toFixed(1);
+                                const amp = (parseFloat(match[1]) * multiplier).toFixed(1);
+                                displayValue = `[+${amp}%]`;
+                                isNumeric = true;
+                                cleanLabel = "Radiation Aura Amp (Per 1% Missing HP)";
+                            }
+                        } else if (isEconomic) {
                             const finalValuePerKill = baseValue * multiplier;
                             let divisor = 1;
                             let useFloor = false;
                             if (p.includes('per 20 kills')) divisor = 20;
                             if (p.includes('per 50 kills')) { divisor = 50; useFloor = true; }
+                            if (p.includes('for 100 kills')) { divisor = 100; useFloor = false; }
 
                             const effectiveKills = useFloor ? Math.floor(levelKills / divisor) : (levelKills / divisor);
                             const totalValue = finalValuePerKill * effectiveKills;
 
                             displayValue = `+${totalValue.toFixed(1)}${hasPercent ? '%' : ''}`;
-                            isNumeric = p.includes('per kill') || p.includes('per 20 kills') || p.includes('per 50 kills');
-                            cleanLabel = p.replace(/[+]\d+\.?\d*%?\s*/, '')
+                            isNumeric = p.toLowerCase().includes('kill');
+                            cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '')
                                 .replace('per kill', '')
-                                .replace('per 50 kills', '')
-                                .replace('per 20 kills', '')
                                 .trim();
                         } else {
                             if (baseValue > 0 && (hasPercent || tacticalKeywords.some(k => p.includes(k)))) {
                                 const amplified = baseValue * multiplier;
                                 displayValue = `${hasPercent ? '+' : ''}${amplified.toFixed(1)}${hasPercent ? '%' : ''}`;
                                 isNumeric = true;
-                                cleanLabel = p.replace(/[+]\d+\.?\d*%?\s*/, '').trim();
+                                cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '').trim();
                             }
+                        }
+
+                        let isStatic = false;
+                        if (hex.type === 'ChronoPlating' && p.includes('Double Armor')) {
+                            const interval = 300;
+                            const startTime = hex.timeAtLevel?.[3] ?? gameState.gameTime;
+                            const elapsed = gameState.gameTime - startTime;
+                            const remaining = interval - (elapsed % interval);
+                            const m = Math.floor(remaining / 60);
+                            const s = Math.floor(remaining % 60).toString().padStart(2, '0');
+
+                            baseValue = "X2";
+                            cleanLabel = `Armour every 5 minutes (${m}:${s})`;
+                            isNumeric = true;
+                            isStatic = true;
+                            hasPercent = false;
+                            displayValue = `+${(gameState.player.chronoArmorBonus || 0).toFixed(1)}`;
+                        }
+
+                        if (hex.type === 'ChronoPlating' && p.includes('Cooldown Reduction')) {
+                            const curCDR = (gameState.player.cooldownReduction || 0) * 100;
+                            cleanLabel = `[${curCDR.toFixed(2)}%] Cooldown Reduction`;
+                            baseValue = 0.25;
+                            hasPercent = true;
+                            isNumeric = true;
+                            displayValue = `+${(0.25 * multiplier).toFixed(2)}%`;
                         }
 
                         return (
                             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff' }}>{isNumeric ? `${baseValue}${hasPercent ? '%' : ''}` : ''}</span>
-                                        <span style={{ fontSize: '8px', color: isNumeric ? '#64748b' : '#fff', fontWeight: 700, textTransform: 'uppercase' }}>{cleanLabel}</span>
+                                        <span style={{ fontSize: isNumeric && typeof baseValue === 'string' && (baseValue as string).includes('-') ? '10px' : '11px', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap' }}>
+                                            {isNumeric ? (typeof baseValue === 'string' && (baseValue as string).includes('%') ? baseValue : `${baseValue}${hasPercent ? '%' : ''}`) : ''}
+                                        </span>
+                                        <span style={{ fontSize: hex.type === 'RadiationCore' && cleanLabel.includes('DPS') ? '7px' : '8px', color: isNumeric ? '#64748b' : '#fff', fontWeight: 700, textTransform: 'uppercase' }}>{cleanLabel}</span>
                                     </div>
 
-                                    {isNumeric && (
+                                    {isNumeric && !isStatic && (
                                         <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', gap: '4px' }}>
                                             <span style={{ fontSize: '8px', color: '#475569' }}>×</span>
                                             <span style={{ fontSize: '9px', color: color, fontWeight: 900 }}>{multiplier.toFixed(2)}</span>
+                                            <span style={{ fontSize: '10px', color: color, opacity: 0.5 }}>|</span>
+                                            <span style={{ fontSize: '11px', color: '#fff', fontWeight: 900 }}>{displayValue}</span>
+                                        </div>
+                                    )}
+                                    {isNumeric && isStatic && (
+                                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', gap: '6px' }}>
+                                            <span style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>STATIC</span>
                                             <span style={{ fontSize: '10px', color: color, opacity: 0.5 }}>|</span>
                                             <span style={{ fontSize: '11px', color: '#fff', fontWeight: 900 }}>{displayValue}</span>
                                         </div>

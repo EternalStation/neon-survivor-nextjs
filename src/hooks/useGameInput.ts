@@ -4,7 +4,6 @@ import { spawnEnemy, spawnRareEnemy } from '../logic/EnemyLogic';
 import { createMeteorite } from '../logic/LootLogic';
 import { castSkill } from '../logic/SkillLogic';
 import { calcStat } from '../logic/MathUtils';
-import { startBGM } from '../logic/AudioLogic';
 import { getKeybinds } from '../logic/Keybinds';
 import { dropBlueprint } from '../logic/BlueprintLogic';
 import { BlueprintType } from '../logic/types';
@@ -16,9 +15,10 @@ interface GameInputProps {
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
     triggerPortal: () => boolean;
+    refreshUI: () => void;
 }
 
-export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setGameOver, triggerPortal }: GameInputProps) {
+export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setGameOver, triggerPortal, refreshUI }: GameInputProps) {
     const keys = useRef<Record<string, boolean>>({});
     const inputVector = useRef({ x: 0, y: 0 });
     const mousePos = useRef({
@@ -43,8 +43,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             const key = (e.key || '').toLowerCase();
             const code = (e.code || '').toLowerCase();
 
-            // Start music on first interaction
-            startBGM(gameState.current.currentArena);
+
 
             // Get latest keybinds from ref
             const keybinds = currentKeybinds.current;
@@ -54,6 +53,11 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     return;
                 }
                 setShowSettings(prev => !prev);
+                return;
+            }
+
+            // Block all other input during extraction dialogue
+            if (['requested', 'waiting'].includes(gameState.current.extractionStatus)) {
                 return;
             }
 
@@ -91,8 +95,11 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             ];
 
             skillBindings.forEach((bind, index) => {
-                if (bind === key && gameState.current.player.activeSkills[index]) {
-                    castSkill(gameState.current, index);
+                const player = gameState.current.player;
+                if (bind === key && player.activeSkills[index]) {
+                    if (!player.phaseShiftUntil || Date.now() > player.phaseShiftUntil) {
+                        castSkill(gameState.current, index);
+                    }
                 }
             });
 
@@ -114,6 +121,15 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             // L1 - Level Up
             if (cheatBuffer.endsWith('l1')) {
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;
+                refreshUI();
+                cheatBuffer = '';
+            }
+
+            // YY / KO - 5100 Dust
+            if (cheatBuffer.endsWith('yy') || cheatBuffer.endsWith('ko')) {
+                gameState.current.player.dust += 5100;
+                console.log('[CHEAT] Added 5100 Dust');
+                refreshUI();
                 cheatBuffer = '';
             }
 
@@ -193,6 +209,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     const inv = gameState.current.inventory;
                     const emptyIdx = inv.findIndex(slot => slot === null);
                     if (emptyIdx !== -1) inv[emptyIdx] = met;
+                    refreshUI();
                     cheatBuffer = '';
                 }
             }
@@ -209,6 +226,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 const p = gameState.current.player;
                 p.arm.base += 100;
                 p.arm.mult = (p.arm.mult || 0) + 10;
+                refreshUI();
                 cheatBuffer = '';
             }
 
@@ -230,6 +248,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     const p = gameState.current.player;
                     p.hp.base *= min;
                     p.dmg.base *= min;
+                    p.atk.base *= (min * 30);
                     p.curHp = calcStat(p.hp);
                     p.level = min * 3;
                     cheatBuffer = '';

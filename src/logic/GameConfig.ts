@@ -11,6 +11,7 @@ export const GAME_CONFIG = {
         ARMOR_CONSTANT: 171, // Precisely tuned: ~35% reduction at 100 armor, caps at 95%
         HISTORY_LENGTH: 60,
         KNOCKBACK_DECAY: 0.85,
+        SPAWN_DURATION: 2.1, // 30% faster than 3.0s
     },
 
     // --- ENEMIES ---
@@ -31,14 +32,17 @@ export const GAME_CONFIG = {
         MERGE_HP_MULT_DEFAULT: 12,
         MERGE_XP_MULT_PENTAGON: 7,
         MERGE_XP_MULT_DEFAULT: 14,
-        MERGE_SIZE_MULT: 1.2,
+        MERGE_SIZE_MULT: 1.55,
         MERGE_SOUL_MULT_PENTAGON: 6,
         MERGE_SOUL_MULT_DEFAULT: 12,
 
         // Contact Damage
-        CONTACT_DAMAGE_PERCENT: 0.15, // 15% Max HP
         MINION_DAMAGE_RATIO: 0.15,
         MINION_STUN_DAMAGE_RATIO: 0.03,
+
+        // New Scaled Collision Logic (Power Scaling)
+        // Damage = HP ^ COLLISION_POWER_SCALING
+        COLLISION_POWER_SCALING: 0.6,
     },
 
     // --- SKILLS & LEGENDARIES ---

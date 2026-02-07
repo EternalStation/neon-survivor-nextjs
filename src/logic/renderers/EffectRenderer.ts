@@ -317,13 +317,74 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.stroke();
             ctx.restore();
         } else if (p.type === 'shockwave') {
-            ctx.save(); ctx.strokeStyle = p.color || '#FFFFFF'; ctx.lineWidth = 3; ctx.shadowColor = p.color || '#FFFFFF'; ctx.shadowBlur = 5;
-            ctx.globalAlpha = (p.alpha || 1.0) * (p.life < 10 ? p.life / 10 : 1.0);
-            const angle = Math.atan2(p.vy, p.vx); const radius = p.size;
-            const cx = p.x - Math.cos(angle) * (radius * 0.5); const cy = p.y - Math.sin(angle) * (radius * 0.5);
+            const alpha = (p.alpha || 1.0) * (p.life < 10 ? p.life / 10 : 1.0);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const angle = Math.atan2(p.vy, p.vx);
+            const radius = p.size;
+            // Center of the arc is offset back so the particle position 'p.x/y' is the leading curve midpoint
+            const cx = p.x - Math.cos(angle) * (radius * 0.5);
+            const cy = p.y - Math.sin(angle) * (radius * 0.5);
+
+            // 1. BEHIND LAYER (Trail/Pulse)
+            ctx.fillStyle = p.color || '#FFFFFF';
+            ctx.globalAlpha = alpha * 0.15;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, angle - 0.75, angle + 0.75);
+            ctx.arc(cx, cy, radius - 50, angle + 0.75, angle - 0.75, true);
+            ctx.fill();
+
+            // 2. MAIN LINES
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = p.color || '#FFFFFF';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = p.color || '#FFFFFF';
+            ctx.shadowBlur = 8;
             ctx.beginPath(); ctx.arc(cx, cy, radius, angle - 0.7, angle + 0.7); ctx.stroke();
-            ctx.lineWidth = 1; ctx.globalAlpha *= 0.5;
+
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = alpha * 0.6;
             ctx.beginPath(); ctx.arc(cx, cy, radius * 0.85, angle - 0.6, angle + 0.6); ctx.stroke();
+            ctx.restore();
+        } else if (p.type === 'bubble') {
+            const maxLife = p.maxLife || 60;
+            const progress = 1 - (p.life / maxLife); // 0 to 1
+            const alpha = (p.alpha || 0.5);
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+
+            let size, currentAlpha, rimAlpha;
+            if (progress < 0.8) {
+                const normP = progress / 0.8;
+                size = p.size * (0.4 + normP * 0.6);
+                currentAlpha = alpha * normP * 0.4;
+                rimAlpha = alpha * normP * 0.8;
+            } else {
+                const normP = (progress - 0.8) / 0.2;
+                size = p.size * (1.0 + normP * 0.7);
+                currentAlpha = alpha * (1 - normP) * 0.4;
+                rimAlpha = alpha * (1 - normP) * 1.0;
+            }
+
+            // Outer Glow
+            const spotGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.5);
+            spotGrad.addColorStop(0, `rgba(163, 230, 53, ${currentAlpha})`);
+            spotGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');
+            ctx.fillStyle = spotGrad;
+            ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.fill();
+
+            // Rim
+            ctx.strokeStyle = `rgba(190, 242, 100, ${rimAlpha})`;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.stroke();
+
+            // Highlight
+            if (progress < 0.8) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${rimAlpha * 0.5})`;
+                ctx.beginPath(); ctx.arc(-size * 0.3, -size * 0.3, size * 0.2, 0, Math.PI * 2); ctx.fill();
+            }
             ctx.restore();
         } else {
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
@@ -361,28 +422,101 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
 export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameState, width: number, height: number) {
     // 1. Transfer Tunnel
     if (state.portalState === 'transferring') {
-        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const cx = width / 2; const cy = height / 2;
-        ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, width, height);
-        ctx.save(); ctx.translate(cx, cy);
-        const color = '#22d3ee'; const baseSize = 50;
-        for (let i = 0; i < 20; i++) {
-            const z = (state.gameTime * 2 + i * 0.5) % 10; const scale = Math.pow(1.5, z); const alpha = Math.max(0, 1 - z / 10);
-            ctx.strokeStyle = color; ctx.lineWidth = 2 + scale; ctx.globalAlpha = alpha;
-            ctx.rotate(state.gameTime + i * 0.1);
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const cx = width / 2;
+        const cy = height / 2;
+        const t = state.gameTime;
+        const progress = 1 - (state.transferTimer / 2.0); // Assumes 2s duration
+
+        // 1. Solid Deep Background
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+
+        // 2. 3D perspective Grid lines (Horizontal/Vertical vanishing)
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        const gridCount = 32;
+        for (let i = 0; i < gridCount; i++) {
+            const angle = (i / gridCount) * Math.PI * 2 + t * 0.1;
+            const xEdge = Math.cos(angle) * width * 1.5;
+            const yEdge = Math.sin(angle) * height * 1.5;
             ctx.beginPath();
-            for (let j = 0; j < 6; j++) {
-                const ang = Math.PI / 3 * j; const r = baseSize * scale;
-                if (j === 0) ctx.moveTo(r * Math.cos(ang), r * Math.sin(ang));
-                else ctx.lineTo(r * Math.cos(ang), r * Math.sin(ang));
+            ctx.moveTo(0, 0);
+            ctx.lineTo(xEdge, yEdge);
+            ctx.stroke();
+        }
+
+        // 3. Scale-out Digital Rings (Fractured Hexagons)
+        const colors = ['#22d3ee', '#a855f7', '#3b82f6'];
+        for (let c = 0; c < 3; c++) {
+            const baseAlpha = 0.5 - (c * 0.1);
+            const layers = 6;
+            for (let i = 0; i < layers; i++) {
+                const z = ((t * 6) + i * 2) % 12;
+                const scale = Math.pow(1.7, z);
+                const alpha = Math.max(0, 1 - z / 11) * baseAlpha;
+
+                if (alpha <= 0) continue;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.scale(scale, scale);
+                ctx.strokeStyle = colors[c];
+                ctx.lineWidth = 1.5 / scale; // Keep lines clean as they scale
+
+                ctx.beginPath();
+                const rot = t * (c % 2 === 0 ? 0.5 : -0.5) + i;
+                for (let j = 0; j < 6; j++) {
+                    const ang = (Math.PI / 3) * j + rot;
+                    const rx = 40 * Math.cos(ang);
+                    const ry = 40 * Math.sin(ang);
+                    // Draw dashed/fragmented hex
+                    if (j % 2 === 0) ctx.moveTo(rx, ry);
+                    else ctx.lineTo(rx, ry);
+                }
+                ctx.stroke();
+                ctx.restore();
             }
-            ctx.closePath(); ctx.stroke();
-            ctx.rotate(-(state.gameTime + i * 0.1));
         }
-        if (state.transferTimer < 0.2) {
-            ctx.fillStyle = '#FFFFFF'; ctx.globalAlpha = (0.2 - state.transferTimer) / 0.2; ctx.fillRect(-cx, -cy, width, height);
+
+        // 4. Kinetic Motion Streaks
+        for (let i = 0; i < 40; i++) {
+            const idSeed = (i * 167.5);
+            const angle = (idSeed % (Math.PI * 2));
+            const speed = 15 + (idSeed % 25);
+            const offset = (t * speed * 25 + idSeed) % (width * 1.2);
+            const length = 40 + (idSeed % 120);
+
+            ctx.strokeStyle = i % 4 === 0 ? '#ffffff' : (i % 3 === 0 ? '#a855f7' : '#22d3ee');
+            ctx.lineWidth = 1 + (idSeed % 2);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle) * offset, Math.sin(angle) * offset);
+            ctx.lineTo(Math.cos(angle) * (offset + length), Math.sin(angle) * (offset + length));
+            ctx.stroke();
         }
-        ctx.restore(); ctx.restore();
+
+        // 5. Digital Glitch Displacement (Vertical slices)
+        if (Math.random() < 0.15 * (0.5 + progress)) {
+            const sliceY = (Math.random() - 0.5) * height;
+            const sliceH = 20 + Math.random() * 50;
+            ctx.fillStyle = `rgba(34, 211, 238, ${0.1 + Math.random() * 0.2})`;
+            ctx.fillRect(-width / 2, sliceY, width, sliceH);
+        }
+
+        // 6. Final Arrival White-out
+        if (state.transferTimer < 0.5) {
+            const easeIn = Math.pow((0.5 - state.transferTimer) / 0.5, 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = easeIn;
+            ctx.fillRect(-cx, -cy, width, height);
+        }
+
+        ctx.restore();
+        ctx.restore();
     }
 
     // 2. Smoke Blindness

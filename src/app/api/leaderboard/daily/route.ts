@@ -5,6 +5,8 @@ import { sql } from '@/lib/db';
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
+
+
         const limit = parseInt(searchParams.get('limit') || '100');
 
         const results = await sql`
@@ -13,7 +15,8 @@ export async function GET(request: NextRequest) {
         gr.class_used, gr.completed_at, p.username, gr.legendary_hexes,
         gr.arena_times, gr.damage_dealt, gr.damage_taken, gr.damage_blocked,
         gr.radar_counts, gr.portals_used, gr.hex_levelup_order,
-        gr.snitches_caught, gr.death_cause, gr.patch_version
+        gr.snitches_caught, gr.death_cause, gr.patch_version, gr.final_stats
+
       FROM game_runs gr
       JOIN players p ON gr.player_id = p.id
       WHERE DATE(gr.completed_at) = CURRENT_DATE

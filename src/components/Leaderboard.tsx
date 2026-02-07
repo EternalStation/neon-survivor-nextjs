@@ -28,7 +28,17 @@ interface LeaderboardEntry {
     snitches_caught?: number;
     death_cause?: string;
     patch_version?: string;
+    final_stats?: {
+        dmg: number;
+        hp: number;
+        xp: number;
+        atkSpd: number;
+        regen: number;
+        armor: number;
+        speed: number;
+    };
 }
+
 
 interface LeaderboardProps {
     onClose: () => void;
@@ -330,7 +340,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                             {/* LEGENDARY LINEUP */}
                                                             <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
                                                                 <div className="card-header">AUGMENTATION HISTORY</div>
-                                                                <div className="legendary-timeline-horizontal">
+                                                                <div className="legendary-grid">
                                                                     {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
                                                                         entry.hex_levelup_order.map((step, i) => {
                                                                             const hexBase = entry.legendary_hexes?.find(h => h.id === step.hexId);
@@ -365,7 +375,44 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                         <div className="empty-msg">No legendary augments acquired.</div>
                                                                     )}
                                                                 </div>
+
+                                                                {entry.final_stats && (
+                                                                    <>
+                                                                        <div className="card-header" style={{ marginTop: 20 }}>FINAL SYSTEM PERFORMANCE</div>
+                                                                        <div className="final-stats-grid">
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">DMG/HIT</span>
+                                                                                <span className="stat-value val-amber">{formatLargeNum(entry.final_stats.dmg)}</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">MAX HP</span>
+                                                                                <span className="stat-value val-green">{formatLargeNum(entry.final_stats.hp)}</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">XP/KILL</span>
+                                                                                <span className="stat-value val-cyan">{entry.final_stats.xp}</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">ATK SPEED</span>
+                                                                                <span className="stat-value val-purple">{(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2)}/s</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">REGEN</span>
+                                                                                <span className="stat-value val-green">{entry.final_stats.regen}/s</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">ARMOR</span>
+                                                                                <span className="stat-value val-blue">{entry.final_stats.armor}</span>
+                                                                            </div>
+                                                                            <div className="final-stat-item">
+                                                                                <span className="stat-label">SPEED</span>
+                                                                                <span className="stat-value val-cyan">{entry.final_stats.speed}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </>
+                                                                )}
                                                             </div>
+
 
                                                             {/* RADAR PROFILE */}
                                                             <div className="details-card radar-card">

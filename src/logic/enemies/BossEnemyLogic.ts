@@ -328,6 +328,10 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                             state.player.damageTaken += dmg;
                             spawnFloatingNumber(state, state.player.x, state.player.y, Math.round(dmg).toString(), '#ef4444', true);
                             spawnParticles(state, state.player.x, state.player.y, '#FF0000', 10);
+
+                            // Kinetic Battery: Trigger Zap on Satellite Strike
+                            const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                            if (triggerZap) triggerZap(state, state.player, 1);
                             if (state.player.curHp <= 0) {
                                 state.player.curHp = 0;
                                 state.gameOver = true;
@@ -408,9 +412,9 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                     const rawDmg = e.maxHp * 0.05; // 5% of Boss Max HP
 
                     // LASER REDUCTION LOGIC
-                    // User: LVL 1 is reduced by armor. LVL 2 PIERCES ALL ARMOR.
+                    // User: LVL 1 & 2 is reduced by armor. LVL 3 PIERCES ALL ARMOR.
                     let finalDmg = rawDmg;
-                    if (!isLevel2) {
+                    if (!isLevel3) {
                         const armor = calcStat(state.player.arm);
                         const reduction = getDefenseReduction(armor);
                         finalDmg = rawDmg * (1 - reduction);
@@ -425,6 +429,10 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
 
                     spawnFloatingNumber(state, state.player.x, state.player.y, Math.round(finalDmg).toString(), e.palette[1], isLevel2); // LVL 2 gets Crit look (larger)
                     spawnParticles(state, state.player.x, state.player.y, e.palette[1], 10);
+
+                    // Kinetic Battery: Trigger Zap on Beam Hit
+                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                    if (triggerZap) triggerZap(state, state.player, 1);
 
                     if (state.player.curHp <= 0) {
                         state.player.curHp = 0;
