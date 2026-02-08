@@ -64,7 +64,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             if (gameState.current.showSettings) return;
 
             // Handle Stats toggle
-            if (key === keybinds.stats) {
+            if (code === (keybinds.stats || '').toLowerCase()) {
                 setShowStats(prev => {
                     const next = !prev;
                     if (next) {
@@ -76,16 +76,16 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             }
 
             // Handle Matrix toggle
-            if (key === keybinds.matrix) {
+            if (code === (keybinds.matrix || '').toLowerCase()) {
                 setShowModuleMenu(prev => !prev);
             }
 
-            // Track movement keys
+            // Track movement keys - prioritize physical location (code)
             if (['keyw', 'keys', 'keya', 'keyd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(code)) {
                 keys.current[code] = true;
-                keys.current[key] = true;
             } else {
-                keys.current[key] = true;
+                // Support potential custom characters if needed, but movement is mostly fixed code
+                keys.current[code] = true;
             }
 
             // Skill Input (1-6)
@@ -96,7 +96,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
 
             skillBindings.forEach((bind, index) => {
                 const player = gameState.current.player;
-                if (bind === key && player.activeSkills[index]) {
+                if ((bind || '').toLowerCase() === code && player.activeSkills[index]) {
                     if (!player.phaseShiftUntil || Date.now() > player.phaseShiftUntil) {
                         castSkill(gameState.current, index);
                     }
@@ -104,7 +104,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             });
 
             // PORTAL TRIGGER
-            if (key === keybinds.portal) {
+            if (code === (keybinds.portal || '').toLowerCase()) {
                 triggerPortal();
             }
 
@@ -243,8 +243,27 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             // T5-T60 - Time Warp
             [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].forEach(min => {
                 if (cheatBuffer.endsWith(`t${min}`)) {
-                    gameState.current.gameTime = min * 60;
-                    gameState.current.nextBossSpawnTime = (min * 60) + 120;
+                    const gameTime = min * 60;
+                    gameState.current.gameTime = gameTime;
+
+                    // Aligned Boss Schedule Logic
+                    const schedule = [2, 4, 5, 6, 8];
+                    const current10MinCycle = Math.floor(min / 10);
+                    const currentMinuteInCycle = min % 10;
+
+                    let nextMinuteInCycle = -1;
+                    for (const m of schedule) {
+                        if (m > currentMinuteInCycle + 0.01) {
+                            nextMinuteInCycle = m;
+                            break;
+                        }
+                    }
+
+                    if (nextMinuteInCycle !== -1) {
+                        gameState.current.nextBossSpawnTime = (current10MinCycle * 10 + nextMinuteInCycle) * 60;
+                    } else {
+                        gameState.current.nextBossSpawnTime = ((current10MinCycle + 1) * 10 + schedule[0]) * 60;
+                    }
                     const p = gameState.current.player;
                     p.hp.base *= min;
                     p.dmg.base *= min;
@@ -257,9 +276,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
         };
 
         const handleUp = (e: KeyboardEvent) => {
-            const key = (e.key || '').toLowerCase();
             const code = (e.code || '').toLowerCase();
-            keys.current[key] = false;
             keys.current[code] = false;
         };
 

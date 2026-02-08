@@ -946,6 +946,10 @@ export function useGameLoop(gameStarted: boolean) {
                         }
                     }
                 }
+            } else if (state.isPaused && !state.gameOver) {
+                // CRITICAL: Allow extraction dialogue to progress even while menu is open (paused)
+                // Otherwise the terminal freezes and the player gets stuck if we block ESC.
+                updateExtraction(state, safeDt);
             }
 
             // Panic Button: If we are still behind after 20 steps, drop the accumulator.
@@ -1073,6 +1077,10 @@ export function useGameLoop(gameStarted: boolean) {
         },
         toggleModuleMenu: () => {
             setShowModuleMenu(prev => {
+                // Prevent closing if extraction dialogue is active
+                const isExtractionActive = ['requested', 'waiting'].includes(gameState.current.extractionStatus);
+                if (prev && isExtractionActive) return prev;
+
                 const next = !prev;
                 // Sync State
                 gameState.current.showModuleMenu = next;

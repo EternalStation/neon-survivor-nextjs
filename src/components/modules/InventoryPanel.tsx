@@ -545,46 +545,51 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         paddingRight: '4px'
                     }}>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => {
-                            const PERK_NAMES: Record<number, string> = {
-                                1: 'METEORITIC PARTICLE',
-                                2: 'PROXIMITY RELAY',
-                                3: 'SECTOR AMPLIFIER',
-                                4: 'CONDITION LINK',
-                                5: 'LEGENDARY LIAISON',
-                                6: 'ALPHA CONTROLLER',
-                                7: 'SYNERGY PAIR',
-                                8: 'HARMONY PAIR',
-                                9: 'SINGULARITY CORE'
-                            };
+                            const rarityKey = RARITY_ORDER[lvl - 1];
+                            const rarityColor = RARITY_COLORS[rarityKey];
+
+                            const suffix = lvl === 1 ? 'ST' : lvl === 2 ? 'ND' : lvl === 3 ? 'RD' : 'TH';
+                            const label = `${lvl}${suffix} PERK`;
+
+                            const isActive = perkFilters[lvl].active;
+
                             return (
                                 <div key={lvl} style={{
-                                    background: perkFilters[lvl].active ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255,255,255,0.02)',
-                                    border: `1px solid ${perkFilters[lvl].active ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
+                                    background: isActive ? `${rarityColor}20` : 'rgba(15, 23, 42, 0.4)',
+                                    border: `1px solid ${isActive ? rarityColor : `${rarityColor}40`}`,
                                     borderRadius: '4px',
                                     padding: '6px',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: '4px',
                                     transition: 'all 0.2s',
-                                    boxShadow: perkFilters[lvl].active ? 'inset 0 0 10px rgba(59, 130, 246, 0.2)' : 'none'
+                                    boxShadow: isActive ? `inset 0 0 10px ${rarityColor}33` : 'none'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                        <span style={{ fontSize: '7.5px', fontWeight: 900, color: perkFilters[lvl].active ? '#fff' : '#475569', letterSpacing: '0.5px' }}>{PERK_NAMES[lvl]}</span>
+                                        <span style={{
+                                            fontSize: '7.5px',
+                                            fontWeight: 900,
+                                            color: rarityColor,
+                                            letterSpacing: '0.5px',
+                                            opacity: isActive ? 1 : 0.8
+                                        }}>
+                                            {label}
+                                        </span>
                                         <input
                                             type="checkbox"
-                                            checked={perkFilters[lvl].active}
+                                            checked={isActive}
                                             onChange={e => updatePerk(lvl, { active: e.target.checked })}
-                                            style={{ cursor: 'pointer', width: '12px', height: '12px' }}
+                                            style={{ cursor: 'pointer', width: '12px', height: '12px', accentColor: rarityColor }}
                                         />
                                     </div>
 
-                                    {perkFilters[lvl].active && (
+                                    {isActive && (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', animation: 'fadeIn 0.2s' }}>
                                             {/* Value Row (Universal for L1-L9) */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '8px', color: '#94a3b8', fontWeight: 900 }}>THRESHOLD</span>
-                                                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6' }}>
+                                                    <span style={{ fontSize: '10px', fontWeight: 900, color: rarityColor }}>
                                                         {perkFilters[lvl].val}%
                                                     </span>
                                                 </div>
@@ -594,7 +599,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                                     max="35"
                                                     step="1"
                                                     className="scanner-range"
-                                                    style={{ width: '100%', cursor: 'pointer', height: '4px', margin: '4px 0' }}
+                                                    style={{
+                                                        width: '100%',
+                                                        cursor: 'pointer',
+                                                        height: '4px',
+                                                        margin: '4px 0',
+                                                        accentColor: rarityColor
+                                                    }}
                                                     value={perkFilters[lvl].val}
                                                     onChange={e => updatePerk(lvl, { val: parseInt(e.target.value) || 0 })}
                                                 />
@@ -602,17 +613,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 
                                             {/* Contextual Rows */}
                                             {(lvl === 3 || lvl === 4 || lvl === 6) && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px' }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
                                                     {ARENAS.map(a => <option key={a} value={a}>{a} ARENA</option>)}
                                                 </select>
                                             )}
                                             {(lvl === 7 || lvl === 8) && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px' }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
                                                     {PAIR_COMBOS.map(p => <option key={p} value={p}>{p}</option>)}
                                                 </select>
                                             )}
                                             {lvl === 4 && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px' }} value={perkFilters[lvl].matchQuality} onChange={e => updatePerk(lvl, { matchQuality: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].matchQuality} onChange={e => updatePerk(lvl, { matchQuality: e.target.value })}>
                                                     {QUALITIES.map(q => <option key={q} value={q}>{q}</option>)}
                                                 </select>
                                             )}
@@ -622,68 +633,63 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             );
                         })}
                     </div>
+
+                    {/* SAFE SLOTS (FIXED AT TOP) */}
+                    <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(59, 130, 246, 0.2)', marginTop: '4px' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            marginBottom: '4px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
+                            <span style={{ fontSize: '7px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(PROTECTED FROM BULK RECYCLING)</span>
+                        </div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+                            gap: '6px'
+                        }}>
+                            {Array.from({ length: 10 }).map((_, i) => renderSlot(displayInventory[i], i, isFilterActive))}
+                        </div>
+                    </div>
                 </div >
 
-                {/* INVENTORY ITEMS */}
+                {/* INVENTORY ITEMS (STORAGE ONLY) */}
                 {
                     (() => {
-                        const isAnyFilterActive =
-                            coreFilter.quality !== 'All' ||
-                            coreFilter.rarity !== 'All' ||
-                            coreFilter.arena !== 'All' ||
-                            Object.values(perkFilters).some(f => f.active);
-
                         const elements: React.ReactNode[] = [];
 
-                        // 1. SAFE SLOTS HEADER
-                        elements.push(
-                            <div key="safe-header" style={{
-                                gridColumn: 'span 10',
-                                padding: '5px 0 5px 0',
-                                borderBottom: '1px solid rgba(168, 85, 247, 0.3)',
-                                marginBottom: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}>
-                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
-                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic' }}>(PROTECTED FROM MASS SCANNER RECYCLING)</span>
-                            </div>
-                        );
-
-                        // 2. SAFE SLOTS (0-9)
-                        for (let i = 0; i < 10; i++) {
-                            elements.push(renderSlot(displayInventory[i], i, isAnyFilterActive));
-                        }
-
-                        // 3. REMOVED ROW SPACER
+                        // 1. REMOVED ROW SPACER (Visual Separation for Storage)
                         elements.push(
                             <div key="removed-header" style={{
                                 gridColumn: 'span 10',
                                 height: '2px',
                                 borderBottom: '1px dashed rgba(148, 163, 184, 0.1)',
-                                margin: '0px 0 0 0'
+                                margin: '4px 0 0 0'
                             }} />
                         );
 
-                        // 4. STORAGE HEADER
+                        // 2. STORAGE HEADER
+                        const storageEmptyCount = inventory.slice(20, 300).filter(item => item === null).length;
                         elements.push(
                             <div key="storage-header" style={{
                                 gridColumn: 'span 10',
-                                padding: '0px 0 5px 0',
+                                padding: '5px 0 5px 0',
                                 borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
                                 marginBottom: '8px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '10px'
                             }}>
-                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE UNIT / PICKUP ZONE</span>
+                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
+                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>({storageEmptyCount} SLOTS)</span>
                             </div>
                         );
 
-                        // 5. STORAGE SLOTS (20+)
+                        // 3. STORAGE SLOTS (20+) - Skip 10-19 as before
                         for (let i = 20; i < 300; i++) {
-                            elements.push(renderSlot(displayInventory[i], i, isAnyFilterActive));
+                            elements.push(renderSlot(displayInventory[i], i, isFilterActive));
                         }
 
                         return elements;

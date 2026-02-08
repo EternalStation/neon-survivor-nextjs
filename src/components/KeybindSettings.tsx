@@ -19,24 +19,25 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         'Move Right': 'D / →',
     };
 
-    const FORBIDDEN_LITERALS = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+    const FORBIDDEN_CODES = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (listening) {
                 e.preventDefault();
-                const key = e.key.toLowerCase();
+                const code = e.code; // Use raw code (e.g. 'KeyC')
+                const lowerCode = code.toLowerCase();
 
                 // Prevent unbindable keys
-                if (key === 'escape') {
+                if (lowerCode === 'escape') {
                     setListening(null);
                     return;
                 }
 
                 // Check for duplicates in current keybinds
-                const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === key);
+                const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === code);
                 // Check for duplicates in reserved movement keys
-                const isReserved = FORBIDDEN_LITERALS.includes(key);
+                const isReserved = FORBIDDEN_CODES.includes(lowerCode);
 
                 if (isDuplicate || isReserved) {
                     setConflict(listening);
@@ -44,7 +45,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                     return; // REJECT INPUT
                 }
 
-                const newKeybinds = { ...keybinds, [listening]: key };
+                const newKeybinds = { ...keybinds, [listening]: code };
                 setKeybinds(newKeybinds);
                 saveKeybinds(newKeybinds);
                 setListening(null);

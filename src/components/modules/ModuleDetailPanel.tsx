@@ -287,71 +287,80 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             height: extractionDialogActive ? 'calc(100% + 40px)' : 'auto',
                             marginTop: extractionDialogActive ? '-20px' : 0
                         }}>
-                            {extractionDialogActive ? (
-                                <div
-                                    ref={terminalRef}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        background: 'rgba(5, 10, 20, 0.92)',
-                                        border: '1px solid #3b82f6',
-                                        borderRadius: '6px',
-                                        padding: '18px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '12px',
-                                        overflowY: 'auto',
-                                        boxShadow: '0 0 30px rgba(59, 130, 246, 0.25), inset 0 0 20px rgba(0,0,0,0.6)',
-                                        fontFamily: 'monospace',
-                                        color: '#93c5fd',
-                                        scrollbarWidth: 'none'
-                                    }}>
-                                    {/* TERMINAL HEADER */}
-                                    <div style={{ borderBottom: '1px solid rgba(59, 130, 246, 0.3)', paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', opacity: 0.85 }}>
-                                        <span>SIGNAL INTERCEPT :: ENCRYPTED</span>
-                                        <span style={{ animation: 'pulse-text 1s infinite' }}>COMMS_ACTIVE</span>
+                            {extractionDialogActive ? (() => {
+                                const visibleMessages = EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1);
+                                const hasAlert = visibleMessages.some(m => (m as any).isAlert);
+
+                                return (
+                                    <div
+                                        ref={terminalRef}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            background: hasAlert ? 'rgba(30, 0, 0, 0.94)' : 'rgba(5, 10, 20, 0.92)',
+                                            border: hasAlert ? '1px solid #ef4444' : '1px solid #3b82f6',
+                                            borderRadius: '6px',
+                                            padding: '18px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '12px',
+                                            overflowY: 'auto',
+                                            boxShadow: hasAlert ? '0 0 30px rgba(239, 68, 68, 0.25), inset 0 0 20px rgba(0,0,0,0.6)' : '0 0 30px rgba(59, 130, 246, 0.25), inset 0 0 20px rgba(0,0,0,0.6)',
+                                            fontFamily: 'monospace',
+                                            color: hasAlert ? '#fca5a5' : '#93c5fd',
+                                            scrollbarWidth: 'none',
+                                            transition: 'all 0.5s ease'
+                                        }}>
+                                        {/* TERMINAL HEADER */}
+                                        <div style={{ borderBottom: '1px solid ' + (hasAlert ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'), paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', opacity: 0.85, color: hasAlert ? '#ef4444' : 'inherit' }}>
+                                            <span>SIGNAL INTERCEPT :: ENCRYPTED</span>
+                                            <span style={{ animation: 'pulse-text 1s infinite' }}>{hasAlert ? 'CRITICAL_ALERT' : 'COMMS_ACTIVE'}</span>
+                                        </div>
+
+                                        {/* MESSAGES */}
+                                        {visibleMessages.map((msg, i) => {
+                                            const resolvedText = msg.text
+                                                .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
+                                                .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
+                                                .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
+                                            const clock = gameState.extractionDialogTime ?? 0;
+                                            const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
+                                            const elapsed = Math.max(0, clock - startTime);
+                                            const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
+                                            const visibleText = resolvedText.slice(0, revealCount);
+                                            const isYou = (msg as any).speaker === 'you';
+                                            const isAlert = (msg as any).isAlert;
+
+                                            return (
+                                                <div key={i} style={{
+                                                    padding: '6px 0',
+                                                    borderLeft: !isYou ? (isAlert ? '2px solid #ef4444' : '2px solid #3b82f6') : 'none',
+                                                    borderRight: isYou ? '2px solid #f59e0b' : 'none',
+                                                    paddingLeft: !isYou ? '10px' : '0',
+                                                    paddingRight: isYou ? '10px' : '0',
+                                                    textAlign: isYou ? 'right' : 'left',
+                                                    alignSelf: isYou ? 'flex-end' : 'flex-start',
+                                                    maxWidth: '95%',
+                                                    color: isYou ? '#fde68a' : (isAlert ? '#fca5a5' : '#93c5fd'),
+                                                    animation: 'typewriter 0.5s ease-out forwards',
+                                                    lineHeight: '1.7',
+                                                    fontSize: '13px'
+                                                }}>
+                                                    <span style={{ color: isYou ? '#fbbf24' : (isAlert ? '#ef4444' : '#60a5fa'), opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
+                                                        {isYou ? 'YOU' : 'ORBITAL'}:
+                                                    </span>
+                                                    <span style={{ textShadow: isAlert ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>
+                                                        {visibleText}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                        {gameState.extractionStatus === 'requested' && (
+                                            <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
+                                        )}
                                     </div>
-
-                                    {/* MESSAGES */}
-                                    {EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1).map((msg, i) => {
-                                        const resolvedText = msg.text
-                                            .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                                            .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
-                                            .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
-                                        const clock = gameState.extractionDialogTime ?? 0;
-                                        const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
-                                        const elapsed = Math.max(0, clock - startTime);
-                                        const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
-                                        const visibleText = resolvedText.slice(0, revealCount);
-                                        const isYou = (msg as any).speaker === 'you';
-
-                                        return (
-                                            <div key={i} style={{
-                                                padding: '6px 0',
-                                                borderLeft: !isYou ? '2px solid' + (msg.isPause ? '#fbbf24' : '#3b82f6') : 'none',
-                                                borderRight: isYou ? '2px solid #f59e0b' : 'none',
-                                                paddingLeft: !isYou ? '10px' : '0',
-                                                paddingRight: isYou ? '10px' : '0',
-                                                textAlign: isYou ? 'right' : 'left',
-                                                alignSelf: isYou ? 'flex-end' : 'flex-start',
-                                                maxWidth: '95%',
-                                                color: isYou ? '#fde68a' : '#93c5fd',
-                                                animation: 'typewriter 0.5s ease-out forwards',
-                                                lineHeight: '1.7',
-                                                fontSize: '13px'
-                                            }}>
-                                                <span style={{ color: isYou ? '#fbbf24' : '#60a5fa', opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
-                                                    {isYou ? 'YOU' : 'ORBITAL'}:
-                                                </span>
-                                                {visibleText}
-                                            </div>
-                                        );
-                                    })}
-                                    {gameState.extractionStatus === 'requested' && (
-                                        <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
-                                    )}
-                                </div>
-                            ) : gameState.extractionStatus === 'active' || gameState.extractionStatus === 'arriving' || gameState.extractionStatus === 'arrived' ? (
+                                );
+                            })() : (gameState.extractionStatus === 'active' || gameState.extractionStatus === 'arriving' || gameState.extractionStatus === 'arrived') ? (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: '18px', fontWeight: 900, color: '#ef4444', animation: 'pulse-text 1s infinite' }}>
                                         EVACUATION ACTIVE

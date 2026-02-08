@@ -14,22 +14,6 @@ export function updateDirector(state: GameState, step: number) {
     const current5MinCycle = Math.floor(minutes / 5);
 
 
-    // 1. Check for RANDOM events (Solar EMP) - Exclude scheduled ones
-    // Check every 2 minutes for general random events logic if not active
-    if (state.gameTime >= state.nextEventCheckTime && !state.activeEvent) {
-        if (state.gameTime > MIN_TIME_FOR_EVENTS) {
-            // General pool (Only solar_emp now, since others are scheduled)
-            const pool: GameEventType[] = ['solar_emp'];
-
-            // 30% chance every 2 mins
-            if (Math.random() < 0.3) {
-                const type = pool[Math.floor(Math.random() * pool.length)];
-                startEvent(state, type);
-            }
-        }
-        state.nextEventCheckTime = state.gameTime + CHECK_INTERVAL;
-    }
-
     // 2. SCHEDULED EVENTS (Necrotic Surge & Legion Formation)
     // Only start attempting after 10 minutes (Cycle 2+)
     if (minutes >= 10 && !state.activeEvent) {
@@ -100,9 +84,6 @@ function startEvent(state: GameState, type: GameEventType) {
     switch (type) {
         case 'necrotic_surge':
             playSfx('ghost-horde');
-            break;
-        case 'solar_emp':
-            playSfx('warning');
             break;
         case 'legion_formation':
             playSfx('warning'); // Maybe a horn?

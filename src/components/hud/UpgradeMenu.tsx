@@ -25,10 +25,10 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
             const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
 
-            if (key === 'a' || code === 'keya' || code === 'arrowleft' || key === 'arrowleft') {
+            if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : upgradeChoices.length - 1));
             }
-            if (key === 'd' || code === 'keyd' || code === 'arrowright' || key === 'arrowright') {
+            if (code === 'keyd' || code === 'arrowright') {
                 setSelectedIndex(prev => (prev < upgradeChoices.length - 1 ? prev + 1 : 0));
             }
         };
@@ -40,9 +40,8 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
     useEffect(() => {
         const handleSelect = (e: KeyboardEvent) => {
             if (e.repeat) return;
-            const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
-            if (key === ' ' || code === 'space' || key === 'enter' || code === 'enter') {
+            if (code === 'space' || code === 'enter') {
                 const choice = upgradeChoices[selectedIndex];
                 playUpgradeSfx(choice.rarity?.id || 'common');
                 onUpgradeSelect(choice);

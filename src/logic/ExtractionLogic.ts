@@ -6,25 +6,25 @@ import { playTypewriterClick } from './SfxLogic';
 
 
 export const EXTRACTION_MESSAGES = [
-    { speaker: 'you', text: "[SIGNAL NOISE] ORBITAL, THIS IS HEX-01-[PLAYER_NAME].", pause: 2.0, rand: 2.0 },
-    { speaker: 'you', text: "SENDING SOS. REQUESTING EXTRACTION.", pause: 2.0, rand: 2.0 },
+    { speaker: 'you', text: "[SIGNAL NOISE] ORBITAL, THIS IS HEX-01-[PLAYER_NAME].", pause: 5.0, rand: 2.0 },
+    { speaker: 'you', text: "SENDING SOS. REQUESTING EXTRACTION.", pause: 4.0, rand: 2.0 },
     { speaker: 'comm', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "Biometric handshake... 0x4F 0x6E 0x65...", pause: 2.4, rand: 2.0 },
+    { speaker: 'comm', text: "Biometric handshake... 0x4F 0x6E 0x65...", pause: 3.0, rand: 2.0 },
     { speaker: 'you', text: "CONFIRMING.", pause: 2.0, rand: 2.0 },
-    { speaker: 'comm', text: "[ ENCRYPTED BUFFER ]", pause: 2.6, rand: 2.0, isPause: true },
+    { speaker: 'comm', text: "[ ENCRYPTED BUFFER ]", pause: 2.9, rand: 2.0, isPause: true },
     { speaker: 'comm', text: "Signature locked. We're sending a ship.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "Transport is jumping the rift now.", pause: 2.2, rand: 2.0 },
-    { speaker: 'you', text: "UNDERSTOOD.", pause: 2.0, rand: 2.0 },
-    { speaker: 'comm', text: "PORTALS BYPASSED. ALL GATES OPEN.", pause: 2.6, rand: 2.0, triggerPortals: true },
+    { speaker: 'comm', text: "Transport is jumping the rift now.", pause: 3.0, rand: 2.0 },
+    { speaker: 'you', text: "UNDERSTOOD.", pause: 3.0, rand: 2.0 },
+    { speaker: 'comm', text: "PORTALS ARE OPEN FOR YOU, HEX-01-[PLAYER_NAME].", pause: 3.5, rand: 2.0, triggerPortals: true },
+    { speaker: 'comm', text: "But they will only allow one transition, be carefull!", pause: 4, rand: 2.0 },
     { speaker: 'comm', text: "Extraction point follows:", pause: 2.2, rand: 2.0 },
     { speaker: 'comm', text: "TARGET SECTOR: [ARENA_NAME]", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "LZ COORDINATES: PENDING SIGNAL.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "ETA 65 SECONDS.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "Swarm intercept detected.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "Annihilation-class forces inbound.", pause: 2.2, rand: 2.0 },
-    { speaker: 'you', text: "MOVING TO COORDINATES.", pause: 2.0, rand: 2.0 },
-    { speaker: 'comm', text: "Reach the ship.", pause: 2.2, rand: 2.0 },
-    { speaker: 'comm', text: "GOOD LUCK. TRANSMISSION ENDS.", pause: 2.4, rand: 2.0 }
+    { speaker: 'comm', text: "EXACT COORDINATES: PENDING SIGNAL...", pause: 3.0, rand: 2.0 },
+    { speaker: 'comm', text: "ETA 65 SECONDS.", pause: 3.0, rand: 2.0 },
+    { speaker: 'comm', text: "DETECTED HIGH ENEMY ACTIVITY", pause: 2.2, rand: 2.0, isAlert: true },
+    { speaker: 'comm', text: "YOU HAVE NO MORE TIME LEFT, EVACUATE NOW!", pause: 2.2, rand: 2.0, isAlert: true },
+    { speaker: 'comm', text: "Reach the ship.", pause: 2.2, rand: 2.0, isAlert: true },
+    { speaker: 'comm', text: "GOOD LUCK, HEX-01-[PLAYER_NAME]! TRANSMISSION ENDS.", pause: 5, rand: 2.0, isAlert: true }
 ];
 
 export function updateExtraction(state: GameState, step: number) {

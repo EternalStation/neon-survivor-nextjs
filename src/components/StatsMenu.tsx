@@ -10,6 +10,8 @@ import { isBuffActive } from '../logic/BlueprintLogic';
 import { DROP_TABLE } from '../logic/LootLogic';
 
 
+import { getKeybinds, getKeyDisplay } from '../logic/Keybinds';
+
 interface StatsMenuProps {
     gameState: GameState;
 }
@@ -198,12 +200,11 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
     // Keyboard Navigation
     useEffect(() => {
         const handleKeys = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
-            if (key === 'a' || code === 'keya' || key === 'arrowleft' || code === 'arrowleft') {
+            if (code === 'keya' || code === 'arrowleft') {
                 setTab('stats');
             }
-            if (key === 'd' || code === 'keyd' || key === 'arrowright' || code === 'arrowright') {
+            if (code === 'keyd' || code === 'arrowright') {
                 setTab('blueprint');
             }
         };
@@ -528,7 +529,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
             </div>
 
             <div style={{ marginTop: 'auto', paddingTop: 20, color: '#475569', fontSize: 10, textAlign: 'center' }}>
-                PRESS [C] TO CLOSE
+                PRESS [{getKeyDisplay(getKeybinds().stats)}] TO CLOSE
             </div>
         </div>
     );

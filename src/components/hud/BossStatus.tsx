@@ -99,7 +99,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && showSkillDetail) {
+            if (e.code === 'Escape' && showSkillDetail) {
                 setShowSkillDetail(false);
                 setLocalSkillData(null);
             }
@@ -144,8 +144,8 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                         <span style={{
                             color: (() => {
                                 const minutes = gameState.gameTime / 60;
-                                const eraIndex = Math.floor(minutes / 15) % 4;
-                                const eraColors = ['#4ade80', '#3b82f6', '#a855f7', '#f97316'];
+                                const eraIndex = Math.floor(minutes / 15) % 5;
+                                const eraColors = ['#4ade80', '#3b82f6', '#a855f7', '#f97316', '#ef4444'];
                                 return eraColors[eraIndex];
                             })()
                         }}>LVL {isLevel3 ? '3' : (isLevel2 ? '2' : '1')}</span>

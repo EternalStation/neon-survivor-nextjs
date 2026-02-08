@@ -28,9 +28,6 @@ export function getProgressionParams(gameTime: number) {
 }
 
 export function getEventPalette(state: GameState): [string, string, string] | null {
-    if (state.activeEvent?.type === 'solar_emp') {
-        return ['#f59e0b', '#d97706', '#92400e']; // Amber/Warning
-    }
     if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
         return ['#9ca3af', '#4b5563', '#1f2937']; // Brighter Black/Grey (Onyx/Slate)
     }

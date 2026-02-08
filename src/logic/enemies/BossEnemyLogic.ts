@@ -280,12 +280,13 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                 if (state.frameCount % 5 === 0 && e.satelliteTargets) {
                     // Determine era color
                     const minutes = (e.spawnedAt || state.gameTime) / 60;
-                    const eraIndex = Math.floor(minutes / 15) % 4; // 0-3 for 4 eras
+                    const eraIndex = Math.floor(minutes / 15) % 5; // 0-4 for 5 eras (Green, Blue, Purple, Orange, Red)
                     const eraColors = [
                         '#4ade80', // 0-15: Green
                         '#3b82f6', // 15-30: Blue  
                         '#a855f7', // 30-45: Purple
-                        '#f97316'  // 45-60: Orange
+                        '#f97316', // 45-60: Orange
+                        '#ef4444'  // 60+: Red
                     ];
                     const warningColor = eraColors[eraIndex];
 
@@ -305,12 +306,13 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
 
                     // Determine era color for strike particles
                     const minutes = (e.spawnedAt || state.gameTime) / 60;
-                    const eraIndex = Math.floor(minutes / 15) % 4;
+                    const eraIndex = Math.floor(minutes / 15) % 5;
                     const eraColors = [
                         '#4ade80', // 0-15: Green
                         '#3b82f6', // 15-30: Blue
                         '#a855f7', // 30-45: Purple
-                        '#f97316'  // 45-60: Orange
+                        '#f97316', // 45-60: Orange
+                        '#ef4444'  // 60+: Red
                     ];
                     const strikeColor = eraColors[eraIndex];
 

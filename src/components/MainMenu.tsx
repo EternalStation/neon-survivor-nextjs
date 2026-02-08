@@ -29,7 +29,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
     // Handle ESC key to close modals
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.code === 'Escape') {
                 if (showBlueprint) setShowBlueprint(false);
                 if (showPatchNotes) setShowPatchNotes(false);
                 if (showSettings) setShowSettings(false);

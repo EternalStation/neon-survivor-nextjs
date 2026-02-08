@@ -15,13 +15,13 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
             const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
 
-            if (key === 'a' || code === 'keya' || code === 'arrowleft' || key === 'arrowleft') {
+            if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : arenas.length - 1));
             }
-            if (key === 'd' || code === 'keyd' || code === 'arrowright' || key === 'arrowright') {
+            if (code === 'keyd' || code === 'arrowright') {
                 setSelectedIndex(prev => (prev < arenas.length - 1 ? prev + 1 : 0));
             }
-            if (key === ' ' || code === 'space' || key === 'enter' || code === 'enter') {
+            if (code === 'space' || code === 'enter') {
                 onSelect(arenas[selectedIndex].id);
             }
         };

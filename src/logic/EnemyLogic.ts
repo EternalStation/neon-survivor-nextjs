@@ -66,11 +66,34 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         manageRareSpawnCycles(state);
     }
 
-    // Boss Spawning
+    // Boss Spawning (Scheduled)
     if (gameTime >= state.nextBossSpawnTime && state.portalState !== 'transferring' && state.extractionStatus === 'none') {
-        // Fix: Pass arguments correctly (x, y, shape, isBoss)
-        spawnEnemy(state, undefined, undefined, undefined, true);
-        state.nextBossSpawnTime += GAME_CONFIG.ENEMY.BOSS_SPAWN_INTERVAL; // 2 Minutes
+        const minutesRaw = gameTime / 60;
+        const current10MinCycle = Math.floor(minutesRaw / 10);
+
+        // Determine tier (1, 2, or 3+)
+        const tier = Math.min(3, current10MinCycle + 1);
+
+        spawnEnemy(state, undefined, undefined, undefined, true, tier);
+
+        // Calculate next spawn time in the schedule: [2, 4, 5, 6, 8]
+        const schedule = [2, 4, 5, 6, 8];
+        const currentMinuteInCycle = minutesRaw % 10;
+
+        let nextMinuteInCycle = -1;
+        for (const m of schedule) {
+            if (m > currentMinuteInCycle + 0.01) { // Add small epsilon to avoid immediate re-spawn
+                nextMinuteInCycle = m;
+                break;
+            }
+        }
+
+        if (nextMinuteInCycle !== -1) {
+            state.nextBossSpawnTime = (current10MinCycle * 10 + nextMinuteInCycle) * 60;
+        } else {
+            // Move to next 10-min cycle
+            state.nextBossSpawnTime = ((current10MinCycle + 1) * 10 + schedule[0]) * 60;
+        }
     }
 
     // --- SPATIAL GRID UPDATE ---

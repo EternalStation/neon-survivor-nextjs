@@ -11,13 +11,12 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
-            if (key === 'a' || code === 'keya' || key === 'arrowleft' || code === 'arrowleft') {
+            if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev - 1 + options.length) % options.length);
-            } else if (key === 'd' || code === 'keyd' || key === 'arrowright' || code === 'arrowright') {
+            } else if (code === 'keyd' || code === 'arrowright') {
                 setSelectedIndex(prev => (prev + 1) % options.length);
-            } else if (key === 'enter' || code === 'enter' || key === ' ' || code === 'space') {
+            } else if (code === 'enter' || code === 'space') {
                 onSelect(options[selectedIndex]);
             }
         };

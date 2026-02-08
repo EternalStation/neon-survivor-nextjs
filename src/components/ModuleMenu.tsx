@@ -85,9 +85,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                // Prevent closing if pending placement
-                if (!gameState.pendingLegendaryHex) {
+            if (e.code === 'Escape' && isOpen) {
+                // Prevent closing if pending placement or if extraction dialogue is active
+                const isExtractionActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
+                if (!gameState.pendingLegendaryHex && !isExtractionActive) {
                     onClose();
                 }
             }
@@ -335,25 +336,29 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             setTimeout(() => setPlacementAlert(false), 2000);
             return;
         }
-        // Collect all actual items
-        const items = gameState.inventory.filter((m): m is Meteorite => m !== null);
 
-        // Build rarity map for quick lookup
+        // 1. Preserve Safe Slots (0-9) and Spacer Row (10-19)
+        const protectedSlots = gameState.inventory.slice(0, 20);
+
+        // 2. Collect & Sort Storage Items (20+)
+        const storageItems = gameState.inventory.slice(20).filter((m): m is Meteorite => m !== null);
+
         const rarityMap: Record<string, number> = {};
         RARITY_ORDER.forEach((r, i) => rarityMap[r] = i);
 
-        // Sort: Highest rarity (highest index in RARITY_ORDER) comes first
-        items.sort((a, b) => rarityMap[b.rarity] - rarityMap[a.rarity]);
+        storageItems.sort((a, b) => rarityMap[b.rarity] - rarityMap[a.rarity]);
 
-        // Construct new inventory array with sorted items followed by nulls
-        const newInventory: (Meteorite | null)[] = [...items];
+        // 3. Reconstruct Inventory
+        const newInventory = [...protectedSlots, ...storageItems];
         while (newInventory.length < gameState.inventory.length) {
             newInventory.push(null);
         }
 
-        // Apply updates to the state
+        // 4. Apply updates (Optimized to only change modified slots)
         newInventory.forEach((item, idx) => {
-            onInventoryUpdate(idx, item);
+            if (gameState.inventory[idx] !== item) {
+                onInventoryUpdate(idx, item);
+            }
         });
     };
 

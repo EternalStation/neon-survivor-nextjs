@@ -493,7 +493,6 @@ export interface Rarity {
 }
 
 export type GameEventType =
-    | 'solar_emp'
     | 'legionnaire_sweep'
     | 'necrotic_surge'
     | 'legion_formation'

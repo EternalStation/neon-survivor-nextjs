@@ -43,10 +43,10 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     // Movement Cancel Logic for Channeling (Epicenter)
     if (player.immobilized && !isStunned) {
         let tryingToMove = false;
-        if (keys['w'] || keys['keyw'] || keys['arrowup']) tryingToMove = true;
-        if (keys['s'] || keys['keys'] || keys['arrowdown']) tryingToMove = true;
-        if (keys['a'] || keys['keya'] || keys['arrowleft']) tryingToMove = true;
-        if (keys['d'] || keys['keyd'] || keys['arrowright']) tryingToMove = true;
+        if (keys['keyw'] || keys['arrowup']) tryingToMove = true;
+        if (keys['keys'] || keys['arrowdown']) tryingToMove = true;
+        if (keys['keya'] || keys['arrowleft']) tryingToMove = true;
+        if (keys['keyd'] || keys['arrowright']) tryingToMove = true;
         if (inputVector && (Math.abs(inputVector.x) > 0.1 || Math.abs(inputVector.y) > 0.1)) tryingToMove = true;
 
         if (tryingToMove) {
@@ -66,10 +66,10 @@ export function updatePlayer(state: GameState, keys: Record<string, boolean>, on
     }
 
     if (!isStunned && !player.immobilized) {
-        if (keys['w'] || keys['keyw'] || keys['arrowup']) vy--;
-        if (keys['s'] || keys['keys'] || keys['arrowdown']) vy++;
-        if (keys['a'] || keys['keya'] || keys['arrowleft']) vx--;
-        if (keys['d'] || keys['keyd'] || keys['arrowright']) vx++;
+        if (keys['keyw'] || keys['arrowup']) vy--;
+        if (keys['keys'] || keys['arrowdown']) vy++;
+        if (keys['keya'] || keys['arrowleft']) vx--;
+        if (keys['keyd'] || keys['arrowright']) vx++;
 
         // Add Joystick Input
         if (inputVector) {

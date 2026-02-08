@@ -15,13 +15,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
             const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
 
-            if (key === 'a' || code === 'keya' || code === 'arrowleft' || key === 'arrowleft') {
+            if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : PLAYER_CLASSES.length - 1));
             }
-            if (key === 'd' || code === 'keyd' || code === 'arrowright' || key === 'arrowright') {
+            if (code === 'keyd' || code === 'arrowright') {
                 setSelectedIndex(prev => (prev < PLAYER_CLASSES.length - 1 ? prev + 1 : 0));
             }
-            if (key === ' ' || code === 'space' || key === 'enter' || code === 'enter') {
+            if (code === 'space' || code === 'enter') {
                 onSelect(PLAYER_CLASSES[selectedIndex]);
             }
         };
