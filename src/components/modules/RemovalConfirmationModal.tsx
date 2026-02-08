@@ -16,6 +16,7 @@ interface RemovalConfirmationModalProps {
 }
 
 export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> = ({ candidate, dust, cost, onCancel, onConfirm }) => {
+    const isCorrupted = candidate.item?.quality === 'Corrupted';
     return (
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -45,6 +46,11 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                         ? 'Replacing this module will move the current one to your inventory.'
                         : 'Removing this module requires energy to safely extract.'}
                 </div>
+                {isCorrupted && (
+                    <div style={{ color: '#a855f7', textAlign: 'center', fontSize: '11px', fontWeight: 800 }}>
+                        CORRUPTED MODULE: EXTRACTION COST IS TRIPLED
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px 16px', borderRadius: '4px' }}>
                     <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>COST: {cost}</span>

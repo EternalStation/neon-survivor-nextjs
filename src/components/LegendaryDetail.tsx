@@ -1,6 +1,7 @@
 import React from 'react';
 import type { GameState, LegendaryHex, LegendaryCategory } from '../logic/types';
 import { calculateMeteoriteEfficiency } from '../logic/EfficiencyLogic';
+import { getMeteoriteImage } from './modules/ModuleUtils';
 
 interface LegendaryDetailProps {
     hex: LegendaryHex;
@@ -317,7 +318,7 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                                     }}>
                                         {item ? (
                                             <>
-                                                <img src={`/assets/meteorites/M${item.visualIndex}${item.quality}.png`} alt="met" style={{ width: '28px', height: '28px' }} />
+                                                <img src={getMeteoriteImage(item)} alt="met" style={{ width: '28px', height: '28px' }} />
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>BOOST</span>
                                                     <span style={{ fontSize: '10px', color: color, fontWeight: 900 }}>+{Math.round(boost * 100)}%</span>

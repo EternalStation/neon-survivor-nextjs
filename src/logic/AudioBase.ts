@@ -9,6 +9,36 @@ if (typeof window !== 'undefined') {
 // Shared State
 let musicVolume = 0.425;
 let sfxVolume = 0.5;
+
+const STORAGE_KEY = 'neon_survivor_audio';
+
+function loadAudioSettings() {
+    if (typeof window === 'undefined') return;
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (typeof parsed?.music === 'number') {
+            musicVolume = Math.max(0, Math.min(1, parsed.music));
+        }
+        if (typeof parsed?.sfx === 'number') {
+            sfxVolume = Math.max(0, Math.min(1, parsed.sfx));
+        }
+    } catch (e) {
+        console.warn('Failed to load audio settings', e);
+    }
+}
+
+function saveAudioSettings() {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ music: musicVolume, sfx: sfxVolume }));
+    } catch (e) {
+        console.warn('Failed to save audio settings', e);
+    }
+}
+
+loadAudioSettings();
 export let masterMusicGain: GainNode | null = null;
 export let masterSfxGain: GainNode | null = null;
 
@@ -20,6 +50,7 @@ export function setMusicVolume(vol: number) {
     if (masterMusicGain && audioCtx) {
         masterMusicGain.gain.setValueAtTime(musicVolume, audioCtx.currentTime);
     }
+    saveAudioSettings();
 }
 
 export function setSfxVolume(vol: number) {
@@ -27,6 +58,7 @@ export function setSfxVolume(vol: number) {
     if (masterSfxGain && audioCtx) {
         masterSfxGain.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
     }
+    saveAudioSettings();
 }
 
 export function initMasterGains() {

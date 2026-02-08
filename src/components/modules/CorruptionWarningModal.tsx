@@ -35,11 +35,11 @@ export const CorruptionWarningModal: React.FC<CorruptionWarningModalProps> = ({ 
 
                 <div style={{ color: '#fff', fontSize: '14px', lineHeight: '1.6' }}>
                     This module is <span style={{ color: '#a855f7', fontWeight: 900 }}>CORRUPTED</span>.
-                    Once slotted into the matrix, it <span style={{ color: '#ef4444', fontWeight: 900 }}>CANNOT BE REMOVED</span> or replaced for the rest of this run.
+                    Once slotted, removal is still possible, but it costs <span style={{ color: '#ef4444', fontWeight: 900 }}>3x DUST</span> to extract.
                 </div>
 
                 <div style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>
-                    Its extreme power comes at the cost of permanent neural integration.
+                    Extreme power, extreme extraction cost.
                 </div>
 
                 <div style={{ display: 'flex', gap: '15px', width: '100%', marginTop: '10px' }}>

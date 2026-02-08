@@ -2,6 +2,7 @@ import React from 'react';
 import type { GameState, LegendaryHex, Meteorite, LegendaryCategory } from '../logic/types';
 import './HexTooltip.css';
 import { calculateMeteoriteEfficiency } from '../logic/EfficiencyLogic';
+import { getMeteoriteImage } from './modules/ModuleUtils';
 
 interface HexTooltipProps {
     hex: LegendaryHex;
@@ -216,7 +217,7 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                                     {item ? (
                                         <>
                                             <img
-                                                src={`/assets/meteorites/M${item.visualIndex}${item.quality}.png`}
+                                                src={getMeteoriteImage(item)}
                                                 alt="met"
                                                 style={{ width: '22px', height: '22px', filter: `drop-shadow(0 0 5px ${color}44)` }}
                                             />

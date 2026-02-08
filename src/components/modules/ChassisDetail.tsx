@@ -1,6 +1,7 @@
 import React from 'react';
 import type { GameState, PlayerClass } from '../../logic/types';
 import { calculateMeteoriteEfficiency } from '../../logic/EfficiencyLogic';
+import { getMeteoriteImage } from './ModuleUtils';
 import './ChassisDetail.css';
 
 interface ChassisDetailProps {
@@ -74,7 +75,7 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                             {item ? (
                                                 <>
                                                     <img
-                                                        src={`/assets/meteorites/M${item.visualIndex}${item.quality}.png`}
+                                                        src={getMeteoriteImage(item)}
                                                         alt="met"
                                                         className="resonance-icon"
                                                     />

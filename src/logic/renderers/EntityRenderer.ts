@@ -36,7 +36,8 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.globalCompositeOperation = 'source-over';
             }
         } else {
-            const imgKey = `M${m.visualIndex}${m.quality}`;
+            const assetQuality = m.quality === 'Corrupted' ? 'New' : m.quality;
+            const imgKey = `M${m.visualIndex}${assetQuality}`;
             const img = meteoriteImages[imgKey];
             if (img && img.complete && img.naturalWidth !== 0) {
                 const size = 32;

@@ -95,7 +95,7 @@ export function updateNormalDiamond(e: Enemy, state: GameState, dist: number, dx
 
     // Standard shot (every 6s)
     if (Date.now() - (e.lastAttack || 0) > 6000) {
-        const dmg = Math.floor(e.maxHp * 0.30); // 30% of max HP
+        const dmg = Math.floor(e.maxHp * 0.15); // 15% of max HP
         const bulletColor = e.baseColor || (e.originalPalette ? e.originalPalette[0] : e.palette[0]);
         spawnEnemyBullet(state, e.x, e.y, angleToPlayerD, dmg, bulletColor);
         e.lastAttack = Date.now();

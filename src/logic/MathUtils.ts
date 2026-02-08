@@ -11,8 +11,8 @@ export function calcStat(s: PlayerStats, arenaMult: number = 1): number {
 export function getDefenseReduction(armor: number, cap: number = 0.95): number {
     if (armor <= 0) return 0;
     const cappedArmor = Math.min(armor, 999999);
-    // New Formula: Matches 25% @ 61, 50% @ 500, 75% @ 8000, 95% @ 100k
-    // R = 0.165 * log10(A + 1)^1.1
-    const reduction = 0.165 * Math.pow(Math.log10(cappedArmor + 1), 1.1);
+    // Log-scaling armor: tuned so 95% reduction is reached around ~300k armor
+    // R = 0.146324 * log10(A + 1)^1.1
+    const reduction = 0.146324 * Math.pow(Math.log10(cappedArmor + 1), 1.1);
     return Math.min(cap, reduction);
 }

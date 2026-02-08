@@ -112,13 +112,12 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         }, delay);
     };
 
+    const getRemovalCost = (item: any) => {
+        const baseCost = Math.floor(1 + (gameState.gameTime / 60)); // User Request: 1 + 1 per minute
+        return item?.quality === 'Corrupted' ? baseCost * 3 : baseCost;
+    };
+
     const handleAttemptRemove = (index: number, item: any, replaceWith?: { item: any, source: string, index: number }) => {
-        if (item?.quality === 'Corrupted') {
-            // Cannot remove corrupted items
-            setPlacementAlert(true);
-            setTimeout(() => setPlacementAlert(false), 2000);
-            return;
-        }
         setLockedItem(null); // Clear tooltip lock so popup is visible
         setRemovalCandidate({ index, item, replaceWith });
     };
@@ -142,7 +141,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 // then if the new item is corrupted, we warn them BEFORE finalizing the swap into the socket.
             }
 
-            const removalCost = Math.floor(1 + (gameState.gameTime / 60)); // User Request: 1 + 1 per minute
+            const removalCost = getRemovalCost(removalCandidate.item);
             if (spendDust(removalCost)) {
                 const { index, item, replaceWith } = removalCandidate;
                 const newItem = { ...item, isNew: false };
@@ -660,7 +659,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     <RemovalConfirmationModal
                         candidate={removalCandidate}
                         dust={meteoriteDust}
-                        cost={Math.floor(1 + (gameState.gameTime / 60))}
+                        cost={getRemovalCost(removalCandidate.item)}
                         onCancel={() => setRemovalCandidate(null)}
                         onConfirm={confirmRemoval}
                     />
