@@ -86,7 +86,7 @@ export default function Home() {
     setSelectingArena(false);
     setGameStarted(true);
     if (selectedClass) {
-      hook.restartGame(selectedClass, arenaId);
+      hook.restartGame(selectedClass, arenaId, username);
     }
   };
 

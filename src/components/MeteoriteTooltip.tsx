@@ -442,7 +442,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                 color: meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')),
                                 fontSize: '12px',
                                 textShadow: `0 0 10px ${meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'))}66`
-                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}{meteorite.quality === 'Corrupted' && <span style={{ fontSize: '9px', marginLeft: '6px', opacity: 0.8, color: '#ef4444' }}>(CANNOT BE REMOVED)</span>}</span>
+                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}{meteorite.quality === 'Corrupted' && <span style={{ fontSize: '9px', marginLeft: '6px', opacity: 0.8, color: '#ef4444' }}>(COST X3 DUST)</span>}</span>
                         </div>
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}

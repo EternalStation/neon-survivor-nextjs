@@ -594,6 +594,7 @@ export interface GameState {
     chassisDetailViewed: boolean;
     // Frame-based caches (Not persistent)
     legionLeads?: Record<string, Enemy>;
+    playerName?: string;
 
     // Blueprint System
     blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)

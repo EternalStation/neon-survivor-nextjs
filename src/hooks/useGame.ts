@@ -187,11 +187,12 @@ export function useGameLoop(gameStarted: boolean) {
         refreshUI: () => setUiState(p => p + 1)
     });
 
-    const restartGame = (selectedClass?: PlayerClass, startingArenaId: number = 0) => {
+    const restartGame = (selectedClass?: PlayerClass, startingArenaId: number = 0, username?: string) => {
         // Preserve current class if not provided
         const classToUse = selectedClass || gameState.current.moduleSockets.center || undefined;
 
         gameState.current = createInitialGameState(classToUse, startingArenaId);
+        if (username) gameState.current.playerName = username;
 
         setGameOver(false);
         setUpgradeChoices(null);

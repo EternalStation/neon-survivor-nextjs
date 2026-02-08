@@ -52,7 +52,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
             .reduce((sum, msg, i) => {
                 const resolvedText = msg.text
                     .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                    .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ");
+                    .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
+                    .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
                 const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
                 const elapsed = Math.max(0, clock - startTime);
                 const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
@@ -315,7 +316,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                     {EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1).map((msg, i) => {
                                         const resolvedText = msg.text
                                             .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                                            .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ");
+                                            .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
+                                            .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
                                         const clock = gameState.extractionDialogTime ?? 0;
                                         const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
                                         const elapsed = Math.max(0, clock - startTime);
@@ -380,7 +382,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 fadeOutMusic(1.0);
                                                 playSfx('alert');
                                                 gameState.extractionStatus = 'requested';
-                                                gameState.extractionTimer = 1.0;
+                                                gameState.extractionTimer = 3.0;
                                                 gameState.extractionMessageIndex = -1;
                                                 gameState.extractionMessageTimes = [];
                                                 gameState.extractionDialogTime = 0;

@@ -6,7 +6,7 @@ import { playTypewriterClick } from './SfxLogic';
 
 
 export const EXTRACTION_MESSAGES = [
-    { speaker: 'you', text: "[SIGNAL NOISE] ORBITAL, THIS IS HEX-01.", pause: 2.0, rand: 2.0 },
+    { speaker: 'you', text: "[SIGNAL NOISE] ORBITAL, THIS IS HEX-01-[PLAYER_NAME].", pause: 2.0, rand: 2.0 },
     { speaker: 'you', text: "SENDING SOS. REQUESTING EXTRACTION.", pause: 2.0, rand: 2.0 },
     { speaker: 'comm', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 2.2, rand: 2.0 },
     { speaker: 'comm', text: "Biometric handshake... 0x4F 0x6E 0x65...", pause: 2.4, rand: 2.0 },

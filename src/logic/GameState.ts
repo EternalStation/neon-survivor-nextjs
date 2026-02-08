@@ -140,6 +140,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     },
     chassisDetailViewed: false,
     legionLeads: {},
+    playerName: '',
 
     // Blueprint System Defaults
     blueprints: Array(10).fill(null),
