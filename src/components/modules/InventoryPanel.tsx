@@ -218,7 +218,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     position: 'relative',
                     cursor: isRecycleMode ? (item ? 'crosshair' : 'default') : 'pointer',
                     opacity: (movedItem?.index === idx && movedItem.source === 'inventory') || (isRecycleMode && idx < 10) ? 0.3 : 1, // Dim safe slots in recycle mode
-                    pointerEvents: (isVisible || !item || item?.isNew) ? 'auto' : 'none',
+                    pointerEvents: 'auto',
                     animation: isRecycleMode && item && idx >= 10 ? 'shake 0.5s infinite' : 'none',
                     transition: 'all 0.2s',
                     filter: isRecycleMode && idx < 10 ? 'grayscale(1)' : 'none' // Gray out safe slots in recycle mode

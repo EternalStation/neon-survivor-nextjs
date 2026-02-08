@@ -250,21 +250,21 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
         // Ring II: 15% Base + Resonance
         const chance2 = 0.15 * (1 + resonance);
         if (Math.random() < chance2) {
-            const b2 = { ...b, id: Math.random(), orbitDist: 175 };
+            const b2 = { ...b, id: Math.random(), orbitDist: 190 };
             state.bullets.push(b2);
         }
 
         // Ring III: 10% Base + Resonance
         const chance3 = 0.10 * (1 + resonance);
         if (Math.random() < chance3) {
-            const b3 = { ...b, id: Math.random(), orbitDist: 225 };
+            const b3 = { ...b, id: Math.random(), orbitDist: 255 };
             state.bullets.push(b3);
         }
 
         // Ring IV: 5% Base + Resonance
         const chance4 = 0.05 * (1 + resonance);
         if (Math.random() < chance4) {
-            const b4 = { ...b, id: Math.random(), orbitDist: 275 };
+            const b4 = { ...b, id: Math.random(), orbitDist: 320 };
             state.bullets.push(b4);
         }
 

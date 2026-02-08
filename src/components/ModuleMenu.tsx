@@ -624,7 +624,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             height: '100%',
                             background: 'rgba(0, 0, 0, 0.75)',
                             zIndex: 2500,
-                            pointerEvents: 'auto'
+                            pointerEvents: 'none'
                         }} />
                     )}
                 </div>
@@ -692,7 +692,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
                     background: 'rgba(0, 0, 0, 0.75)',
                     zIndex: 2500,
-                    pointerEvents: 'auto'
+                    pointerEvents: 'none'
                 }} />
             )}
 

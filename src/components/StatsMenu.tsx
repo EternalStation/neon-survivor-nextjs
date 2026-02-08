@@ -35,7 +35,7 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
     const totalColor = isBuffed ? '#3b82f6' : '#4ade80';
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{label}</span>
                 {extraInfo && <span style={{ color: '#64748b', fontSize: 12 }}>{extraInfo}</span>}
@@ -305,15 +305,14 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
 
                 {tab === 'stats' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                         {/* Radar Chart */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ color: '#64748b', fontSize: 10, marginBottom: 10, textTransform: 'uppercase' }}>Build Profile</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: -10 }}>
                             <RadarChart player={player} size={180} />
                         </div>
 
                         {/* Stats Table */}
-                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
                             {(() => {
                                 const arenaIdx = getArenaIndex(player.x, player.y);
                                 const surgeMult = gameState.activeBlueprintBuffs['ARENA_SURGE'] ? 2.0 : 1.0;
@@ -349,13 +348,13 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             legendaryBonusPct={player.arm.hexMult || 0}
                                             extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
                                         />
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Movement Speed</span>
                                             <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
                                                 {player.speed.toFixed(1)}
                                             </span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Cooldown Reduction</span>
                                             <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                                 {((player.cooldownReduction || 0) * 100).toFixed(2)}%
@@ -396,7 +395,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             );
                                         })()}
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>XP Gain per kill</span>
                                             <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                                 {(() => {
@@ -435,7 +434,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Meteorite Drop Chance</span>
                                             <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                                 {(() => {
@@ -485,7 +484,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #334155', marginTop: 10 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderTop: '1px solid #334155', marginTop: 10 }}>
                                             <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Pierce</span>
                                             <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                                 {player.pierce}
