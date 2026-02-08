@@ -367,29 +367,46 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     {/* TOP ROW: CORE + SORT/RESET + RECYCLE */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '8px', marginBottom: '4px', alignItems: 'flex-end' }}>
                         {/* TYPE */}
-                        <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ gridColumn: 'span 3' }}>
                             <span style={labelStyle}>TYPE</span>
-                            <select style={selectStyle} value={coreFilter.quality} onChange={e => setCoreFilter({ ...coreFilter, quality: e.target.value })}>
-                                {QUALITIES.map(q => <option key={q} value={q}>{q}</option>)}
+                            <select style={{ ...selectStyle, color: coreFilter.quality === 'All' ? '#fff' : (coreFilter.quality === 'PRI' ? '#3b82f6' : coreFilter.quality === 'DAM' ? '#f59e0b' : coreFilter.quality === 'BRO' ? '#94a3b8' : '#a855f7') }} value={coreFilter.quality} onChange={e => setCoreFilter({ ...coreFilter, quality: e.target.value })}>
+                                {QUALITIES.map(q => {
+                                    let color = '#fff';
+                                    if (q === 'PRI') color = '#3b82f6'; // Pristine - Blue
+                                    if (q === 'DAM') color = '#f59e0b'; // Damaged - Orange
+                                    if (q === 'BRO') color = '#94a3b8'; // Broken - Grey
+                                    if (q === 'COR') color = '#a855f7'; // Corrupted - Purple
+                                    return <option key={q} value={q} style={{ color }}>{q}</option>;
+                                })}
                             </select>
                         </div>
                         {/* RARITY */}
-                        <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ gridColumn: 'span 3' }}>
                             <span style={labelStyle}>RARITY</span>
-                            <select style={selectStyle} value={coreFilter.rarity} onChange={e => setCoreFilter({ ...coreFilter, rarity: e.target.value })}>
-                                <option value="All">ALL</option>
-                                {RARITY_ORDER.map(r => <option key={r} value={r}>{r.toUpperCase().slice(0, 3)}</option>)}
+                            <select style={{ ...selectStyle, color: coreFilter.rarity === 'All' ? '#fff' : (RARITY_COLORS as any)[coreFilter.rarity] || '#fff' }} value={coreFilter.rarity} onChange={e => setCoreFilter({ ...coreFilter, rarity: e.target.value })}>
+                                <option value="All" style={{ color: '#fff' }}>ALL</option>
+                                {RARITY_ORDER.map(r => (
+                                    <option key={r} value={r} style={{ color: (RARITY_COLORS as any)[r] }}>
+                                        {r.toUpperCase().slice(0, 3)}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         {/* FOUND IN */}
-                        <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ gridColumn: 'span 3' }}>
                             <span style={labelStyle}>FOUND</span>
-                            <select style={selectStyle} value={coreFilter.arena} onChange={e => setCoreFilter({ ...coreFilter, arena: e.target.value })}>
-                                {ARENAS.map(a => <option key={a} value={a}>{a}</option>)}
+                            <select style={{ ...selectStyle, color: coreFilter.arena === 'All' ? '#fff' : (coreFilter.arena === 'ECO' ? '#eab308' : coreFilter.arena === 'DEF' ? '#3b82f6' : '#ef4444') }} value={coreFilter.arena} onChange={e => setCoreFilter({ ...coreFilter, arena: e.target.value })}>
+                                {ARENAS.map(a => {
+                                    let color = '#fff';
+                                    if (a === 'ECO') color = '#eab308'; // Yellow
+                                    if (a === 'DEF') color = '#3b82f6'; // Blue
+                                    if (a === 'COM') color = '#ef4444'; // Red
+                                    return <option key={a} value={a} style={{ color }}>{a}</option>;
+                                })}
                             </select>
                         </div>
-                        {/* ACTION CONTROLS GROUP (RESET, SORT, RECYCLE) */}
-                        <div style={{ gridColumn: 'span 6', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {/* ACTION CONTROLS GROUP (RESET, SORT) */}
+                        <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                             {/* RESET BUTTON (Large Icon) */}
                             <button
                                 onClick={() => {
@@ -447,91 +464,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 </svg>
                             </button>
 
-                            {/* RECYCLE CONTROLS GROUP */}
-                            <div style={{ display: 'flex', alignItems: 'stretch', gap: '4px', flex: 1 }}>
-                                {/* RECYCLE TOGGLE ICON (Large) */}
-                                <button
-                                    onClick={onToggleRecycle}
-                                    style={{
-                                        ...selectStyle,
-                                        background: isRecycleMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                                        borderColor: isRecycleMode ? '#ef4444' : '#3b82f6',
-                                        color: isRecycleMode ? '#ef4444' : '#3b82f6',
-                                        height: '38px', // Double height
-                                        width: '32px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: 0,
-                                        cursor: 'pointer',
-                                        boxShadow: isRecycleMode ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none',
-                                        transition: 'all 0.2s',
-                                        transform: recyclingAnim ? 'scale(0.8) rotate(-10deg)' : 'scale(1)',
-                                        flexShrink: 0
-                                    }}
-                                    title="Toggle Recycle Mode"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-6 5v6m4-5v6" />
-                                    </svg>
-                                </button>
+                            {/* RECYCLE CONTROLS MOVED TO STORAGE HEADER */}
 
-                                {/* STACKED BUTTONS */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
-                                    <button
-                                        onClick={() => {
-                                            if (!isRecycleMode) return;
-                                            const targets: number[] = [];
-                                            inventory.forEach((item, i) => {
-                                                if (i >= 10 && item && matchesFilter(item)) targets.push(i);
-                                            });
-                                            if (targets.length > 0) onMassRecycle(targets);
-                                        }}
-                                        disabled={!isRecycleMode}
-                                        style={{
-                                            ...selectStyle,
-                                            background: isRecycleMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(15, 23, 42, 0.5)',
-                                            borderColor: isRecycleMode ? '#3b82f6' : 'rgba(148, 163, 184, 0.1)',
-                                            color: isRecycleMode ? '#fff' : '#475569',
-                                            height: '18px',
-                                            fontSize: '8px',
-                                            fontWeight: 900,
-                                            cursor: isRecycleMode ? 'pointer' : 'default',
-                                            opacity: isRecycleMode ? 1 : 0.4,
-                                            transition: 'all 0.2s',
-                                            padding: '0 4px'
-                                        }}
-                                    >
-                                        SELECTED
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (!isRecycleMode) return;
-                                            const discards: number[] = [];
-                                            inventory.forEach((item, i) => {
-                                                if (i >= 10 && item && !matchesFilter(item)) discards.push(i);
-                                            });
-                                            if (discards.length > 0) onMassRecycle(discards);
-                                        }}
-                                        disabled={!isRecycleMode}
-                                        style={{
-                                            ...selectStyle,
-                                            background: isRecycleMode ? 'rgba(239, 68, 68, 0.25)' : 'rgba(15, 23, 42, 0.5)',
-                                            borderColor: isRecycleMode ? '#ef4444' : 'rgba(148, 163, 184, 0.1)',
-                                            color: isRecycleMode ? '#fff' : '#475569',
-                                            height: '18px',
-                                            fontSize: '8px',
-                                            fontWeight: 900,
-                                            cursor: isRecycleMode ? 'pointer' : 'default',
-                                            opacity: isRecycleMode ? 1 : 0.4,
-                                            transition: 'all 0.2s',
-                                            padding: '0 4px'
-                                        }}
-                                    >
-                                        GHOSTS
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -683,7 +617,99 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 gap: '10px'
                             }}>
                                 <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
-                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>({storageEmptyCount} SLOTS)</span>
+                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(280 SLOTS)</span>
+
+                                {/* NEW RECYCLE CONTROLS LOCATION */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                                    <button
+                                        onClick={onToggleRecycle}
+                                        style={{
+                                            ...selectStyle,
+                                            background: isRecycleMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                                            borderColor: isRecycleMode ? '#ef4444' : '#3b82f6',
+                                            color: isRecycleMode ? '#ef4444' : '#3b82f6',
+                                            height: '24px',
+                                            width: 'auto',
+                                            padding: '0 12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            cursor: 'pointer',
+                                            boxShadow: isRecycleMode ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none',
+                                            transition: 'all 0.2s',
+                                            transform: recyclingAnim ? 'scale(0.95)' : 'scale(1)',
+                                            letterSpacing: '1px'
+                                        }}
+                                        title="Toggle Recycle Mode"
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                        {isRecycleMode ? "RECYCLING ON" : "RECYCLE"}
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (!isRecycleMode) return;
+                                            const targets: number[] = [];
+                                            inventory.forEach((item, i) => {
+                                                if (i >= 10 && item && matchesFilter(item)) targets.push(i);
+                                            });
+                                            if (targets.length > 0) onMassRecycle(targets);
+                                        }}
+                                        disabled={!isRecycleMode}
+                                        style={{
+                                            ...selectStyle,
+                                            background: isRecycleMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(15, 23, 42, 0.5)',
+                                            borderColor: isRecycleMode ? '#3b82f6' : 'rgba(148, 163, 184, 0.1)',
+                                            color: isRecycleMode ? '#fff' : '#475569',
+                                            height: '24px',
+                                            width: 'auto',
+                                            minWidth: '70px',
+                                            padding: '0 12px',
+                                            fontSize: '9px',
+                                            fontWeight: 900,
+                                            cursor: isRecycleMode ? 'pointer' : 'default',
+                                            opacity: isRecycleMode ? 1 : 0.4,
+                                            transition: 'all 0.2s',
+                                        }}
+                                    >
+                                        SELECTED
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (!isRecycleMode) return;
+                                            const discards: number[] = [];
+                                            inventory.forEach((item, i) => {
+                                                if (i >= 10 && item && !matchesFilter(item)) discards.push(i);
+                                            });
+                                            if (discards.length > 0) onMassRecycle(discards);
+                                        }}
+                                        disabled={!isRecycleMode}
+                                        style={{
+                                            ...selectStyle,
+                                            background: isRecycleMode ? 'rgba(239, 68, 68, 0.25)' : 'rgba(15, 23, 42, 0.5)',
+                                            borderColor: isRecycleMode ? '#ef4444' : 'rgba(148, 163, 184, 0.1)',
+                                            color: isRecycleMode ? '#fff' : '#475569',
+                                            height: '24px',
+                                            width: 'auto',
+                                            minWidth: '70px',
+                                            padding: '0 12px',
+                                            fontSize: '9px',
+                                            fontWeight: 900,
+                                            cursor: isRecycleMode ? 'pointer' : 'default',
+                                            opacity: isRecycleMode ? 1 : 0.4,
+                                            transition: 'all 0.2s',
+                                        }}
+                                    >
+                                        GHOSTS
+                                    </button>
+                                </div>
                             </div>
                         );
 
