@@ -66,7 +66,7 @@ const formatTime = (seconds: number) => {
 };
 
 export default function Leaderboard({ onClose, currentUsername }: LeaderboardProps) {
-    const [period, setPeriod] = useState<'global' | 'daily' | 'weekly' | 'patch'>('global');
+    const [period, setPeriod] = useState<'global' | 'daily' | 'patch'>('patch');
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [patches, setPatches] = useState<string[]>([]);
@@ -106,14 +106,12 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         setLoading(true);
         try {
             let data;
-            if (period === 'global') {
-                data = await api.getGlobalLeaderboard(100);
+            if (period === 'patch' && selectedPatch) {
+                data = await api.getPatchLeaderboard(selectedPatch, 100);
             } else if (period === 'daily') {
                 data = await api.getDailyLeaderboard(100);
-            } else if (period === 'weekly') {
-                data = await api.getWeeklyLeaderboard(100);
-            } else if (period === 'patch' && selectedPatch) {
-                data = await api.getPatchLeaderboard(selectedPatch, 100);
+            } else if (period === 'global') {
+                data = await api.getGlobalLeaderboard(100);
             }
             setEntries(data?.leaderboard || []);
         } catch (err) {
@@ -240,10 +238,9 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
 
                 <div className="leaderboard-controls">
                     <div className="leaderboard-tabs" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                        <button className={period === 'global' ? 'active' : ''} onClick={() => setPeriod('global')}>All Time</button>
-                        <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
-                        <button className={period === 'weekly' ? 'active' : ''} onClick={() => setPeriod('weekly')}>Weekly</button>
                         <button className={period === 'patch' ? 'active' : ''} onClick={() => setPeriod('patch')}>By Patch</button>
+                        <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
+                        <button className={period === 'global' ? 'active' : ''} onClick={() => setPeriod('global')}>All Time</button>
                     </div>
 
                     <div className="leaderboard-filters">
