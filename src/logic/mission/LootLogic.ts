@@ -18,56 +18,56 @@ interface PerkDef {
 
 const PERK_POOLS: Record<number, PerkDef[]> = {
     1: [
-        { id: 'base_efficiency', description: 'Base Efficiency Boost', min: 3, max: 5 }
+        { id: 'base_efficiency', description: '3-5%effieciency%', min: 3, max: 5 }
     ],
     2: [
-        { id: 'neighbor_any_all', description: 'Efficiency per neighboring meteorite (Any)', min: 3, max: 6 }
+        { id: 'neighbor_any_all', description: '3-6% effieciency% per neigboring (any type) meteorite collected in (any type) arena', min: 3, max: 6 }
     ],
     3: [
-        { id: 'neighbor_any_eco', description: 'Efficiency per neighboring meteorite from ECO arena', min: 3, max: 6 },
-        { id: 'neighbor_any_com', description: 'Efficiency per neighboring meteorite from COM arena', min: 3, max: 6 },
-        { id: 'neighbor_any_def', description: 'Efficiency per neighboring meteorite from DEF arena', min: 3, max: 6 }
+        { id: 'neighbor_any_eco', description: '3-6% effieciency% per neigboring (any type) meteorite collected in (Eco) arena', min: 3, max: 6 },
+        { id: 'neighbor_any_com', description: '3-6% effieciency% per neigboring (any type) meteorite collected in (Com) arena', min: 3, max: 6 },
+        { id: 'neighbor_any_def', description: '3-6% effieciency% per neigboring (any type) meteorite collected in (Def) arena', min: 3, max: 6 }
     ],
     4: [
-        { id: 'neighbor_new_eco', description: 'Efficiency per neighboring PRISTINE meteorite from ECO arena', min: 4, max: 10 },
-        { id: 'neighbor_dam_eco', description: 'Efficiency per neighboring DAMAGED meteorite from ECO arena', min: 4, max: 10 },
-        { id: 'neighbor_bro_eco', description: 'Efficiency per neighboring BROKEN meteorite from ECO arena', min: 4, max: 10 },
-        { id: 'neighbor_new_com', description: 'Efficiency per neighboring PRISTINE meteorite from COM arena', min: 4, max: 10 },
-        { id: 'neighbor_dam_com', description: 'Efficiency per neighboring DAMAGED meteorite from COM arena', min: 4, max: 10 },
-        { id: 'neighbor_bro_com', description: 'Efficiency per neighboring BROKEN meteorite from COM arena', min: 4, max: 10 },
-        { id: 'neighbor_new_def', description: 'Efficiency per neighboring PRISTINE meteorite from DEF arena', min: 4, max: 10 },
-        { id: 'neighbor_dam_def', description: 'Efficiency per neighboring DAMAGED meteorite from DEF arena', min: 4, max: 10 },
-        { id: 'neighbor_bro_def', description: 'Efficiency per neighboring BROKEN meteorite from DEF arena', min: 4, max: 10 },
-        { id: 'neighbor_cor_eco', description: 'Efficiency per neighboring CORRUPTED meteorite from ECO arena', min: 6, max: 12 },
-        { id: 'neighbor_cor_com', description: 'Efficiency per neighboring CORRUPTED meteorite from COM arena', min: 6, max: 12 },
-        { id: 'neighbor_cor_def', description: 'Efficiency per neighboring CORRUPTED meteorite from DEF arena', min: 6, max: 12 }
+        { id: 'neighbor_new_eco', description: '4-10% effieciency% per neigboring (New) meteorite collected in (Eco) arena', min: 4, max: 10 },
+        { id: 'neighbor_dam_eco', description: '4-10% effieciency% per neigboring (Damaged) meteorite collected in (Eco) arena', min: 4, max: 10 },
+        { id: 'neighbor_bro_eco', description: '4-10% effieciency% per neigboring (Broken) meteorite collected in (Eco) arena', min: 4, max: 10 },
+        { id: 'neighbor_new_com', description: '4-10% effieciency% per neigboring (New) meteorite collected in (Com) arena', min: 4, max: 10 },
+        { id: 'neighbor_dam_com', description: '4-10% effieciency% per neigboring (Damaged) meteorite collected in (Com) arena', min: 4, max: 10 },
+        { id: 'neighbor_bro_com', description: '4-10% effieciency% per neigboring (Broken) meteorite collected in (Com) arena', min: 4, max: 10 },
+        { id: 'neighbor_new_def', description: '4-10% effieciency% per neigboring (New) meteorite collected in (Def) arena', min: 4, max: 10 },
+        { id: 'neighbor_dam_def', description: '4-10% effieciency% per neigboring (Damaged) meteorite collected in (Def) arena', min: 4, max: 10 },
+        { id: 'neighbor_bro_def', description: '4-10% effieciency% per neigboring (Broken) meteorite collected in (Def) arena', min: 4, max: 10 },
+        { id: 'neighbor_cor_eco', description: '4-10% effieciency% per neigboring (Corrupted) meteorite collected in (Eco) arena', min: 4, max: 10 },
+        { id: 'neighbor_cor_com', description: '4-10% effieciency% per neigboring (Corrupted) meteorite collected in (Com) arena', min: 4, max: 10 },
+        { id: 'neighbor_cor_def', description: '4-10% effieciency% per neigboring (Corrupted) meteorite collected in (Def) arena', min: 4, max: 10 }
     ],
     5: [
-        { id: 'neighbor_leg_any', description: 'Efficiency per (Any) neighboring Legendary Hex', min: 6, max: 15 }
+        { id: 'neighbor_leg_any', description: '6-15% effieciency% per neigboring (any type) Legendary Upgrade', min: 6, max: 15 }
     ],
     6: [
-        { id: 'neighbor_leg_eco', description: 'Efficiency per neighboring ECO Legendary Hex', min: 8, max: 20 },
-        { id: 'neighbor_leg_com', description: 'Efficiency per neighboring COM Legendary Hex', min: 8, max: 20 },
-        { id: 'neighbor_leg_def', description: 'Efficiency per neighboring DEF Legendary Hex', min: 8, max: 20 }
+        { id: 'neighbor_leg_eco', description: '8-20% effieciency% per neigboring (Eco) Legendary Upgrade', min: 8, max: 20 },
+        { id: 'neighbor_leg_com', description: '8-20% effieciency% per neigboring (Com) Legendary Upgrade', min: 8, max: 20 },
+        { id: 'neighbor_leg_def', description: '8-20% effieciency% per neigboring (Def) Legendary Upgrade', min: 8, max: 20 }
     ],
     7: [
-        { id: 'pair_eco_eco', description: 'Efficiency per connecting ECO-ECO Legendary Hex pair', min: 10, max: 25 },
-        { id: 'pair_eco_com', description: 'Efficiency per connecting ECO-COM Legendary Hex pair', min: 10, max: 25 },
-        { id: 'pair_eco_def', description: 'Efficiency per connecting ECO-DEF Legendary Hex pair', min: 10, max: 25 },
-        { id: 'pair_com_com', description: 'Efficiency per connecting COM-COM Legendary Hex pair', min: 10, max: 25 },
-        { id: 'pair_com_def', description: 'Efficiency per connecting COM-DEF Legendary Hex pair', min: 10, max: 25 },
-        { id: 'pair_def_def', description: 'Efficiency per connecting DEF-DEF Legendary Hex pair', min: 10, max: 25 }
+        { id: 'pair_eco_eco', description: '10-25% effieciency% per connecting (Eco) and (Eco) Legendary Upgrades', min: 10, max: 25 },
+        { id: 'pair_eco_com', description: '10-25% effieciency% per connecting (Eco) and (Com) Legendary Upgrades', min: 10, max: 25 },
+        { id: 'pair_eco_def', description: '10-25% effieciency% per connecting (Eco) and (Def) Legendary Upgrades', min: 10, max: 25 },
+        { id: 'pair_com_com', description: '10-25% effieciency% per connecting (Com) and (Com) Legendary Upgrades', min: 10, max: 25 },
+        { id: 'pair_com_def', description: '10-25% effieciency% per connecting (Com) and (Def) Legendary Upgrades', min: 10, max: 25 },
+        { id: 'pair_def_def', description: '10-25% effieciency% per connecting (Def) and (Def) Legendary Upgrades', min: 10, max: 25 }
     ],
     8: [
-        { id: 'pair_eco_eco_lvl', description: 'Efficiency per connecting ECO-ECO Legendary Hex pair of same level', min: 12, max: 30 },
-        { id: 'pair_eco_com_lvl', description: 'Efficiency per connecting ECO-COM Legendary Hex pair of same level', min: 12, max: 30 },
-        { id: 'pair_eco_def_lvl', description: 'Efficiency per connecting ECO-DEF Legendary Hex pair of same level', min: 12, max: 30 },
-        { id: 'pair_com_com_lvl', description: 'Efficiency per connecting COM-COM Legendary Hex pair of same level', min: 12, max: 30 },
-        { id: 'pair_com_def_lvl', description: 'Efficiency per connecting COM-DEF Legendary Hex pair of same level', min: 12, max: 30 },
-        { id: 'pair_def_def_lvl', description: 'Efficiency per connecting DEF-DEF Legendary Hex pair of same level', min: 12, max: 30 }
+        { id: 'pair_eco_eco_lvl', description: '12-30% effieciency% per connecting (Eco) and (Eco) Legendary Upgrades of same level', min: 12, max: 30 },
+        { id: 'pair_eco_com_lvl', description: '12-30% effieciency% per connecting (Eco) and (Com) Legendary Upgrades of same level', min: 12, max: 30 },
+        { id: 'pair_eco_def_lvl', description: '12-30% effieciency% per connecting (Eco) and (Def) Legendary Upgrades of same level', min: 12, max: 30 },
+        { id: 'pair_com_com_lvl', description: '12-30% effieciency% per connecting (Com) and (Com) Legendary Upgrades of same level', min: 12, max: 30 },
+        { id: 'pair_com_def_lvl', description: '12-30% effieciency% per connecting (Com) and (Def) Legendary Upgrades of same level', min: 12, max: 30 },
+        { id: 'pair_def_def_lvl', description: '12-30% effieciency% per connecting (Def) and (Def) Legendary Upgrades of same level', min: 12, max: 30 }
     ],
     9: [
-        { id: 'matrix_same_type_rarity', description: 'Efficiency per neighb. meteorite w/ same Type, Rarity & Arena', min: 5, max: 20 }
+        { id: 'matrix_same_type_rarity', description: '5-20% efficiency per each methoirite of same type and same rarity an found in that is placed in a matrix', min: 5, max: 20 }
     ]
 };
 

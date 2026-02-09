@@ -26,7 +26,9 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                 case 'matrix_same_type_rarity':
                     const currentMet = state.moduleSockets.diamonds[meteoriteIdx];
                     if (currentMet) {
-                        count = neighbors.meteorites.filter(m =>
+                        // Scan ALL 12 sockets, not just neighbors
+                        count = state.moduleSockets.diamonds.filter(m =>
+                            m &&
                             m.rarity === currentMet.rarity &&
                             m.discoveredIn === currentMet.discoveredIn &&
                             m.quality === currentMet.quality
@@ -134,17 +136,32 @@ function getMeteoriteNeighbors(state: GameState, idx: number) {
     const meteorites: Meteorite[] = [];
     const isInner = idx < 6;
 
+    let neighborIdxs: number[] = [];
     if (isInner) {
-        // Neighbors: prev inner, next inner, same-index edge
-        const neighborIdxs = [(idx + 5) % 6, (idx + 1) % 6, idx + 6];
-        neighborIdxs.forEach(nIdx => {
-            if (state.moduleSockets.diamonds[nIdx]) meteorites.push(state.moduleSockets.diamonds[nIdx]!);
-        });
+        // Inner diamond (i) connects to adjacent inners and the corresponding outer
+        // Also connects to the "next" outer ring diamond
+        neighborIdxs = [
+            (idx + 5) % 6,       // Prev inner
+            (idx + 1) % 6,       // Next inner
+            idx + 6,             // Direct outer
+            ((idx + 5) % 6) + 6  // Outer neighbor
+        ];
     } else {
-        // Neighbors: inner equivalent
-        const innerIdx = idx - 6;
-        if (state.moduleSockets.diamonds[innerIdx]) meteorites.push(state.moduleSockets.diamonds[innerIdx]!);
+        // Outer diamond (i+6) connects to its two inner neighbors
+        // and adjacent outer diamonds
+        const i = idx - 6;
+        neighborIdxs = [
+            i,                   // Direct inner
+            (i + 1) % 6,         // Next inner
+            ((i + 5) % 6) + 6,   // Prev outer
+            ((i + 1) % 6) + 6    // Next outer
+        ];
     }
+
+    neighborIdxs.forEach(nIdx => {
+        const met = state.moduleSockets.diamonds[nIdx];
+        if (met) meteorites.push(met);
+    });
 
     return { meteorites };
 }
