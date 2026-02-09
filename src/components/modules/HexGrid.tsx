@@ -1,8 +1,8 @@
 import React from 'react';
-import type { GameState, LegendaryHex, PlayerClass } from '../../logic/types';
-import { calculateMeteoriteEfficiency } from '../../logic/EfficiencyLogic';
-import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices, RARITY_COLORS } from './ModuleUtils';
-import { isBuffActive } from '../../logic/BlueprintLogic';
+import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/types';
+import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
+import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices, RARITY_COLORS, getMeteoriteColor } from './ModuleUtils';
+import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 
 interface HexGridProps {
     gameState: GameState;
@@ -417,180 +417,193 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 );
             })}
 
-            {allDiamondPositions.map((pos, i) => (
-                <g key={`diamond-socket-${i}`}
-                    style={{ pointerEvents: gameState.pendingLegendaryHex ? 'none' : 'auto' }}
-                    onMouseDown={(e) => {
-                        if (gameState.pendingLegendaryHex) return; // Disable during placement
-                        if (!movedItem && moduleSockets.diamonds[i]) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onAttemptRemove(i, moduleSockets.diamonds[i]);
-                            return;
-                        }
-                    }}
-                    onClick={() => {
-                        // Only Click-Lock tooltip if not dragging
-                        if (!movedItem && moduleSockets.diamonds[i]) {
-                            // Note: onMouseDown usually fires before onClick, so this might be redundant or unreachable if handled above.
-                            // However, if we want dragging logic separate from locking, we need to be careful.
-                            // Current request is "try to drag" -> show popup.
-                            // If we assume interaction starts with mousedown, we use that.
-                            // We'll keep setLockedItem here for explicit clicks that don't trigger drag threshold (if we had one),
-                            // BUT since we are popping up a modal on ANY attempt to "pick up" (which assumes mousedown),
-                            // we might block the lock info.
-                            // Actually, if a modal pops up, you can't lock the item instructions anyway.
-                            // Let's rely on onMouseDown for the "Remove" flow.
-                        }
-                    }}
-                    onMouseUp={(_e) => {
-                        _e.stopPropagation();
-                        if (movedItem) {
-                            const itemAtTarget = moduleSockets.diamonds[i];
-                            // FIX: If target is filled, force removal check (5-dust fee) instead of free swap
-                            if (itemAtTarget) {
-                                onAttemptRemove(i, itemAtTarget, movedItem);
-                                // We don't drop the new item yet; user must pay to clear the slot first
-                                setMovedItem(null);
+            {allDiamondPositions.map((pos, i) => {
+                const meteorite = moduleSockets.diamonds[i];
+                const socketColor = meteorite ? getMeteoriteColor(meteorite.discoveredIn) : '#64748b'; // slate-500
+                const socketOpacity = meteorite ? 1 : 0.4;
+
+                return (
+                    <g key={`diamond-socket-${i}`}
+                        style={{ pointerEvents: gameState.pendingLegendaryHex ? 'none' : 'auto' }}
+                        onMouseDown={(e) => {
+                            if (gameState.pendingLegendaryHex) return; // Disable during placement
+                            if (!movedItem && moduleSockets.diamonds[i]) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAttemptRemove(i, moduleSockets.diamonds[i]);
                                 return;
                             }
+                        }}
+                        onClick={() => {
+                            // Only Click-Lock tooltip if not dragging
+                            if (!movedItem && moduleSockets.diamonds[i]) {
 
-                            // Handle Drop on Empty Socket
-                            if (movedItem.item.quality === 'Corrupted') {
-                                // Intercept for corruption warning
-                                onAttemptPlace(i, movedItem.item, movedItem.source, movedItem.index);
+                            }
+                        }}
+                        onMouseUp={(_e) => {
+                            _e.stopPropagation();
+                            if (movedItem) {
+                                const itemAtTarget = moduleSockets.diamonds[i];
+                                // FIX: If target is filled, force removal check (5-dust fee) instead of free swap
+                                if (itemAtTarget) {
+                                    onAttemptRemove(i, itemAtTarget, movedItem);
+                                    // We don't drop the new item yet; user must pay to clear the slot first
+                                    setMovedItem(null);
+                                    return;
+                                }
+
+                                // Handle Drop on Empty Socket
+                                if (movedItem.item.quality === 'Corrupted') {
+                                    // Intercept for corruption warning
+                                    onAttemptPlace(i, movedItem.item, movedItem.source, movedItem.index);
+                                    setMovedItem(null);
+                                    return;
+                                }
+
+                                if (movedItem.source === 'inventory') {
+                                    onSocketUpdate('diamond', i, movedItem.item);
+                                    onInventoryUpdate(movedItem.index, null);
+                                } else if (movedItem.source === 'diamond') {
+                                    // Move from socket to socket (both were empty or source index is reset)
+                                    onSocketUpdate('diamond', i, movedItem.item);
+                                    onSocketUpdate('diamond', movedItem.index, null);
+                                }
                                 setMovedItem(null);
-                                return;
+                                setHoveredItem(null);
+                                setLockedItem(null);
                             }
-
-                            if (movedItem.source === 'inventory') {
-                                onSocketUpdate('diamond', i, movedItem.item);
-                                onInventoryUpdate(movedItem.index, null);
-                            } else if (movedItem.source === 'diamond') {
-                                // Move from socket to socket (both were empty or source index is reset)
-                                onSocketUpdate('diamond', i, movedItem.item);
-                                onSocketUpdate('diamond', movedItem.index, null);
-                            }
-                            setMovedItem(null);
-                            setHoveredItem(null);
-                            setLockedItem(null);
-                        }
-                    }}
-                >
-                    {movedItem && !moduleSockets.diamonds[i] && (
+                        }}
+                    >
+                        {movedItem && !moduleSockets.diamonds[i] && (
+                            <circle
+                                cx={pos.x} cy={pos.y} r="50"
+                                fill="none"
+                                stroke="#22d3ee"
+                                strokeWidth="3"
+                                strokeDasharray="8 6"
+                                className="pulse-cyan-glow"
+                                pointerEvents="none"
+                            />
+                        )}
                         <circle
-                            cx={pos.x} cy={pos.y} r="50"
+                            cx={pos.x} cy={pos.y} r="40"
                             fill="none"
-                            stroke="#22d3ee"
-                            strokeWidth="3"
-                            strokeDasharray="8 6"
-                            className="pulse-cyan-glow"
-                            pointerEvents="none"
+                            stroke={socketColor}
+                            strokeWidth="2"
+                            strokeOpacity={socketOpacity}
+                            filter="url(#rugged-rim)"
+                            style={{ filter: `drop-shadow(0 0 10px ${socketColor})` }}
                         />
-                    )}
-                    <circle cx={pos.x} cy={pos.y} r="40" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="2" filter="url(#rugged-rim)" className="glow-pink" />
-                    <circle cx={pos.x} cy={pos.y} r="35" fill="url(#socket-grad)" stroke="rgba(236, 72, 153, 0.25)" strokeWidth="1" filter="url(#rugged-rim)" />
-                    <circle cx={pos.x} cy={pos.y} r="25" fill="rgba(0,0,0,0.3)" />
+                        <circle
+                            cx={pos.x} cy={pos.y} r="35"
+                            fill="url(#socket-grad)"
+                            stroke={socketColor}
+                            strokeWidth="1"
+                            strokeOpacity={meteorite ? 0.6 : 0.25}
+                            filter="url(#rugged-rim)"
+                        />
+                        <circle cx={pos.x} cy={pos.y} r="25" fill="rgba(0,0,0,0.3)" />
 
-                    {moduleSockets.diamonds[i] && (
-                        <>
-                            <foreignObject x={pos.x - 35} y={pos.y - 35} width="70" height="70" style={{ pointerEvents: 'none' }}>
-                                <div
-                                    style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    onMouseMove={(e) => {
-                                        const item = moduleSockets.diamonds[i];
-                                        if (item && !movedItem) {
-                                            handleMouseEnterItem(item, e.clientX, e.clientY);
-                                            if (item.isNew) {
-                                                item.isNew = false;
-                                                onSocketUpdate('diamond', i, item);
+                        {moduleSockets.diamonds[i] && (
+                            <>
+                                <foreignObject x={pos.x - 35} y={pos.y - 35} width="70" height="70" style={{ pointerEvents: 'none' }}>
+                                    <div
+                                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        onMouseMove={(e) => {
+                                            const item = moduleSockets.diamonds[i];
+                                            if (item && !movedItem) {
+                                                handleMouseEnterItem(item, e.clientX, e.clientY);
+                                                if (item.isNew) {
+                                                    item.isNew = false;
+                                                    onSocketUpdate('diamond', i, item);
+                                                }
                                             }
-                                        }
-                                    }}
-
-                                    onMouseLeave={() => handleMouseLeaveItem(100)}
-                                >
-                                    {moduleSockets.diamonds[i]?.isNew && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            right: 0,
-                                            background: '#ef4444',
-                                            color: 'white',
-                                            fontSize: '8px',
-                                            fontWeight: 900,
-                                            padding: '2px 4px',
-                                            borderRadius: '4px',
-                                            boxShadow: '0 0 10px #ef4444',
-                                            zIndex: 10,
-                                            pointerEvents: 'none',
-                                            animation: 'pulse-red 1s infinite'
-                                        }}>
-                                            NEW
-                                        </div>
-                                    )}
-                                    <img
-                                        src={getMeteoriteImage(moduleSockets.diamonds[i]!)}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'contain',
-                                            pointerEvents: 'auto', // Allow mouse events for hover
-                                            cursor: movedItem ? 'copy' : 'help' // Indicate info available
                                         }}
-                                        alt="meteorite"
+
+                                        onMouseLeave={() => handleMouseLeaveItem(100)}
+                                    >
+                                        {moduleSockets.diamonds[i]?.isNew && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                right: 0,
+                                                background: '#ef4444',
+                                                color: 'white',
+                                                fontSize: '8px',
+                                                fontWeight: 900,
+                                                padding: '2px 4px',
+                                                borderRadius: '4px',
+                                                boxShadow: '0 0 10px #ef4444',
+                                                zIndex: 10,
+                                                pointerEvents: 'none',
+                                                animation: 'pulse-red 1s infinite'
+                                            }}>
+                                                NEW
+                                            </div>
+                                        )}
+                                        <img
+                                            src={getMeteoriteImage(moduleSockets.diamonds[i]!)}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'contain',
+                                                pointerEvents: 'auto', // Allow mouse events for hover
+                                                cursor: movedItem ? 'copy' : 'help' // Indicate info available
+                                            }}
+                                            alt="meteorite"
+                                        />
+                                    </div>
+                                </foreignObject>
+
+                                {/* SVG-based Efficiency Label (to avoid clipping) */}
+                                <g pointerEvents="none">
+                                    <rect
+                                        x={pos.x - 32}
+                                        y={pos.y + 25}
+                                        width="64"
+                                        height="18"
+                                        rx="4"
+                                        fill="rgba(15, 23, 42, 0.98)"
+                                        stroke={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
+                                        strokeWidth="1.5"
+                                        style={{ filter: `drop-shadow(0 0 8px ${RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}66)` }}
                                     />
-                                </div>
-                            </foreignObject>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 38}
+                                        textAnchor="middle"
+                                        fill={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
+                                        fontSize={isBuffActive(gameState, 'MATRIX_OVERDRIVE') ? "10" : "11"}
+                                        fontWeight="900"
+                                        style={{ letterSpacing: '0.5px' }}
+                                    >
+                                        +{Math.round(calculateMeteoriteEfficiency(gameState, i).totalBoost * 100)}%
+                                    </text>
 
-                            {/* SVG-based Efficiency Label (to avoid clipping) */}
-                            <g pointerEvents="none">
-                                <rect
-                                    x={pos.x - 32}
-                                    y={pos.y + 25}
-                                    width="64"
-                                    height="18"
-                                    rx="4"
-                                    fill="rgba(15, 23, 42, 0.98)"
-                                    stroke={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
-                                    strokeWidth="1.5"
-                                    style={{ filter: `drop-shadow(0 0 8px ${RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}66)` }}
-                                />
-                                <text
-                                    x={pos.x}
-                                    y={pos.y + 38}
-                                    textAnchor="middle"
-                                    fill={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
-                                    fontSize={isBuffActive(gameState, 'MATRIX_OVERDRIVE') ? "10" : "11"}
-                                    fontWeight="900"
-                                    style={{ letterSpacing: '0.5px' }}
-                                >
-                                    +{Math.round(calculateMeteoriteEfficiency(gameState, i).totalBoost * 100)}%
-                                </text>
-
-                                {moduleSockets.diamonds[i]!.quality === 'Corrupted' && (
-                                    <g transform={`translate(${pos.x + 22}, ${pos.y - 24})`}>
-                                        <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
-                                        <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>C</text>
-                                    </g>
-                                )}
-                                {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
-                                    <g transform={`translate(${pos.x + 22}, ${pos.y + 24})`}>
-                                        <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
-                                        <text x="0" y="4" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>M</text>
-                                    </g>
-                                )}
-                                {moduleSockets.diamonds[i]!.blueprintBoosted && (
-                                    <g transform={`translate(${pos.x - 22}, ${pos.y + 24})`}>
-                                        <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
-                                        <text x="0" y="4" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>H</text>
-                                    </g>
-                                )}
-                            </g>
-                        </>
-                    )}
-                </g>
-            ))}
+                                    {moduleSockets.diamonds[i]!.quality === 'Corrupted' && (
+                                        <g transform={`translate(${pos.x + 22}, ${pos.y - 24})`}>
+                                            <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
+                                            <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>C</text>
+                                        </g>
+                                    )}
+                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                        <g transform={`translate(${pos.x + 22}, ${pos.y + 24})`}>
+                                            <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
+                                            <text x="0" y="4" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>M</text>
+                                        </g>
+                                    )}
+                                    {moduleSockets.diamonds[i]!.blueprintBoosted && (
+                                        <g transform={`translate(${pos.x - 22}, ${pos.y + 24})`}>
+                                            <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
+                                            <text x="0" y="4" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>H</text>
+                                        </g>
+                                    )}
+                                </g>
+                            </>
+                        )}
+                    </g>
+                )
+            })}
         </svg>
     );
 };

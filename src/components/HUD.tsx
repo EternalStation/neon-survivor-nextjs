@@ -1,8 +1,8 @@
 
 import React from 'react';
-import type { GameState, UpgradeChoice } from '../logic/types';
-import { calcStat } from '../logic/MathUtils';
-import { getArenaIndex, SECTOR_NAMES } from '../logic/MapLogic';
+import type { GameState, UpgradeChoice } from '../logic/core/types';
+import { calcStat } from '../logic/utils/MathUtils';
+import { getArenaIndex, SECTOR_NAMES } from '../logic/mission/MapLogic';
 import { Minimap } from './Minimap';
 
 import { TopLeftPanel } from './hud/TopLeftPanel';
@@ -11,7 +11,7 @@ import { AlertPanel } from './hud/AlertPanel';
 import { PlayerStatus } from './hud/PlayerStatus';
 import { BossStatus } from './hud/BossStatus';
 import { UpgradeMenu } from './hud/UpgradeMenu';
-import { getKeybinds, getKeyDisplay } from '../logic/Keybinds';
+import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 
 
 interface HUDProps {
@@ -91,6 +91,7 @@ export const HUD: React.FC<HUDProps> = ({
                 dust={gameState.player.dust}
                 portalError={portalError}
                 portalCost={portalCost}
+                isFull={!gameState.inventory.slice(20).some(slot => slot === null)}
             />
             <AlertPanel gameState={gameState} bossWarning={bossWarning} />
 
@@ -169,7 +170,12 @@ export const HUD: React.FC<HUDProps> = ({
                         boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)',
                         backdropFilter: 'blur(5px)'
                     }}>
-                        <div style={{ color: '#ef4444', fontSize: '10px', fontWeight: 900, letterSpacing: '2px' }}>
+                        <div style={{
+                            color: gameState.extractionShipPos ? '#10b981' : '#ef4444',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                            letterSpacing: '2px'
+                        }}>
                             EXTRACTION POINT IDENTIFIED
                         </div>
                         <div style={{ color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px', textShadow: '0 0 10px #ef4444' }}>
@@ -178,7 +184,7 @@ export const HUD: React.FC<HUDProps> = ({
                         <div style={{ color: '#60a5fa', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
                             {gameState.extractionShipPos ?
                                 `COORD: [${Math.round(gameState.extractionShipPos.x)} : ${Math.round(gameState.extractionShipPos.y)}]` :
-                                ' LZ COORDINATES: PENDING SIGNAL...'}
+                                'Exact coordinates: pending...'}
                         </div>
                     </div>
                     <style>{`
@@ -198,41 +204,7 @@ export const HUD: React.FC<HUDProps> = ({
                 />
             )}
 
-            {gameState.extractionStatus === 'complete' && (
-                <div style={{
-                    position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)',
-                    zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px'
-                }}>
-                    <button
-                        onClick={() => onRestart()}
-                        style={{
-                            background: 'rgba(59, 130, 246, 0.2)',
-                            border: '2px solid #3b82f6',
-                            color: '#fff',
-                            padding: '15px 40px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontFamily: 'Orbitron, sans-serif',
-                            fontSize: '20px',
-                            fontWeight: 900,
-                            letterSpacing: '4px',
-                            textShadow: '0 0 10px #3b82f6',
-                            boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)',
-                            transition: 'all 0.3s ease'
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
-                            e.currentTarget.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
-                            e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                    >
-                        MAIN MENU
-                    </button>
-                </div>
-            )}
+
 
             {/* CSS Animations */}
             <style>{`

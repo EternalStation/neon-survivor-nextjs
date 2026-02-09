@@ -103,3 +103,23 @@
 .float-up-fade {
     animation: floatUpFade 1.2s forwards cubic-bezier(0.17, 0.89, 0.32, 1.28);
 }
+
+/* User Scanner Animations */
+@keyframes grid-pan {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 40px; }
+}
+@keyframes scan-vertical {
+    0% { top: 10%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 90%; opacity: 0; }
+}
+@keyframes spin-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+@keyframes spin-reverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}

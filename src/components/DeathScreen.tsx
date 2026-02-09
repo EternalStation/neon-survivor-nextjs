@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
-import type { GameState, UpgradeChoice } from '../logic/types';
-import { calcStat, getDefenseReduction } from '../logic/MathUtils';
-import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
-import { GAME_CONFIG } from '../logic/GameConfig';
+import type { GameState, UpgradeChoice } from '../logic/core/types';
+import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
+import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
+import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { submitRunToLeaderboard } from '../utils/leaderboard';
 
 interface DeathScreenProps {
@@ -137,11 +137,81 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
         else grouped.push({ choice: u, count: 1 });
     });
 
+    if (gameState.extractionStatus === 'complete') {
+        return (
+            <div style={{
+                height: '100%', width: '100%', background: '#050505',
+                position: 'absolute', top: 0, left: 0, zIndex: 10000,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                textAlign: 'center'
+            }}>
+                <div style={{
+                    fontSize: 72, fontWeight: 900, letterSpacing: 8,
+                    background: 'linear-gradient(to bottom, #fff 0%, #10b981 100%)',
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    marginBottom: 20, animation: 'pulse-glow 2s infinite ease-in-out'
+                }}>
+                    MISSION COMPLETED
+                </div>
+
+                {!isSubmitting && rank && (
+                    <div style={{ marginBottom: 40 }}>
+                        <div style={{ color: '#94a3b8', fontSize: 14, letterSpacing: 2, fontWeight: 800, marginBottom: 5 }}>GLOBAL RANK</div>
+                        <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#10b981', fontSize: 48, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
+                    </div>
+                )}
+
+                <button
+                    onClick={onQuit}
+                    style={{
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '2px solid #10b981',
+                        color: '#10b981',
+                        padding: '15px 40px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontFamily: 'Orbitron, sans-serif',
+                        fontSize: '20px',
+                        fontWeight: 900,
+                        letterSpacing: '4px',
+                        textShadow: '0 0 10px #10b981',
+                        boxShadow: '0 0 30px rgba(16, 185, 129, 0.2)',
+                        transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                >
+                    MAIN MENU
+                </button>
+
+                <style>{`
+                    @keyframes pulse-glow {
+                        0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3)); }
+                        50% { opacity: 1; filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.6)); }
+                    }
+                `}</style>
+            </div>
+        );
+    }
+
+    const FinalStatItem = ({ label, value, color = '#fff' }: { label: string, value: string | number, color?: string }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Orbitron, sans-serif' }}>{label}</span>
+            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Orbitron, sans-serif', color }}>{value}</span>
+        </div>
+    );
+
     const StatItem = ({ label, value, color = '#fff', subValue = '' }: { label: string, value: string | number, color?: string, subValue?: string }) => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
+            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Orbitron, sans-serif' }}>{label}</span>
             <div style={{ textAlign: 'right' }}>
-                <span style={{ color, fontSize: 15, fontWeight: 800, fontFamily: 'monospace' }}>{value}</span>
+                <span style={{ color, fontSize: 15, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>{value}</span>
                 {subValue && <div style={{ fontSize: 8, color: '#64748b' }}>{subValue}</div>}
             </div>
         </div>
@@ -169,7 +239,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 ) : rank ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                         <div style={{ color: '#94a3b8', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>GLOBAL RANK</div>
-                        <div style={{ color: rank <= 3 ? '#fbbf24' : '#22d3ee', fontSize: 20, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
+                        <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#22d3ee', fontSize: 20, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
                     </div>
                 ) : null}
 
@@ -195,12 +265,10 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 <div className="death-title" style={{
                     fontSize: 54,
                     marginBottom: 10,
-                    background: gameState.extractionStatus === 'complete'
-                        ? 'linear-gradient(to bottom, #fff 0%, #10b981 100%)'
-                        : 'linear-gradient(to bottom, #fff 0%, #334155 100%)',
+                    background: 'linear-gradient(to bottom, #fff 0%, #334155 100%)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                     fontWeight: 900, letterSpacing: 4, textAlign: 'center'
-                }}>{gameState.extractionStatus === 'complete' ? 'MISSION COMPLETED' : 'SESSION TERMINATED'}</div>
+                }}>SESSION TERMINATED</div>
 
                 <div className="death-tabs" style={{ marginBottom: 5, display: 'flex', justifyContent: 'center' }}>
                     <button className={`death-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')} style={{ padding: '6px 20px', fontSize: 14 }}>Overview</button>
@@ -215,7 +283,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
                         {/* MISSION LOG */}
                         <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 12, color: '#22d3ee', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ fontSize: 12, color: '#22d3ee', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Orbitron, sans-serif' }}>
                                 <div style={{ width: 4, height: 16, background: '#22d3ee' }} /> MISSION LOG
                             </div>
                             <StatItem label="Time Active" value={formatTime(stats.time)} color="#fff" />
@@ -226,36 +294,40 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
                             <StatItem label="Fatal Event" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
 
-                            <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10 }}>
+                            <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
                                 SECTOR ALLOCATION
                                 <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC</span><span style={{ color: '#94a3b8' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT</span><span style={{ color: '#94a3b8' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENSE</span><span style={{ color: '#94a3b8' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENSE</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* SYSTEM FINALIZED */}
+                        {/* FINAL SYSTEM PERFORMANCE */}
                         <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 12, color: '#10b981', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 4, height: 16, background: '#10b981' }} /> SYSTEM FINALIZED
+                            <div style={{ fontSize: 12, color: '#00ffff', letterSpacing: 1.5, marginBottom: 12, fontWeight: 900, borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: 6, textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                FINAL SYSTEM PERFORMANCE
                             </div>
-                            <StatItem label="Damage" value={Math.round(calcStat(gameState.player.dmg))} color="#fff" />
-                            <StatItem label="Attack Speed" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#fff" />
-                            <StatItem label="XP per Kill" value={finalXpPerKill} color="#fff" />
-                            <StatItem label="Max HP" value={maxHp} color="#fff" />
-                            <StatItem label="Regen" value={regen + '/s'} color="#10b981" />
-                            <StatItem label="Armor" value={calcStat(gameState.player.arm).toFixed(1)} color="#3b82f6" subValue={`${armRed}% Reduc`} />
-                            <StatItem label="Col Reduc" value={colRed + '%'} color="#3b82f6" />
-                            <StatItem label="Proj Reduc" value={projRed + '%'} color="#3b82f6" />
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', background: 'rgba(10, 15, 30, 0.4)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0, 255, 255, 0.1)' }}>
+                                <FinalStatItem label="DMG/HIT" value={formatDmg(calcStat(gameState.player.dmg))} color="#f59e0b" />
+                                <FinalStatItem label="MAX HP" value={formatDmg(maxHp)} color="#4ade80" />
+                                <FinalStatItem label="XP/KILL" value={finalXpPerKill} color="#22d3ee" />
+                                <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
+                                <FinalStatItem label="REGEN" value={regen + '/s'} color="#4ade80" />
+                                <FinalStatItem label="ARMOR" value={Math.round(calcStat(gameState.player.arm))} color="#3b82f6" />
+                                <FinalStatItem label="ARM REDUC" value={armRed + '%'} color="#3b82f6" />
+                                <FinalStatItem label="SPEED" value={gameState.player.speed.toFixed(1)} color="#22d3ee" />
+                                <FinalStatItem label="COL REDUC" value={colRed + '%'} color="#3b82f6" />
+                                <FinalStatItem label="PROJ REDUC" value={projRed + '%'} color="#3b82f6" />
+                            </div>
                         </div>
 
                         {/* COMBAT ANALYTICS */}
                         <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '20px 25px', borderRadius: 12, border: '1px solid #1e293b', gridColumn: 'span 2' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: 13, color: '#3b82f6', letterSpacing: 3, marginBottom: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ fontSize: 13, color: '#3b82f6', letterSpacing: 3, marginBottom: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Orbitron, sans-serif' }}>
                                         <div style={{ width: 4, height: 16, background: '#3b82f6' }} /> COMBAT ANALYTICS
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
@@ -281,7 +353,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
                 {activeTab === 'modules' && (
                     <div style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', borderRadius: 12, border: '1px solid #1e293b', padding: 20 }}>
-                        <div style={{ fontSize: 14, color: '#22d3ee', letterSpacing: 4, marginBottom: 15, borderBottom: '1px solid #1e293b', paddingBottom: 10, fontWeight: 800 }}>
+                        <div style={{ fontSize: 14, color: '#22d3ee', letterSpacing: 4, marginBottom: 15, borderBottom: '1px solid #1e293b', paddingBottom: 10, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>
                             HARDWARE MODIFICATIONS ({gameState.player.upgradesCollected.length})
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>

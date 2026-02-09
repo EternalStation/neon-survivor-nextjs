@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/types';
+import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/core/types';
 
 import { HexGrid } from './modules/HexGrid';
 
@@ -8,14 +8,14 @@ import { InventoryPanel, PerkFilter } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
 import { getMeteoriteImage, getDustValue, RARITY_ORDER } from './modules/ModuleUtils';
-import { isBuffActive, researchBlueprint } from '../logic/BlueprintLogic';
+import { isBuffActive, researchBlueprint } from '../logic/upgrades/BlueprintLogic';
 import { BlueprintBay } from './BlueprintBay';
-import { Blueprint } from '../logic/types';
-import { spawnFloatingNumber } from '../logic/ParticleLogic';
+import { Blueprint } from '../logic/core/types';
+import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { RemovalConfirmationModal } from './modules/RemovalConfirmationModal';
 import { CorruptionWarningModal } from './modules/CorruptionWarningModal';
-import { ARENA_DATA } from '../logic/MapLogic';
-import { EXTRACTION_MESSAGES } from '../logic/ExtractionLogic';
+import { ARENA_DATA } from '../logic/mission/MapLogic';
+import { EXTRACTION_MESSAGES } from '../logic/mission/ExtractionLogic';
 import './modules/ModuleMenu.css';
 
 
@@ -157,7 +157,27 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 }
 
                 // 2. Extract old item to inventory
-                const emptySlotIdx = gameState.inventory.indexOf(null);
+                // User Request: Prioritize "Storage" (Index 20+) over "Safe Slots" (0-9)
+                let emptySlotIdx = -1;
+
+                // Check Storage (20+)
+                for (let i = 20; i < gameState.inventory.length; i++) {
+                    if (gameState.inventory[i] === null) {
+                        emptySlotIdx = i;
+                        break;
+                    }
+                }
+
+                // Fallback to Safe Slots (0-9) if Storage is full
+                if (emptySlotIdx === -1) {
+                    for (let i = 0; i < 10; i++) {
+                        if (gameState.inventory[i] === null) {
+                            emptySlotIdx = i;
+                            break;
+                        }
+                    }
+                }
+
                 if (emptySlotIdx !== -1) {
                     onInventoryUpdate(emptySlotIdx, newItem);
                 }
@@ -531,7 +551,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                         {/* EVACUATION COST LABEL */}
                                         <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '5px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '15px' }}>
                                             <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: 900, letterSpacing: '1px' }}>EVACUATION PROTOCOL:</span>
-                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#f87171' }}>4,000 DUST</span>
+                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#f87171' }}>10,000 DUST</span>
                                         </div>
 
                                         {/* DUST FLOW INDICATORS (Relocated) */}

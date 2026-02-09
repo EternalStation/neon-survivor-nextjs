@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/client';
 import { RadarChart } from './RadarChart';
-import { PLAYER_CLASSES } from '../logic/classes';
+import { PLAYER_CLASSES } from '../logic/core/classes';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {
@@ -37,13 +37,32 @@ interface LeaderboardEntry {
         armor: number;
         speed: number;
     };
+    blueprints?: any[];
 }
-
 
 interface LeaderboardProps {
     onClose: () => void;
     currentUsername?: string;
 }
+
+const FinalStatItem = ({ label, value, color = '#fff' }: { label: string, value: string | number, color?: string }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <span className="stat-label">{label}</span>
+        <span className="stat-value" style={{ color }}>{value}</span>
+    </div>
+);
+
+const formatLargeNum = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num.toLocaleString();
+};
+
+const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 export default function Leaderboard({ onClose, currentUsername }: LeaderboardProps) {
     const [period, setPeriod] = useState<'global' | 'daily' | 'weekly' | 'patch'>('global');
@@ -135,18 +154,28 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
     };
 
     const filteredEntries = useMemo(() => {
-        return entries.filter(entry => {
+        const filtered = entries.filter(entry => {
             const matchesClass = classFilter === 'All' || entry.class_used === classFilter.toLowerCase();
             const matchesSearch = entry.username.toLowerCase().includes(searchFilter.toLowerCase());
             return matchesClass && matchesSearch;
         });
-    }, [entries, classFilter, searchFilter]);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+        return [...filtered].sort((a, b) => {
+            const aEvac = a.death_cause === 'EVACUATED';
+            const bEvac = b.death_cause === 'EVACUATED';
+
+            if (aEvac && !bEvac) return -1;
+            if (!aEvac && bEvac) return 1;
+
+            if (aEvac && bEvac) {
+                // Both evacuated: fastest time first (asc)
+                return a.survival_time - b.survival_time;
+            } else {
+                // Both died: longest survival first (desc)
+                return b.survival_time - a.survival_time;
+            }
+        });
+    }, [entries, classFilter, searchFilter]);
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -170,12 +199,6 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         return cls?.name || classId;
     };
 
-    const formatLargeNum = (num: number) => {
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-        return num.toLocaleString();
-    };
-
     const hasUserRuns = useMemo(() => {
         return entries.some(e => e.username === currentUsername);
     }, [entries, currentUsername]);
@@ -184,7 +207,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         <div className="leaderboard-overlay" onClick={onClose}>
             <div className="leaderboard-container" onClick={(e) => e.stopPropagation()}>
                 <div className="leaderboard-header">
-                    <h2>Global Leaderboard</h2>
+                    <h2 style={{ fontFamily: 'Orbitron, sans-serif' }}>Global Leaderboard</h2>
                     <div className="header-actions">
                         {hasUserRuns && (
                             <button className="purge-btn" onClick={handleClearAll}>PURGE MY HISTORY</button>
@@ -194,7 +217,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                 </div>
 
                 <div className="leaderboard-controls">
-                    <div className="leaderboard-tabs">
+                    <div className="leaderboard-tabs" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                         <button className={period === 'global' ? 'active' : ''} onClick={() => setPeriod('global')}>All Time</button>
                         <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
                         <button className={period === 'weekly' ? 'active' : ''} onClick={() => setPeriod('weekly')}>Weekly</button>
@@ -203,14 +226,14 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
 
                     <div className="leaderboard-filters">
                         <div className="filter-group">
-                            <label>CLASS:</label>
+                            <label style={{ fontFamily: 'Orbitron, sans-serif' }}>CLASS:</label>
                             <div className="class-filter-row">
                                 <button
                                     className={`class-filter-btn ${classFilter === 'All' ? 'active' : ''}`}
                                     onClick={() => setClassFilter('All')}
                                     title="ALL CLASSES"
                                 >
-                                    <div className="hex-icon-placeholder">ALL</div>
+                                    <div className="hex-icon-placeholder" style={{ fontFamily: 'Orbitron, sans-serif' }}>ALL</div>
                                 </button>
                                 {PLAYER_CLASSES.map(cls => (
                                     <button
@@ -226,12 +249,13 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                             </div>
                         </div>
                         <div className="filter-group">
-                            <label>SEARCH:</label>
+                            <label style={{ fontFamily: 'Orbitron, sans-serif' }}>SEARCH:</label>
                             <input
                                 type="text"
                                 placeholder="PLAYER NAME..."
                                 value={searchFilter}
                                 onChange={(e) => setSearchFilter(e.target.value)}
+                                style={{ fontFamily: 'Orbitron, sans-serif' }}
                             />
                         </div>
                     </div>
@@ -239,8 +263,8 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
 
                 {period === 'patch' && patches.length > 0 && (
                     <div className="patch-selector">
-                        <label>Patch Version:</label>
-                        <select value={selectedPatch} onChange={(e) => setSelectedPatch(e.target.value)}>
+                        <label style={{ fontFamily: 'Orbitron, sans-serif' }}>Version:</label>
+                        <select value={selectedPatch} onChange={(e) => setSelectedPatch(e.target.value)} style={{ fontFamily: 'Orbitron, sans-serif' }}>
                             {patches.map(patch => (
                                 <option key={patch} value={patch}>{patch}</option>
                             ))}
@@ -251,19 +275,19 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                 <div className="leaderboard-content">
                     {loading ? (
                         <div className="leaderboard-loading">
-                            <div className="loading-glitch" data-text="LOADING RECORDS...">LOADING RECORDS...</div>
+                            <div className="loading-glitch" data-text="LOADING RECORDS..." style={{ fontFamily: 'Orbitron, sans-serif' }}>LOADING RECORDS...</div>
                         </div>
                     ) : filteredEntries.length === 0 ? (
-                        <div className="leaderboard-empty">No records found matching criteria.</div>
+                        <div className="leaderboard-empty" style={{ fontFamily: 'Orbitron, sans-serif' }}>No records found matching criteria.</div>
                     ) : (
                         <table className="leaderboard-table">
-                            <thead>
+                            <thead style={{ fontFamily: 'Orbitron, sans-serif' }}>
                                 <tr>
                                     <th>Rank</th>
                                     <th>Player</th>
                                     <th>Time</th>
                                     <th>Class</th>
-                                    <th>Cause</th>
+                                    <th>CAUSED</th>
                                     <th>Date</th>
                                     <th>Patch</th>
                                 </tr>
@@ -281,16 +305,16 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                 onClick={() => setExpandedRunId(isExpanded ? null : entry.id)}
                                                 style={{ cursor: 'pointer' }}
                                             >
-                                                <td style={{ color: getRankColor(index + 1), fontWeight: 'bold' }}>
+                                                <td style={{ color: getRankColor(index + 1), fontWeight: '900', fontFamily: 'Orbitron, sans-serif' }}>
                                                     #{index + 1}
                                                 </td>
-                                                <td className="player-name">
+                                                <td className="player-name" style={{ fontWeight: '700' }}>
                                                     {entry.username} {isUserRun && <span className="owner-tag">(YOU)</span>}
                                                 </td>
-                                                <td className="time-val">{formatTime(entry.survival_time)}</td>
-                                                <td className="class-name" style={{ color: classColor }}>{getClassName(entry.class_used)}</td>
-                                                <td className="cause-val" style={{ color: '#ef4444', fontSize: '0.9em' }}>{entry.death_cause || 'Unknown'}</td>
-                                                <td className="date">{formatDate(entry.completed_at)}</td>
+                                                <td className="time-val" style={{ fontFamily: 'Orbitron, sans-serif' }}>{formatTime(entry.survival_time)}</td>
+                                                <td className="class-name" style={{ color: classColor, fontWeight: '700', fontFamily: 'Orbitron, sans-serif' }}>{getClassName(entry.class_used)}</td>
+                                                <td className="cause-val" style={{ color: entry.death_cause === 'EVACUATED' ? '#10b981' : '#ef4444', fontSize: '0.9em', fontWeight: '500', fontFamily: 'Orbitron, sans-serif' }}>{entry.death_cause || 'Unknown'}</td>
+                                                <td className="date" style={{ opacity: 0.7 }}>{formatDate(entry.completed_at)}</td>
                                                 <td className="patch-val" style={{ opacity: 0.5 }}>{entry.patch_version || '1.0.0'}</td>
                                             </tr>
 
@@ -300,8 +324,8 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                         <div className="run-details-grid">
                                                             {/* STATS ANALYTICS */}
                                                             <div className="details-card stats-card">
-                                                                <div className="card-header">MISSION DATA</div>
-                                                                <div className="stats-list">
+                                                                <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>MISSION DATA</div>
+                                                                <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                                                                     <div className="stat-row"><span>DMG DEALT</span><span className="val-amber">{formatLargeNum(entry.damage_dealt || 0)}</span></div>
                                                                     <div className="stat-row"><span>DMG TAKEN</span><span className="val-red">{formatLargeNum(entry.damage_taken || 0)}</span></div>
                                                                     <div className="stat-row"><span>DMG BLOCKED</span><span className="val-blue">{formatLargeNum(entry.damage_blocked || 0)}</span></div>
@@ -314,8 +338,8 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                     <div className="stat-row"><span>PORTALS</span><span className="val-purple">{entry.portals_used || 0}</span></div>
                                                                 </div>
 
-                                                                <div className="card-header" style={{ marginTop: 15 }}>ARENA LOG</div>
-                                                                <div className="stats-list" style={{ flex: 1 }}>
+                                                                <div className="card-header" style={{ marginTop: 15, fontFamily: 'Orbitron, sans-serif' }}>ARENA LOG</div>
+                                                                <div className="stats-list" style={{ flex: 1, fontFamily: 'Orbitron, sans-serif' }}>
                                                                     <div className="stat-row"><span>ECO</span><span>{formatTime(entry.arena_times?.[0] || 0)}</span></div>
                                                                     <div className="stat-row"><span>COM</span><span>{formatTime(entry.arena_times?.[1] || 0)}</span></div>
                                                                     <div className="stat-row"><span>DEF</span><span>{formatTime(entry.arena_times?.[2] || 0)}</span></div>
@@ -330,6 +354,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                                 handleDeleteRun(entry.id);
                                                                             }}
                                                                             disabled={deletingId === entry.id}
+                                                                            style={{ fontFamily: 'Orbitron, sans-serif' }}
                                                                         >
                                                                             {deletingId === entry.id ? 'WIPING...' : 'WIPE RECORD'}
                                                                         </button>
@@ -339,7 +364,24 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
 
                                                             {/* LEGENDARY LINEUP */}
                                                             <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
-                                                                <div className="card-header">AUGMENTATION HISTORY</div>
+                                                                <div style={{ fontSize: '12px', color: '#00ffff', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                    Final System Performance
+                                                                </div>
+                                                                {entry.final_stats && (
+                                                                    <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
+                                                                        <FinalStatItem label="DMG/HIT" value={formatLargeNum(entry.final_stats.dmg)} color="#f59e0b" />
+                                                                        <FinalStatItem label="MAX HP" value={formatLargeNum(entry.final_stats.hp)} color="#4ade80" />
+                                                                        <FinalStatItem label="XP/KILL" value={formatLargeNum(entry.final_stats.xp || 0)} color="#22d3ee" />
+                                                                        <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
+                                                                        <FinalStatItem label="REGEN" value={entry.final_stats.regen.toFixed(1) + '/s'} color="#4ade80" />
+                                                                        <FinalStatItem label="ARMOR" value={formatLargeNum(entry.final_stats.armor)} color="#3b82f6" />
+                                                                        <FinalStatItem label="SPEED" value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
+                                                                    </div>
+                                                                )}
+
+                                                                <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(59, 130, 246, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                    Augmentation History
+                                                                </div>
                                                                 <div className="legendary-grid">
                                                                     {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
                                                                         entry.hex_levelup_order.map((step, i) => {
@@ -361,7 +403,10 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                                                                             hexBase.type === 'CombShield' ? 'DefShield' :
                                                                                                                                 hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
                                                                                                                                     hexBase.type === 'shield_passive' ? 'AigisVortex' :
-                                                                                                                                        'MalwarePrime'
+                                                                                                                                        hexBase.type === 'KineticBattery' ? 'DefBattery' :
+                                                                                                                                            hexBase.type === 'RadiationCore' ? 'ComRad' :
+                                                                                                                                                hexBase.type === 'ChronoPlating' ? 'EcoPlating' :
+                                                                                                                                                    'MalwarePrime'
                                                                                                 }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
                                                                                             alt={hexBase.name}
                                                                                         />
@@ -372,53 +417,40 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                             );
                                                                         })
                                                                     ) : (
-                                                                        <div className="empty-msg">No legendary augments acquired.</div>
+                                                                        <div className="empty-msg" style={{ fontFamily: 'Orbitron, sans-serif' }}>No legendary augments acquired.</div>
                                                                     )}
                                                                 </div>
-
-                                                                {entry.final_stats && (
-                                                                    <>
-                                                                        <div className="card-header" style={{ marginTop: 20 }}>FINAL SYSTEM PERFORMANCE</div>
-                                                                        <div className="final-stats-grid">
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">DMG/HIT</span>
-                                                                                <span className="stat-value val-amber">{formatLargeNum(entry.final_stats.dmg)}</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">MAX HP</span>
-                                                                                <span className="stat-value val-green">{formatLargeNum(entry.final_stats.hp)}</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">XP/KILL</span>
-                                                                                <span className="stat-value val-cyan">{entry.final_stats.xp}</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">ATK SPEED</span>
-                                                                                <span className="stat-value val-purple">{(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2)}/s</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">REGEN</span>
-                                                                                <span className="stat-value val-green">{entry.final_stats.regen}/s</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">ARMOR</span>
-                                                                                <span className="stat-value val-blue">{entry.final_stats.armor}</span>
-                                                                            </div>
-                                                                            <div className="final-stat-item">
-                                                                                <span className="stat-label">SPEED</span>
-                                                                                <span className="stat-value val-cyan">{entry.final_stats.speed}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </>
-                                                                )}
                                                             </div>
-
 
                                                             {/* RADAR PROFILE */}
                                                             <div className="details-card radar-card">
-                                                                <div className="card-header">HARDWARE PROFILE</div>
+                                                                <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>HARDWARE PROFILE</div>
                                                                 <div style={{ padding: '10px 0' }}>
                                                                     <RadarChart counts={entry.radar_counts} size={150} />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* BLUEPRINT LOADOUT */}
+                                                            <div className="details-card blueprints-card" style={{ gridColumn: '1 / -1', marginTop: 10 }}>
+                                                                <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(245, 158, 11, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                    Blueprint Configuration
+                                                                </div>
+                                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0' }}>
+                                                                    {entry.blueprints && entry.blueprints.length > 0 ? (
+                                                                        entry.blueprints.map((bp: any, i: number) => (
+                                                                            <div key={i} style={{
+                                                                                display: 'flex', alignItems: 'center', gap: 6,
+                                                                                background: 'rgba(16, 185, 129, 0.1)',
+                                                                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                                                padding: '6px 10px', borderRadius: 6
+                                                                            }}>
+                                                                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
+                                                                                <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type}</span>
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <div className="empty-msg" style={{ fontStyle: 'italic', opacity: 0.5, fontSize: 11, fontFamily: 'Orbitron, sans-serif' }}>No blueprints recorded.</div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -492,6 +524,21 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                     font-weight: 900;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                }
+
+                .stat-label {
+                    font-size: 10px;
+                    font-weight: 800;
+                    color: rgba(255, 255, 255, 0.4);
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                    font-family: 'Orbitron', sans-serif;
+                }
+
+                .stat-value {
+                    font-size: 18px;
+                    font-weight: 700;
+                    font-family: 'Orbitron', sans-serif;
                 }
 
                 .delete-run-btn:hover:not(:disabled) {

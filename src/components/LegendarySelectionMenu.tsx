@@ -1,5 +1,5 @@
 import React from 'react';
-import type { LegendaryHex } from '../logic/types';
+import type { LegendaryHex } from '../logic/core/types';
 
 interface LegendarySelectionMenuProps {
     options: LegendaryHex[];
@@ -108,37 +108,85 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                             </h2>
 
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', padding: '0 10px', overflowY: 'auto' }}>
-                                {opt.perks?.map((perk, idx) => {
-                                    const isNew = idx === opt.level - 1;
-                                    return (
-                                        <div key={idx} style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            color: isNew ? '#fbbf24' : '#64748b',
-                                            fontSize: '0.75rem',
-                                            fontWeight: isNew ? '900' : '500',
-                                            padding: '6px 8px',
-                                            background: isNew ? 'rgba(251, 191, 36, 0.15)' : 'rgba(0,0,0,0.2)',
-                                            borderRadius: '6px',
-                                            border: isNew ? '1px solid rgba(251, 191, 36, 0.4)' : '1px solid rgba(255,255,255,0.05)',
-                                            textShadow: isNew ? '0 0 8px rgba(251, 191, 36, 0.5)' : 'none'
-                                        }}>
-                                            {isNew && <span style={{
-                                                fontSize: '9px',
-                                                background: '#fbbf24',
-                                                color: '#0f172a',
-                                                padding: '2px 5px',
-                                                borderRadius: '3px',
-                                                fontWeight: '900',
-                                                textShadow: 'none',
-                                                boxShadow: '0 0 10px #fbbf24'
-                                            }}>NEW</span>}
-                                            {perk}
-                                        </div>
-                                    );
-                                })}
+                                {opt.allPerks ? (
+                                    opt.allPerks.map((levelPerks, levelIdx) => {
+                                        const currentLevel = levelIdx + 1;
+                                        const isPast = currentLevel < opt.level;
+                                        const isNew = currentLevel === opt.level;
+                                        const isFuture = currentLevel > opt.level;
+
+                                        return (
+                                            <div key={levelIdx} style={{
+                                                display: 'flex', flexDirection: 'column', gap: '4px',
+                                                opacity: isFuture ? 0.6 : 1,
+                                                marginBottom: '8px'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '0.65rem',
+                                                    color: isNew ? '#fbbf24' : (isPast ? '#4ade80' : '#94a3b8'),
+                                                    fontWeight: 'bold',
+                                                    marginBottom: '2px',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                    borderBottom: isNew ? '1px solid #fbbf24' : (isPast ? '1px solid #4ade80' : '1px solid #334155'),
+                                                    paddingBottom: '2px'
+                                                }}>
+                                                    <span>LEVEL {currentLevel}</span>
+                                                    {isNew && <span style={{ color: '#fbbf24', textShadow: '0 0 5px #fbbf24' }}>★ NEW</span>}
+                                                    {isPast && <span style={{ color: '#4ade80' }}>✔ ACTIVE</span>}
+                                                    {isFuture && <span style={{ color: '#94a3b8' }}>LOCKED</span>}
+                                                </div>
+
+                                                {levelPerks.map((perk, pIdx) => (
+                                                    <div key={pIdx} style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        textAlign: 'center',
+                                                        color: isNew ? '#fbbf24' : (isFuture ? '#94a3b8' : '#e2e8f0'),
+                                                        fontSize: '0.7rem',
+                                                        padding: '4px 6px',
+                                                        background: isNew ? 'rgba(251, 191, 36, 0.15)' : (isPast ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0,0,0,0.2)'),
+                                                        borderRadius: '4px',
+                                                        border: isNew ? '1px solid rgba(251, 191, 36, 0.4)' : (isPast ? '1px solid rgba(74, 222, 128, 0.2)' : '1px solid rgba(255,255,255,0.05)'),
+                                                        textShadow: isNew ? '0 0 5px rgba(251, 191, 36, 0.3)' : 'none'
+                                                    }}>
+                                                        {perk}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    opt.perks?.map((perk, idx) => {
+                                        const isNew = idx === opt.level - 1;
+                                        return (
+                                            <div key={idx} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                color: isNew ? '#fbbf24' : '#64748b',
+                                                fontSize: '0.75rem',
+                                                fontWeight: isNew ? '900' : '500',
+                                                padding: '6px 8px',
+                                                background: isNew ? 'rgba(251, 191, 36, 0.15)' : 'rgba(0,0,0,0.2)',
+                                                borderRadius: '6px',
+                                                border: isNew ? '1px solid rgba(251, 191, 36, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                                                textShadow: isNew ? '0 0 8px rgba(251, 191, 36, 0.5)' : 'none'
+                                            }}>
+                                                {isNew && <span style={{
+                                                    fontSize: '9px',
+                                                    background: '#fbbf24',
+                                                    color: '#0f172a',
+                                                    padding: '2px 5px',
+                                                    borderRadius: '3px',
+                                                    fontWeight: '900',
+                                                    textShadow: 'none',
+                                                    boxShadow: '0 0 10px #fbbf24'
+                                                }}>NEW</span>}
+                                                {perk}
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
 
                             <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>

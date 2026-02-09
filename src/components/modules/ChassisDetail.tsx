@@ -1,6 +1,6 @@
 import React from 'react';
-import type { GameState, PlayerClass } from '../../logic/types';
-import { calculateMeteoriteEfficiency } from '../../logic/EfficiencyLogic';
+import type { GameState, PlayerClass } from '../../logic/core/types';
+import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './ModuleUtils';
 import './ChassisDetail.css';
 

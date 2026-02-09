@@ -1,5 +1,5 @@
 
-import type { GameState, Enemy } from '../types';
+import type { GameState, Enemy } from '../core/types';
 
 /**
  * Implements a "Flanker" AI behavior where the enemy circles the player

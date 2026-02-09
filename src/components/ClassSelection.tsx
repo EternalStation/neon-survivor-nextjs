@@ -1,6 +1,6 @@
 import React from 'react';
-import { type PlayerClass } from '../logic/types';
-import { PLAYER_CLASSES } from '../logic/classes';
+import { type PlayerClass } from '../logic/core/types';
+import { PLAYER_CLASSES } from '../logic/core/classes';
 
 interface ClassSelectionProps {
     onSelect: (selectedClass: PlayerClass) => void;

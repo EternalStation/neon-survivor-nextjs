@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { getKeybinds, saveKeybinds, getKeyDisplay } from '../logic/Keybinds';
-import type { Keybinds } from '../logic/Keybinds';
+import { getKeybinds, saveKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
+import type { Keybinds } from '../logic/utils/Keybinds';
 
 interface KeybindSettingsProps {
     onBack: () => void;

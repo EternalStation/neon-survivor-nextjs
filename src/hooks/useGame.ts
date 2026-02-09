@@ -1,29 +1,29 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 // Worker will be initialized via URL for Next.js compatibility
-import type { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/types';
+import type { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/types';
 
-import { createInitialGameState } from '../logic/GameState';
-import { updatePlayer } from '../logic/PlayerLogic';
-import { updateEnemies, resetEnemyAggro } from '../logic/EnemyLogic';
-import { getChassisResonance } from '../logic/EfficiencyLogic';
-import { updateProjectiles } from '../logic/ProjectileLogic';
-import { spawnBullet } from '../logic/ProjectileSpawning';
-import { GAME_CONFIG } from '../logic/GameConfig';
+import { createInitialGameState } from '../logic/core/GameState';
+import { updatePlayer } from '../logic/player/PlayerLogic';
+import { updateEnemies, resetEnemyAggro } from '../logic/enemies/EnemyLogic';
+import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
+import { updateProjectiles } from '../logic/combat/ProjectileLogic';
+import { spawnBullet } from '../logic/combat/ProjectileSpawning';
+import { GAME_CONFIG } from '../logic/core/GameConfig';
 
-import { spawnUpgrades, spawnSnitchUpgrades, applyUpgrade } from '../logic/UpgradeLogic';
-import { calcStat } from '../logic/MathUtils';
-import { updateLoot } from '../logic/LootLogic';
-import { isBuffActive, updateBlueprints } from '../logic/BlueprintLogic';
-import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/ParticleLogic'; // Added spawnParticles import
-import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/MapLogic';
-import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/AudioLogic';
-import { syncLegendaryHex, applyLegendarySelection, syncAllLegendaries, getLegendaryOptions } from '../logic/LegendaryLogic';
-import { updateDirector } from '../logic/DirectorLogic';
-import { updateExtraction } from '../logic/ExtractionLogic';
+import { spawnUpgrades, spawnSnitchUpgrades, applyUpgrade } from '../logic/upgrades/UpgradeLogic';
+import { calcStat } from '../logic/utils/MathUtils';
+import { updateLoot } from '../logic/mission/LootLogic';
+import { isBuffActive, updateBlueprints } from '../logic/upgrades/BlueprintLogic';
+import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic'; // Added spawnParticles import
+import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/mission/MapLogic';
+import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/audio/AudioLogic';
+import { syncLegendaryHex, applyLegendarySelection, syncAllLegendaries, getLegendaryOptions } from '../logic/upgrades/LegendaryLogic';
+import { updateDirector } from '../logic/enemies/DirectorLogic';
+import { updateExtraction } from '../logic/mission/ExtractionLogic';
 
 
 // Refactored Modules
-import { renderGame } from '../logic/GameRenderer';
+import { renderGame } from '../logic/rendering/GameRenderer';
 import { useGameInput } from './useGameInput';
 
 export function useGameLoop(gameStarted: boolean) {
@@ -93,7 +93,7 @@ export function useGameLoop(gameStarted: boolean) {
         (meteoriteImagesRef.current as any).ship = shipImg;
 
         // Initialize Background Worker (Next.js/Turbopack compatible way)
-        workerRef.current = new Worker(new URL('../logic/gameWorker.ts', import.meta.url), { type: 'module' });
+        workerRef.current = new Worker(new URL('../logic/core/gameWorker.ts', import.meta.url), { type: 'module' });
         workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
 
         const handleVisibility = () => {
@@ -145,7 +145,7 @@ export function useGameLoop(gameStarted: boolean) {
         const cost = 0;
 
         // Block portal use during evacuation (One way trip only)
-        if (['active', 'arriving', 'arrived', 'departing'].includes(gameState.current.extractionStatus)) {
+        if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(gameState.current.extractionStatus) || gameState.current.portalOneTimeUse) {
             setPortalError(true);
             setUiState(p => p + 1);
             setTimeout(() => {
@@ -269,7 +269,7 @@ export function useGameLoop(gameStarted: boolean) {
             if (event === 'game_over') {
                 state.isPaused = true;
                 setGameOver(true);
-                import('../logic/AudioLogic').then(mod => mod.stopAllLoops());
+                import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
             }
         };
         state.legionLeads = state.legionLeads || {};
@@ -937,12 +937,12 @@ export function useGameLoop(gameStarted: boolean) {
                         // Update Logic
                         updateLogic(state, FIXED_STEP);
 
-                        // Failsafe Death Check (Covering all damage sources)
-                        if (state.player.curHp <= 0) {
-                            state.player.curHp = 0;
+                        // Failsafe Death Check (Covering all damage sources, including extraction)
+                        if (state.player.curHp <= 0 || state.gameOver) {
+                            if (state.player.curHp < 0) state.player.curHp = 0;
                             state.gameOver = true;
                             setGameOver(true);
-                            import('../logic/AudioLogic').then(mod => mod.stopAllLoops());
+                            import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
                         }
                     }
                 }

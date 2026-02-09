@@ -1,9 +1,9 @@
-import type { GameState, Enemy } from '../types';
-import { ARENA_CENTERS, isInMap } from '../MapLogic';
-import { spawnParticles, spawnFloatingNumber } from '../ParticleLogic';
-import { playSfx } from '../AudioLogic';
-import { handleEnemyDeath } from '../DeathLogic';
-import { getHexLevel } from '../LegendaryLogic';
+import type { GameState, Enemy } from '../core/types';
+import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
+import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
+import { playSfx } from '../audio/AudioLogic';
+import { handleEnemyDeath } from '../mission/DeathLogic';
+import { getHexLevel } from '../upgrades/LegendaryLogic';
 
 export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, count: number) {
     for (let i = 0; i < count; i++) {

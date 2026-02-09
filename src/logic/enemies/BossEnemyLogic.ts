@@ -1,7 +1,7 @@
-import type { Enemy, GameState } from '../types';
-import { spawnParticles, spawnFloatingNumber } from '../ParticleLogic';
-import { playSfx } from '../AudioLogic';
-import { calcStat, getDefenseReduction } from '../MathUtils';
+import type { Enemy, GameState } from '../core/types';
+import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
+import { playSfx } from '../audio/AudioLogic';
+import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 
 export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, onEvent?: (event: string, data?: any) => void) {
     const distToPlayer = Math.hypot(dx, dy);
@@ -29,7 +29,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
             if (!e.shieldsInitialized) {
                 e.shieldsInitialized = true;
                 // Spawn 3 initial shields
-                import('../enemies/EnemySpawnLogic').then(({ spawnShield }) => {
+                import('./EnemySpawnLogic').then(({ spawnShield }) => {
                     for (let i = 0; i < 3; i++) {
                         const angle = (i * Math.PI * 2) / 3;
                         const sx = e.x + Math.cos(angle) * 150;
@@ -58,7 +58,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                         // we'll emit an event or push to a queue? 
                         // Actually, let's just create them here manually since it's simple data or use the onEvent callback if we had one for spawning.
                         // Better: Just construct the object here.
-                        import('../enemies/EnemySpawnLogic').then(({ spawnShield }) => {
+                        import('./EnemySpawnLogic').then(({ spawnShield }) => {
                             const angle = (i * Math.PI * 2) / 3;
                             const sx = e.x + Math.cos(angle) * 150;
                             const sy = e.y + Math.sin(angle) * 150;
@@ -337,7 +337,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                             if (state.player.curHp <= 0) {
                                 state.player.curHp = 0;
                                 state.gameOver = true;
-                                state.player.deathCause = "Diamond Boss: Orbital Satellites";
+                                state.player.deathCause = "Vaporized by Diamond Boss: Orbital Satellites";
                                 if (onEvent) onEvent('game_over');
                             }
                         }
@@ -439,7 +439,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                     if (state.player.curHp <= 0) {
                         state.player.curHp = 0;
                         state.gameOver = true;
-                        state.player.deathCause = "Diamond Boss: Kinetic Beam";
+                        state.player.deathCause = "Killed by Diamond Boss: Kinetic Beam";
                         if (onEvent) onEvent('game_over');
                     }
                 }
@@ -513,7 +513,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
                         if (state.player.curHp <= 0) {
                             state.player.curHp = 0;
                             state.gameOver = true;
-                            state.player.deathCause = "Pentagon Boss: Parasitic Link";
+                            state.player.deathCause = "Drained by Pentagon Boss: Parasitic Link";
                             if (onEvent) onEvent('game_over');
                         }
                     }

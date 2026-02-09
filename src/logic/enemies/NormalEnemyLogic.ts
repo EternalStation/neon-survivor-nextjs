@@ -1,7 +1,7 @@
-import type { GameState, Enemy } from '../types';
-import { ARENA_CENTERS, ARENA_RADIUS } from '../MapLogic';
-import { spawnParticles } from '../ParticleLogic';
-import { spawnEnemyBullet } from '../ProjectileSpawning';
+import type { GameState, Enemy } from '../core/types';
+import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
+import { spawnParticles } from '../effects/ParticleLogic';
+import { spawnEnemyBullet } from '../combat/ProjectileSpawning';
 
 export function updateNormalCircle(e: Enemy, state: GameState, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     if (e.timer && state.gameTime < e.timer) return { vx: 0, vy: 0 };
@@ -105,7 +105,7 @@ export function updateNormalDiamond(e: Enemy, state: GameState, dist: number, dx
 }
 
 import { spawnMinion } from './UniqueEnemyLogic';
-import { playSfx } from '../AudioLogic';
+import { playSfx } from '../audio/AudioLogic';
 
 export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     // Capture original palette for state restoration

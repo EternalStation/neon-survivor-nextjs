@@ -1,5 +1,5 @@
 import React from 'react';
-import { ARENA_DATA } from '../logic/MapLogic';
+import { ARENA_DATA } from '../logic/mission/MapLogic';
 
 interface ArenaSelectionProps {
     onSelect: (arenaId: number) => void;

@@ -1,7 +1,7 @@
 
-import type { GameState, Enemy } from '../types';
-import { playSfx } from '../AudioLogic';
-import { GAME_CONFIG } from '../GameConfig';
+import type { GameState, Enemy } from '../core/types';
+import { playSfx } from '../audio/AudioLogic';
+import { GAME_CONFIG } from '../core/GameConfig';
 
 export function scanForMerges(state: GameState) {
     const { enemies, spatialGrid } = state;
@@ -83,8 +83,8 @@ export function manageMerges(state: GameState) {
             if (!host) return;
             host.mergeState = 'none'; host.isElite = true; host.eliteState = 0;
             host.spawnedAt = state.gameTime;
-            host.lastAttack = state.gameTime + 3.0;
-            host.isFlanker = Math.random() < 0.10; // Re-roll or ensure 10% for elites
+            host.lastAttack = state.gameTime + Math.random() * 2.0;
+            host.isFlanker = ['circle', 'triangle', 'square'].includes(host.shape) && Math.random() < 0.10; // Re-roll or ensure 10% for elites
             host.flankAngle = Math.random() * Math.PI * 2;
             host.flankDistance = 450 + Math.random() * 200; // Elites stay a bit further?
             host.size *= GAME_CONFIG.ENEMY.MERGE_SIZE_MULT;

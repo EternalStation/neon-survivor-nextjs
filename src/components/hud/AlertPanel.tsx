@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { GameState } from '../../logic/types';
+import type { GameState } from '../../logic/core/types';
 
 interface AlertPanelProps {
     gameState: GameState;

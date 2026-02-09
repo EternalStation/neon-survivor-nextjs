@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RadarChart } from './RadarChart';
 export { RadarChart };
-import type { GameState, PlayerStats } from '../logic/types';
-import { calcStat, getDefenseReduction } from '../logic/MathUtils';
-import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
-import { getArenaIndex } from '../logic/MapLogic';
-import { GAME_CONFIG } from '../logic/GameConfig';
-import { isBuffActive } from '../logic/BlueprintLogic';
-import { DROP_TABLE } from '../logic/LootLogic';
+import type { GameState, PlayerStats } from '../logic/core/types';
+import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
+import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
+import { getArenaIndex } from '../logic/mission/MapLogic';
+import { GAME_CONFIG } from '../logic/core/GameConfig';
+import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
+import { DROP_TABLE } from '../logic/mission/LootLogic';
 
 
-import { getKeybinds, getKeyDisplay } from '../logic/Keybinds';
+import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 
 interface StatsMenuProps {
     gameState: GameState;

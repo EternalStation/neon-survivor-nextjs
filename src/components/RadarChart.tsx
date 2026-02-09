@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Player } from '../logic/types';
+import type { Player } from '../logic/core/types';
 
 interface RadarCounts {
     DPS: number;

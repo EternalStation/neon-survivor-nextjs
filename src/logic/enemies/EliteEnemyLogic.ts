@@ -1,8 +1,8 @@
-import type { GameState, Enemy } from '../types';
-import { ARENA_CENTERS, ARENA_RADIUS } from '../MapLogic';
-import { spawnParticles, spawnFloatingNumber } from '../ParticleLogic';
-import { playSfx } from '../AudioLogic';
-import { calcStat, getDefenseReduction } from '../MathUtils';
+import type { GameState, Enemy } from '../core/types';
+import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
+import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
+import { playSfx } from '../audio/AudioLogic';
+import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 // Actually, check if it is used anywhere else.
 // updateEliteCircle: No.
 // updateEliteTriangle: No.
@@ -40,7 +40,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
                 const pColor = e.palette ? e.palette[0] : '#EF4444';
                 spawnParticles(state, e.x, e.y, pColor, 1);
             } else {
-                e.eliteState = 0; e.timer = state.gameTime + 5.0;
+                e.eliteState = 0; e.timer = state.gameTime + 5.0 + Math.random() * 2.0;
                 e.lockedTargetX = undefined; e.lockedTargetY = undefined;
             }
         }
@@ -64,7 +64,7 @@ export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx
         vx = Math.cos(a) * fast + pushX; vy = Math.sin(a) * fast + pushY;
         spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 1);
         if (state.gameTime > (e.timer || 0)) {
-            e.eliteState = 0; e.timer = state.gameTime + 5.0;
+            e.eliteState = 0; e.timer = state.gameTime + 5.0 + Math.random() * 2.0;
         }
     }
     return { vx, vy };
@@ -129,7 +129,8 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
         }
 
         // Charge Transition (Every 5 seconds)
-        if (state.gameTime - (e.lastAttack || 0) > 5.0) {
+        const currentCD = (e as any).nextAttackCD || 5.0;
+        if (state.gameTime - (e.lastAttack || 0) > currentCD) {
             e.eliteState = 1;
             e.timer = state.gameTime + 1.4; // 1.4s Total Charge (0.8s Track + 0.6s Lock)
             e.dashState = angleToPlayerD; // Initial angle
@@ -211,7 +212,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 
             if (player.curHp <= 0 && !state.gameOver) {
                 state.gameOver = true;
-                player.deathCause = 'Elite Diamond Laser';
+                player.deathCause = 'Incinerated by Elite Diamond Laser';
                 if (onEvent) onEvent('game_over');
             }
         }
@@ -235,6 +236,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
     if (e.eliteState !== 0 && state.gameTime > (e.timer || 0)) {
         e.eliteState = 0;
         e.lastAttack = state.gameTime;
+        (e as any).nextAttackCD = 5.0 + Math.random() * 2.0;
         e.lockedTargetX = undefined;
         e.lockedTargetY = undefined;
     }

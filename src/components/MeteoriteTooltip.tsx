@@ -1,7 +1,7 @@
 import React from 'react';
-import type { GameState, Meteorite, MeteoriteRarity } from '../logic/types';
+import type { GameState, Meteorite, MeteoriteRarity } from '../logic/core/types';
 import './MeteoriteTooltip.css';
-import { calculateMeteoriteEfficiency } from '../logic/EfficiencyLogic';
+import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 
 interface MeteoriteTooltipProps {
     meteorite: Meteorite;

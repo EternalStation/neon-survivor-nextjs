@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Meteorite } from '../../logic/types';
+import type { Meteorite } from '../../logic/core/types';
 import { getMeteoriteImage, RARITY_COLORS, RARITY_ORDER } from './ModuleUtils';
 
 interface InventoryPanelProps {
@@ -291,14 +291,14 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
         coreFilter.arena !== 'All' ||
         Object.values(perkFilters).some(f => f.active);
 
-    const displayInventory = [...inventory, ...Array(Math.max(0, 300 - inventory.length)).fill(null)];
+    const displayInventory = [...inventory, ...Array(Math.max(0, 320 - inventory.length)).fill(null)];
 
     const selectStyle: React.CSSProperties = {
         background: '#0f172a',
         border: '1px solid #3b82f6',
         color: '#fff',
         fontSize: '9px',
-        fontWeight: 'bold',
+        fontWeight: 900,
         padding: '2px 4px',
         borderRadius: '4px',
         width: '100%',
@@ -501,11 +501,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                                         <span style={{
-                                            fontSize: '7.5px',
+                                            fontSize: '8px',
                                             fontWeight: 900,
                                             color: rarityColor,
                                             letterSpacing: '0.5px',
-                                            opacity: isActive ? 1 : 0.8
+                                            opacity: isActive ? 1 : 0.8,
+                                            textTransform: 'uppercase'
                                         }}>
                                             {label}
                                         </span>
@@ -522,8 +523,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                             {/* Value Row (Universal for L1-L9) */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: '8px', color: '#94a3b8', fontWeight: 900 }}>THRESHOLD</span>
-                                                    <span style={{ fontSize: '10px', fontWeight: 900, color: rarityColor }}>
+                                                    <span style={{ fontSize: '8px', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>THRESHOLD</span>
+                                                    <span style={{ fontSize: '9px', fontWeight: 900, color: rarityColor }}>
                                                         {perkFilters[lvl].val}%
                                                     </span>
                                                 </div>
@@ -547,17 +548,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 
                                             {/* Contextual Rows */}
                                             {(lvl === 3 || lvl === 4 || lvl === 6) && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
                                                     {ARENAS.map(a => <option key={a} value={a}>{a} ARENA</option>)}
                                                 </select>
                                             )}
                                             {(lvl === 7 || lvl === 8) && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
                                                     {PAIR_COMBOS.map(p => <option key={p} value={p}>{p}</option>)}
                                                 </select>
                                             )}
                                             {lvl === 4 && (
-                                                <select style={{ ...selectStyle, height: '18px', fontSize: '8px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].matchQuality} onChange={e => updatePerk(lvl, { matchQuality: e.target.value })}>
+                                                <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].matchQuality} onChange={e => updatePerk(lvl, { matchQuality: e.target.value })}>
                                                     {QUALITIES.map(q => <option key={q} value={q}>{q}</option>)}
                                                 </select>
                                             )}
@@ -605,7 +606,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         );
 
                         // 2. STORAGE HEADER
-                        const storageEmptyCount = inventory.slice(20, 300).filter(item => item === null).length;
+                        const storageEmptyCount = inventory.slice(20, 320).filter(item => item === null).length;
                         elements.push(
                             <div key="storage-header" style={{
                                 gridColumn: 'span 10',
@@ -617,7 +618,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 gap: '10px'
                             }}>
                                 <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
-                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(280 SLOTS)</span>
+                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span>
 
                                 {/* NEW RECYCLE CONTROLS LOCATION */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
@@ -714,7 +715,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         );
 
                         // 3. STORAGE SLOTS (20+) - Skip 10-19 as before
-                        for (let i = 20; i < 300; i++) {
+                        for (let i = 20; i < 320; i++) {
                             elements.push(renderSlot(displayInventory[i], i, isFilterActive));
                         }
 

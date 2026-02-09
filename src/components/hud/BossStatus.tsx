@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GameState } from '../../logic/types';
+import type { GameState } from '../../logic/core/types';
 
 
 interface BossStatusProps {

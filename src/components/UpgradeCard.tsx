@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { UpgradeChoice } from '../logic/types';
-import { BASE_UPGRADE_VALUES } from '../logic/constants';
+import type { UpgradeChoice } from '../logic/core/types';
+import { BASE_UPGRADE_VALUES } from '../logic/core/constants';
 import { getIcon } from './UpgradeIcons';
 import '../styles/UpgradeMenu.css';
 

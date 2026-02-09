@@ -63,7 +63,8 @@ export async function GET(request: NextRequest) {
         gr.snitches_caught,
         gr.death_cause,
         gr.patch_version,
-        gr.final_stats
+        gr.final_stats,
+        gr.blueprints
       FROM game_runs gr
 
       JOIN players p ON gr.player_id = p.id

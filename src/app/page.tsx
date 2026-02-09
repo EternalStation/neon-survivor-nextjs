@@ -15,11 +15,11 @@ import { ModuleMenu } from '@/components/ModuleMenu';
 import { LegendarySelectionMenu } from '@/components/LegendarySelectionMenu';
 import { ClassSelection } from '@/components/ClassSelection';
 import { ArenaSelection } from '@/components/ArenaSelection';
-import { type PlayerClass } from '@/logic/types';
+import { type PlayerClass } from '@/logic/core/types';
 
 import { useGameLoop } from '@/hooks/useGame';
 import { useWindowScale } from '@/hooks/useWindowScale';
-import { startBGM } from '@/logic/AudioLogic';
+import { startBGM } from '@/logic/audio/AudioLogic';
 import api from '@/api/client';
 import '@/styles/menu_additions.css';
 

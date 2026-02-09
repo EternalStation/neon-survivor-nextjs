@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { GameState, Blueprint, BlueprintType } from '../logic/types';
-import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/BlueprintLogic';
+import type { GameState, Blueprint, BlueprintType } from '../logic/core/types';
+import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 
 interface BlueprintBayProps {
     gameState: GameState;
@@ -347,7 +347,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                                     }}
                                 >
-                                    <span>SCRAP (Recycle)</span>
+                                    <span>RECYCLE</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
                                         <span style={{ fontSize: '12px' }}>+5</span>
                                         <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '16px', height: '16px' }} />

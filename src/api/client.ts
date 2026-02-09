@@ -127,6 +127,7 @@ class ApiClient {
         arenaTimes: Record<number, number>;
         legendaryHexes: any[];
         hexLevelupOrder: any[];
+        blueprints: any[];
     }) {
         return this.request('/runs', {
             method: 'POST',

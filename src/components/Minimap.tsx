@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import type { GameState } from '../logic/types';
-import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/MapLogic';
+import type { GameState } from '../logic/core/types';
+import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/mission/MapLogic';
 
 interface MinimapProps {
     gameState: GameState;

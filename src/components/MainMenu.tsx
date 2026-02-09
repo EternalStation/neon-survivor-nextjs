@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { startMenuMusic, preloadMusic } from '../logic/AudioLogic';
+import { startMenuMusic, preloadMusic } from '../logic/audio/AudioLogic';
 import { CURRENT_PATCH_VERSION } from '../utils/leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';

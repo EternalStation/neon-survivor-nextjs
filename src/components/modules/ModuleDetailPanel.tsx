@@ -1,12 +1,12 @@
 import React from 'react';
-import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/types';
+import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/core/types';
 import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
-import { isBuffActive } from '../../logic/BlueprintLogic';
-import { ARENA_DATA } from '../../logic/MapLogic';
-import { EXTRACTION_MESSAGES } from '../../logic/ExtractionLogic';
-import { fadeOutMusic, playSfx } from '../../logic/AudioLogic';
-import { playTypewriterClick } from '../../logic/SfxLogic';
+import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
+import { ARENA_DATA } from '../../logic/mission/MapLogic';
+import { EXTRACTION_MESSAGES } from '../../logic/mission/ExtractionLogic';
+import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
+import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 
 
 
@@ -75,8 +75,6 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '10px',
-            background: 'radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6) 0%, rgba(2, 2, 5, 0.2) 100%)',
         }}>
             <div className="data-panel" style={{
                 width: '100%',
@@ -347,7 +345,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                     fontSize: '13px'
                                                 }}>
                                                     <span style={{ color: isYou ? '#fbbf24' : (isAlert ? '#ef4444' : '#60a5fa'), opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
-                                                        {isYou ? 'YOU' : 'ORBITAL'}:
+                                                        {isYou ? 'YOU' : msg.speaker === 'comm' ? 'ORBITAL' : msg.speaker?.toUpperCase()}:
                                                     </span>
                                                     <span style={{ textShadow: isAlert ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>
                                                         {visibleText}
@@ -355,7 +353,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 </div>
                                             );
                                         })}
-                                        {gameState.extractionStatus === 'requested' && (
+                                        {gameState.extractionStatus === 'requested' && gameState.extractionMessageIndex < 0 && (
                                             <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
                                         )}
                                     </div>
@@ -383,11 +381,11 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                     </div>
 
                                     {/* DUST COST FOR EXTRACTION (If any) */}
-                                    {gameState.player.dust >= 4000 && (
+                                    {gameState.player.dust >= 10000 && (
                                         <button
                                             className="evac-button"
                                             onClick={() => {
-                                                if (gameState.player.dust < 4000) return;
+                                                if (gameState.player.dust < 10000) return;
                                                 fadeOutMusic(1.0);
                                                 playSfx('alert');
                                                 gameState.extractionStatus = 'requested';
@@ -395,7 +393,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 gameState.extractionMessageIndex = -1;
                                                 gameState.extractionMessageTimes = [];
                                                 gameState.extractionDialogTime = 0;
-                                                gameState.player.dust -= 4000;
+                                                gameState.player.dust -= 10000;
                                             }}
                                             style={{
                                                 marginTop: '10px',
@@ -414,7 +412,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
-                                            REQUEST EVACUATION (4000 DUST)
+                                            REQUEST EVACUATION (10,000 DUST)
                                         </button>
                                     )}
                                 </>

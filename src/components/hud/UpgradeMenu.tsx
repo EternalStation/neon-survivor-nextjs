@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import type { GameState, UpgradeChoice } from '../../logic/types';
-import { playUpgradeSfx } from '../../logic/AudioLogic';
+import type { GameState, UpgradeChoice } from '../../logic/core/types';
+import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
 import { UpgradeCard } from '../UpgradeCard';
 
 interface UpgradeMenuProps {

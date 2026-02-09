@@ -10,9 +10,20 @@ interface BottomRightPanelProps {
     dust: number;
     portalError: boolean;
     portalCost: number;
+    isFull?: boolean;
 }
 
-export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({ onInventoryToggle, unseenMeteorites, fps, portalKey, portalState, dust, portalError, portalCost }) => {
+export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
+    onInventoryToggle,
+    unseenMeteorites,
+    fps,
+    portalKey,
+    portalState,
+    dust,
+    portalError,
+    portalCost,
+    isFull
+}) => {
     const isPortalUnavailable = portalState !== 'closed' || dust < portalCost;
 
     return (
@@ -109,13 +120,13 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({ onInventoryT
                     position: 'relative',
                     width: 52,
                     height: 52,
-                    background: 'rgba(15, 23, 42, 0.7)',
-                    border: '2px solid rgba(148, 163, 184, 0.4)',
+                    background: isFull ? 'rgba(239, 68, 68, 0.2)' : 'rgba(15, 23, 42, 0.7)',
+                    border: isFull ? '2px solid #ef4444' : '2px solid rgba(148, 163, 184, 0.4)',
                     borderRadius: '14px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(125, 211, 252, 0.1)',
+                    boxShadow: isFull ? '0 0 30px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.2)' : '0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(125, 211, 252, 0.1)',
                     backdropFilter: 'blur(8px)',
                     pointerEvents: 'auto',
                     cursor: 'pointer',
@@ -123,37 +134,59 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({ onInventoryT
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1) translateY(-4px)';
-                    e.currentTarget.style.borderColor = 'rgba(125, 211, 252, 0.6)';
-                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(125, 211, 252, 0.2)';
+                    if (!isFull) e.currentTarget.style.borderColor = 'rgba(125, 211, 252, 0.6)';
+                    if (!isFull) e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(125, 211, 252, 0.2)';
                 }}
                 onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1) translateY(0)';
-                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.4)';
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(125, 211, 252, 0.1)';
+                    if (!isFull) e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.4)';
+                    if (!isFull) e.currentTarget.style.boxShadow = '0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(125, 211, 252, 0.1)';
                 }}
             >
                 {/* Meteorite Icon (SVG) - Jagged Rock Shape */}
-                <svg viewBox="0 0 100 100" width="34" height="34" style={{ filter: 'drop-shadow(0 0 8px #7dd3fc)' }}>
+                <svg viewBox="0 0 100 100" width="34" height="34" style={{ filter: isFull ? 'drop-shadow(0 0 8px #ef4444)' : 'drop-shadow(0 0 8px #7dd3fc)' }}>
                     <path
                         d="M30 20 L75 15 L90 40 L80 80 L50 90 L20 75 L10 45 Z"
                         fill="none"
-                        stroke="#7dd3fc"
+                        stroke={isFull ? '#ef4444' : '#7dd3fc'}
                         strokeWidth="6"
                         strokeLinejoin="round"
                     />
                     <path
                         d="M40 35 L65 30 L80 45 L70 70 L45 75 L30 60 Z"
-                        fill="#7dd3fc"
+                        fill={isFull ? '#ef4444' : '#7dd3fc'}
                         opacity="0.6"
                     />
                     {/* Small craters/details */}
-                    <circle cx="45" cy="45" r="4.5" fill="#7dd3fc" opacity="0.8" />
-                    <circle cx="65" cy="62" r="3.5" fill="#7dd3fc" opacity="0.8" />
-                    <circle cx="35" cy="65" r="2.5" fill="#7dd3fc" opacity="0.8" />
+                    <circle cx="45" cy="45" r="4.5" fill={isFull ? '#ef4444' : '#7dd3fc'} opacity="0.8" />
+                    <circle cx="65" cy="62" r="3.5" fill={isFull ? '#ef4444' : '#7dd3fc'} opacity="0.8" />
+                    <circle cx="35" cy="65" r="2.5" fill={isFull ? '#ef4444' : '#7dd3fc'} opacity="0.8" />
                 </svg>
 
+                {/* Full Text Indicator */}
+                {isFull && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: -4,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#ef4444',
+                        color: '#fff',
+                        fontSize: '9px',
+                        fontWeight: 900,
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)',
+                        textShadow: '0 0 3px rgba(0,0,0,0.5)',
+                        letterSpacing: '1px',
+                        zIndex: 10
+                    }}>
+                        FULL
+                    </div>
+                )}
+
                 {/* Unseen Badge */}
-                {unseenMeteorites > 0 && (
+                {unseenMeteorites > 0 && !isFull && (
                     <div style={{
                         position: 'absolute',
                         top: -10,

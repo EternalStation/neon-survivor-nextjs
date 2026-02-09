@@ -1,9 +1,9 @@
-import type { GameState } from '../logic/types';
+import type { GameState } from '../logic/core/types';
 import api from '../api/client';
-import { calcStat } from '../logic/MathUtils';
-import { calculateLegendaryBonus } from '../logic/LegendaryLogic';
-import { getArenaIndex } from '../logic/MapLogic';
-import { isBuffActive } from '../logic/BlueprintLogic';
+import { calcStat } from '../logic/utils/MathUtils';
+import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
+import { getArenaIndex } from '../logic/mission/MapLogic';
+import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 
 // Current game version - update this when you release new patches
 export const CURRENT_PATCH_VERSION = '1.0.1';
@@ -39,6 +39,7 @@ export interface RunSubmissionData {
         armor: number;
         speed: number;
     };
+    blueprints: any[];
 }
 
 
@@ -128,6 +129,15 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         hexLevelupOrder,
         snitchesCaught: gameState.snitchCaught || 0,
         deathCause: gameState.player.deathCause || 'Unknown',
+        blueprints: gameState.blueprints
+            .filter(bp => bp !== null)
+            .map(bp => ({
+                id: bp!.id,
+                type: bp!.type,
+                name: bp!.name,
+                status: bp!.status,
+                researched: bp!.researched
+            })),
         finalStats: (() => {
             const player = gameState.player;
             const arenaIdx = getArenaIndex(player.x, player.y);

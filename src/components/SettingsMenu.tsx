@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { setMusicVolume, setSfxVolume, getMusicVolume, getSfxVolume } from '../logic/AudioLogic';
+import { setMusicVolume, setSfxVolume, getMusicVolume, getSfxVolume } from '../logic/audio/AudioLogic';
 import { KeybindSettings } from './KeybindSettings';
 
 interface SettingsMenuProps {

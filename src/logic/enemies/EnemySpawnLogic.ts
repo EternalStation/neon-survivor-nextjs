@@ -1,10 +1,10 @@
 
-import type { GameState, Enemy, ShapeType } from '../types';
-import { SHAPE_DEFS, PALETTES, PULSE_RATES, SHAPE_CYCLE_ORDER } from '../constants';
-import { isInMap, getArenaIndex, getRandomPositionInArena } from '../MapLogic';
-import { playSfx } from '../AudioLogic';
-// import { spawnParticles } from '../ParticleLogic'; // Unused
-import { GAME_CONFIG } from '../GameConfig';
+import type { GameState, Enemy, ShapeType } from '../core/types';
+import { SHAPE_DEFS, PALETTES, PULSE_RATES, SHAPE_CYCLE_ORDER } from '../core/constants';
+import { isInMap, getArenaIndex, getRandomPositionInArena } from '../mission/MapLogic';
+import { playSfx } from '../audio/AudioLogic';
+// import { spawnParticles } from '../effects/ParticleLogic'; // Unused
+import { GAME_CONFIG } from '../core/GameConfig';
 
 // Helper to determine current game era params
 // Helper to determine current game era params
@@ -127,7 +127,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         isRare: false,
         isElite: false,
         spawnedAt: state.gameTime,
-        isFlanker: !isBoss && Math.random() < 0.10,
+        isFlanker: !isBoss && ['circle', 'triangle', 'square'].includes(chosenShape) && Math.random() < 0.10,
         flankAngle: Math.random() * Math.PI * 2,
         flankDistance: 400 + Math.random() * 200,
         particleOrbit: ['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0

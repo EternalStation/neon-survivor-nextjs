@@ -1,5 +1,5 @@
 
-import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/types';
+import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/core/types';
 
 export const RARITY_COLORS: Record<MeteoriteRarity, string> = {
     scrap: '#7FFF00',
@@ -77,4 +77,11 @@ export const getLegendaryInfo = (category: string, type: string) => {
         case 'drone_overdrive': return { ...base, icon: '🤖' };
         default: return base;
     }
+};
+
+export const getMeteoriteColor = (discoveredIn: string) => {
+    if (discoveredIn.includes('ECONOMIC')) return '#fbbf24'; // Yellow
+    if (discoveredIn.includes('COMBAT')) return '#f87171';   // Red
+    if (discoveredIn.includes('DEFENCE') || discoveredIn.includes('DEFENSE')) return '#60a5fa'; // Blue
+    return '#94a3b8'; // Slate-400 (Default/Grey)
 };

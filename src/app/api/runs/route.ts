@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
             snitchesCaught,
             deathCause,
             finalStats,
+            blueprints,
         } = body;
 
 
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
         patch_version, damage_dealt, damage_taken, damage_blocked,
         damage_blocked_armor, damage_blocked_collision, damage_blocked_projectile,
         damage_blocked_shield, radar_counts, meteorites_collected, portals_used,
-        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats
+        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats, blueprints
       ) VALUES (
         ${user.id}, ${score}, ${survivalTime}, ${kills}, ${bossKills || 0},
         ${classUsed}, ${patchVersion}, ${damageDealt || 0}, ${damageTaken || 0},
@@ -72,7 +73,8 @@ export async function POST(request: NextRequest) {
         ${JSON.stringify(radarCounts || {})}, ${meteoritesCollected || 0},
         ${portalsUsed || 0}, ${JSON.stringify(arenaTimes || { 0: 0, 1: 0, 2: 0 })},
         ${JSON.stringify(legendaryHexes || [])}, ${JSON.stringify(hexLevelupOrder || [])},
-        ${snitchesCaught || 0}, ${deathCause || 'Unknown'}, ${JSON.stringify(finalStats || {})}
+        ${snitchesCaught || 0}, ${deathCause || 'Unknown'}, ${JSON.stringify(finalStats || {})},
+        ${JSON.stringify(blueprints || [])}
       )
 
       RETURNING id, score, completed_at, survival_time
@@ -80,11 +82,16 @@ export async function POST(request: NextRequest) {
 
         const run = result[0];
 
-        // Calculate rank
+        // Calculate rank:
+        // Priority 1: death_cause = 'EVACUATED' (success)
+        // Priority 2: survival_time (descending)
         const rankResult = await sql`
       SELECT COUNT(*) + 1 as rank
       FROM game_runs
-      WHERE survival_time > ${run.survival_time}
+      WHERE 
+        (death_cause = 'EVACUATED' AND ${deathCause || 'Unknown'} != 'EVACUATED')
+        OR (death_cause = ${deathCause || 'Unknown'} AND survival_time > ${run.survival_time})
+        OR (death_cause != 'EVACUATED' AND ${deathCause || 'Unknown'} = 'EVACUATED' AND 1=0) 
     `;
 
         return NextResponse.json(

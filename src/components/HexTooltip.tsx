@@ -1,7 +1,7 @@
 import React from 'react';
-import type { GameState, LegendaryHex, Meteorite, LegendaryCategory } from '../logic/types';
+import type { GameState, LegendaryHex, Meteorite, LegendaryCategory } from '../logic/core/types';
 import './HexTooltip.css';
-import { calculateMeteoriteEfficiency } from '../logic/EfficiencyLogic';
+import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './modules/ModuleUtils';
 
 interface HexTooltipProps {

@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import type { GameState, MeteoriteRarity } from '../logic/types';
-import { spawnEnemy, spawnRareEnemy } from '../logic/EnemyLogic';
-import { createMeteorite } from '../logic/LootLogic';
-import { castSkill } from '../logic/SkillLogic';
-import { calcStat } from '../logic/MathUtils';
-import { getKeybinds } from '../logic/Keybinds';
-import { dropBlueprint } from '../logic/BlueprintLogic';
-import { BlueprintType } from '../logic/types';
+import type { GameState, MeteoriteRarity } from '../logic/core/types';
+import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
+import { createMeteorite } from '../logic/mission/LootLogic';
+import { castSkill } from '../logic/player/SkillLogic';
+import { calcStat } from '../logic/utils/MathUtils';
+import { getKeybinds } from '../logic/utils/Keybinds';
+import { dropBlueprint } from '../logic/upgrades/BlueprintLogic';
+import { BlueprintType } from '../logic/core/types';
 
 interface GameInputProps {
     gameState: React.MutableRefObject<GameState>;

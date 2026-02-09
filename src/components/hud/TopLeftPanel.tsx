@@ -1,7 +1,7 @@
 
 import React from 'react';
-import type { GameState } from '../../logic/types';
-import { getArenaIndex } from '../../logic/MapLogic';
+import type { GameState } from '../../logic/core/types';
+import { getArenaIndex } from '../../logic/mission/MapLogic';
 
 interface TopLeftPanelProps {
     gameState: GameState;
@@ -114,7 +114,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
                 }
 
                 // 2. BLUEPRINT BUFFS (Priority 1 - Sorted by Duration)
-                const addBp = (type: import('../../logic/types').BlueprintType, serial: string, text: string, color: string) => {
+                const addBp = (type: import('../../logic/core/types').BlueprintType, serial: string, text: string, color: string) => {
                     const endTime = gameState.activeBlueprintBuffs[type];
                     if (endTime) {
                         const timeLeft = Math.max(0, Math.floor(endTime - gameTime));

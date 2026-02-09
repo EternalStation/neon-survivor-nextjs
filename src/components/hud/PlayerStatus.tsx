@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import type { GameState } from '../../logic/types';
-import { CANVAS_WIDTH } from '../../logic/constants';
-import { getHexMultiplier, getHexLevel } from '../../logic/LegendaryLogic';
-import { PLAYER_CLASSES } from '../../logic/classes';
-import { isBuffActive } from '../../logic/BlueprintLogic';
-import { calcStat } from '../../logic/MathUtils';
+import type { GameState } from '../../logic/core/types';
+import { CANVAS_WIDTH } from '../../logic/core/constants';
+import { getHexMultiplier, getHexLevel } from '../../logic/upgrades/LegendaryLogic';
+import { PLAYER_CLASSES } from '../../logic/core/classes';
+import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
+import { calcStat } from '../../logic/utils/MathUtils';
 
 interface PlayerStatusProps {
     gameState: GameState;
