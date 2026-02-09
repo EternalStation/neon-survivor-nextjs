@@ -306,7 +306,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             // Ignore friendly zombies or dead/immune stuff
             // Friendly zombies shouldn't be hit by player bullets? Usually yes.
             // "on your side".
-            if (e.dead || e.hp <= 0 || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady)) continue;
+            if (e.dead || e.hp <= 0 || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground') continue;
 
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
             const hitRadius = e.size + 10;

@@ -2,11 +2,12 @@ import React from 'react';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
 
 interface ArenaSelectionProps {
-    onSelect: (arenaId: number) => void;
+    onSelect: (arenaId: number, tutorialEnabled: boolean) => void;
 }
 
 export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
     const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const [tutorialEnabled, setTutorialEnabled] = React.useState(true);
     const arenas = Object.values(ARENA_DATA);
 
     // Keyboard Navigation
@@ -22,7 +23,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                 setSelectedIndex(prev => (prev < arenas.length - 1 ? prev + 1 : 0));
             }
             if (code === 'space' || code === 'enter') {
-                onSelect(arenas[selectedIndex].id);
+                onSelect(arenas[selectedIndex].id, tutorialEnabled);
             }
         };
         window.addEventListener('keydown', handleKeys);
@@ -60,12 +61,59 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
 
             <div style={{ zIndex: 1, textAlign: 'center', marginBottom: '40px' }}>
                 <h1 style={{
-                    fontSize: '3rem',
-                    letterSpacing: '0.8rem',
-                    marginBottom: '10px',
+                    fontSize: '2.5rem',
+                    letterSpacing: '0.6rem',
+                    marginBottom: '5px',
                     textShadow: '0 0 30px rgba(59, 130, 246, 0.6)',
                     fontWeight: 900
                 }}>DEPLOYMENT ZONE</h1>
+
+                {/* Tutorial Toggle */}
+                <div
+                    className="tutorial-toggle"
+                    onClick={() => setTutorialEnabled(!tutorialEnabled)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        padding: '10px 20px',
+                        borderRadius: '30px',
+                        border: `1px solid ${tutorialEnabled ? '#3b82f6' : 'rgba(148, 163, 184, 0.3)'}`,
+                        margin: '0 auto',
+                        width: 'fit-content',
+                        transition: 'all 0.3s'
+                    }}
+                >
+                    <div style={{
+                        width: '18px',
+                        height: '18px',
+                        border: '2px solid #3b82f6',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: tutorialEnabled ? '#3b82f6' : 'transparent',
+                        transition: 'all 0.2s'
+                    }}>
+                        {tutorialEnabled && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        )}
+                    </div>
+                    <span style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 900,
+                        letterSpacing: '2px',
+                        color: tutorialEnabled ? '#fff' : '#94a3b8',
+                        textShadow: tutorialEnabled ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                    }}>
+                        ENABLE TUTORIAL HINTS
+                    </span>
+                </div>
             </div>
 
             <div style={{
@@ -79,7 +127,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                 {arenas.map((arena, i) => (
                     <div
                         key={arena.id}
-                        onClick={() => onSelect(arena.id)}
+                        onClick={() => onSelect(arena.id, tutorialEnabled)}
                         onMouseEnter={() => setSelectedIndex(i)}
                         style={{
                             flex: 1,
@@ -202,6 +250,10 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                 @keyframes grid-scroll {
                     from { background-position: 0 0; }
                     to { background-position: 0 1000px; }
+                }
+                .tutorial-toggle:hover {
+                    background: rgba(59, 130, 246, 0.2) !important;
+                    transform: scale(1.05);
                 }
             `}</style>
         </div>

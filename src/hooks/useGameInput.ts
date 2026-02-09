@@ -10,6 +10,8 @@ import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
 
+import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
+
 interface GameInputProps {
     gameState: React.MutableRefObject<GameState>;
     setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
@@ -285,6 +287,12 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             }
             if (cheatBuffer.endsWith('z2')) {
                 gameState.current.activeEvent = { type: 'legion_formation', startTime: gameState.current.gameTime, duration: 30, endTime: gameState.current.gameTime + 30, data: { legions: [] } };
+                cheatBuffer = '';
+            }
+            if (cheatBuffer.endsWith('z3')) {
+                const p = gameState.current.player;
+                spawnVoidBurrower(gameState.current, p.x + 500, p.y + 500);
+                spawnFloatingNumber(gameState.current, p.x, p.y, 'VOID BURROWER SPAWNED!', '#E942FF', true);
                 cheatBuffer = '';
             }
 

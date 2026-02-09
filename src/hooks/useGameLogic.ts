@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/types';
+import { GameState, UpgradeChoice, LegendaryHex, PlayerClass, TutorialStep } from '../logic/core/types';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { updatePlayer } from '../logic/player/PlayerLogic';
 import { updateEnemies } from '../logic/enemies/EnemyLogic';
@@ -16,6 +16,7 @@ import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/m
 import { calcStat } from '../logic/utils/MathUtils';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { spawnBullet } from '../logic/combat/ProjectileSpawning';
+import { updateTutorial } from '../logic/core/TutorialLogic';
 
 interface UseGameLogicProps {
     gameState: React.MutableRefObject<GameState>;
@@ -88,6 +89,19 @@ export function useGameLogic({
             } else {
                 updatePlayer(state, keys.current, eventHandler, inputVector.current);
             }
+
+            // Tutorial Input Tracking
+            if (state.tutorial.isActive && state.tutorial.currentStep === TutorialStep.MOVEMENT) {
+                // Check WASD/Arrows
+                ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].forEach(k => {
+                    if (keys.current[k]) state.tutorial.pressedKeys.add(k);
+                });
+
+                // Check Joystick
+                if (Math.abs(inputVector.current.x) > 0.1 || Math.abs(inputVector.current.y) > 0.1) {
+                    state.tutorial.hasMoved = true;
+                }
+            }
         }
 
         if (state.spawnTimer > (GAME_CONFIG.PLAYER.SPAWN_DURATION * 0.9) && !state.hasPlayedSpawnSound) {
@@ -101,6 +115,7 @@ export function useGameLogic({
         if (state.extractionStatus !== 'departing') {
             updateEnemies(state, eventHandler, step);
             updateDirector(state, step);
+            updateTutorial(state, step);
         }
         updateExtraction(state, step);
 
@@ -518,6 +533,7 @@ export function useGameLogic({
                 state.isPaused = true;
                 state.pendingLevelUps--;
                 playSfx('level');
+                if (state.tutorial.isActive) state.tutorial.stepTimer = 0;
             }
         } else if (state.pendingLevelUps > 0 && !state.isPaused) {
             const choices = spawnUpgrades(state, false);

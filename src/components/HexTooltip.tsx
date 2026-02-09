@@ -150,7 +150,7 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
 
                         if (hex.type === 'ChronoPlating' && p.includes('Cooldown Reduction')) {
                             const curCDR = (gameState.player.cooldownReduction || 0) * 100;
-                            cleanLabel = `Cooldown Reduction [${curCDR.toFixed(2)}%]`;
+                            cleanLabel = `Cooldown Reduction [${curCDR.toFixed(1)}%]`;
                         }
 
                         return (

@@ -6,7 +6,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 export function scanForMerges(state: GameState) {
     const { enemies, spatialGrid } = state;
     for (const e of enemies) {
-        if (e.dead || e.boss || e.isElite || e.isRare || e.mergeState || e.legionId) continue;
+        if (e.dead || e.boss || e.isElite || e.isRare || e.mergeState || e.legionId || e.wormId) continue;
         if (e.mergeCooldown && state.gameTime < e.mergeCooldown) continue;
         const neighbors = spatialGrid.query(e.x, e.y, 100);
         const candidates = neighbors.filter(n =>

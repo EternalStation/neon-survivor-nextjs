@@ -73,7 +73,7 @@ export const createInitialPlayer = (selectedClass?: PlayerClass, startingArenaId
 
 import { SpatialGrid } from './SpatialGrid';
 
-export const createInitialGameState = (selectedClass?: PlayerClass, startingArenaId: number = 0): GameState => ({
+export const createInitialGameState = (selectedClass?: PlayerClass, startingArenaId: number = 0, tutorialEnabled: boolean = true): GameState => ({
     player: createInitialPlayer(selectedClass, startingArenaId),
     enemies: [],
     bullets: [],
@@ -163,5 +163,18 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     pendingLevelUps: 0,
     levelUpTimer: 0,
     pendingBossKills: 0,
-    bossKillTimer: 0
+    bossKillTimer: 0,
+
+    tutorial: {
+        currentStep: 0, // TutorialStep.MOVEMENT (Avoiding circular dependency if enum not imported, but it is valid TS to use enum if imported or just 0)
+        isActive: tutorialEnabled, // Set based on parameter
+        stepTimer: 0,
+        completedSteps: [],
+        pressedKeys: new Set(),
+        hasMoved: false,
+        hasKilled: false,
+        hasCollectedMeteorite: false,
+        hasOpenedModules: false,
+        hasOpenedStats: false
+    }
 });

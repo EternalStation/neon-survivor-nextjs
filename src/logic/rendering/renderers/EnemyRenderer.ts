@@ -662,29 +662,171 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 };
                 drawBlade(-1, -0.6, 1.0, 1.0); drawBlade(-1, 0, 1.2, 0.5); drawBlade(-1, 0.6, 1.0, 1.0);
                 drawBlade(1, -0.6, 1.0, 1.0); drawBlade(1, 0, 1.2, 0.5); drawBlade(1, 0.6, 1.0, 1.0);
+            } else if (e.shape === 'worm') {
+                const isPromoDormant = e.wormPromotionTimer && state.gameTime < e.wormPromotionTimer;
+                const isHead = e.wormRole === 'head' && !isPromoDormant;
+                const t = state.gameTime;
+                const isUnderground = e.wormBurrowState === 'underground';
+                const alphaMult = isUnderground ? 0.35 : (isPromoDormant ? 0.5 : 1.0);
+
+                // Dimming logic for colors
+                const dim = (hex: string, amt: number) => {
+                    if (isUnderground) return hex + '88'; // Add transparency
+                    return hex;
+                };
+
+                const moveAngle = (e.vx && e.vy) ? Math.atan2(e.vy, e.vx) : 0;
+                const headColor = dim(innerColor, 0.5);
+                const outlineColor = dim(outerColor, 0.5);
+                const eyesColor = dim(coreColor, 0.5);
+
+                if (isHead) {
+                    // --- CRAZY SCARY HEAD DESIGN ---
+                    ctx.save();
+                    ctx.globalAlpha *= alphaMult;
+
+                    // 1. Mandibles / Jaws (Jagged and Sharp)
+                    const drawMandible = (side: number) => {
+                        const open = Math.sin(t * 15) * 0.4 + 0.5;
+                        const ang = moveAngle + (0.7 + open) * side;
+
+                        ctx.beginPath();
+                        ctx.strokeStyle = headColor;
+                        ctx.lineWidth = 4;
+                        ctx.lineJoin = 'round';
+                        ctx.moveTo(Math.cos(moveAngle + 0.4 * side) * size * 0.8, Math.sin(moveAngle + 0.4 * side) * size * 0.8);
+
+                        // Joint 1
+                        const j1x = Math.cos(ang) * size * 1.5;
+                        const j1y = Math.sin(ang) * size * 1.5;
+                        ctx.lineTo(j1x, j1y);
+
+                        // Joint 2 (Hooked tip)
+                        const tipAng = ang + 0.8 * side;
+                        const tX = j1x + Math.cos(tipAng) * size * 0.8;
+                        const tY = j1y + Math.sin(tipAng) * size * 0.8;
+                        ctx.lineTo(tX, tY);
+                        ctx.stroke();
+
+                        // Teeth/Spikes on Mandible
+                        ctx.beginPath();
+                        ctx.fillStyle = eyesColor; // Sulfur teeth
+                        for (let i = 0; i < 3; i++) {
+                            const p = 0.3 + i * 0.3;
+                            const sx = j1x * (1 - p) + (Math.cos(moveAngle + 0.4 * side) * size * 0.8) * p;
+                            const sy = j1y * (1 - p) + (Math.sin(moveAngle + 0.4 * side) * size * 0.8) * p;
+                            ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                        }
+                        ctx.fill();
+                    };
+                    drawMandible(1);
+                    drawMandible(-1);
+
+                    // 2. Skull Shape (Jagged Pentagonal Shield)
+                    ctx.beginPath();
+                    const skullSteps = 8;
+                    for (let i = 0; i <= skullSteps; i++) {
+                        const ang = moveAngle + (i / skullSteps - 0.5) * Math.PI * 1.2;
+                        const r = size * (1.2 + Math.random() * 0.1);
+                        const px = Math.cos(ang) * r;
+                        const py = Math.sin(ang) * r;
+                        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                    }
+                    // Back logic for head connection
+                    ctx.lineTo(Math.cos(moveAngle + Math.PI) * size * 0.5, Math.sin(moveAngle + Math.PI) * size * 0.5);
+                    ctx.closePath();
+                    ctx.strokeStyle = outlineColor;
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                    ctx.fillStyle = '#111827';
+                    ctx.fill();
+
+                    // 3. Multiple Eyes (Spider-like / Eldritch)
+                    const eyePos = [
+                        { a: 0.2, d: 0.8, s: 4 }, { a: -0.2, d: 0.8, s: 4 }, // Main eyes
+                        { a: 0.5, d: 0.6, s: 2 }, { a: -0.5, d: 0.6, s: 2 }, // Side eyes
+                        { a: 0, d: 1.1, s: 3 } // Forward eye
+                    ];
+
+                    const isCharging = e.wormAIState === 'charging' && !isUnderground;
+                    const activeEyesColor = isCharging ? '#ff0000' : eyesColor;
+                    const finalEyesColor = isUnderground ? activeEyesColor + (activeEyesColor.length === 7 ? '88' : '') : activeEyesColor;
+
+                    ctx.shadowBlur = isUnderground ? 5 : 15;
+                    ctx.shadowColor = finalEyesColor;
+                    ctx.fillStyle = finalEyesColor;
+                    eyePos.forEach(p => {
+                        const ep = (isCharging ? 1.2 : 0.8) + Math.sin(t * 10 + p.a * 5) * 0.2;
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(moveAngle + p.a) * size * p.d, Math.sin(moveAngle + p.a) * size * p.d, p.s * ep, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    ctx.restore();
+
+                } else {
+                    // --- ARMORED DIAMOND SEGMENTS ---
+                    ctx.save();
+                    ctx.globalAlpha *= alphaMult;
+
+                    // Segment Rotation (follow head's general line)
+                    const rot = t * 3 + e.wormSegmentIndex! * 0.4;
+                    ctx.rotate(rot);
+
+                    // Diamond Shape
+                    ctx.beginPath();
+                    ctx.moveTo(0, -size * 1.2);
+                    ctx.lineTo(size * 0.8, 0);
+                    ctx.lineTo(0, size * 1.2);
+                    ctx.lineTo(-size * 0.8, 0);
+                    ctx.closePath();
+
+                    ctx.strokeStyle = outlineColor;
+                    ctx.lineWidth = isUnderground ? 1.5 : 4;
+                    ctx.stroke();
+                    ctx.fillStyle = isUnderground ? '#0f172a' : '#1e293b';
+                    ctx.fill();
+
+                    // Inner detail (Fragmented core)
+                    if (!isUnderground) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = headColor;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(-size * 0.4, 0);
+                        ctx.lineTo(size * 0.4, 0);
+                        ctx.moveTo(0, -size * 0.6);
+                        ctx.lineTo(0, size * 0.6);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // Underground Ripple (MUCH DIMMER)
+                if (isUnderground) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.2;
+                    ctx.strokeStyle = outlineColor;
+                    ctx.setLineDash([4, 12]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, size * (1.5 + Math.sin(t * 5) * 0.2), 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // IMPORTANT: Define empty path so the default stroke/fill at the end doesn't draw anything extra
+                ctx.beginPath();
             } else if (e.shape === 'glitcher') {
                 // Prism Glitcher: Pure Glitch Lines (No Shapes)
                 const t = state.gameTime;
 
-                // EMERGENCY FALLBACK: Draw a bright pink dot at the center
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0); // Temporary Screen Space
-                ctx.fillStyle = '#ff00ff';
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                // ONLY draw glitch lines shooting out - no shapes!
-                const lineCount = 8; // More lines for better visibility
+                // ONLY 2 glitch lines!
+                const lineCount = 2;
                 for (let i = 0; i < lineCount; i++) {
                     ctx.save();
                     const angle = (i / lineCount) * Math.PI * 2 + t * 5;
                     const length = size * (1.8 + Math.sin(t * 20 + i) * 0.7);
 
-                    // Alternate colors: pink, cyan, white
-                    const colors = ['#ff00ff', '#00ffff', '#ffffff'];
-                    ctx.strokeStyle = colors[i % 3];
+                    // Alternate colors: pink and cyan
+                    ctx.strokeStyle = i === 0 ? '#ff00ff' : '#00ffff';
                     ctx.lineWidth = 3;
                     ctx.globalAlpha = 0.7 + Math.sin(t * 15 + i) * 0.3; // Pulsing opacity
 

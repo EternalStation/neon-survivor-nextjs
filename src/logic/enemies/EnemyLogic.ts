@@ -14,6 +14,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette } from './EnemySpawnLogic';
 import { scanForMerges, manageMerges } from './EnemyMergeLogic';
 import { updateZombie, updateSnitch, updateMinion, updatePrismGlitcher } from './UniqueEnemyLogic';
+import { updateVoidBurrower } from './WormLogic';
 import { getFlankingVelocity } from './EnemyAILogic';
 
 // Helper to determine current game era params
@@ -64,6 +65,74 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
     // Rare Spawning Logic
     if (state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         manageRareSpawnCycles(state);
+    }
+
+    // --- PRISM GLITCHER RANDOM SPAWN ---
+    // After 10 minutes, 15% chance to schedule a spawn for a random second within that minute window
+    if (state.glitcherLastCheckedMinute === undefined) state.glitcherLastCheckedMinute = 9; // Start checking from minute 10
+    const currentMinute = Math.floor(gameTime / 60);
+
+    const glitcherAlive = state.enemies.some(e => e.shape === 'glitcher' && !e.dead);
+
+    if (currentMinute > state.glitcherLastCheckedMinute && !state.glitcherScheduledSpawnTime && !glitcherAlive && currentMinute >= 10) {
+        state.glitcherLastCheckedMinute = currentMinute;
+
+        // 15% chance per minute window (e.g. 10-11m, 12-13m)
+        if (Math.random() < 0.15) {
+            const randomSeconds = Math.random() * 60;
+            const spawnTime = currentMinute * 60 + randomSeconds;
+            state.glitcherScheduledSpawnTime = spawnTime;
+            // console.log(`[GLITCHER] Scheduled for minute ${currentMinute}: at ${Math.floor(randomSeconds)}s`);
+        }
+    }
+
+    // Execute scheduled glitcher spawn
+    if (state.glitcherScheduledSpawnTime && gameTime >= state.glitcherScheduledSpawnTime) {
+        // Only spawn if another one didn't appear somehow (rare)
+        if (!glitcherAlive) {
+            const p = state.player;
+            const angle = Math.random() * Math.PI * 2;
+            const dToPlayer = 1200; // Spawn far away (standard enemy distance)
+            const spawnX = p.x + Math.cos(angle) * dToPlayer;
+            const spawnY = p.y + Math.sin(angle) * dToPlayer;
+
+            spawnEnemy(state, spawnX, spawnY, 'glitcher');
+            console.log(`[GLITCHER] Spawn triggered at scheduled time ${gameTime.toFixed(1)}s (Dist: 1200px)`);
+        }
+        state.glitcherScheduledSpawnTime = undefined;
+    }
+
+    // --- VOID BURROWER RANDOM SPAWN ---
+    // After 5 minutes, 8% chance per minute to schedule a spawn
+    if (state.wormLastCheckedMinute === undefined) state.wormLastCheckedMinute = 4; // Start checking from minute 5
+
+    const wormAlive = state.enemies.some(e => e.shape === 'worm' && !e.dead);
+
+    if (currentMinute > state.wormLastCheckedMinute && !state.wormScheduledSpawnTime && !wormAlive && currentMinute >= 5) {
+        state.wormLastCheckedMinute = currentMinute;
+
+        if (Math.random() < 0.08) { // 8% chance
+            const randomSeconds = Math.random() * 60;
+            const spawnTime = currentMinute * 60 + randomSeconds;
+            state.wormScheduledSpawnTime = spawnTime;
+            console.log(`[WORM] Scheduled for minute ${currentMinute}: at ${Math.floor(randomSeconds)}s`);
+        }
+    }
+
+    // Execute scheduled worm spawn
+    if (state.wormScheduledSpawnTime && gameTime >= state.wormScheduledSpawnTime) {
+        if (!wormAlive) {
+            const p = state.player;
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 800 + Math.random() * 300; // Spawn further away to orbit
+            const spawnX = p.x + Math.cos(angle) * distance;
+            const spawnY = p.y + Math.sin(angle) * distance;
+
+            spawnEnemy(state, spawnX, spawnY, 'worm');
+            playSfx('warning'); // Sound cue for boss-like unique
+            spawnFloatingNumber(state, p.x, p.y, 'VOID BURROWER DETECTED', '#ff0000', true);
+        }
+        state.wormScheduledSpawnTime = undefined;
     }
 
     // Boss Spawning (Scheduled)
@@ -291,9 +360,12 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         const params = getProgressionParams(gameTime);
         e.fluxState = params.fluxState;
 
-        if (!e.isNeutral && !e.isRare && !e.isNecroticZombie) {
+        if (!e.isNeutral && !e.isRare && !e.isNecroticZombie && e.shape !== 'worm' && e.shape !== 'glitcher') {
             const eventPalette = getEventPalette(state);
             e.eraPalette = eventPalette || params.eraPalette.colors;
+        } else if (e.shape === 'worm') {
+            // Hard enforce worm palette to be safe
+            e.eraPalette = undefined; // Force it to use its unique palette
         }
 
         // Particle Leakage (Starts at 30m, stronger at 60m+)
@@ -312,6 +384,11 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         // --- ZOMBIE LOGIC ---
         if (e.isZombie) {
             updateZombie(e, state, step, onEvent);
+            return;
+        }
+
+        if (e.shape === 'worm') {
+            updateVoidBurrower(e, state, step, onEvent);
             return;
         }
 

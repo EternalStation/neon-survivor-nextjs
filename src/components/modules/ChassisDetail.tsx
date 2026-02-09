@@ -33,7 +33,7 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
 
                 {/* Header Section */}
                 <div className="chassis-header">
-                    <div className="chassis-icon-container" style={playerClass.iconUrl ? { background: 'none', border: 'none', boxShadow: 'none' } : {}}>
+                    <div className="chassis-icon-container center-class-icon" style={playerClass.iconUrl ? { background: 'none', border: 'none', boxShadow: 'none' } : {}}>
                         {playerClass.iconUrl ? (
                             <img src={playerClass.iconUrl} alt="chassis-icon" className="chassis-header-icon" style={{ width: '100%', height: '100%' }} />
                         ) : (

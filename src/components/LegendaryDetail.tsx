@@ -258,11 +258,11 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
 
                         if (hex.type === 'ChronoPlating' && p.includes('Cooldown Reduction')) {
                             const curCDR = (gameState.player.cooldownReduction || 0) * 100;
-                            cleanLabel = `[${curCDR.toFixed(2)}%] Cooldown Reduction`;
+                            cleanLabel = `[${curCDR.toFixed(1)}%] Cooldown Reduction`;
                             baseValue = 0.25;
                             hasPercent = true;
                             isNumeric = true;
-                            displayValue = `+${(0.25 * multiplier).toFixed(2)}%`;
+                            displayValue = `+${(0.25 * multiplier).toFixed(1)}%`;
                         }
 
                         return (

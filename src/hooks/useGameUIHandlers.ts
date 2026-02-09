@@ -45,6 +45,21 @@ export function useGameUIHandlers({
             return false;
         }
 
+        // --- VOID BURROWER DIMENSIONAL SUPPRESSION ---
+        const hasWorm = gameState.current.enemies.some(e => e.shape === 'worm' && !e.dead);
+        if (hasWorm) {
+            gameState.current.portalBlockedByWorms = true;
+            setPortalError(true);
+            playSfx('stun-disrupt'); // Distorted electronic sound
+            setUiState(p => p + 1);
+            setTimeout(() => {
+                setPortalError(false);
+                gameState.current.portalBlockedByWorms = false;
+                setUiState(p => p + 1);
+            }, 2000);
+            return false;
+        }
+
         if (gameState.current.portalState === 'closed') {
             if (gameState.current.player.dust >= cost) {
                 gameState.current.player.dust -= cost;
@@ -66,9 +81,9 @@ export function useGameUIHandlers({
         return false;
     }, [gameState, setPortalError, setUiState]);
 
-    const restartGame = useCallback((selectedClass?: PlayerClass, startingArenaId: number = 0, username?: string) => {
+    const restartGame = useCallback((selectedClass?: PlayerClass, startingArenaId: number = 0, username?: string, tutorialEnabled: boolean = true) => {
         const classToUse = selectedClass || gameState.current.moduleSockets.center || undefined;
-        gameState.current = createInitialGameState(classToUse, startingArenaId);
+        gameState.current = createInitialGameState(classToUse, startingArenaId, tutorialEnabled);
         if (username) gameState.current.playerName = username;
 
         setGameOver(false);

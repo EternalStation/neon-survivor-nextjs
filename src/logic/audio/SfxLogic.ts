@@ -217,7 +217,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -640,6 +640,12 @@ export function playSfx(type: SfxType) {
     }
     else if (type === 'zombie-consume') {
         playShootDing();
+    }
+    else if (type === 'dash') {
+        playSfx('sonic-wave');
+    }
+    else if (type === 'eruption') {
+        playSfx('impact');
     }
 }
 

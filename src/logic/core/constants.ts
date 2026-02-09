@@ -54,7 +54,8 @@ export const SHAPE_DEFS: Record<string, { type: string; hpMult: number; speedMul
     diamond: { type: 'diamond', hpMult: 0.6, speedMult: 1.5, sizeMult: 1.0, spawnWeight: 1.0 },
     pentagon: { type: 'pentagon', hpMult: 2.0, speedMult: 0.8, sizeMult: 1.5, spawnWeight: 0.25 },
     glitcher: { type: 'glitcher', hpMult: 1.5, speedMult: 1.4, sizeMult: 1.1, spawnWeight: 0.05 },
-    hexagon: { type: 'hexagon', hpMult: 1.0, speedMult: 1.0, sizeMult: 1.0, spawnWeight: 0 } // Legion only
+    hexagon: { type: 'hexagon', hpMult: 1.0, speedMult: 1.0, sizeMult: 1.0, spawnWeight: 0 }, // Legion only
+    worm: { type: 'worm', hpMult: 1.5, speedMult: 1.0, sizeMult: 1.2, spawnWeight: 0 } // Unique only
 };
 
 // Core, Medium, Dark (for Cycle Logic)

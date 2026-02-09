@@ -62,7 +62,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
     TEMPORAL_GUARD: {
         type: 'TEMPORAL_GUARD',
         name: 'Temporal Guard',
-        serial: 'GUAR-D',
+        serial: 'GUAR_D',
         desc: 'Block lethal hit, teleport to random safe location (min 2500u offset) and grant 1.5s immunity. Duration 300s.',
         cost: 100,
         duration: 300 // 5 min

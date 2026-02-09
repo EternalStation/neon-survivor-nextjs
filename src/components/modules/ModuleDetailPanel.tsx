@@ -5,6 +5,8 @@ import { LegendaryDetail } from '../LegendaryDetail';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { ARENA_DATA } from '../../logic/mission/MapLogic';
 import { EXTRACTION_MESSAGES } from '../../logic/mission/ExtractionLogic';
+import type { BestiaryEntry } from '../../data/BestiaryData';
+import { BestiaryDetailView } from './BestiaryDetailView';
 import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 
@@ -20,6 +22,7 @@ interface ModuleDetailPanelProps {
     hoveredBlueprint: Blueprint | null;
     onCancelHoverTimeout: () => void;
     onMouseLeaveItem: (delay?: number) => void;
+    selectedBestiaryEnemy?: BestiaryEntry | null;
 }
 
 export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
@@ -31,7 +34,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     lockedItem,
     hoveredBlueprint,
     onCancelHoverTimeout,
-    onMouseLeaveItem
+    onMouseLeaveItem,
+    selectedBestiaryEnemy
 }) => {
     const terminalRef = React.useRef<HTMLDivElement>(null);
     const lastTypedCountRef = React.useRef(0);
@@ -76,7 +80,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
         }}>
-            <div className="data-panel" style={{
+            <div className="data-panel module-detail-panel" style={{
                 width: '100%',
                 height: '100%',
                 background: 'rgba(5, 5, 15, 0.95)',
@@ -101,19 +105,25 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         hex={hoveredHex.hex}
                         gameState={gameState}
                         hexIdx={hoveredHex.index}
+                        pending={false}
                     />
-                ) : (hoveredItem || lockedItem) && !movedItem ? (
+                ) : lockedItem ? (
                     <MeteoriteTooltip
-                        meteorite={(lockedItem?.item || hoveredItem?.item) as Meteorite}
+                        meteorite={lockedItem.item}
                         gameState={gameState}
-                        x={0} y={0}
-                        meteoriteIdx={moduleSockets.diamonds.indexOf((lockedItem?.item || hoveredItem?.item))}
+                        x={lockedItem.x}
+                        y={lockedItem.y}
                         isEmbedded={true}
-                        isInteractive={true}
-                        onMouseEnter={onCancelHoverTimeout}
-                        onMouseLeave={() => onMouseLeaveItem(100)}
                     />
-                ) : (hoveredBlueprint) ? (
+                ) : hoveredItem ? (
+                    <MeteoriteTooltip
+                        meteorite={hoveredItem.item}
+                        gameState={gameState}
+                        x={hoveredItem.x}
+                        y={hoveredItem.y}
+                        isEmbedded={true}
+                    />
+                ) : hoveredBlueprint ? (
                     <div style={{
                         width: '100%', height: '100%',
                         display: 'flex', flexDirection: 'column',
@@ -189,9 +199,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                         </div>
                                     ) : isBuffActive(gameState, hoveredBlueprint.type) ? (
                                         <div style={{ marginTop: '10px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid #22c55e', color: '#4ade80', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 900, fontSize: '11px', letterSpacing: '1px' }}>
-                                            PROTOCOL ACTIVE {hoveredBlueprint.type === 'QUANTUM_SCRAPPER'
-                                                ? `(${gameState.activeBlueprintCharges[hoveredBlueprint.type]} USES)`
-                                                : `(${Math.max(0, Math.ceil(gameState.activeBlueprintBuffs[hoveredBlueprint.type]! - gameState.gameTime) - 1)}s)`}
+                                            PROTOCOL ACTIVE
                                         </div>
                                     ) : (
                                         <div style={{ marginTop: '10px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', color: '#60a5fa', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 900, fontSize: '11px', letterSpacing: '1px', opacity: 0.7 }}>
@@ -201,6 +209,88 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                 </>
                             )}
                         </div>
+                    </div>
+                ) : selectedBestiaryEnemy ? (
+                    <BestiaryDetailView entry={selectedBestiaryEnemy} />
+                ) : extractionDialogActive ? (
+                    // EXTRACTION TERMINAL
+                    <div ref={terminalRef} style={{
+                        width: '100%',
+                        height: '100%',
+                        padding: '20px',
+                        fontFamily: 'monospace',
+                        color: extractionDialogActive ? '#22c55e' : '#4ade80',
+                        overflowY: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        textShadow: '0 0 5px rgba(34, 197, 94, 0.5)',
+                        fontSize: '14px',
+                        lineHeight: '1.4'
+                    }}>
+                        {/* TERMINAL CONTENT */}
+                        {(() => {
+                            const visibleMessages = EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1);
+                            const hasAlert = visibleMessages.some(m => (m as any).isAlert);
+
+                            return (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '12px'
+                                    }}>
+                                    {/* TERMINAL HEADER */}
+                                    <div style={{ borderBottom: '1px solid ' + (hasAlert ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'), paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', opacity: 0.85, color: hasAlert ? '#ef4444' : 'inherit' }}>
+                                        <span>SIGNAL INTERCEPT :: ENCRYPTED</span>
+                                        <span style={{ animation: 'pulse-text 1s infinite' }}>{hasAlert ? 'CRITICAL_ALERT' : 'COMMS_ACTIVE'}</span>
+                                    </div>
+
+                                    {/* MESSAGES */}
+                                    {visibleMessages.map((msg, i) => {
+                                        const resolvedText = msg.text
+                                            .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
+                                            .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
+                                            .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
+                                        const clock = gameState.extractionDialogTime ?? 0;
+                                        const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
+                                        const elapsed = Math.max(0, clock - startTime);
+                                        const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
+                                        const visibleText = resolvedText.slice(0, revealCount);
+                                        const isYou = (msg as any).speaker === 'you';
+                                        const isAlert = (msg as any).isAlert;
+
+                                        return (
+                                            <div key={i} style={{
+                                                padding: '6px 0',
+                                                borderLeft: !isYou ? (isAlert ? '2px solid #ef4444' : '2px solid #3b82f6') : 'none',
+                                                borderRight: isYou ? '2px solid #f59e0b' : 'none',
+                                                paddingLeft: !isYou ? '10px' : '0',
+                                                paddingRight: isYou ? '10px' : '0',
+                                                textAlign: isYou ? 'right' : 'left',
+                                                alignSelf: isYou ? 'flex-end' : 'flex-start',
+                                                maxWidth: '95%',
+                                                color: isYou ? '#fde68a' : (isAlert ? '#fca5a5' : '#93c5fd'),
+                                                animation: 'typewriter 0.5s ease-out forwards',
+                                                lineHeight: '1.7',
+                                                fontSize: '13px'
+                                            }}>
+                                                <span style={{ color: isYou ? '#fbbf24' : (isAlert ? '#ef4444' : '#60a5fa'), opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
+                                                    {isYou ? 'YOU' : msg.speaker === 'comm' ? 'ORBITAL' : msg.speaker?.toUpperCase()}:
+                                                </span>
+                                                <span style={{ textShadow: isAlert ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>
+                                                    {visibleText}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                    {gameState.extractionStatus === 'requested' && gameState.extractionMessageIndex < 0 && (
+                                        <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                        )
                     </div>
                 ) : (
                     <div style={{
@@ -455,11 +545,12 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             }
                         `}</style>
                     </div>
-                )}
+                )
+                }
             </div>
         </div>
-    );
-};
+    )
+}
 
 
 

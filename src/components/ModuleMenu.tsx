@@ -4,11 +4,12 @@ import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/c
 
 import { HexGrid } from './modules/HexGrid';
 
-import { InventoryPanel, PerkFilter } from './modules/InventoryPanel';
+import { InventoryPanel } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
-import { getMeteoriteImage, getDustValue, RARITY_ORDER } from './modules/ModuleUtils';
+import { getMeteoriteImage, getDustValue, RARITY_ORDER, PerkFilter, matchesFilter } from './modules/ModuleUtils';
 import { isBuffActive, researchBlueprint } from '../logic/upgrades/BlueprintLogic';
+import type { BestiaryEntry } from '../data/BestiaryData';
 import { BlueprintBay } from './BlueprintBay';
 import { Blueprint } from '../logic/core/types';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
@@ -41,6 +42,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [isRecycleMode, setIsRecycleMode] = useState(false);
     const [recyclingAnim, setRecyclingAnim] = useState(false); // Used for visual feedback on button
     const [dustIndicators, setDustIndicators] = useState<{ id: number, baseValue: number, bonusValue: number }[]>([]);
+
+    const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
 
     // Persistent Filter State (Lifted from InventoryPanel)
     const [coreFilter, setCoreFilter] = useState({
@@ -82,6 +85,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             setHoveredHex(null);
             setHoveredBlueprint(null);
             setMovedItem(null);
+            setSelectedBestiaryEnemy(null);
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -357,16 +361,26 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             return;
         }
 
-        // 1. Preserve Safe Slots (0-9) and Spacer Row (10-19)
-        const protectedSlots = gameState.inventory.slice(0, 20);
+        // 1. Preserve Safe Slots (0-9)
+        const protectedSlots = gameState.inventory.slice(0, 10);
 
-        // 2. Collect & Sort Storage Items (20+)
-        const storageItems = gameState.inventory.slice(20).filter((m): m is Meteorite => m !== null);
+        // 2. Collect & Sort Storage Items (10+)
+        const storageItems = gameState.inventory.slice(10).filter((m): m is Meteorite => m !== null);
 
         const rarityMap: Record<string, number> = {};
         RARITY_ORDER.forEach((r, i) => rarityMap[r] = i);
 
-        storageItems.sort((a, b) => rarityMap[b.rarity] - rarityMap[a.rarity]);
+        storageItems.sort((a, b) => {
+            const matchA = matchesFilter(a, coreFilter, perkFilters);
+            const matchB = matchesFilter(b, coreFilter, perkFilters);
+
+            // Priority 1: Matching items first
+            if (matchA && !matchB) return -1;
+            if (!matchA && matchB) return 1;
+
+            // Priority 2: Rarity within the same group
+            return rarityMap[b.rarity] - rarityMap[a.rarity];
+        });
 
         // 3. Reconstruct Inventory
         const newInventory = [...protectedSlots, ...storageItems];
@@ -374,7 +388,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             newInventory.push(null);
         }
 
-        // 4. Apply updates (Optimized to only change modified slots)
+        // 4. Apply updates
         newInventory.forEach((item, idx) => {
             if (gameState.inventory[idx] !== item) {
                 onInventoryUpdate(idx, item);
@@ -389,8 +403,63 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
     const extractionFocusActive = gameState.extractionStatus !== 'none' && gameState.extractionStatus !== 'complete';
 
+
+    // Tutorial Spotlight Logic
+    const getTutorialHighlight = () => {
+        if (!gameState.tutorial.isActive) return null;
+        switch (gameState.tutorial.currentStep) {
+            case 10: // TutorialStep.MATRIX_INVENTORY
+                return {
+                    selector: '.inventory-grid', // Needs class name added to InventoryPanel container
+                    text: 'METEORITE STORAGE',
+                    subtext: "Here you can store collected meteorites. Hover over them to see detailed stats."
+                };
+            case 11: // TutorialStep.MATRIX_SCAN
+                return {
+                    selector: '.module-detail-panel', // Needs class
+                    text: 'SCANNER LINK',
+                    subtext: "View detailed statistics, perks, and rarities of selected meteorites here."
+                };
+            case 12: // TutorialStep.MATRIX_FILTERS
+                return {
+                    selector: '.filter-controls', // Needs class
+                    text: 'FILTER ARRAY',
+                    subtext: "Sort and filter meteorites by Rarity, Quality, or specific Perks."
+                };
+            case 13: // TutorialStep.MATRIX_RECYCLE
+                return {
+                    selector: '.recycle-btn', // Needs class
+                    text: 'RECYCLER',
+                    subtext: "Convert unwanted meteorites into Dust, the primary currency for system upgrades."
+                };
+            case 14: // TutorialStep.MATRIX_SOCKETS
+                return {
+                    selector: '.hex-grid-container', // Needs class
+                    text: 'MODULE SOCKETS',
+                    subtext: "Place meteorites into Diamond Sockets to empower your Hexes."
+                };
+            case 15: // TutorialStep.MATRIX_CLASS_DETAIL
+                return {
+                    selector: '.center-class-icon', // Needs class
+                    text: 'CHASSIS CORE',
+                    subtext: "Click your class icon to view core stats and upgrade paths."
+                };
+            case 16: // TutorialStep.MATRIX_QUOTA
+                return {
+                    selector: '.dust-display', // Needs class
+                    text: 'EVACUATION QUOTA',
+                    subtext: "Collect 10,000 Dust to initiate emergency evacuation protocol."
+                };
+            default:
+                return null;
+        }
+    };
+
+    const activeHighlight = getTutorialHighlight();
+
     return (
         <div
+            className="module-menu-container" // Hook for potential global styles
             onMouseMove={(e) => {
                 if (!movedItem || ['requested', 'waiting'].includes(gameState.extractionStatus)) return;
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -419,6 +488,22 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 userSelect: 'none'
             }}>
 
+            {/* Tutorial Overlay Layer */}
+            {activeHighlight && (
+                <div className="tutorial-container">
+                    {/* The dimming is handled by the .tutorial-highlight class which we must apply dynamically to children? 
+                        The CSS solution `box-shadow: 0 0 0 9999px rgba(0,0,0,0.9)` on the HIGHLIGHTED element is easiest.
+                        But we can't easily inject classes into child components from here without props.
+                        Alternatively, we render a semi-transparent overlay HERE with a "hole" (clip-path).
+                        
+                        Better approach for React:
+                        SpotlightOverlay component that takes a rect or selector and renders the dimming around it.
+                        Or, simpler: Just use the CSS class injection if we can traverse DOM (Effect).
+                     */}
+                    <SpotlightOverlay selector={activeHighlight.selector} text={activeHighlight.text} subtext={activeHighlight.subtext} />
+                </div>
+            )}
+
             {/* MAIN LAYOUT CONTAINER */}
             <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -426,7 +511,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             }}>
 
                 {/* LEFT: MATRIX (40%) - Shrunk slightly to give more room to right */}
-                <div style={{
+                <div className="hex-grid-container" style={{
                     width: '40%',
                     height: '100%',
                     position: 'relative',
@@ -467,7 +552,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         onAttemptPlace={(index, item, source, sourceIndex) => {
                             setCorruptionCandidate({ index, item, source, sourceIndex });
                         }}
+                        selectedBestiaryEnemy={selectedBestiaryEnemy}
+                        onSelectBestiaryEnemy={setSelectedBestiaryEnemy}
                     />
+                    {/* Hidden element to help selector find class icon if it's deeply nested in Canvas/HexGrid? 
+                         HexGrid renders HTML usually. Let's assume HexGrid uses DOM elements we can target. 
+                         If HexGrid is Canvas, we put a dummy div over it? 
+                         HexGrid.tsx seems to use HTML/SVG.
+                      */}
                 </div>
 
                 {/* RIGHT: CONTROLS & INVENTORY (60%) - Expanded */}
@@ -490,25 +582,28 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         borderRight: 'none' // Remove separator line to use empty space as divider
                     }}>
                         {/* DATA PANEL (Top - 9:16 tactical area) */}
-                        <ModuleDetailPanel
-                            gameState={gameState}
-                            placementAlert={placementAlert}
-                            hoveredHex={hoveredHex}
-                            movedItem={movedItem}
-                            hoveredItem={hoveredItem}
-                            lockedItem={lockedItem}
-                            hoveredBlueprint={hoveredBlueprint}
-                            onCancelHoverTimeout={() => {
-                                if (hoverTimeout.current) {
-                                    clearTimeout(hoverTimeout.current);
-                                    hoverTimeout.current = null;
-                                }
-                            }}
-                            onMouseLeaveItem={handleMouseLeaveItem}
-                        />
+                        <div className="module-detail-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <ModuleDetailPanel
+                                gameState={gameState}
+                                placementAlert={placementAlert}
+                                hoveredHex={hoveredHex}
+                                movedItem={movedItem}
+                                hoveredItem={hoveredItem}
+                                lockedItem={lockedItem}
+                                hoveredBlueprint={hoveredBlueprint}
+                                onCancelHoverTimeout={() => {
+                                    if (hoverTimeout.current) {
+                                        clearTimeout(hoverTimeout.current);
+                                        hoverTimeout.current = null;
+                                    }
+                                }}
+                                onMouseLeaveItem={handleMouseLeaveItem}
+                                selectedBestiaryEnemy={selectedBestiaryEnemy}
+                            />
+                        </div>
 
                         {/* BUTTON CLUSTER (Bottom - Metadata & Recycler) */}
-                        <div style={{
+                        <div className="filter-controls" style={{
                             padding: '10px',
                             display: 'flex',
                             flexDirection: 'row', // Horizontal layout
@@ -519,8 +614,21 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             background: 'rgba(15, 23, 42, 0.5)',
                             pointerEvents: 'auto'
                         }}>
+                            {/* Recycle Button Wrapper for Spotlight */}
+                            <div className="recycle-btn" style={{ display: 'none' }}></div>
+                            {/* ^ Hack: The actual recycle button is likely inside InventoryPanel or here? 
+                                Wait, `onRecycle` is passed to `InventoryPanel`? 
+                                Let's check where the recycle button IS. 
+                                It seems `ModuleMenu` renders `InventoryPanel` which has the controls?
+                                Actually, `InventoryPanel.tsx` likely has the buttons.
+                                The code below has "DUST & EXTRACTION GROUP" but where is the recycle BUTTON?
+                                Ah, `handleRecycleClick` is passed to InventoryPanel. 
+                                So `InventoryPanel` contains the button.
+                                We will need to update InventoryPanel to have the class name `recycle-btn`.
+                              */}
+
                             {/* DUST & EXTRACTION GROUP */}
-                            <div style={{
+                            <div className="dust-display" style={{
                                 flex: '1',
                                 display: 'flex',
                                 alignItems: 'stretch',
@@ -588,7 +696,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     </div>
 
                     {/* COL 2: INVENTORY - Remaining Width (55%) */}
-                    <div style={{
+                    <div className="inventory-grid" style={{
                         flex: 1, // Takes remaining width (approx 55% of 55%)
                         height: '100%',
                         display: 'flex',
@@ -723,5 +831,66 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
 
         </div >
+    );
+};
+
+// Internal Spotlight Component
+const SpotlightOverlay: React.FC<{ selector: string, text: string, subtext: string }> = ({ selector, text, subtext }) => {
+    const [targetRect, setTargetRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
+
+    React.useEffect(() => {
+        const updateRect = () => {
+            const el = document.querySelector(selector);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                // Ensure we get coordinates relative to the viewport (fixed) or container (absolute).
+                // Since this overlay is absolute 100% w/h top 0 left 0, it matches viewport if container is fullscreen.
+                setTargetRect(rect);
+            }
+        };
+        updateRect();
+        const interval = setInterval(updateRect, 100); // Polling for layout shifts
+        return () => clearInterval(interval);
+    }, [selector]);
+
+    if (!targetRect) return null;
+
+    return (
+        <>
+            {/* The Dimmer Overlay with a 'hole' */}
+            {/* Using a massive box-shadow on the highlight element is easier than clip-path reverse for React */}
+            <div style={{
+                position: 'fixed',
+                top: targetRect.top,
+                left: targetRect.left,
+                width: targetRect.width,
+                height: targetRect.height,
+                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.85)', // THE SPOTLIGHT
+                zIndex: 2999,
+                pointerEvents: 'none',
+                border: '2px solid #0ff',
+                borderRadius: '4px',
+                animation: 'pulseBorder 2s infinite'
+            }} />
+
+            <style>{`
+                @keyframes pulseBorder {
+                    0% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 10px #0ff; }
+                    50% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 20px #0ff; }
+                    100% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 10px #0ff; }
+                }
+            `}</style>
+
+            {/* The Hint Box */}
+            <div className="tutorial-hint-box" style={{
+                top: Math.max(20, targetRect.top - 120), // Position above if possible
+                left: targetRect.left + targetRect.width / 2 + 20, // To right center
+                // Basic logic to keep it on screen:
+                transform: 'none'
+            }}>
+                <h3>{text}</h3>
+                <p>{subtext}</p>
+            </div>
+        </>
     );
 };

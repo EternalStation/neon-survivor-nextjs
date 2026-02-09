@@ -79,7 +79,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
 
     return (
         <div
-            className={`upgrade-card card-${rId} ${isSelected ? 'active' : 'idle'}`}
+            className={`upgrade-card card-${rId} ${isSelected ? 'active active-tutorial-target' : 'idle'}`}
             onMouseEnter={() => onHover(index)}
             onClick={handleClick}
             style={{
@@ -128,7 +128,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                 {/* <div style={{ flex: 1 }} /> */}
 
                 {/* Footer Group (Rarity + Sockets) - Pushed to bottom */}
-                <div className="card-footer-group" style={{
+                <div className="card-footer-group rarity-sockets" style={{
                     position: 'absolute',
                     bottom: '8px',
                     left: 0,

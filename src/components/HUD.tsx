@@ -11,7 +11,10 @@ import { AlertPanel } from './hud/AlertPanel';
 import { PlayerStatus } from './hud/PlayerStatus';
 import { BossStatus } from './hud/BossStatus';
 import { UpgradeMenu } from './hud/UpgradeMenu';
+import { TutorialOverlay } from './hud/TutorialOverlay';
+import { SpotlightOverlay } from './common/SpotlightOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
+import { TutorialStep } from '../logic/core/types';
 
 
 interface HUDProps {
@@ -27,18 +30,84 @@ interface HUDProps {
     portalCost: number;
     showSkillDetail: boolean;
     setShowSkillDetail: (v: boolean) => void;
+    isTutorialLayerOnly?: boolean;
+    showStats: boolean;
+    showUpgradeMenu: boolean;
 }
 
 export const HUD: React.FC<HUDProps> = ({
     gameState, upgradeChoices, onUpgradeSelect, gameOver, onRestart, bossWarning,
-    fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail
+    fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail,
+    isTutorialLayerOnly, showStats, showUpgradeMenu
 }) => {
     const { player, activeEvent } = gameState;
 
     // Dynamic Max HP calculation for HUD
     let maxHp = calcStat(player.hp);
-    if (getArenaIndex(player.x, player.y) === 2) {
+    const arenaIdx = getArenaIndex(player.x, player.y);
+    if (arenaIdx === 2) {
         maxHp *= 1.2; // +20% Max HP in Defence Hex
+    }
+
+    if (isTutorialLayerOnly) {
+        return (
+            <>
+                <TutorialOverlay gameState={gameState} />
+                {(() => {
+                    const { tutorial } = gameState;
+                    if (!tutorial.isActive) return null;
+
+                    if (tutorial.currentStep === TutorialStep.LEVEL_UP_MENU) {
+                        if (tutorial.stepTimer > 5.0) return null;
+
+                        return (
+                            <SpotlightOverlay
+                                selector=".active-tutorial-target .rarity-sockets"
+                                text="RARITY"
+                                subtext="SOCKETS BELOW REPRESENT RARITY LEVEL"
+                            />
+                        );
+                    }
+
+                    if (tutorial.currentStep === TutorialStep.UPGRADE_SELECTED_CHECK_STATS) {
+                        if (!showStats) return null;
+
+                        if (tutorial.stepTimer < 10) {
+                            return (
+                                <SpotlightOverlay
+                                    selector=".radar-chart-wrapper"
+                                    text="SYNERGY DIAGRAM"
+                                    subtext="THIS GRAPH VISUALIZES YOUR CHASSIS FOCUS AND SYNERGY STRENGTHS."
+                                    preferredPosition="left"
+                                    nextLabel="[ NEXT ]"
+                                    onNext={() => {
+                                        // Jump to 10s mark to show next hint
+                                        gameState.tutorial.stepTimer = 10;
+                                    }}
+                                />
+                            );
+                        } else {
+                            return (
+                                <SpotlightOverlay
+                                    selector=".stats-calculations"
+                                    text="SYSTEM CALCULATIONS"
+                                    subtext="VIEW DETAILED FORMULAS SHOWING HOW AUGMENTATIONS IMPACT CORE STATS."
+                                    preferredPosition="left"
+                                    nextLabel="[ OKAY ]"
+                                    onNext={() => {
+                                        // Advance tutorial step to next phase
+                                        gameState.tutorial.currentStep = TutorialStep.COLLECT_METEORITE;
+                                        gameState.tutorial.stepTimer = 0;
+                                    }}
+                                />
+                            );
+                        }
+                    }
+
+                    return null;
+                })()}
+            </>
+        );
     }
 
     if (gameOver && gameState.extractionStatus !== 'complete') return null;
@@ -203,7 +272,6 @@ export const HUD: React.FC<HUDProps> = ({
                     gameState={gameState}
                 />
             )}
-
 
 
             {/* CSS Animations */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, RARITY_ORDER } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, RARITY_ORDER, PerkFilter, matchesFilter } from './ModuleUtils';
 
 interface InventoryPanelProps {
     inventory: (Meteorite | null)[];
@@ -27,12 +27,6 @@ const PAIR_COMBOS = ['All', 'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF
 const QUALITIES = ['All', 'PRI', 'DAM', 'BRO', 'COR'];
 const ARENAS = ['All', 'ECO', 'COM', 'DEF'];
 
-export type PerkFilter = {
-    active: boolean;
-    val: number;
-    arena: string;
-    matchQuality: string;
-};
 
 export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     inventory,
@@ -56,102 +50,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 }) => {
     // State lifted to ModuleMenu for persistence
 
-    const matchesFilter = (item: Meteorite | null): boolean => {
-        if (!item) return true;
-
-        // Core Checks
-        // Map UI labels to internal quality types
-        const qualityMap: Record<string, string> = { 'PRI': 'New', 'DAM': 'Damaged', 'BRO': 'Broken', 'COR': 'Corrupted' };
-        if (coreFilter.quality !== 'All' && item.quality !== qualityMap[coreFilter.quality]) return false;
-
-        if (coreFilter.rarity !== 'All' && item.rarity !== coreFilter.rarity) return false;
-        if (coreFilter.arena !== 'All' && !item.discoveredIn.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
-
-        // Perk Checks (Cumulative/AND logic)
-        for (let lvl = 1; lvl <= 9; lvl++) {
-            const f = perkFilters[lvl];
-            if (!f.active) continue;
-
-            const perks = item.perks;
-            let levelMatch = false;
-
-            const checkValue = (v: number) => v >= f.val;
-
-            switch (lvl) {
-                case 1: {
-                    const p = perks.find((x: any) => x.id === 'base_efficiency');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 2: {
-                    const p = perks.find((x: any) => x.id === 'neighbor_any_all');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 3: {
-                    const a = f.arena.toLowerCase();
-                    const target = a === 'all' ? 'neighbor_any_' : `neighbor_any_${a}`;
-                    const p = perks.find((x: any) => x.id.startsWith(target) && x.id.split('_').length === 3 && x.id !== 'neighbor_any_all');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 4: {
-                    const a = f.arena.toLowerCase();
-                    // Match Quality Mapping
-                    const qMap: Record<string, string> = { 'PRI': 'new', 'DAM': 'dam', 'BRO': 'bro', 'COR': 'cor' };
-                    let q = qMap[f.matchQuality] || 'any';
-
-                    const p = perks.find((x: any) => {
-                        const pts = x.id.split('_');
-                        if (pts[0] !== 'neighbor') return false;
-                        // Exclude 'any' which is reserved for L2/L3 (Proximity/Sector)
-                        if (pts[1] === 'any') return false;
-                        if (f.matchQuality !== 'All' && pts[1] !== q) return false;
-                        if (f.arena !== 'All' && pts[2] !== a) return false;
-                        return pts.length === 3;
-                    });
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 5: {
-                    const p = perks.find((x: any) => x.id === 'neighbor_leg_any');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 6: {
-                    const a = f.arena.toLowerCase();
-                    const target = a === 'all' ? 'neighbor_leg_' : `neighbor_leg_${a}`;
-                    const p = perks.find((x: any) => x.id.startsWith(target) && x.id !== 'neighbor_leg_any');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 7:
-                case 8: {
-                    const a = f.arena.toLowerCase().replace('-', '_');
-                    const p = perks.find((x: any) => {
-                        if (!x.id.startsWith('pair_')) return false;
-                        if (lvl === 8 && !x.id.endsWith('_lvl')) return false;
-                        if (lvl === 7 && x.id.endsWith('_lvl')) return false;
-                        return f.arena === 'All' || x.id.includes(`_${a}`);
-                    });
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-                case 9: {
-                    const p = perks.find((x: any) => x.id === 'matrix_same_type_rarity');
-                    if (p) levelMatch = checkValue(p.value);
-                    break;
-                }
-            }
-
-            if (!levelMatch) return false;
-        }
-
-        return true;
+    const matchesFilterLocal = (item: Meteorite | null): boolean => {
+        return matchesFilter(item, coreFilter, perkFilters);
     };
 
     const renderSlot = (item: Meteorite | null, idx: number, isAnyFilterActive: boolean) => {
-        const matches = matchesFilter(item);
+        const matches = matchesFilterLocal(item);
         if (isAnyFilterActive && item && item.isNew && !matches) {
             item.isNew = false;
         }
@@ -328,19 +232,18 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
             flex: 1,
             height: '100%',
             display: 'flex', flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden' // Main container doesn't scroll
         }}>
-            <div className="inventory-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
-                gridAutoRows: 'min-content',
-                columnGap: '6px',
-                rowGap: '2px',
-                width: '100%',
-                height: '100%',
-                paddingRight: '20px',
-                overflowY: 'auto',
-                boxSizing: 'border-box'
+            {/* FIXED HEADER: Scanner + Safe Slots */}
+            <div style={{
+                background: 'rgba(5, 10, 20, 0.98)',
+                zIndex: 100,
+                borderBottom: '2px solid rgba(59, 130, 246, 0.3)',
+                padding: '10px 10px 0 10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                flexShrink: 0 // Prevents header from shrinking
             }}>
                 {/* ADVANCED MASS SCANNER AREA */}
                 <div
@@ -349,23 +252,16 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     onMouseMove={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                     style={{
-                        gridColumn: 'span 10',
-                        background: 'rgba(5, 10, 20, 0.98)',
+                        background: 'rgba(15, 23, 42, 0.4)',
                         border: '1px solid rgba(59, 130, 246, 0.4)',
                         borderRadius: '8px',
                         padding: '10px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px',
-                        marginBottom: '5px', // Reduced from 10px
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 100,
-                        backdropFilter: 'blur(20px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+                        gap: '8px'
                     }}>
                     {/* TOP ROW: CORE + SORT/RESET + RECYCLE */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '8px', marginBottom: '4px', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end' }}>
                         {/* TYPE */}
                         <div style={{ gridColumn: 'span 3' }}>
                             <span style={labelStyle}>TYPE</span>
@@ -422,8 +318,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     background: isFilterActive ? 'rgba(239, 68, 68, 0.15)' : 'rgba(156, 163, 175, 0.05)',
                                     borderColor: isFilterActive ? 'rgba(239, 68, 68, 0.5)' : 'rgba(156, 163, 175, 0.2)',
                                     color: isFilterActive ? '#ef4444' : '#6b7280',
-                                    height: '38px',
-                                    width: '32px',
+                                    height: '24px',
+                                    width: '28px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -448,8 +344,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     background: 'rgba(59, 130, 246, 0.15)',
                                     borderColor: '#3b82f6',
                                     color: '#fff',
-                                    height: '38px',
-                                    width: '32px',
+                                    height: '24px',
+                                    width: '28px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -463,9 +359,6 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     <path d="m11 5-3-3-3 3M8 22V2M13 19l3 3 3-3M16 2v20" />
                                 </svg>
                             </button>
-
-                            {/* RECYCLE CONTROLS MOVED TO STORAGE HEADER */}
-
                         </div>
                     </div>
 
@@ -474,7 +367,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '8px',
-                        maxHeight: '260px',
+                        maxHeight: '180px', // Reduced height for sticky area
                         overflowY: 'auto',
                         paddingRight: '4px'
                     }}>
@@ -568,27 +461,147 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             );
                         })}
                     </div>
+                </div>
 
-                    {/* SAFE SLOTS (FIXED AT TOP) */}
-                    <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(59, 130, 246, 0.2)', marginTop: '4px' }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            marginBottom: '4px'
-                        }}>
-                            <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
-                            <span style={{ fontSize: '7px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(PROTECTED FROM BULK RECYCLING)</span>
-                        </div>
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
-                            gap: '6px'
-                        }}>
-                            {Array.from({ length: 10 }).map((_, i) => renderSlot(displayInventory[i], i, isFilterActive))}
-                        </div>
+                {/* SAFE SLOTS (FIXED IN HEADER) */}
+                <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(59, 130, 246, 0.2)', marginTop: '4px' }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '4px'
+                    }}>
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
+                        <span style={{ fontSize: '7px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(PROTECTED FROM BULK RECYCLING)</span>
                     </div>
-                </div >
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+                        gap: '6px'
+                    }}>
+                        {Array.from({ length: 10 }).map((_, i) => renderSlot(displayInventory[i], i, isFilterActive))}
+                    </div>
+                </div>
+
+                {/* STORAGE HEADER (FIXED IN HEADER) */}
+                <div style={{
+                    padding: '8px 0 8px 0',
+                    borderTop: '1px solid rgba(59, 130, 246, 0.3)',
+                    marginTop: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
+                    <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span>
+
+                    {/* RECYCLE CONTROLS */}
+                    <div className="recycle-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                        <button
+                            onClick={onToggleRecycle}
+                            style={{
+                                ...selectStyle,
+                                background: isRecycleMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                                borderColor: isRecycleMode ? '#ef4444' : '#3b82f6',
+                                color: isRecycleMode ? '#ef4444' : '#3b82f6',
+                                height: '24px',
+                                width: 'auto',
+                                padding: '0 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                cursor: 'pointer',
+                                boxShadow: isRecycleMode ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none',
+                                transition: 'all 0.2s',
+                                transform: recyclingAnim ? 'scale(0.95)' : 'scale(1)',
+                                letterSpacing: '1px'
+                            }}
+                            title="Toggle Recycle Mode"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            {isRecycleMode ? "RECYCLING ON" : "RECYCLE"}
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (!isRecycleMode) return;
+                                const targets: number[] = [];
+                                inventory.forEach((item, i) => {
+                                    if (i >= 10 && item && matchesFilterLocal(item)) targets.push(i);
+                                });
+                                if (targets.length > 0) onMassRecycle(targets);
+                            }}
+                            disabled={!isRecycleMode}
+                            style={{
+                                ...selectStyle,
+                                background: isRecycleMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(15, 23, 42, 0.5)',
+                                borderColor: isRecycleMode ? '#3b82f6' : 'rgba(148, 163, 184, 0.1)',
+                                color: isRecycleMode ? '#fff' : '#475569',
+                                height: '24px',
+                                width: 'auto',
+                                minWidth: '70px',
+                                padding: '0 12px',
+                                fontSize: '9px',
+                                fontWeight: 900,
+                                cursor: isRecycleMode ? 'pointer' : 'default',
+                                opacity: isRecycleMode ? 1 : 0.4,
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            SELECTED
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (!isRecycleMode) return;
+                                const discards: number[] = [];
+                                inventory.forEach((item, i) => {
+                                    if (i >= 10 && item && !matchesFilterLocal(item)) discards.push(i);
+                                });
+                                if (discards.length > 0) onMassRecycle(discards);
+                            }}
+                            disabled={!isRecycleMode}
+                            style={{
+                                ...selectStyle,
+                                background: isRecycleMode ? 'rgba(239, 68, 68, 0.25)' : 'rgba(15, 23, 42, 0.5)',
+                                borderColor: isRecycleMode ? '#ef4444' : 'rgba(148, 163, 184, 0.1)',
+                                color: isRecycleMode ? '#fff' : '#475569',
+                                height: '24px',
+                                width: 'auto',
+                                minWidth: '70px',
+                                padding: '0 12px',
+                                fontSize: '9px',
+                                fontWeight: 900,
+                                cursor: isRecycleMode ? 'pointer' : 'default',
+                                opacity: isRecycleMode ? 1 : 0.4,
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            GHOSTS
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* SCROLLABLE STORAGE AREA */}
+            <div className="inventory-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+                gridAutoRows: 'min-content',
+                columnGap: '6px',
+                rowGap: '2px',
+                width: '100%',
+                flex: 1, // Takes remaining space
+                padding: '0 10px 10px 10px',
+                overflowY: 'auto',
+                boxSizing: 'border-box'
+            }}>
 
                 {/* INVENTORY ITEMS (STORAGE ONLY) */}
                 {
@@ -596,126 +609,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         const elements: React.ReactNode[] = [];
 
                         // 1. REMOVED ROW SPACER (Visual Separation for Storage)
-                        elements.push(
-                            <div key="removed-header" style={{
-                                gridColumn: 'span 10',
-                                height: '2px',
-                                borderBottom: '1px dashed rgba(148, 163, 184, 0.1)',
-                                margin: '4px 0 0 0'
-                            }} />
-                        );
 
-                        // 2. STORAGE HEADER
-                        const storageEmptyCount = inventory.slice(20, 320).filter(item => item === null).length;
-                        elements.push(
-                            <div key="storage-header" style={{
-                                gridColumn: 'span 10',
-                                padding: '5px 0 5px 0',
-                                borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
-                                marginBottom: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}>
-                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
-                                <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span>
 
-                                {/* NEW RECYCLE CONTROLS LOCATION */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                                    <button
-                                        onClick={onToggleRecycle}
-                                        style={{
-                                            ...selectStyle,
-                                            background: isRecycleMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                                            borderColor: isRecycleMode ? '#ef4444' : '#3b82f6',
-                                            color: isRecycleMode ? '#ef4444' : '#3b82f6',
-                                            height: '24px',
-                                            width: 'auto',
-                                            padding: '0 12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            cursor: 'pointer',
-                                            boxShadow: isRecycleMode ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none',
-                                            transition: 'all 0.2s',
-                                            transform: recyclingAnim ? 'scale(0.95)' : 'scale(1)',
-                                            letterSpacing: '1px'
-                                        }}
-                                        title="Toggle Recycle Mode"
-                                    >
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                                        </svg>
-                                        {isRecycleMode ? "RECYCLING ON" : "RECYCLE"}
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            if (!isRecycleMode) return;
-                                            const targets: number[] = [];
-                                            inventory.forEach((item, i) => {
-                                                if (i >= 10 && item && matchesFilter(item)) targets.push(i);
-                                            });
-                                            if (targets.length > 0) onMassRecycle(targets);
-                                        }}
-                                        disabled={!isRecycleMode}
-                                        style={{
-                                            ...selectStyle,
-                                            background: isRecycleMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(15, 23, 42, 0.5)',
-                                            borderColor: isRecycleMode ? '#3b82f6' : 'rgba(148, 163, 184, 0.1)',
-                                            color: isRecycleMode ? '#fff' : '#475569',
-                                            height: '24px',
-                                            width: 'auto',
-                                            minWidth: '70px',
-                                            padding: '0 12px',
-                                            fontSize: '9px',
-                                            fontWeight: 900,
-                                            cursor: isRecycleMode ? 'pointer' : 'default',
-                                            opacity: isRecycleMode ? 1 : 0.4,
-                                            transition: 'all 0.2s',
-                                        }}
-                                    >
-                                        SELECTED
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            if (!isRecycleMode) return;
-                                            const discards: number[] = [];
-                                            inventory.forEach((item, i) => {
-                                                if (i >= 10 && item && !matchesFilter(item)) discards.push(i);
-                                            });
-                                            if (discards.length > 0) onMassRecycle(discards);
-                                        }}
-                                        disabled={!isRecycleMode}
-                                        style={{
-                                            ...selectStyle,
-                                            background: isRecycleMode ? 'rgba(239, 68, 68, 0.25)' : 'rgba(15, 23, 42, 0.5)',
-                                            borderColor: isRecycleMode ? '#ef4444' : 'rgba(148, 163, 184, 0.1)',
-                                            color: isRecycleMode ? '#fff' : '#475569',
-                                            height: '24px',
-                                            width: 'auto',
-                                            minWidth: '70px',
-                                            padding: '0 12px',
-                                            fontSize: '9px',
-                                            fontWeight: 900,
-                                            cursor: isRecycleMode ? 'pointer' : 'default',
-                                            opacity: isRecycleMode ? 1 : 0.4,
-                                            transition: 'all 0.2s',
-                                        }}
-                                    >
-                                        GHOSTS
-                                    </button>
-                                </div>
-                            </div>
-                        );
-
-                        // 3. STORAGE SLOTS (20+) - Skip 10-19 as before
-                        for (let i = 20; i < 320; i++) {
+                        // 3. STORAGE SLOTS (10+) - Pin 0-9 to top
+                        for (let i = 10; i < 320; i++) {
                             elements.push(renderSlot(displayInventory[i], i, isFilterActive));
                         }
 
@@ -725,8 +622,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
             </div >
             <style>{`
                 .inventory-grid::-webkit-scrollbar { width: 6px; }
-                .inventory-grid::-webkit-scrollbar-track { background: #0f172a; }
-                .inventory-grid::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+                .inventory-grid::-webkit-scrollbar-track { background: transparent; }
+                .inventory-grid::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+                .inventory-grid::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes shake {
                     0% { transform: translate(1px, 1px) rotate(0deg); }

@@ -81,17 +81,17 @@ export default function Home() {
     setSelectingArena(true);
   };
 
-  const handleArenaSelect = (arenaId: number) => {
+  const handleArenaSelect = (arenaId: number, tutorialEnabled: boolean = true) => {
     startBGM(arenaId);
     setSelectingArena(false);
     setGameStarted(true);
     if (selectedClass) {
-      hook.restartGame(selectedClass, arenaId, username);
+      hook.restartGame(selectedClass, arenaId, username, tutorialEnabled);
     }
   };
 
   const handleRestart = () => {
-    hook.restartGame();
+    hook.restartGame(undefined, 0, undefined, false); // No tutorial on quick restart
     setGameStarted(false);
     setSelectingClass(true);
     setSelectingArena(false);
@@ -169,6 +169,8 @@ export default function Home() {
                   portalCost={hook.portalCost}
                   showSkillDetail={hook.showBossSkillDetail}
                   setShowSkillDetail={hook.setShowBossSkillDetail}
+                  showStats={hook.showStats}
+                  showUpgradeMenu={!!hook.upgradeChoices}
                 />
 
                 {isMobile && !hook.gameOver && (
@@ -217,7 +219,7 @@ export default function Home() {
                     time: hook.gameState.gameTime,
                     kills: hook.gameState.killCount,
                     bosses: hook.gameState.bossKills,
-                    level: hook.gameState.player.level,
+                    level: hook.gameState.player.level // Fix: player level is in player object
                   }}
                   gameState={hook.gameState}
                   onRestart={handleRestart}
@@ -226,6 +228,27 @@ export default function Home() {
                 />
               </div>
             )}
+
+            {/* Global Tutorial Layer - Rendered last to be on top of EVERYTHING */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10000 }}>
+              <HUD
+                gameState={hook.gameState}
+                upgradeChoices={hook.upgradeChoices}
+                onUpgradeSelect={hook.handleUpgradeSelect}
+                gameOver={hook.gameOver}
+                onRestart={handleRestart}
+                bossWarning={hook.bossWarning}
+                fps={hook.fps}
+                onInventoryToggle={hook.toggleModuleMenu}
+                portalError={hook.portalError}
+                portalCost={hook.portalCost}
+                showSkillDetail={hook.showBossSkillDetail}
+                setShowSkillDetail={hook.setShowBossSkillDetail}
+                isTutorialLayerOnly={true}
+                showStats={hook.showStats}
+                showUpgradeMenu={!!hook.upgradeChoices}
+              />
+            </div>
           </div>
 
           {isMobile && !isLandscape && (

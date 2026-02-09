@@ -220,7 +220,7 @@ export interface Bullet {
     ringAmmo?: number; // Count of fused bullets
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -456,6 +456,23 @@ export interface Enemy {
 
     parasiteLinkActive?: boolean; // Pentagon Link
     parasiteTimer?: number;
+    wormId?: string;
+    wormRole?: 'head' | 'segment';
+    wormSegmentIndex?: number;
+    wormNextId?: number;
+    wormPrevId?: number;
+    wormHistory?: { x: number, y: number, state?: 'surface' | 'digging' | 'underground' | 'erupting' }[];
+    wormBurrowState?: 'surface' | 'digging' | 'underground' | 'erupting';
+    wormBurrowTimer?: number;
+    wormAIState?: 'stalking' | 'charging';
+    wormFlankAngle?: number;
+    wormLungeTimer?: number;
+    wormLungeActive?: boolean;
+    wormOrbitDir?: number;
+    wormOrbitRadius?: number;
+    wormTrueDamage?: number; // True damage percentage (pierces armor/reduction)
+    wormPromotionTimer?: number; // Timing for split promotion
+    dieOnCollision?: boolean;
 }
 
 export interface Upgrade {
@@ -581,6 +598,8 @@ export interface GameState {
     portalState: 'closed' | 'warn' | 'open' | 'transferring';
     portalTimer: number; // Cycles every 4 minutes (240s)
     portalOpenDuration: number; // 10s
+    isUpgradeMenuOpen?: boolean;
+    portalBlockedByWorms?: boolean;
     transferTimer: number; // 3s delay during teleport
     nextArenaId: number | null; // Destination
     portalOneTimeUse?: boolean; // If true, portals close after one use
@@ -628,6 +647,17 @@ export interface GameState {
     extractionStartTime?: number;
     extractionPowerMult: number;
     extractionSectorLabel?: string;
+
+    // Tutorial System
+    tutorial: TutorialState;
+
+    // Prism Glitcher Random Spawn System
+    glitcherLastCheckedMinute?: number;
+    glitcherScheduledSpawnTime?: number;
+
+    // Void Burrower Random Spawn System
+    wormLastCheckedMinute?: number;
+    wormScheduledSpawnTime?: number;
 
     // UI Delays
     pendingLevelUps: number;
@@ -698,4 +728,41 @@ export interface Blueprint {
     status: 'ready' | 'active' | 'broken' | 'researching';
     researchRemainingTime?: number;
     researchFinishTime?: number;
+}
+
+export enum TutorialStep {
+    MOVEMENT = 0,
+    COMBAT = 1, // Hidden but track kill
+    KILL_ENEMY = 2,
+    LEVEL_UP_MENU = 3,
+    UPGRADE_SELECTED_CHECK_STATS = 4,
+
+    COLLECT_METEORITE = 5,
+    OPEN_MODULE_MENU = 6,
+
+    // Module Menu Tour Steps
+    MATRIX_INVENTORY = 10,
+    MATRIX_SCAN = 11,
+    MATRIX_FILTERS = 12,
+    MATRIX_RECYCLE = 13,
+    MATRIX_SOCKETS = 14,
+    MATRIX_CLASS_DETAIL = 15,
+    MATRIX_QUOTA = 16,
+
+    COMPLETE = 99
+}
+
+export interface TutorialState {
+    currentStep: TutorialStep;
+    isActive: boolean;
+    stepTimer: number; // Time spent in current step
+    completedSteps: TutorialStep[];
+
+    // Trackers for verification
+    pressedKeys: Set<string>; // 'w', 'a', 's', 'd'
+    hasMoved: boolean;
+    hasKilled: boolean;
+    hasCollectedMeteorite: boolean;
+    hasOpenedModules: boolean;
+    hasOpenedStats: boolean;
 }

@@ -131,15 +131,23 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         snitchesCaught: gameState.snitchCaught || 0,
         deathCause: gameState.player.deathCause || 'Unknown',
         timezoneOffset: new Date().getTimezoneOffset(), // Capture player's timezone offset in minutes
-        blueprints: gameState.blueprints
-            .filter(bp => bp !== null)
-            .map(bp => ({
-                id: bp!.id,
-                type: bp!.type,
-                name: bp!.name,
-                status: bp!.status,
-                researched: bp!.researched
-            })),
+        blueprints: (() => {
+            const grouped: Record<string, { name: string; type: string; count: number }> = {};
+            gameState.blueprints.forEach(bp => {
+                if (!bp) return;
+                const key = bp.serial || bp.type;
+                if (grouped[key]) {
+                    grouped[key].count++;
+                } else {
+                    grouped[key] = {
+                        name: bp.serial || bp.name,
+                        type: bp.type,
+                        count: 1
+                    };
+                }
+            });
+            return Object.values(grouped);
+        })(),
         finalStats: (() => {
             const player = gameState.player;
             const arenaIdx = getArenaIndex(player.x, player.y);

@@ -8,6 +8,7 @@ import { renderGame } from '../logic/rendering/GameRenderer';
 import { useGameInput } from './useGameInput';
 import { useGameLogic } from './useGameLogic';
 import { useGameUIHandlers } from './useGameUIHandlers';
+import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
 
 export function useGameLoop(gameStarted: boolean) {
@@ -54,6 +55,7 @@ export function useGameLoop(gameStarted: boolean) {
     gameState.current.showStats = showStats;
     gameState.current.showSettings = showSettings;
     gameState.current.showBossSkillDetail = showBossSkillDetail;
+    gameState.current.isUpgradeMenuOpen = !!upgradeChoices;
     gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail;
 
     // Connect UI Handlers
@@ -223,12 +225,13 @@ export function useGameLoop(gameStarted: boolean) {
                     }
                 }
             } else if (state.isPaused && !state.gameOver) {
+                updateTutorial(state, safeDt);
                 updateExtraction(state, safeDt);
             }
 
             if (accRef.current > FIXED_STEP * 20) accRef.current = 0;
 
-            if (['requested', 'waiting'].includes(state.extractionStatus)) {
+            if (['requested', 'waiting'].includes(state.extractionStatus) || state.portalBlockedByWorms) {
                 updateExtraction(state, safeDt);
                 setUiState(p => p + 1);
             }

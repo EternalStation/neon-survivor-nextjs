@@ -464,7 +464,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                                 padding: '6px 10px', borderRadius: 6
                                                                             }}>
                                                                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
-                                                                                <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type}</span>
+                                                                                <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type} x{bp.count || 1}</span>
                                                                             </div>
                                                                         ))
                                                                     ) : (

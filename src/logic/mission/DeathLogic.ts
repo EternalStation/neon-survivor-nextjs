@@ -5,9 +5,15 @@ import { trySpawnMeteorite } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint } from '../upgrades/BlueprintLogic';
+import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
+
+    if (e.shape === 'worm') {
+        handleVoidBurrowerDeath(state, e, onEvent);
+    }
+
     e.dead = true; e.hp = 0;
 
     // Soul Reward Multipliers (Kill Count)
@@ -16,6 +22,8 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         soulCount = e.soulRewardMult;
     } else if (e.isElite) {
         soulCount = 12; // Default elite = 12 kills
+    } else if (e.shape === 'worm' && e.wormRole === 'head') {
+        soulCount = 50; // Big reward for head
     }
 
     state.killCount += soulCount;

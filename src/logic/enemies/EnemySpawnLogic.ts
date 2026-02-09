@@ -38,13 +38,9 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     const { player, gameTime } = state;
     const { shapeDef, eraPalette, fluxState } = getProgressionParams(gameTime);
 
-    // Use provided shape OR respect game progression (shapeDef unlocks based on game time)
+    // We no longer randomly override normal spawns with glitchers here, 
+    // as they are handled by the scheduled 15%/min logic in EnemyLogic.ts
     let chosenShape: ShapeType = shape || shapeDef.type as ShapeType;
-
-    // Rare random chance for Glitcher (excludes bosses/explicit spawns)
-    if (!shape && !isBoss && Math.random() < 0.005) { // 0.5% chance
-        chosenShape = 'glitcher';
-    }
 
     // If specific position provided (cheat command), use it; otherwise calculate spawn location
     let spawnPos = (x !== undefined && y !== undefined) ? { x, y } : { x: player.x, y: player.y };
@@ -94,8 +90,9 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1)); // 10-20 min
     const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)); // 20+ min
 
-    const size = isBoss ? (isLvl3 ? 60 : (isLvl2 ? 50 : 50)) : (20 * SHAPE_DEFS[chosenShape].sizeMult); // Lvl 3 is 60, others 50 (User Request: Lvl 1 size 50, Lvl 2 size 55? Prompt said 55, let's fix)
-    let hp = (isBoss ? baseHp * 20 : baseHp) * hpMult;
+    const size = isBoss ? (isLvl3 ? 60 : (isLvl2 ? 50 : 50)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
+    const bossHpMult = 25 + Math.floor(minutes);
+    let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
 
 
     const eventPalette = getEventPalette(state);

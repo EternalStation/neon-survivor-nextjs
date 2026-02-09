@@ -104,12 +104,13 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
                         left: 0,
                         width: '100%',
                         textAlign: 'center',
-                        fontSize: '8px',
+                        fontSize: '7px',
                         color: portalError ? '#fff' : '#64748b',
                         fontWeight: 900,
-                        textShadow: portalError ? '0 0 5px #000' : 'none'
+                        textShadow: portalError ? '0 0 5px #000' : 'none',
+                        textTransform: 'uppercase'
                     }}>
-                        {Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST
+                        {portalError && portalState === 'closed' && (dust >= portalCost) ? 'BLOCKED' : `${Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST`}
                     </div>
                 )}
             </div>

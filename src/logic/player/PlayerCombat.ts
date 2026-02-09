@@ -146,7 +146,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
     const kinLvl = getHexLevel(state, 'KineticBattery');
 
     state.enemies.forEach(e => {
-        if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady)) return;
+        if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground') return;
 
         const dToE = Math.hypot(e.x - player.x, e.y - player.y);
         const contactDist = e.size + 18;
@@ -180,7 +180,8 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     const mother = state.enemies.find(m => m.id === e.parentId);
                     rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
                 } else if (e.customCollisionDmg !== undefined) {
-                    rawDmg = (e.hp / e.maxHp) * e.customCollisionDmg;
+                    const playerMaxHp = calcStat(player.hp);
+                    rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
                 } else {
                     rawDmg = Math.pow(e.maxHp, GAME_CONFIG.ENEMY.COLLISION_POWER_SCALING);
                 }
@@ -216,25 +217,37 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
 
             const finalDmg = Math.max(0, reducedDmg);
 
-            if (finalDmg > 0) {
+            if (finalDmg > 0 || e.wormTrueDamage) {
                 let absorbed = 0;
+                let damageToApply = finalDmg;
+
+                // --- SPECIAL: Worm Head True Damage (Pierces Armor & Reduction) ---
+                if (e.wormRole === 'head' && e.wormTrueDamage) {
+                    const playerMaxHp = calcStat(player.hp);
+                    damageToApply = playerMaxHp * (e.wormTrueDamage / 100);
+                }
+
                 if (player.shieldChunks && player.shieldChunks.length > 0) {
                     player.shieldChunks.sort((a, b) => a.expiry - b.expiry);
-                    let rem = finalDmg;
+                    let rem = damageToApply;
                     for (const chunk of player.shieldChunks) {
-                        if (chunk.amount >= rem) { chunk.amount -= rem; absorbed += rem; rem = 0; break; }
-                        else { absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0; }
+                        if (chunk.amount >= rem) {
+                            chunk.amount -= rem; absorbed += rem; rem = 0; break;
+                        } else {
+                            absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0;
+                        }
                     }
                     player.shieldChunks = player.shieldChunks.filter(c => c.amount > 0);
                     player.damageBlockedByShield += absorbed;
                     player.damageBlocked += absorbed;
                 }
-                const actualDmg = finalDmg - absorbed;
+
+                const actualDmg = damageToApply - absorbed;
                 if (actualDmg > 0) {
                     player.curHp -= actualDmg;
                     player.damageTaken += actualDmg;
                 }
-                spawnFloatingNumber(state, player.x, player.y, Math.round(finalDmg).toString(), '#ef4444', false);
+                spawnFloatingNumber(state, player.x, player.y, Math.round(damageToApply).toString(), '#ef4444', false);
             }
 
             if (e.stunOnHit) {
@@ -242,7 +255,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 playSfx('stun-disrupt');
             }
 
-            if (onEvent) onEvent('player_hit', { dmg: finalDmg });
+            if (onEvent) onEvent('player_hit', { dmg: e.wormTrueDamage ? (calcStat(player.hp) * 0.2) : finalDmg });
             e.lastCollisionDamage = now;
 
             let canDie = true;
@@ -254,6 +267,11 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     lead.legionShield = Math.max(0, (lead.legionShield || 0) - contactShieldDmg);
                     spawnFloatingNumber(state, e.x, e.y, Math.round(contactShieldDmg).toString(), '#60a5fa', false);
                 }
+            }
+
+            // --- SPECIAL: Worm Body Segments die on collision ---
+            if (e.dieOnCollision) {
+                canDie = true;
             }
 
             if (canDie && (!e.lastCollisionDamage || now - e.lastCollisionDamage <= 10)) {
