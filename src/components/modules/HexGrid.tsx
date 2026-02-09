@@ -13,10 +13,11 @@ interface HexGridProps {
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
     onInventoryUpdate: (index: number, item: any) => void;
     setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex', index: number } | null) => void;
-    setHoveredItem: (item: { item: any, x: number, y: number } | null) => void;
-    setLockedItem: (item: { item: any, x: number, y: number } | null) => void;
-    handleMouseEnterItem: (item: any, x: number, y: number) => void;
+    setHoveredItem: (item: { item: any, x: number, y: number, index?: number } | null) => void;
+    setLockedItem: (item: { item: any, x: number, y: number, index?: number } | null) => void;
+    handleMouseEnterItem: (item: any, x: number, y: number, index?: number) => void;
     handleMouseLeaveItem: (delay?: number) => void;
+
     setHoveredHex: (hex: { hex: LegendaryHex, index: number, x: number, y: number } | null) => void;
     onShowClassDetail: (playerClass: PlayerClass) => void;
     onAttemptRemove: (index: number, item: any, replaceWith?: any) => void;
@@ -520,10 +521,11 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     return;
                                 }
                             }}
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 // Only Click-Lock tooltip if not dragging
                                 if (!movedItem && moduleSockets.diamonds[i]) {
-
+                                    setLockedItem({ item: moduleSockets.diamonds[i], x: e.clientX, y: e.clientY, index: i });
                                 }
                             }}
                             onMouseUp={(_e) => {
@@ -592,13 +594,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                             {moduleSockets.diamonds[i] && (
                                 <>
-                                    <foreignObject x={pos.x - 35} y={pos.y - 35} width="70" height="70" style={{ pointerEvents: 'none' }}>
+                                    <foreignObject x={pos.x - 35} y={pos.y - 35} width="70" height="70" style={{ pointerEvents: 'auto' }}>
                                         <div
                                             style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             onMouseMove={(e) => {
                                                 const item = moduleSockets.diamonds[i];
                                                 if (item && !movedItem) {
-                                                    handleMouseEnterItem(item, e.clientX, e.clientY);
+                                                    handleMouseEnterItem(item, e.clientX, e.clientY, i);
                                                     if (item.isNew) {
                                                         item.isNew = false;
                                                         onSocketUpdate('diamond', i, item);

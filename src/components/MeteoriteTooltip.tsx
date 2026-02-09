@@ -408,7 +408,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                                 marginLeft: '12px',
                                                 textAlign: 'right'
                                             }}>
-                                                +{formatPct(isActive ? perkResult.activeValue : perk.value, true)}%
+                                                +{formatPct(isActive ? perkResult.activeValue : (perk.id === 'base_efficiency' ? perk.value : 0), true)}%
                                             </span>
                                         </div>
 

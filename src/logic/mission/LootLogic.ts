@@ -257,8 +257,8 @@ export function updateLoot(state: GameState) {
         const dist = Math.hypot(dx, dy);
 
         // Magnet Logic
-        // Magnet Logic (Only if storage indices 20+ have space)
-        const hasSPACE = inventory.slice(20).some(slot => slot === null);
+        // Magnet Logic (Only if storage indices 10+ have space)
+        const hasSPACE = inventory.slice(10).some(slot => slot === null);
 
         if (dist < MAGNET_RANGE && hasSPACE) {
             item.magnetized = true;
@@ -277,10 +277,10 @@ export function updateLoot(state: GameState) {
             // Pickup Logic
             if (dist < PICKUP_RANGE) {
                 // Try to add to inventory
-                // User Request: Skip Row 1 (Safe Slots: 0-9) and Row 2 (Removed: 10-19)
-                // Items go directly into Row 3 (Index 20+)
+                // User Request: Skip Row 1 (Safe Slots: 0-9)
+                // Items go directly into Storage (Index 10+)
                 let emptySlotIndex = -1;
-                for (let j = 20; j < inventory.length; j++) {
+                for (let j = 10; j < inventory.length; j++) {
                     if (inventory[j] === null) {
                         emptySlotIndex = j;
                         break;

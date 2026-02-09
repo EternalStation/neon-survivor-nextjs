@@ -34,8 +34,8 @@ interface ModuleMenuProps {
 export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClose, onSocketUpdate, onInventoryUpdate, onRecycle, spendDust, onViewChassisDetail }) => {
     const [movedItem, setMovedItem] = useState<{ item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex', index: number } | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number } | null>(null);
-    const [hoveredItem, setHoveredItem] = useState<{ item: Meteorite | any, x: number, y: number } | null>(null);
+    const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
+    const [hoveredItem, setHoveredItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
     const [hoveredHex, setHoveredHex] = useState<{ hex: LegendaryHex, index: number, x: number, y: number } | null>(null);
     const [hoveredBlueprint, setHoveredBlueprint] = useState<Blueprint | null>(null);
     const [selectedClassDetail, setSelectedClassDetail] = useState<PlayerClass | null>(null);
@@ -102,13 +102,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
 
-    const handleMouseEnterItem = (item: any, x: number, y: number) => {
+    const handleMouseEnterItem = (item: any, x: number, y: number, index?: number) => {
         if (hoverTimeout.current) {
             clearTimeout(hoverTimeout.current);
             hoverTimeout.current = null;
         }
-        setHoveredItem({ item, x, y });
+        setHoveredItem({ item, x, y, index });
     };
+
 
     const handleMouseLeaveItem = (delay: number = 300) => {
         hoverTimeout.current = window.setTimeout(() => {
@@ -161,11 +162,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 }
 
                 // 2. Extract old item to inventory
-                // User Request: Prioritize "Storage" (Index 20+) over "Safe Slots" (0-9)
+                // User Request: Prioritize "Storage" (Index 10+) over "Safe Slots" (0-9)
                 let emptySlotIdx = -1;
 
-                // Check Storage (20+)
-                for (let i = 20; i < gameState.inventory.length; i++) {
+                // Check Storage (10+)
+                for (let i = 10; i < gameState.inventory.length; i++) {
                     if (gameState.inventory[i] === null) {
                         emptySlotIdx = i;
                         break;

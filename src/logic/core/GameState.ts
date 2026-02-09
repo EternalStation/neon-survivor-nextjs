@@ -122,7 +122,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
     // Inventory Defaults
     meteorites: [],
-    inventory: Array(320).fill(null), // 320 slots (20 reserved + 300 storage)
+    inventory: Array(320).fill(null), // 320 slots (10 reserved + 310 storage)
 
     // Module Menu Defaults
     showModuleMenu: false,

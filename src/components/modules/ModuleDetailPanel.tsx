@@ -17,8 +17,9 @@ interface ModuleDetailPanelProps {
     placementAlert: boolean;
     hoveredHex: { hex: LegendaryHex, index: number, x: number, y: number } | null;
     movedItem: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex', index: number } | null;
-    hoveredItem: { item: Meteorite | any, x: number, y: number } | null;
-    lockedItem: { item: Meteorite | any, x: number, y: number } | null;
+    hoveredItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
+    lockedItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
+
     hoveredBlueprint: Blueprint | null;
     onCancelHoverTimeout: () => void;
     onMouseLeaveItem: (delay?: number) => void;
@@ -111,6 +112,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     <MeteoriteTooltip
                         meteorite={lockedItem.item}
                         gameState={gameState}
+                        meteoriteIdx={lockedItem.index}
                         x={lockedItem.x}
                         y={lockedItem.y}
                         isEmbedded={true}
@@ -119,6 +121,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     <MeteoriteTooltip
                         meteorite={hoveredItem.item}
                         gameState={gameState}
+                        meteoriteIdx={hoveredItem.index}
                         x={hoveredItem.x}
                         y={hoveredItem.y}
                         isEmbedded={true}
