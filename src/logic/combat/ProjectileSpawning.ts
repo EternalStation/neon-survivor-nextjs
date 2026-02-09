@@ -380,6 +380,6 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         isEnemy: true,
         hits: new Set(),
         color: brightColor, // Ignore passed color, use bright era color
-        size: 6
+        size: 4
     });
 }
