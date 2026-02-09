@@ -40,6 +40,7 @@ export interface RunSubmissionData {
         speed: number;
     };
     blueprints: any[];
+    timezoneOffset: number; // Player's timezone offset in minutes (e.g., -60 for UTC+1)
 }
 
 
@@ -129,6 +130,7 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         hexLevelupOrder,
         snitchesCaught: gameState.snitchCaught || 0,
         deathCause: gameState.player.deathCause || 'Unknown',
+        timezoneOffset: new Date().getTimezoneOffset(), // Capture player's timezone offset in minutes
         blueprints: gameState.blueprints
             .filter(bp => bp !== null)
             .map(bp => ({

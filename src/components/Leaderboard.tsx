@@ -28,6 +28,7 @@ interface LeaderboardEntry {
     snitches_caught?: number;
     death_cause?: string;
     patch_version?: string;
+    timezone_offset?: number; // Player's timezone offset in minutes
     final_stats?: {
         dmg: number;
         hp: number;
@@ -177,9 +178,30 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         });
     }, [entries, classFilter, searchFilter]);
 
-    const formatDate = (dateStr: string) => {
+    const formatDate = (dateStr: string, timezoneOffset?: number) => {
         const date = new Date(dateStr);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // If we have the player's timezone offset, adjust to show their local time
+        if (timezoneOffset !== undefined) {
+            // getTimezoneOffset() returns offset in minutes (e.g., -60 for UTC+1)
+            // We need to adjust the UTC time to the player's local time
+            const viewerOffset = new Date().getTimezoneOffset();
+            const offsetDiff = viewerOffset - timezoneOffset;
+            date.setMinutes(date.getMinutes() + offsetDiff);
+        }
+
+        // Format: "Feb 9, 2026 3:30 AM" (in player's local timezone)
+        const dateOptions: Intl.DateTimeFormatOptions = {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        };
+        const timeOptions: Intl.DateTimeFormatOptions = {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        };
+        return date.toLocaleDateString(undefined, dateOptions) + ' ' + date.toLocaleTimeString(undefined, timeOptions);
     };
 
     const getRankColor = (rank: number) => {
@@ -314,7 +336,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                 <td className="time-val" style={{ fontFamily: 'Orbitron, sans-serif' }}>{formatTime(entry.survival_time)}</td>
                                                 <td className="class-name" style={{ color: classColor, fontWeight: '700', fontFamily: 'Orbitron, sans-serif' }}>{getClassName(entry.class_used)}</td>
                                                 <td className="cause-val" style={{ color: entry.death_cause === 'EVACUATED' ? '#10b981' : '#ef4444', fontSize: '0.9em', fontWeight: '500', fontFamily: 'Orbitron, sans-serif' }}>{entry.death_cause || 'Unknown'}</td>
-                                                <td className="date" style={{ opacity: 0.7 }}>{formatDate(entry.completed_at)}</td>
+                                                <td className="date" style={{ opacity: 0.7 }}>{formatDate(entry.completed_at, entry.timezone_offset)}</td>
                                                 <td className="patch-val" style={{ opacity: 0.5 }}>{entry.patch_version || '1.0.0'}</td>
                                             </tr>
 
