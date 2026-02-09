@@ -1,5 +1,5 @@
 import type { GameState, Enemy } from '../core/types';
-import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
+import { ARENA_CENTERS, isInMap, getHexDistToWall } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
@@ -83,24 +83,110 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         playSfx('rare-despawn'); return { vx: 0, vy: 0 };
     }
     const dToP = Math.hypot(player.x - e.x, player.y - e.y);
+
+    // Check wall proximity - teleport if too close to walls
+    const { dist: wallDist, normal: wallNormal } = getHexDistToWall(e.x, e.y);
+    if (wallDist < 200) {
+        // Too close to wall - teleport to safe position
+        const a = Math.random() * Math.PI * 2;
+        const d = 600 + Math.random() * 200;
+        let tx = player.x + Math.cos(a) * d;
+        let ty = player.y + Math.sin(a) * d;
+
+        // Ensure teleport target is valid and far from walls
+        let attempts = 0;
+        while (attempts < 10) {
+            if (isInMap(tx, ty)) {
+                const { dist: targetWallDist } = getHexDistToWall(tx, ty);
+                if (targetWallDist > 300) {
+                    // Valid position found
+                    const oldX = e.x, oldY = e.y;
+                    e.x = tx;
+                    e.y = ty;
+                    spawnParticles(state, oldX, oldY, ['#F0F0F0', '#808080'], 15);
+                    spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 15);
+                    playSfx('smoke-puff');
+                    e.lockedTargetX = undefined;
+                    e.lockedTargetY = undefined;
+                    break;
+                }
+            }
+            // Try new position
+            const newAngle = Math.random() * Math.PI * 2;
+            tx = player.x + Math.cos(newAngle) * d;
+            ty = player.y + Math.sin(newAngle) * d;
+            attempts++;
+        }
+    }
+
     if (e.rarePhase === 0) {
         const tSpd = player.speed * 0.8; e.spd = tSpd;
         if (e.spiralAngle === undefined) e.spiralAngle = Math.atan2(e.y - player.y, e.x - player.x);
         e.spiralAngle += 0.005;
-        let tx = player.x + Math.cos(e.spiralAngle) * 1100, ty = player.y + Math.sin(e.spiralAngle) * 1100;
-        if (!isInMap(tx, ty)) { tx -= (tx - player.x) * 0.2; ty -= (ty - player.y) * 0.2; }
+
+        // Find valid orbit position
+        let tx = player.x + Math.cos(e.spiralAngle) * 1100;
+        let ty = player.y + Math.sin(e.spiralAngle) * 1100;
+
+        // If target is out of bounds, find closest valid position on the orbit
+        if (!isInMap(tx, ty)) {
+            // Try progressively closer orbit distances until we find a valid position
+            for (let dist = 1000; dist >= 400; dist -= 100) {
+                tx = player.x + Math.cos(e.spiralAngle) * dist;
+                ty = player.y + Math.sin(e.spiralAngle) * dist;
+                if (isInMap(tx, ty)) {
+                    const { dist: targetWallDist } = getHexDistToWall(tx, ty);
+                    if (targetWallDist > 200) break;
+                }
+            }
+        }
+
+        // Ensure target is far enough from walls
+        const { dist: targetWallDist } = getHexDistToWall(tx, ty);
+        if (targetWallDist < 200) {
+            // Adjust position away from wall
+            const { normal } = getHexDistToWall(tx, ty);
+            tx += normal.x * 250;
+            ty += normal.y * 250;
+        }
+
         const tdx = tx - e.x, tdy = ty - e.y, tdist = Math.hypot(tdx, tdy);
         if (tdist > 1) { vx = (tdx / tdist) * e.spd; vy = (tdy / tdist) * e.spd; }
         if (dToP < 500) { e.rarePhase = 1; e.rareTimer = timeS; e.palette = ['#f97316', '#ea580c', '#c2410c']; playSfx('smoke-puff'); }
     } else {
         if (e.lockedTargetX === undefined || e.lockedTargetY === undefined || (Math.abs(e.x - e.lockedTargetX) < 50 && Math.abs(e.y - e.lockedTargetY) < 50)) {
-            const a = Math.random() * Math.PI * 2, d = 500 + Math.random() * 300;
-            let tx = player.x + Math.cos(a) * d, ty = player.y + Math.sin(a) * d;
-            if (!isInMap(tx, ty)) { tx = ARENA_CENTERS[0].x; ty = ARENA_CENTERS[0].y; }
-            e.lockedTargetX = tx; e.lockedTargetY = ty;
+            // Find new valid target position
+            let tx = 0, ty = 0;
+            let foundValid = false;
+
+            for (let attempt = 0; attempt < 20; attempt++) {
+                const a = Math.random() * Math.PI * 2;
+                const d = 500 + Math.random() * 300;
+                tx = player.x + Math.cos(a) * d;
+                ty = player.y + Math.sin(a) * d;
+
+                if (isInMap(tx, ty)) {
+                    const { dist: targetWallDist } = getHexDistToWall(tx, ty);
+                    if (targetWallDist > 250) {
+                        foundValid = true;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback to arena center if no valid position found
+            if (!foundValid) {
+                tx = ARENA_CENTERS[0].x;
+                ty = ARENA_CENTERS[0].y;
+            }
+
+            e.lockedTargetX = tx;
+            e.lockedTargetY = ty;
         }
+
         const tdx = (e.lockedTargetX || 0) - e.x, tdy = (e.lockedTargetY || 0) - e.y, tdist = Math.hypot(tdx, tdy);
         if (tdist > 1) { vx = (tdx / tdist) * e.spd; vy = (tdy / tdist) * e.spd; }
+
         if (e.forceTeleport || (dToP < 350 && (!e.tacticalTimer || timeS > e.tacticalTimer))) {
             const target = state.enemies.find(o => !o.dead && !o.boss && !o.legionId && o.shape !== 'snitch' && Math.hypot(o.x - player.x, o.y - player.y) > dToP + 200);
             if (target) {
@@ -108,19 +194,40 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
                 spawnParticles(state, ox, oy, ['#F0F0F0', '#808080'], 20);
                 spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 20);
                 playSfx('smoke-puff'); e.tacticalTimer = timeS + 4.0; e.panicCooldown = timeS + 1.0;
+                e.lockedTargetX = undefined;
+                e.lockedTargetY = undefined;
             } else if (e.forceTeleport) {
-                // Fallback: Random Blink if no swap target
-                const a = Math.random() * Math.PI * 2;
-                const d = 800 + Math.random() * 200;
-                const oldX = e.x, oldY = e.y;
-                e.x = player.x + Math.cos(a) * d;
-                e.y = player.y + Math.sin(a) * d;
+                // Fallback: Random Blink to valid position
+                let tx = 0, ty = 0;
+                let foundValid = false;
 
-                spawnParticles(state, oldX, oldY, ['#F0F0F0', '#808080'], 20);
-                spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 20);
-                playSfx('smoke-puff');
-                e.tacticalTimer = timeS + 4.0;
-                e.panicCooldown = timeS + 1.0;
+                for (let attempt = 0; attempt < 15; attempt++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const d = 800 + Math.random() * 200;
+                    tx = player.x + Math.cos(a) * d;
+                    ty = player.y + Math.sin(a) * d;
+
+                    if (isInMap(tx, ty)) {
+                        const { dist: targetWallDist } = getHexDistToWall(tx, ty);
+                        if (targetWallDist > 300) {
+                            foundValid = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (foundValid) {
+                    const oldX = e.x, oldY = e.y;
+                    e.x = tx;
+                    e.y = ty;
+                    spawnParticles(state, oldX, oldY, ['#F0F0F0', '#808080'], 20);
+                    spawnParticles(state, e.x, e.y, ['#F0F0F0', '#808080'], 20);
+                    playSfx('smoke-puff');
+                    e.tacticalTimer = timeS + 4.0;
+                    e.panicCooldown = timeS + 1.0;
+                    e.lockedTargetX = undefined;
+                    e.lockedTargetY = undefined;
+                }
             }
             e.forceTeleport = undefined;
         }
@@ -391,4 +498,112 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
             }
         }
     }
+}
+
+export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
+    const player = state.player;
+    const now = state.gameTime;
+
+    // INVINCIBILITY: Glitcher cannot be killed
+    e.hp = e.maxHp;
+
+    // LIFESPAN: Disappear after 20 seconds
+    const lifespan = 20;
+    const age = now - (e.spawnedAt || now);
+
+    if (age >= lifespan) {
+        // Dramatic exit
+        const colors = ['#ff00ff', '#00ffff', '#ffffff'];
+        for (let i = 0; i < 30; i++) {
+            spawnParticles(state, e.x, e.y, colors, 5);
+        }
+        playSfx('smoke-puff');
+        e.dead = true;
+        e.hp = 0;
+        console.log('[GLITCHER] Disappeared after 15 seconds');
+        return { vx: 0, vy: 0 };
+    }
+
+    // 1. BLINK (Teleport when player is too close)
+    const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+    const blinkCooldown = 6; // 6 seconds
+    if (distToPlayer < 300 && (!e.lastBlink || now - e.lastBlink > blinkCooldown) && !e.glitchDecoy) {
+        const oldX = e.x, oldY = e.y;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 400 + Math.random() * 200;
+        let tx = player.x + Math.cos(angle) * dist;
+        let ty = player.y + Math.sin(angle) * dist;
+
+        if (isInMap(tx, ty)) {
+            e.x = tx; e.y = ty;
+            e.lastBlink = now;
+            const colors = ['#ff00ff', '#00ffff', '#ffffff'];
+            spawnParticles(state, oldX, oldY, colors, 20);
+            spawnParticles(state, e.x, e.y, colors, 20);
+            playSfx('smoke-puff');
+        }
+    }
+
+    // 2. GLITCH CLOUD ASSAULT (Spawn clouds NEAR PLAYER, not at Glitcher)
+    const cloudInterval = 4; // Every 4 seconds
+    if (!e.lastLeak || now - e.lastLeak > cloudInterval) {
+        // Spawn 2-3 clouds in a pattern around the player
+        const cloudCount = 2 + Math.floor(Math.random() * 2); // 2-3 clouds
+
+        for (let i = 0; i < cloudCount; i++) {
+            const angle = (Math.PI * 2 / cloudCount) * i + Math.random() * 0.5;
+            const distance = 150 + Math.random() * 200; // 150-350px from player (wider spread)
+            const cloudX = player.x + Math.cos(angle) * distance;
+            const cloudY = player.y + Math.sin(angle) * distance;
+
+            state.areaEffects.push({
+                id: Math.random(),
+                type: 'glitch_cloud',
+                x: cloudX,
+                y: cloudY,
+                radius: 120,
+                duration: 8,
+                creationTime: now,
+                level: 1
+            });
+
+            // Visual feedback
+            spawnParticles(state, cloudX, cloudY, ['#ff00ff', '#00ffff'], 8);
+        }
+
+        e.lastLeak = now;
+        console.log(`[GLITCHER] Spawned ${cloudCount} Glitch Clouds near player`);
+        playSfx('smoke-puff');
+    }
+
+    // Movement: Keep distance from player (harasser behavior)
+    const dx = player.x - e.x;
+    const dy = player.y - e.y;
+    const dist = Math.hypot(dx, dy);
+    let vx = 0, vy = 0;
+
+    // Maintain 300-500px distance
+    const idealDist = 400;
+    if (dist > 1 && !isNaN(dist)) {
+        if (dist < 300) {
+            // Too close - move away
+            vx = -(dx / dist) * e.spd;
+            vy = -(dy / dist) * e.spd;
+        } else if (dist > 500) {
+            // Too far - move closer
+            vx = (dx / dist) * e.spd;
+            vy = (dy / dist) * e.spd;
+        } else {
+            // Circle around player
+            const perpAngle = Math.atan2(dy, dx) + Math.PI / 2;
+            vx = Math.cos(perpAngle) * e.spd;
+            vy = Math.sin(perpAngle) * e.spd;
+        }
+    }
+
+    // Final safety check for velocity
+    if (isNaN(vx)) vx = 0;
+    if (isNaN(vy)) vy = 0;
+
+    return { vx, vy };
 }

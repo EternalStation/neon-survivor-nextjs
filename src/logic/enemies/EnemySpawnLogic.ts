@@ -39,7 +39,12 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     const { shapeDef, eraPalette, fluxState } = getProgressionParams(gameTime);
 
     // Use provided shape OR respect game progression (shapeDef unlocks based on game time)
-    const chosenShape: ShapeType = shape || shapeDef.type as ShapeType;
+    let chosenShape: ShapeType = shape || shapeDef.type as ShapeType;
+
+    // Rare random chance for Glitcher (excludes bosses/explicit spawns)
+    if (!shape && !isBoss && Math.random() < 0.005) { // 0.5% chance
+        chosenShape = 'glitcher';
+    }
 
     // If specific position provided (cheat command), use it; otherwise calculate spawn location
     let spawnPos = (x !== undefined && y !== undefined) ? { x, y } : { x: player.x, y: player.y };

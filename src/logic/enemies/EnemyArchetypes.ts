@@ -1,4 +1,4 @@
-export type EnemyArchetype = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon';
+export type EnemyArchetype = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher';
 
 export interface ArchetypeConfig {
     shape: EnemyArchetype;
@@ -47,5 +47,13 @@ export const ARCHETYPES: Record<EnemyArchetype, ArchetypeConfig> = {
         hpMult: 1.0,
         spawnRateMult: 0.25,
         specialAbility: 'spawn',
+    },
+    glitcher: {
+        shape: 'glitcher',
+        name: 'Prism Glitcher',
+        speedMult: 1.4,
+        hpMult: 1.5,
+        spawnRateMult: 0.05,
+        specialAbility: 'glitch',
     },
 };

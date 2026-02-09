@@ -1,5 +1,6 @@
 import type { GameState, Enemy } from '../../core/types';
 import { spawnParticles } from '../../effects/ParticleLogic';
+import { playSfx } from '../../audio/AudioLogic';
 import { PALETTES } from '../../core/constants';
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
@@ -661,6 +662,38 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 };
                 drawBlade(-1, -0.6, 1.0, 1.0); drawBlade(-1, 0, 1.2, 0.5); drawBlade(-1, 0.6, 1.0, 1.0);
                 drawBlade(1, -0.6, 1.0, 1.0); drawBlade(1, 0, 1.2, 0.5); drawBlade(1, 0.6, 1.0, 1.0);
+            } else if (e.shape === 'glitcher') {
+                // Prism Glitcher: Pure Glitch Lines (No Shapes)
+                const t = state.gameTime;
+
+                // EMERGENCY FALLBACK: Draw a bright pink dot at the center
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Temporary Screen Space
+                ctx.fillStyle = '#ff00ff';
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // ONLY draw glitch lines shooting out - no shapes!
+                const lineCount = 8; // More lines for better visibility
+                for (let i = 0; i < lineCount; i++) {
+                    ctx.save();
+                    const angle = (i / lineCount) * Math.PI * 2 + t * 5;
+                    const length = size * (1.8 + Math.sin(t * 20 + i) * 0.7);
+
+                    // Alternate colors: pink, cyan, white
+                    const colors = ['#ff00ff', '#00ffff', '#ffffff'];
+                    ctx.strokeStyle = colors[i % 3];
+                    ctx.lineWidth = 3;
+                    ctx.globalAlpha = 0.7 + Math.sin(t * 15 + i) * 0.3; // Pulsing opacity
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
+                    ctx.stroke();
+                    ctx.restore();
+                }
             }
         };
 

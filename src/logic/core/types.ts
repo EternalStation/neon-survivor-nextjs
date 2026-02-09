@@ -52,9 +52,10 @@ export interface ActiveSkill {
     icon?: string;
 }
 
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud';
 export interface AreaEffect {
     id: number;
-    type: 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater';
+    type: AreaEffectType;
     x: number;
     y: number;
     radius: number;
@@ -89,6 +90,7 @@ export interface Player {
     wallsHit: number;
     upgradesCollected: import('./types').UpgradeChoice[]; // Full objects for stat tracking
     reg: PlayerStats;
+    invertedControlsUntil?: number;
     arm: PlayerStats;
     xp_per_kill: { base: number; flat: number; mult: number };
     xp: { current: number; needed: number };
@@ -218,7 +220,7 @@ export interface Bullet {
     ringAmmo?: number; // Count of fused bullets
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'minion' | 'snitch' | 'hexagon';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -250,7 +252,6 @@ export interface Enemy {
     bossAttackPattern: number; // 0 = Spread Shot, 1 = Tracking Snipe
     lastAttack: number;
     dead: boolean;
-    isExecuted?: boolean;
 
     // New Progression Props
     shape: ShapeType;
@@ -297,7 +298,13 @@ export interface Enemy {
     canBlock?: boolean; // For Phase 2 defense (replaces blockedShots boolean flag logic)
     invincibleUntil?: number; // Timestamp for invincibility (Phase 3 start)
     parentId?: number; // For decoys to know their master
-    teleported?: boolean; // Flag for Phase 2 entry
+    isExecuted?: boolean; // Specialist marker for execute skill
+
+    // Glitcher Properties
+    glitchDecoy?: boolean;
+    lastBlink?: number;
+    lastDecoy?: number;
+    lastLeak?: number;
     longTrail?: { x: number; y: number }[]; // Long paint trail
     forceTeleport?: boolean; // Signal to force teleport logic (Snitch)
 

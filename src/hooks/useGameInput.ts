@@ -6,6 +6,8 @@ import { castSkill } from '../logic/player/SkillLogic';
 import { calcStat } from '../logic/utils/MathUtils';
 import { getKeybinds } from '../logic/utils/Keybinds';
 import { dropBlueprint } from '../logic/upgrades/BlueprintLogic';
+import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
+import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
 
 interface GameInputProps {
@@ -110,17 +112,56 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
 
             // --- CHEAT CODES ---
             cheatBuffer += key;
-            if (cheatBuffer.length > 10) cheatBuffer = cheatBuffer.slice(-10);
+            if (cheatBuffer.length > 20) cheatBuffer = cheatBuffer.slice(-20); // Longer buffer to handle movement noise
 
-            // K1 - Kill Player
-            if (cheatBuffer.endsWith('k1')) {
-                setGameOver(true);
-                cheatBuffer = '';
-            }
+            // GLI - Spawn Prism Glitcher (MANUAL CONSTRUCTION)
+            if (cheatBuffer.endsWith('gli')) {
+                const p = gameState.current.player;
+                const now = gameState.current.gameTime;
 
-            // L1 - Level Up
-            if (cheatBuffer.endsWith('l1')) {
-                gameState.current.player.xp.current = gameState.current.player.xp.needed;
+                // MANUALLY CREATE THE GLITCHER ENEMY
+                const glitcher = {
+                    id: Math.random(),
+                    type: 'glitcher' as const,
+                    shape: 'glitcher' as const,
+                    x: p.x + 100, // Spawn 100px to the right
+                    y: p.y,
+                    size: 33, // 1.5x base size (22 * 1.5)
+                    hp: 500,
+                    maxHp: 500,
+                    spd: 3.36, // 2.4 * 1.4 (speedMult from constants)
+                    boss: false,
+                    bossType: 0,
+                    bossAttackPattern: 0,
+                    lastAttack: now,
+                    dead: false,
+                    palette: ['#ff00ff', '#00ffff', '#ffffff'], // Glitch colors
+                    eraPalette: ['#ff00ff', '#00ffff', '#ffffff'],
+                    shellStage: 2,
+                    fluxState: 0,
+                    pulsePhase: 0,
+                    rotationPhase: 0,
+                    knockback: { x: 0, y: 0 },
+                    isElite: false,
+                    spawnedAt: now,
+                    // Glitcher-specific properties
+                    glitchDecoy: false,
+                    lastBlink: 0,
+                    lastDecoy: 0,
+                    lastLeak: 0,
+                    longTrail: []
+                };
+
+                // DIRECTLY PUSH TO ENEMIES ARRAY
+                gameState.current.enemies.push(glitcher);
+
+                spawnFloatingNumber(gameState.current, p.x, p.y, 'GLITCHER SPAWNED!', '#ff00ff', true);
+                playSfx('spawn');
+
+                console.log('[CHEAT] MANUALLY spawned Glitcher:', glitcher);
+                console.log('[CHEAT] Total enemies:', gameState.current.enemies.length);
+                console.log('[CHEAT] Glitcher position:', glitcher.x, glitcher.y);
+
                 refreshUI();
                 cheatBuffer = '';
             }
@@ -129,6 +170,13 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             if (cheatBuffer.endsWith('yy') || cheatBuffer.endsWith('ko')) {
                 gameState.current.player.dust += 5100;
                 console.log('[CHEAT] Added 5100 Dust');
+                refreshUI();
+                cheatBuffer = '';
+            }
+
+            // L1 - Level Up
+            if (cheatBuffer.endsWith('l1')) {
+                gameState.current.player.xp.current = gameState.current.player.xp.needed;
                 refreshUI();
                 cheatBuffer = '';
             }
@@ -247,7 +295,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     gameState.current.gameTime = gameTime;
 
                     // Aligned Boss Schedule Logic
-                    const schedule = [2, 4, 5, 6, 8];
+                    const schedule = [2, 4, 6, 8, 10]; // 5 bosses per tier, every 2 minutes
                     const current10MinCycle = Math.floor(min / 10);
                     const currentMinuteInCycle = min % 10;
 

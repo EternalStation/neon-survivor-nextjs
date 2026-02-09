@@ -47,6 +47,8 @@ export function handlePlayerMovement(
         }
     }
 
+    const isInverted = player.invertedControlsUntil && state.gameTime < player.invertedControlsUntil;
+
     if (!isStunned && !player.immobilized) {
         if (keys['keyw'] || keys['arrowup']) vy--;
         if (keys['keys'] || keys['arrowdown']) vy++;
@@ -57,6 +59,11 @@ export function handlePlayerMovement(
         if (inputVector) {
             vx += inputVector.x;
             vy += inputVector.y;
+        }
+
+        if (isInverted) {
+            vx = -vx;
+            vy = -vy;
         }
     }
 

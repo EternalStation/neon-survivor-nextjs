@@ -13,7 +13,7 @@ import { updateBossEnemy } from './BossEnemyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette } from './EnemySpawnLogic';
 import { scanForMerges, manageMerges } from './EnemyMergeLogic';
-import { updateZombie, updateSnitch, updateMinion } from './UniqueEnemyLogic';
+import { updateZombie, updateSnitch, updateMinion, updatePrismGlitcher } from './UniqueEnemyLogic';
 import { getFlankingVelocity } from './EnemyAILogic';
 
 // Helper to determine current game era params
@@ -76,8 +76,8 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         spawnEnemy(state, undefined, undefined, undefined, true, tier);
 
-        // Calculate next spawn time in the schedule: [2, 4, 5, 6, 8]
-        const schedule = [2, 4, 5, 6, 8];
+        // Calculate next spawn time in the schedule: [2, 4, 6, 8, 10] (5 bosses per tier, every 2 minutes)
+        const schedule = [2, 4, 6, 8, 10];
         const currentMinuteInCycle = minutesRaw % 10;
 
         let nextMinuteInCycle = -1;
@@ -552,6 +552,8 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             v = updateMinion(e, state, player, dx, dy, 0, 0);
         } else if (e.shape === 'snitch') {
             v = updateSnitch(e, state, player, state.gameTime);
+        } else if (e.shape === 'glitcher') {
+            v = updatePrismGlitcher(e, state, step);
         } else if (e.isRare && e.shape === 'pentagon') {
             v = updateUniquePentagon(e, state, dist, dx, dy, currentSpd, pushX, pushY);
         } else if (e.isElite) {

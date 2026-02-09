@@ -60,7 +60,7 @@ export function updateExtraction(state: GameState, step: number) {
             // External trigger: Open Portals
             if (msg.triggerPortals) {
                 state.portalState = 'open';
-                state.portalTimer = 999999;
+                state.portalTimer = 10.0;
                 state.portalOneTimeUse = true; // Mark as one-time use for extraction
                 playSfx('warning');
             }

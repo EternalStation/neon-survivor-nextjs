@@ -266,6 +266,36 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             }
 
             ctx.restore();
+        } else if (effect.type === 'glitch_cloud') {
+            const radius = effect.radius || 100;
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+            const t = state.gameTime;
+
+            // Draw noise squares
+            for (let i = 0; i < 15; i++) {
+                const offX = Math.sin(i * 123 + t * 5) * radius * 0.8;
+                const offY = Math.cos(i * 456 + t * 5) * radius * 0.8;
+                const sz = 10 + Math.sin(i + t * 10) * 5;
+
+                ctx.fillStyle = i % 2 === 0 ? '#ff00ff' : '#00ffff';
+                ctx.globalAlpha = 0.4 + Math.sin(t * 20 + i) * 0.2;
+                ctx.fillRect(offX, offY, sz, sz);
+            }
+
+            // Outer distorted ring
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.2;
+            ctx.beginPath();
+            for (let a = 0; a < Math.PI * 2; a += 0.5) {
+                const r = radius * (0.9 + Math.random() * 0.2);
+                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.restore();
         }
     });
 }
