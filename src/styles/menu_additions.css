@@ -567,7 +567,7 @@ body {
 
 /* --- SLIDE PANELS --- */
 .stats-panel-slide {
-    position: fixed;
+    position: absolute;
     top: 0;
     right: -650px;
     width: 600px;

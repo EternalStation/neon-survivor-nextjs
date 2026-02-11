@@ -36,7 +36,11 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
         ctx.lineWidth = 200; // Scaled down this will be thin
         ctx.globalAlpha = 0.5;
 
-        ARENA_CENTERS.forEach(c => {
+        const visibleArenas = gameState.portalsUnlocked
+            ? ARENA_CENTERS
+            : ARENA_CENTERS.filter(c => c.id === 0);
+
+        visibleArenas.forEach(c => {
             ctx.beginPath();
             for (let i = 0; i < 6; i++) {
                 const ang = Math.PI / 3 * i;

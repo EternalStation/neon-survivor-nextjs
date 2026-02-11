@@ -484,7 +484,7 @@ export function useGameLogic({
 
         state.enemies = state.enemies.filter(e => !e.dead);
         const { player } = state;
-        const atkScore = calcStat(player.atk);
+        const atkScore = calcStat(player.atk, state.dmgAtkBuffMult);
         let shotsPerSec = 2.64 * Math.log(atkScore / 100) - 1.25;
         const fireDelaySec = 1 / shotsPerSec;
         player.shotAccumulator = (player.shotAccumulator || 0) + step;
@@ -492,7 +492,7 @@ export function useGameLogic({
 
         if (player.shotAccumulator >= fireDelaySec && state.spawnTimer <= 0 && state.portalState !== 'transferring' && !phaseShifted
             && !['departing', 'complete'].includes(state.extractionStatus)) {
-            const d = calcStat(player.dmg);
+            const d = calcStat(player.dmg, state.dmgAtkBuffMult);
             let maxBursts = 5;
             while (player.shotAccumulator >= fireDelaySec && maxBursts > 0) {
                 for (let i = 0; i < player.multi; i++) {
@@ -512,7 +512,7 @@ export function useGameLogic({
             d.y = player.y + Math.sin(d.a + (i * 2)) * 60;
             if (Date.now() - d.last > 800) {
                 const droneDmgMult = player.droneCount > 3 ? Math.pow(2, player.droneCount - 3) : 1;
-                spawnBullet(state, d.x, d.y, player.targetAngle, calcStat(player.dmg) * droneDmgMult, player.pierce);
+                spawnBullet(state, d.x, d.y, player.targetAngle, calcStat(player.dmg, state.dmgAtkBuffMult) * droneDmgMult, player.pierce);
                 d.last = Date.now();
             }
         });

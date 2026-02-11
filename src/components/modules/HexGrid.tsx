@@ -331,6 +331,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 </defs>
 
                 <g
+                    className="center-class-icon"
                     style={{ cursor: 'pointer' }}
                     onClick={() => {
                         const centerClass = gameState.moduleSockets.center;
@@ -340,7 +341,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     }}
                 >
                     {/* Attention Pulse for First-Time Players */}
-                    {!gameState.chassisDetailViewed && (
+                    {!gameState.chassisDetailViewed && gameState.tutorial.isActive && gameState.tutorial.currentStep === 18 && (
                         <polygon
                             points={getHexPoints(centerX, centerY, 90)}
                             fill="none"
@@ -562,7 +563,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 }
                             }}
                         >
-                            {movedItem && !moduleSockets.diamonds[i] && (
+                            {(movedItem || (gameState.tutorial.isActive && gameState.tutorial.currentStep === 12)) && !moduleSockets.diamonds[i] && (
                                 <circle
                                     cx={pos.x} cy={pos.y} r="50"
                                     fill="none"

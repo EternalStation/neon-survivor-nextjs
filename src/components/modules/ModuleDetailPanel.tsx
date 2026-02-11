@@ -118,14 +118,87 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         isEmbedded={true}
                     />
                 ) : hoveredItem ? (
-                    <MeteoriteTooltip
-                        meteorite={hoveredItem.item}
-                        gameState={gameState}
-                        meteoriteIdx={hoveredItem.index}
-                        x={hoveredItem.x}
-                        y={hoveredItem.y}
-                        isEmbedded={true}
-                    />
+                    hoveredItem.item.isBlueprint ? (
+                        <div style={{
+                            width: '100%', height: '100%',
+                            display: 'flex', flexDirection: 'column',
+                            padding: '15px', color: '#fff',
+                            fontFamily: 'Inter, sans-serif',
+                            position: 'relative'
+                        }}>
+                            {/* HEADER */}
+                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '8px', marginBottom: '10px' }}>
+                                <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#60a5fa', boxShadow: '0 0 5px #60a5fa' }} />
+                                    ARCHIVE ANOMALY
+                                </div>
+                                <div style={{ fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', textShadow: '0 0 10px rgba(59, 130, 246, 0.5)', marginTop: '2px' }}>
+                                    ENCRYPTED DATASET
+                                </div>
+                            </div>
+
+                            {/* CONTENT */}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                                    <div style={{
+                                        border: '1px solid #3b82f6',
+                                        borderRadius: '8px',
+                                        padding: '10px',
+                                        background: 'rgba(59, 130, 246, 0.1)',
+                                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)'
+                                    }}>
+                                        <img
+                                            src="/assets/Icons/Blueprint.png"
+                                            style={{ width: '64px', height: '64px', filter: 'drop-shadow(0 0 10px #3b82f6)' }}
+                                            alt="encrypted blueprint"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ fontSize: '11px', lineHeight: '1.6', color: '#94a3b8', fontStyle: 'italic', background: 'rgba(15, 23, 42, 0.5)', padding: '10px', borderRadius: '4px', borderLeft: '2px solid #3b82f6' }}>
+                                    "Deep-space telemetry recovered from an abandoned orbital station. The data appears to contain advanced chassis augmentation protocols, but requires local research processing to initialize."
+                                </div>
+
+                                {/* ANALYSIS BOX */}
+                                <div style={{
+                                    border: '1px dashed rgba(59, 130, 246, 0.4)',
+                                    borderRadius: '6px',
+                                    padding: '12px',
+                                    background: 'rgba(15, 23, 42, 0.3)',
+                                    marginTop: '20px'
+                                }}>
+
+
+
+
+                                    <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', fontStyle: 'italic' }}>
+                                        *Decryption duration varies based on encryption complexity
+                                    </div>
+
+                                    <div style={{
+                                        marginTop: '4px',
+                                        textAlign: 'center',
+                                        color: '#f59e0b',
+                                        fontWeight: 900,
+                                        fontSize: '11px',
+                                        letterSpacing: '1px',
+                                        animation: 'pulse-text 2s infinite'
+                                    }}>
+                                        RIGHT-CLICK TO BEGIN DECRYPTION
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <MeteoriteTooltip
+                            meteorite={hoveredItem.item}
+                            gameState={gameState}
+                            meteoriteIdx={hoveredItem.index}
+                            x={hoveredItem.x}
+                            y={hoveredItem.y}
+                            isEmbedded={true}
+                        />
+                    )
                 ) : hoveredBlueprint ? (
                     <div style={{
                         width: '100%', height: '100%',

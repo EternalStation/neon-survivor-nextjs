@@ -94,6 +94,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     portalsUsed: 0,
     snitchCaught: 0,
     timeInArena: { 0: 0, 1: 0, 2: 0 },
+    arenaLevels: { 0: 0, 1: 0, 2: 0 }, // Initialize levels
     frameCount: 0,
     isPaused: false,
     gameOver: false,
@@ -113,6 +114,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
     // Portal / Arena Defaults
     currentArena: startingArenaId,
+    portalsUnlocked: false, // Default to locked
     portalState: 'closed',
     portalTimer: 240, // 240s = 4 minutes (Cycle)
     portalOpenDuration: 10, // 10 seconds open
@@ -148,7 +150,9 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     blueprints: Array(10).fill(null),
     activeBlueprintBuffs: {},
     activeBlueprintCharges: {},
-    arenaBuffMult: 1.0,
+    hpRegenBuffMult: 1.0,
+    dmgAtkBuffMult: 1.0,
+    xpSoulBuffMult: 1.0,
 
     // Extraction System
     extractionStatus: 'none',
@@ -176,5 +180,6 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         hasCollectedMeteorite: false,
         hasOpenedModules: false,
         hasOpenedStats: false
-    }
+    },
+    firstMeteoriteSpawned: false
 });

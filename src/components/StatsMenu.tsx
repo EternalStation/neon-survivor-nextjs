@@ -301,7 +301,8 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderTop: '1px solid #334155', marginTop: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Pierce</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {player.pierce}

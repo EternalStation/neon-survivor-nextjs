@@ -66,6 +66,38 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         desc: 'Block lethal hit, teleport to random safe location (min 2500u offset) and grant 1.5s immunity. Duration 300s.',
         cost: 100,
         duration: 300 // 5 min
+    },
+    DIMENSIONAL_GATE: {
+        type: 'DIMENSIONAL_GATE',
+        name: 'Dimensional Gate',
+        serial: 'GATE-KEY',
+        desc: 'Unlocks Neural Portals, allowing travel to other sectors.',
+        cost: 0,
+        duration: -1 // Permanent
+    },
+    SECTOR_UPGRADE_ECO: {
+        type: 'SECTOR_UPGRADE_ECO',
+        name: 'Sector Override: ECO',
+        serial: 'ECO-OVR',
+        desc: 'Unlocks Economic Sector Protocol: +30% Extraction Efficiency (XP & Soul Yield). Permanent.',
+        cost: 200,
+        duration: -1 // Permanent
+    },
+    SECTOR_UPGRADE_COM: {
+        type: 'SECTOR_UPGRADE_COM',
+        name: 'Sector Override: COM',
+        serial: 'COM-OVR',
+        desc: 'Unlocks Combat Sector Protocol: +30% Offensive Output (DMG & Attack Speed). Permanent.',
+        cost: 200,
+        duration: -1 // Permanent
+    },
+    SECTOR_UPGRADE_DEF: {
+        type: 'SECTOR_UPGRADE_DEF',
+        name: 'Sector Override: DEF',
+        serial: 'DEF-OVR',
+        desc: 'Unlocks Defense Sector Protocol: +30% Vitality Metrics (Max HP & Regen). Permanent.',
+        cost: 200,
+        duration: -1 // Permanent
     }
 };
 
@@ -107,10 +139,16 @@ export function dropBlueprint(state: GameState, type: BlueprintType, x: number, 
 }
 
 export function trySpawnBlueprint(state: GameState, x: number, y: number) {
+    // DELAY MECHANIC: No Blueprints until 10 minutes (600s)
+    if (state.gameTime < 600) return;
+
     // 15% Drop Rate from Elites
     if (Math.random() > 0.15) return;
 
-    const types: BlueprintType[] = ['METEOR_SHOWER', 'NEURAL_OVERCLOCK', 'STASIS_FIELD', 'PERK_RESONANCE', 'ARENA_SURGE', 'QUANTUM_SCRAPPER', 'MATRIX_OVERDRIVE', 'TEMPORAL_GUARD'];
+    const types: BlueprintType[] = [
+        'METEOR_SHOWER', 'NEURAL_OVERCLOCK', 'STASIS_FIELD', 'PERK_RESONANCE', 'ARENA_SURGE', 'QUANTUM_SCRAPPER', 'MATRIX_OVERDRIVE', 'TEMPORAL_GUARD',
+        'SECTOR_UPGRADE_ECO', 'SECTOR_UPGRADE_COM', 'SECTOR_UPGRADE_DEF'
+    ];
     const randomType = types[Math.floor(Math.random() * types.length)];
     dropBlueprint(state, randomType, x, y);
 }
@@ -130,9 +168,9 @@ export function researchBlueprint(state: GameState, inventoryIndex: number): boo
     if (slotIdx !== -1) {
         blueprint.researched = false;
         blueprint.status = 'researching';
-        // Random duration between 30 and 120 seconds
-        const randomDuration = 30 + Math.random() * 90; // 30 + (0 to 90) = 30 to 120
-        blueprint.researchFinishTime = Date.now() + (randomDuration * 1000);
+        // Random duration between 30 and 60 seconds
+        const randomDuration = 30 + Math.random() * 30; // 30 + (0 to 30) = 30 to 60
+        blueprint.researchFinishTime = state.gameTime + randomDuration;
         state.blueprints[slotIdx] = blueprint;
         state.inventory[inventoryIndex] = null;
         playSfx('socket-place');
@@ -144,7 +182,7 @@ export function researchBlueprint(state: GameState, inventoryIndex: number): boo
 }
 
 export function checkResearchProgress(state: GameState) {
-    const now = Date.now();
+    const now = state.gameTime;
     let updated = false;
     state.blueprints.forEach(bp => {
         if (bp && bp.status === 'researching' && bp.researchFinishTime) {
@@ -172,11 +210,38 @@ export function activateBlueprint(state: GameState, slotIndex: number): boolean 
     state.player.dust -= blueprint.cost;
     blueprint.status = 'active';
 
+    // Handle Permanent Unlocks
+    if (blueprint.type === 'DIMENSIONAL_GATE') {
+        state.portalsUnlocked = true;
+        playSfx('rare-spawn'); // Placeholder sound
+        // state.player.dust -= blueprint.cost; // Already deducted
+        blueprint.status = 'active'; // Mark as used/active
+        // For permanent items, maybe we remove them or keep them as "Active" in the list?
+        // Keeping them "Active" helps track that we have them.
+        return true;
+    }
+    if (blueprint.type === 'SECTOR_UPGRADE_ECO') {
+        state.arenaLevels[0] = (state.arenaLevels[0] || 0) + 1;
+        blueprint.status = 'active';
+        playSfx('rare-spawn');
+        return true;
+    }
+    if (blueprint.type === 'SECTOR_UPGRADE_COM') {
+        state.arenaLevels[1] = (state.arenaLevels[1] || 0) + 1;
+        blueprint.status = 'active';
+        playSfx('rare-spawn');
+        return true;
+    }
+    if (blueprint.type === 'SECTOR_UPGRADE_DEF') {
+        state.arenaLevels[2] = (state.arenaLevels[2] || 0) + 1;
+        blueprint.status = 'active';
+        playSfx('rare-spawn');
+        return true;
+    }
+
     if (blueprint.type === 'QUANTUM_SCRAPPER') {
         state.activeBlueprintCharges[blueprint.type] = 50;
     } else if (blueprint.type === 'ARENA_SURGE') {
-        state.arenaBuffMult = 2.0; // 100% increase
-        // Sync to whole seconds: round gameTime up, then add duration
         const endTime = Math.ceil(state.gameTime) + blueprint.duration;
         state.activeBlueprintBuffs[blueprint.type] = endTime;
     } else {
@@ -219,9 +284,6 @@ export function updateBlueprints(state: GameState, step: number) {
             delete state.activeBlueprintBuffs[t];
             if (t === 'TEMPORAL_GUARD') {
                 state.player.temporalGuardActive = false;
-            }
-            if (t === 'ARENA_SURGE') {
-                state.arenaBuffMult = 1.0;
             }
         }
     }

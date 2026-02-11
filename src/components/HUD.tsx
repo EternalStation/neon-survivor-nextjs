@@ -45,70 +45,14 @@ export const HUD: React.FC<HUDProps> = ({
     // Dynamic Max HP calculation for HUD
     let maxHp = calcStat(player.hp);
     const arenaIdx = getArenaIndex(player.x, player.y);
-    if (arenaIdx === 2) {
+    if (arenaIdx === 2 && (gameState.arenaLevels[2] || 0) >= 1) {
         maxHp *= 1.2; // +20% Max HP in Defence Hex
     }
 
     if (isTutorialLayerOnly) {
-        return (
-            <>
-                <TutorialOverlay gameState={gameState} />
-                {(() => {
-                    const { tutorial } = gameState;
-                    if (!tutorial.isActive) return null;
-
-                    if (tutorial.currentStep === TutorialStep.LEVEL_UP_MENU) {
-                        if (tutorial.stepTimer > 5.0) return null;
-
-                        return (
-                            <SpotlightOverlay
-                                selector=".active-tutorial-target .rarity-sockets"
-                                text="RARITY"
-                                subtext="SOCKETS BELOW REPRESENT RARITY LEVEL"
-                            />
-                        );
-                    }
-
-                    if (tutorial.currentStep === TutorialStep.UPGRADE_SELECTED_CHECK_STATS) {
-                        if (!showStats) return null;
-
-                        if (tutorial.stepTimer < 10) {
-                            return (
-                                <SpotlightOverlay
-                                    selector=".radar-chart-wrapper"
-                                    text="SYNERGY DIAGRAM"
-                                    subtext="THIS GRAPH VISUALIZES YOUR CHASSIS FOCUS AND SYNERGY STRENGTHS."
-                                    preferredPosition="left"
-                                    nextLabel="[ NEXT ]"
-                                    onNext={() => {
-                                        // Jump to 10s mark to show next hint
-                                        gameState.tutorial.stepTimer = 10;
-                                    }}
-                                />
-                            );
-                        } else {
-                            return (
-                                <SpotlightOverlay
-                                    selector=".stats-calculations"
-                                    text="SYSTEM CALCULATIONS"
-                                    subtext="VIEW DETAILED FORMULAS SHOWING HOW AUGMENTATIONS IMPACT CORE STATS."
-                                    preferredPosition="left"
-                                    nextLabel="[ OKAY ]"
-                                    onNext={() => {
-                                        // Advance tutorial step to next phase
-                                        gameState.tutorial.currentStep = TutorialStep.COLLECT_METEORITE;
-                                        gameState.tutorial.stepTimer = 0;
-                                    }}
-                                />
-                            );
-                        }
-                    }
-
-                    return null;
-                })()}
-            </>
-        );
+        return <TutorialOverlay gameState={gameState} />;
     }
+
 
     if (gameOver && gameState.extractionStatus !== 'complete') return null;
 
@@ -116,7 +60,16 @@ export const HUD: React.FC<HUDProps> = ({
     // timeRemaining removed (was used for event timer)
 
     return (
-        <>
+        <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            width: '100%',
+            height: '100%',
+            maxWidth: '1800px',
+            transform: 'translateX(-50%)',
+            pointerEvents: 'none'
+        }}>
             {/* Event Indicator (Title Only) */}
             {activeEvent && (
                 <div style={{
@@ -161,6 +114,7 @@ export const HUD: React.FC<HUDProps> = ({
                 portalError={portalError}
                 portalCost={portalCost}
                 isFull={!gameState.inventory.slice(20).some(slot => slot === null)}
+                portalsUnlocked={gameState.portalsUnlocked}
             />
             <AlertPanel gameState={gameState} bossWarning={bossWarning} />
 
@@ -293,6 +247,6 @@ export const HUD: React.FC<HUDProps> = ({
                     75% { transform: translate(-1px, 2px); }
                 }
             `}</style>
-        </>
+        </div>
     );
 };

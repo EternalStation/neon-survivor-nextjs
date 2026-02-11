@@ -10,6 +10,17 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
     ctx.shadowColor = 'transparent';
     ctx.setLineDash([]);
 
+    // Helper to dim hex color by 20%
+    const dimHex = (hex: string, factor: number) => {
+        if (!hex.startsWith('#') || hex.length < 7) return hex;
+        try {
+            const r = Math.floor(parseInt(hex.slice(1, 3), 16) * factor);
+            const g = Math.floor(parseInt(hex.slice(3, 5), 16) * factor);
+            const b = Math.floor(parseInt(hex.slice(5, 7), 16) * factor);
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        } catch { return hex; }
+    };
+
     // 1. Draw Merging Lines (Optimized)
     const mergeHosts = new Map<string, Enemy>();
     enemies.forEach(e => {
@@ -534,6 +545,11 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.shadowBlur = 15;
         }
 
+        // --- SECOND 5-MIN CYCLE (5-10, 20-25, etc.) BRIGHTNESS TWEAK ---
+        if (fState === 1) {
+            innerColor = dimHex(innerColor, 0.8);
+        }
+
         let chaosLevel = 0;
         const minutes = state.gameTime / 60;
         if (e.boss) {
@@ -915,9 +931,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         }
 
         ctx.strokeStyle = outerColor; ctx.lineWidth = 1.5;
-        if (e.boss) { ctx.shadowBlur = 8; ctx.shadowColor = outerColor; }
+        if (e.boss) {
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = outerColor;
+        } else {
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+        }
         drawShape(e.size * 1.1, true); ctx.stroke();
-        ctx.fillStyle = innerColor; ctx.globalAlpha = 1.0; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; drawShape(e.size, true); ctx.fill();
+
+        ctx.fillStyle = innerColor; ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+        drawShape(e.size, true); ctx.fill();
 
         if (e.boss) {
             ctx.save(); ctx.clip(); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.8;

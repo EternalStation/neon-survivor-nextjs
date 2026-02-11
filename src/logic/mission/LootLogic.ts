@@ -212,8 +212,7 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     // Base chance is the sum of the weights (e.g. 1.6 + 1.0 + 0.4 = 3.0 -> 3%)
     let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.7; // User Request: Lower from 10% to 7%
 
-    const surge = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
-    if (state.currentArena === 0) chance *= (1 + (0.15 * surge)); // +15% (or +30%) Drop Chance in Economic Hex
+    chance *= state.xpSoulBuffMult;
 
     // Add Legendary Bonus
     chance += calculateLegendaryBonus(state, 'met_drop_per_kill');
@@ -224,7 +223,21 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
         chance *= (1 + (0.5 * surge));
     }
 
-    if (Math.random() > chance) return;
+    // DELAY MECHANIC: No meteorites until 1 minute (60s)
+    if (minutes < 1.0) return;
+
+    let forceSpawn = false;
+
+    // First Meteorite: Forcefully spawn at 1 minute mark (or first kill after)
+    if (!state.firstMeteoriteSpawned) {
+        state.firstMeteoriteSpawned = true;
+        forceSpawn = true;
+    } else {
+        // Subsequent Meteorites: Only start spawning normally after 1:30 (90s)
+        if (minutes < 1.5) return;
+    }
+
+    if (!forceSpawn && Math.random() > chance) return;
 
     const rarity = getRandomRarity(state);
     const dropX = x + (Math.random() - 0.5) * 20;

@@ -96,7 +96,7 @@ export const getMeteoriteColor = (discoveredIn: string) => {
 
 export const matchesFilter = (
     item: Meteorite | null,
-    coreFilter: { quality: string, rarity: string, arena: string },
+    coreFilter: { quality: string | string[], rarity: string | string[], arena: string | string[] },
     perkFilters: Record<number, PerkFilter>
 ): boolean => {
     if (!item) return true;
@@ -104,10 +104,48 @@ export const matchesFilter = (
     // Core Checks
     // Map UI labels to internal quality types
     const qualityMap: Record<string, string> = { 'PRI': 'New', 'DAM': 'Damaged', 'BRO': 'Broken', 'COR': 'Corrupted' };
-    if (coreFilter.quality !== 'All' && item.quality !== qualityMap[coreFilter.quality]) return false;
 
-    if (coreFilter.rarity !== 'All' && item.rarity !== coreFilter.rarity) return false;
-    if (coreFilter.arena !== 'All' && !item.discoveredIn.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
+    // Handle Quality Filter (Multi-Select)
+    if (Array.isArray(coreFilter.quality)) {
+        // If empty or includes 'All', it passes
+        if (coreFilter.quality.length > 0 && !coreFilter.quality.includes('All')) {
+            const wantBlueprints = coreFilter.quality.includes('BLUEPRINTS');
+
+            if (item.isBlueprint) {
+                if (!wantBlueprints) return false;
+            } else {
+                let mappedQualities = coreFilter.quality.map(q => qualityMap[q]).filter(q => q !== undefined);
+                if (!mappedQualities.includes(item.quality)) return false;
+            }
+        }
+    } else {
+        // Legacy string support
+        if (coreFilter.quality === 'BLUEPRINTS') {
+            if (!item.isBlueprint) return false;
+        } else if (coreFilter.quality !== 'All') {
+            if (item.isBlueprint) return false; // If filtering by specific quality (e.g. PRI), hide blueprints? Or show them? Let's hide them unless All or BP is picked.
+            if (item.quality !== qualityMap[coreFilter.quality]) return false;
+        }
+    }
+
+    // Handle Rarity Filter
+    if (Array.isArray(coreFilter.rarity)) {
+        if (coreFilter.rarity.length > 0 && !coreFilter.rarity.includes('All')) {
+            if (!coreFilter.rarity.includes(item.rarity)) return false;
+        }
+    } else {
+        if (coreFilter.rarity !== 'All' && item.rarity !== coreFilter.rarity) return false;
+    }
+
+    // Handle Arena Filter
+    if (Array.isArray(coreFilter.arena)) {
+        if (coreFilter.arena.length > 0 && !coreFilter.arena.includes('All')) {
+            const match = coreFilter.arena.some(a => item.discoveredIn.toUpperCase().includes(a.toUpperCase()));
+            if (!match) return false;
+        }
+    } else {
+        if (coreFilter.arena !== 'All' && !item.discoveredIn.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
+    }
 
     // Perk Checks (Cumulative/AND logic)
     for (let lvl = 1; lvl <= 9; lvl++) {

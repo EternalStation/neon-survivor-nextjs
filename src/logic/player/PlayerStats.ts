@@ -31,16 +31,18 @@ export function updatePlayerStats(state: GameState) {
     player.atk.hexMult2 = 0;
 
     // Arena Buffs (Multiplier based)
-    let arenaBuff = 1.0;
-    if (state.currentArena === 2) {
-        const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
-        arenaBuff = 1 + (0.2 * surgeMult);
-    }
-    state.arenaBuffMult = arenaBuff;
+    const currentArenaLevel = state.arenaLevels[state.currentArena] || 0;
+    const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
+    const baseBuff = 0.3; // 30% Base Buff
+    const activeBuff = 1 + (baseBuff * surgeMult);
+
+    state.hpRegenBuffMult = (state.currentArena === 2 && currentArenaLevel >= 1) ? activeBuff : 1.0;
+    state.dmgAtkBuffMult = (state.currentArena === 1 && currentArenaLevel >= 1) ? activeBuff : 1.0;
+    state.xpSoulBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? activeBuff : 1.0;
 
     // Movement stat
-    const maxHp = calcStat(player.hp, state.arenaBuffMult);
-    let regenAmount = (calcStat(player.reg, state.arenaBuffMult) / 60);
+    const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
+    let regenAmount = (calcStat(player.reg, state.hpRegenBuffMult) / 60);
 
     if (player.buffs?.puddleRegen) {
         regenAmount *= 1.25; // +25% Regen in Puddle (Lvl 3)

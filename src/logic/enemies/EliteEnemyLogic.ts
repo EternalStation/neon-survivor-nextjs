@@ -300,19 +300,24 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     let vx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
     let vy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
 
-    // Check for Living Minions
-    const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
-    const orbitingMinions = myMinions.filter(m => m.minionState === 0);
+    // --- OPTIMIZED HIVE LOGIC (Staggered) ---
+    if (e.minionCount === undefined || state.frameCount % 10 === 0) {
+        const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
+        e.minionCount = myMinions.length;
+        e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
+    }
 
-    // --- PROXIMITY-BASED HIVE LOGIC ---
     const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
-    const hasMinions = myMinions.length > 0;
+    const hasMinions = (e.minionCount || 0) > 0;
 
     // 1. Proximity Aggro Check
-    if (distToPlayer <= 350 && orbitingMinions.length > 0) {
-        orbitingMinions.forEach(m => m.minionState = 1);
+    if (distToPlayer <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
+        state.enemies.forEach(m => {
+            if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
+        });
         playSfx('stun-disrupt');
         e.angryUntil = state.gameTime + 2.0; // Stay red for 2 seconds
+        e.orbitingMinionIds = [];
     }
 
     // 2. Visual Feedback
@@ -337,14 +342,17 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     // --- AGE-BASED DESTRUCTION SEQUENCE (Age > 60s) ---
     const age = state.gameTime - (e.spawnedAt || 0);
     if (age > 60) {
-        if (orbitingMinions.length > 0) {
+        if ((e.minionCount || 0) > 0) {
             // RELEASE ONE BY ONE
             if (!e.lastAttack) e.lastAttack = state.gameTime;
-            if (state.gameTime - e.lastAttack > 2.0) {
-                const victim = orbitingMinions[0];
-                victim.minionState = 1;
-                playSfx('stun-disrupt');
+            if (state.gameTime - (e.lastAttack || 0) > 2.0) {
+                const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
+                if (victim) {
+                    victim.minionState = 1;
+                    playSfx('stun-disrupt');
+                }
                 e.lastAttack = state.gameTime;
+                e.minionCount = (e.minionCount || 1) - 1;
             }
             // Pulsate White/Red while dying (Only if NOT in aggro red state)
             if (!isAngry) {
@@ -365,11 +373,6 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     if (!isAngry && !isWarning) {
         // Normal State / Spawning Logic
         if (e.summonState === 1) {
-            // Charging Blink (Removed per user request to prevent wall-flashing perception)
-            // const isBlink = Math.floor(Date.now() / 150) % 2 === 0;
-            // e.palette = isBlink ? ['#4ade80', '#22c55e', '#166534'] : (e.originalPalette || e.palette);
-            // if (isBlink) e.eraPalette = undefined; // OVERRIDE ERA PALETTE
-
             if (state.gameTime > (e.timer || 0)) {
                 spawnMinion(state, e, true, 3);
                 e.lastAttack = state.gameTime;
@@ -380,7 +383,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
             if (e.originalPalette) e.palette = e.originalPalette;
             const spawnInterval = 20.0;
             if (!e.lastAttack) e.lastAttack = state.gameTime;
-            if (state.gameTime - e.lastAttack > spawnInterval && myMinions.length < 9) {
+            if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
                 e.summonState = 1;
                 e.timer = state.gameTime + 3.0;
                 playSfx('warning');

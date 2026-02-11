@@ -62,7 +62,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
 
             <h2 style={{
                 position: 'absolute',
-                top: '10%',
+                top: '40px',
                 color: '#FFFFFF',
                 fontSize: 32,
                 fontFamily: 'Orbitron, sans-serif',
@@ -73,10 +73,20 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                 textAlign: 'center',
                 width: '100%',
             }}>
-                {upgradeChoices[0].isSpecial ? "VOID TECHNOLOGY DETECTED" : "SELECT AUGMENTATION"}
+                {upgradeChoices[0].isSpecial ? "VOID TECHNOLOGY DETECTED" : "SELECT SYSTEM UPGRADE"}
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 20, perspective: '1000px', gap: '60px', marginTop: -40 }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 20,
+                perspective: '1000px',
+                gap: '60px',
+                marginTop: '-150px' // Shifted up from -40px
+            }}>
+
                 {upgradeChoices.map((c, i) => (
                     <div key={i} className="upgrade-card-container">
                         <UpgradeCard

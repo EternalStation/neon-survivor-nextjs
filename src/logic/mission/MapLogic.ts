@@ -32,8 +32,8 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
         id: 0,
         name: "ECONOMIC HEX",
         location: "Central Sector - Resource Hub",
-        description: "A high-stability zone optimized for resource extraction and data harvesting. Managed by the station's core AI.",
-        buffs: ["+15% XP Gain", "+15% Meteorite Chance"],
+        description: "Optimized for maximum efficiency. High-fidelity data extraction increases yield by 30%.",
+        buffs: ["+30% XP & Soul Yield"],
         debuffs: [],
         color: "#22d3ee"
     },
@@ -41,21 +41,29 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
         id: 1,
         name: "COMBAT HEX",
         location: "Northern Sector - Weapon Testing",
-        description: "An unstable quarantine zone used for stress-testing experimental armaments against glitch-ridden entities.",
-        buffs: [],
-        debuffs: ["+15% Spawn Rate", "+15% Collision Dmg"],
+        description: "Restored offensive protocols enhance weapon output and cycling speed by 30%.",
+        buffs: ["+30% DMG & Atk Speed"],
+        debuffs: [],
         color: "#ef4444"
     },
     2: {
         id: 2,
         name: "DEFENCE HEX",
         location: "Southern Sector - Fortress Perimeter",
-        description: "The most heavily armored section of Eternal Station, designed to withstand deep-space anomalies.",
-        buffs: ["+20% Max HP", "+20% HP Regen"],
+        description: "Fortified structural integrity and nano-repair systems increase vitality metrics by 30%.",
+        buffs: ["+30% Max HP & Regen"],
         debuffs: [],
         color: "#3b82f6"
     }
 };
+
+export function getArenaDetails(id: number, level: number = 1): ArenaDetails {
+    const base = ARENA_DATA[id];
+    if (level === 0) {
+        return { ...base, buffs: [], debuffs: [] };
+    }
+    return base;
+}
 
 export const SECTOR_NAMES: Record<number, string> = {
     0: ARENA_DATA[0].name,

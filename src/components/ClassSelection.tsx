@@ -3,11 +3,12 @@ import { type PlayerClass } from '../logic/core/types';
 import { PLAYER_CLASSES } from '../logic/core/classes';
 
 interface ClassSelectionProps {
-    onSelect: (selectedClass: PlayerClass) => void;
+    onSelect: (selectedClass: PlayerClass, tutorialEnabled: boolean) => void;
 }
 
 export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
     const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const [tutorialEnabled, setTutorialEnabled] = React.useState(false);
 
     // Keyboard Navigation
     React.useEffect(() => {
@@ -22,12 +23,12 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                 setSelectedIndex(prev => (prev < PLAYER_CLASSES.length - 1 ? prev + 1 : 0));
             }
             if (code === 'space' || code === 'enter') {
-                onSelect(PLAYER_CLASSES[selectedIndex]);
+                onSelect(PLAYER_CLASSES[selectedIndex], tutorialEnabled);
             }
         };
         window.addEventListener('keydown', handleKeys);
         return () => window.removeEventListener('keydown', handleKeys);
-    }, [selectedIndex, onSelect]);
+    }, [selectedIndex, onSelect, tutorialEnabled]);
 
     return (
         <div style={{
@@ -58,11 +59,59 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
 
             <h1 style={{
                 fontSize: '3rem',
-                marginBottom: '2rem',
+                marginBottom: '1rem',
                 letterSpacing: '0.5rem',
                 textShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
                 fontWeight: 900
             }}>SELECT CLASS</h1>
+
+            {/* Tutorial Toggle */}
+            <div
+                className="tutorial-toggle"
+                onClick={() => setTutorialEnabled(!tutorialEnabled)}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    padding: '8px 20px',
+                    borderRadius: '30px',
+                    border: `1px solid ${tutorialEnabled ? '#3b82f6' : 'rgba(148, 163, 184, 0.3)'}`,
+                    marginBottom: '2rem',
+                    width: 'fit-content',
+                    transition: 'all 0.3s',
+                    zIndex: 10
+                }}
+            >
+                <div style={{
+                    width: '18px',
+                    height: '18px',
+                    border: '2px solid #3b82f6',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: tutorialEnabled ? '#3b82f6' : 'transparent',
+                    transition: 'all 0.2s'
+                }}>
+                    {tutorialEnabled && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    )}
+                </div>
+                <span style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 900,
+                    letterSpacing: '2px',
+                    color: tutorialEnabled ? '#fff' : '#94a3b8',
+                    textShadow: tutorialEnabled ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                }}>
+                    ENABLE TUTORIAL HINTS
+                </span>
+            </div>
 
             <div style={{
                 display: 'flex',
@@ -75,7 +124,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                     <div
                         key={cls.id}
                         className={`class-card class-card-${cls.id} ${i === selectedIndex ? 'selected' : ''}`}
-                        onClick={() => onSelect(cls)}
+                        onClick={() => onSelect(cls, tutorialEnabled)}
                         onMouseEnter={() => setSelectedIndex(i)}
                         style={{
                             flex: 1,

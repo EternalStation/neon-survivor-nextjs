@@ -82,9 +82,9 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                             </div>
 
                             <div style={{
-                                width: '180px', height: '180px',
+                                width: '144px', height: '144px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                marginBottom: '20px',
+                                marginBottom: '10px',
                                 position: 'relative',
                                 filter: `drop-shadow(0 0 15px ${info.color})`
                             }}>
@@ -103,11 +103,11 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                 )}
                             </div>
 
-                            <h2 style={{ color: info.color, fontSize: '1.2rem', textAlign: 'center', marginBottom: '15px', textShadow: `0 0 10px ${info.color}aa` }}>
+                            <h2 style={{ color: info.color, fontSize: '1.2rem', textAlign: 'center', marginBottom: '10px', textShadow: `0 0 10px ${info.color}aa` }}>
                                 {opt.name}
                             </h2>
 
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', padding: '0 10px', overflowY: 'auto' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', padding: '0 6px', overflowY: 'hidden' }}>
                                 {opt.allPerks ? (
                                     opt.allPerks.map((levelPerks, levelIdx) => {
                                         const currentLevel = levelIdx + 1;
@@ -117,18 +117,18 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
 
                                         return (
                                             <div key={levelIdx} style={{
-                                                display: 'flex', flexDirection: 'column', gap: '4px',
+                                                display: 'flex', flexDirection: 'column', gap: '2px',
                                                 opacity: isFuture ? 0.6 : 1,
-                                                marginBottom: '8px'
+                                                marginBottom: '4px'
                                             }}>
                                                 <div style={{
-                                                    fontSize: '0.65rem',
+                                                    fontSize: '0.6rem',
                                                     color: isNew ? '#fbbf24' : (isPast ? '#4ade80' : '#94a3b8'),
                                                     fontWeight: 'bold',
-                                                    marginBottom: '2px',
+                                                    marginBottom: '1px',
                                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                                     borderBottom: isNew ? '1px solid #fbbf24' : (isPast ? '1px solid #4ade80' : '1px solid #334155'),
-                                                    paddingBottom: '2px'
+                                                    paddingBottom: '1px'
                                                 }}>
                                                     <span>LEVEL {currentLevel}</span>
                                                     {isNew && <span style={{ color: '#fbbf24', textShadow: '0 0 5px #fbbf24' }}>★ NEW</span>}
@@ -141,12 +141,13 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         textAlign: 'center',
                                                         color: isNew ? '#fbbf24' : (isFuture ? '#94a3b8' : '#e2e8f0'),
-                                                        fontSize: '0.7rem',
-                                                        padding: '4px 6px',
+                                                        fontSize: '0.65rem',
+                                                        padding: '2px 4px',
                                                         background: isNew ? 'rgba(251, 191, 36, 0.15)' : (isPast ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0,0,0,0.2)'),
                                                         borderRadius: '4px',
                                                         border: isNew ? '1px solid rgba(251, 191, 36, 0.4)' : (isPast ? '1px solid rgba(74, 222, 128, 0.2)' : '1px solid rgba(255,255,255,0.05)'),
-                                                        textShadow: isNew ? '0 0 5px rgba(251, 191, 36, 0.3)' : 'none'
+                                                        textShadow: isNew ? '0 0 5px rgba(251, 191, 36, 0.3)' : 'none',
+                                                        lineHeight: '1.2'
                                                     }}>
                                                         {perk}
                                                     </div>

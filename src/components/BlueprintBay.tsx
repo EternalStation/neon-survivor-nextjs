@@ -176,7 +176,9 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                                                     background: 'rgba(0, 0, 0, 0.4)'
                                                 }}>
                                                     <span style={{ fontSize: '0.35rem', opacity: 0.8, letterSpacing: '1px' }}>DECRYPTING</span>
-                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.5rem' }}>ANALYZING...</span>
+                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.5rem' }}>
+                                                        {bp.researchFinishTime ? Math.max(0, Math.ceil(bp.researchFinishTime - gameState.gameTime)) + 's' : '...'}
+                                                    </span>
                                                 </div>
                                             )}
 

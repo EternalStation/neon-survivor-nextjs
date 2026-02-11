@@ -5,14 +5,14 @@ export const CANVAS_HEIGHT = typeof window !== 'undefined' ? window.innerHeight 
 
 export const RARITIES: Rarity[] = [
     { id: 'scrap', label: 'Scrap', color: '#7FFF00', mult: 0.5 }, // High-Vis Lime
-    { id: 'anomalous', label: 'Anomalous', color: '#00C0C0', mult: 0.8 },
-    { id: 'quantum', label: 'Quantum', color: '#00FFFF', mult: 1.5 },
-    { id: 'astral', label: 'Astral', color: '#7B68EE', mult: 2.5 },
-    { id: 'radiant', label: 'Radiant', color: '#FFD700', mult: 4 },
-    { id: 'abyss', label: 'Abyss', color: '#8B0000', mult: 7 },
-    { id: 'eternal', label: 'Eternal', color: '#B8860B', mult: 12 },
-    { id: 'divine', label: 'Divine', color: '#FFFFFF', mult: 20 },
-    { id: 'singularity', label: 'Singularity', color: '#E942FF', mult: 35 }
+    { id: 'anomalous', label: 'Anomalous', color: '#00C0C0', mult: 1 },
+    { id: 'quantum', label: 'Quantum', color: '#00FFFF', mult: 2 },
+    { id: 'astral', label: 'Astral', color: '#7B68EE', mult: 3 },
+    { id: 'radiant', label: 'Radiant', color: '#FFD700', mult: 5 },
+    { id: 'abyss', label: 'Abyss', color: '#8B0000', mult: 9 },
+    { id: 'eternal', label: 'Eternal', color: '#B8860B', mult: 15 },
+    { id: 'divine', label: 'Divine', color: '#FFFFFF', mult: 28 },
+    { id: 'singularity', label: 'Singularity', color: '#E942FF', mult: 45 }
 ];
 
 export const UPGRADE_TYPES: Upgrade[] = [
@@ -30,17 +30,17 @@ export const UPGRADE_TYPES: Upgrade[] = [
 ];
 
 export const BASE_UPGRADE_VALUES: Record<string, number> = {
-    dmg_f: 10,
-    dmg_m: 5,
-    atk_s: 25,
-    hp_f: 40,
-    hp_m: 20,
-    reg_f: 2.5,
-    reg_m: 15,
-    xp_f: 15,
-    xp_m: 5,
-    arm_f: 10,
-    arm_m: 10
+    dmg_f: 15,
+    dmg_m: 15,
+    atk_s: 30,
+    hp_f: 50,
+    hp_m: 30,
+    reg_f: 4,
+    reg_m: 30,
+    xp_f: 20,
+    xp_m: 10,
+    arm_f: 15,
+    arm_m: 15
 };
 
 // --- Enemy Progression Constants ---

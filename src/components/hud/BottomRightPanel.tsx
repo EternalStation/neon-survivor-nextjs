@@ -11,6 +11,7 @@ interface BottomRightPanelProps {
     portalError: boolean;
     portalCost: number;
     isFull?: boolean;
+    portalsUnlocked?: boolean;
 }
 
 export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
@@ -22,7 +23,8 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
     dust,
     portalError,
     portalCost,
-    isFull
+    isFull,
+    portalsUnlocked = true // Default to true for backward compatibility/safety if not passed
 }) => {
     const isPortalUnavailable = portalState !== 'closed' || dust < portalCost;
 
@@ -36,84 +38,86 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
             gap: 12
         }}>
             {/* PORTAL SKILL INDICATOR */}
-            <div
-                style={{
-                    position: 'relative',
-                    width: 52,
-                    height: 52,
-                    background: portalError ? 'rgba(239, 68, 68, 0.2)' : (isPortalUnavailable ? 'rgba(15, 23, 42, 0.4)' : 'rgba(88, 28, 135, 0.3)'),
-                    border: '2px solid',
-                    borderColor: portalError ? '#ef4444' : (isPortalUnavailable ? 'rgba(148, 163, 184, 0.2)' : 'rgba(168, 85, 247, 0.6)'),
-                    borderRadius: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: portalError ? '0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 20px rgba(239, 68, 68, 0.4)' : (isPortalUnavailable ? 'none' : '0 0 20px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1)'),
-                    backdropFilter: 'blur(8px)',
-                    transition: 'all 0.1s',
-                    animation: portalError ? 'shake 0.2s cubic-bezier(.36,.07,.19,.97) both' : 'none'
-                }}
-            >
-                {/* Portal Icon (SVG) */}
-                <svg viewBox="0 0 100 100" width="30" height="30" style={{ opacity: isPortalUnavailable ? 0.4 : 1, filter: isPortalUnavailable ? 'none' : 'drop-shadow(0 0 8px #a855f7)' }}>
-                    <circle cx="50" cy="50" r="35" fill="none" stroke="#a855f7" strokeWidth="4" strokeDasharray="15 8" />
-                    <circle cx="50" cy="50" r="25" fill="none" stroke="#d8b4fe" strokeWidth="6" strokeDasharray="5 5" />
-                    <circle cx="50" cy="50" r="10" fill="#a855f7" />
-                </svg>
-
-                {/* Keybind Label */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: -6,
-                    right: -6,
-                    background: '#0f172a',
-                    border: '1px solid #475569',
-                    borderRadius: '4px',
-                    padding: '1px 5px',
-                    fontSize: '10px',
-                    fontWeight: 900,
-                    color: isPortalUnavailable ? '#64748b' : '#e9d5ff',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                    textTransform: 'uppercase'
-                }}>
-                    {portalKey}
-                </div>
-
-                {/* Status Overlay */}
-                {portalState !== 'closed' && (
-                    <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.4)',
-                        borderRadius: '12px',
+            {portalsUnlocked && (
+                <div
+                    style={{
+                        position: 'relative',
+                        width: 52,
+                        height: 52,
+                        background: portalError ? 'rgba(239, 68, 68, 0.2)' : (isPortalUnavailable ? 'rgba(15, 23, 42, 0.4)' : 'rgba(88, 28, 135, 0.3)'),
+                        border: '2px solid',
+                        borderColor: portalError ? '#ef4444' : (isPortalUnavailable ? 'rgba(148, 163, 184, 0.2)' : 'rgba(168, 85, 247, 0.6)'),
+                        borderRadius: '14px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '9px',
-                        color: '#f87171',
-                        fontWeight: 900,
-                        textAlign: 'center'
-                    }}>
-                        ACTIVE
-                    </div>
-                )}
-                {(portalError || (portalState === 'closed' && dust < portalCost)) && (
+                        boxShadow: portalError ? '0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 20px rgba(239, 68, 68, 0.4)' : (isPortalUnavailable ? 'none' : '0 0 20px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1)'),
+                        backdropFilter: 'blur(8px)',
+                        transition: 'all 0.1s',
+                        animation: portalError ? 'shake 0.2s cubic-bezier(.36,.07,.19,.97) both' : 'none'
+                    }}
+                >
+                    {/* Portal Icon (SVG) */}
+                    <svg viewBox="0 0 100 100" width="30" height="30" style={{ opacity: isPortalUnavailable ? 0.4 : 1, filter: isPortalUnavailable ? 'none' : 'drop-shadow(0 0 8px #a855f7)' }}>
+                        <circle cx="50" cy="50" r="35" fill="none" stroke="#a855f7" strokeWidth="4" strokeDasharray="15 8" />
+                        <circle cx="50" cy="50" r="25" fill="none" stroke="#d8b4fe" strokeWidth="6" strokeDasharray="5 5" />
+                        <circle cx="50" cy="50" r="10" fill="#a855f7" />
+                    </svg>
+
+                    {/* Keybind Label */}
                     <div style={{
                         position: 'absolute',
-                        top: 2,
-                        left: 0,
-                        width: '100%',
-                        textAlign: 'center',
-                        fontSize: '7px',
-                        color: portalError ? '#fff' : '#64748b',
+                        bottom: -6,
+                        right: -6,
+                        background: '#0f172a',
+                        border: '1px solid #475569',
+                        borderRadius: '4px',
+                        padding: '1px 5px',
+                        fontSize: '10px',
                         fontWeight: 900,
-                        textShadow: portalError ? '0 0 5px #000' : 'none',
+                        color: isPortalUnavailable ? '#64748b' : '#e9d5ff',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
                         textTransform: 'uppercase'
                     }}>
-                        {portalError && portalState === 'closed' && (dust >= portalCost) ? 'BLOCKED' : `${Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST`}
+                        {portalKey}
                     </div>
-                )}
-            </div>
+
+                    {/* Status Overlay */}
+                    {portalState !== 'closed' && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.4)',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '9px',
+                            color: '#f87171',
+                            fontWeight: 900,
+                            textAlign: 'center'
+                        }}>
+                            ACTIVE
+                        </div>
+                    )}
+                    {(portalError || (portalState === 'closed' && dust < portalCost)) && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 2,
+                            left: 0,
+                            width: '100%',
+                            textAlign: 'center',
+                            fontSize: '7px',
+                            color: portalError ? '#fff' : '#64748b',
+                            fontWeight: 900,
+                            textShadow: portalError ? '0 0 5px #000' : 'none',
+                            textTransform: 'uppercase'
+                        }}>
+                            {portalError && portalState === 'closed' && (dust >= portalCost) ? 'BLOCKED' : `${Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST`}
+                        </div>
+                    )}
+                </div>
+            )}
             {/* INVENTORY / METEORITE INDICATOR (Moved to bottom right, clickable) */}
             <div
                 onClick={onInventoryToggle}

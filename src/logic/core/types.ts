@@ -379,6 +379,9 @@ export interface Enemy {
     panicCooldown?: number; // Cooldown for panic escape
     trollTimer?: number; // Stop duration for Fake Snitch
     trollRush?: boolean; // If true, Fake Snitch is suicide rushing wall
+    minionCount?: number;
+    orbitingMinionIds?: number[];
+    minionIndex?: number;
 
     // Friendly Zombie Props
     isFriendly?: boolean;
@@ -595,6 +598,8 @@ export interface GameState {
 
     // Portal / Multiverse Props
     currentArena: number; // ID of the arena the player is currently in
+    portalsUnlocked: boolean; // Are portals usable?
+    arenaLevels: Record<number, number>; // Level of each arena (0 = No Buffs, 1 = Base, 2+ = Enhanced)
     portalState: 'closed' | 'warn' | 'open' | 'transferring';
     portalTimer: number; // Cycles every 4 minutes (240s)
     portalOpenDuration: number; // 10s
@@ -634,7 +639,9 @@ export interface GameState {
     blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)
     activeBlueprintBuffs: Partial<Record<BlueprintType, number>>; // End-time timestamps
     activeBlueprintCharges: Partial<Record<BlueprintType, number>>; // Remaining use counts
-    arenaBuffMult: number; // Mult-based Arena Buff scale
+    hpRegenBuffMult: number; // For Defense Arena
+    dmgAtkBuffMult: number; // For Combat Arena
+    xpSoulBuffMult: number; // For Economic Arena
 
     // Extraction System
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';
@@ -665,6 +672,9 @@ export interface GameState {
     pendingBossKills: number;
     bossKillTimer: number;
     pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, history: { x1: number; y1: number; x2: number; y2: number }[] }>;
+
+    // Spawn Logic
+    firstMeteoriteSpawned?: boolean;
 }
 
 export type MeteoriteRarity = 'scrap' | 'anomalous' | 'quantum' | 'astral' | 'radiant' | 'void' | 'eternal' | 'divine' | 'singularity';
@@ -713,7 +723,11 @@ export type BlueprintType =
     | 'ARENA_SURGE'
     | 'QUANTUM_SCRAPPER'
     | 'MATRIX_OVERDRIVE'
-    | 'TEMPORAL_GUARD';
+    | 'TEMPORAL_GUARD'
+    | 'DIMENSIONAL_GATE'
+    | 'SECTOR_UPGRADE_ECO'
+    | 'SECTOR_UPGRADE_COM'
+    | 'SECTOR_UPGRADE_DEF';
 
 export interface Blueprint {
     id: number;
@@ -741,13 +755,17 @@ export enum TutorialStep {
     OPEN_MODULE_MENU = 6,
 
     // Module Menu Tour Steps
-    MATRIX_INVENTORY = 10,
-    MATRIX_SCAN = 11,
-    MATRIX_FILTERS = 12,
-    MATRIX_RECYCLE = 13,
-    MATRIX_SOCKETS = 14,
-    MATRIX_CLASS_DETAIL = 15,
-    MATRIX_QUOTA = 16,
+    MATRIX_WELCOME = 10,
+    MATRIX_INVENTORY = 11,
+    MATRIX_SOCKETS = 12,
+    MATRIX_TYPES = 13,
+    MATRIX_ORIGIN = 14,
+    MATRIX_RECYCLE_ACTION = 15, // New: Recycle button highight
+    MATRIX_DUST_USAGE = 16, // New: Dust amount highlight
+    MATRIX_QUOTA_MISSION = 17, // New: Quota highlight
+    MATRIX_CLASS_DETAIL = 18,
+    MATRIX_NON_STATIC_METRICS = 19,
+    MATRIX_FILTERS = 20,
 
     COMPLETE = 99
 }

@@ -193,7 +193,9 @@ export function manageRareSpawnCycles(state: GameState) {
     const { gameTime, rareSpawnCycle, rareSpawnActive } = state;
     if (rareSpawnActive) return;
 
-    const nextSpawnTime = 60 + (rareSpawnCycle * 120);
+    // DELAY MECHANIC: Snitch ("Rare") spawns start at 5 minutes (300s)
+    // Previously: 60 + ...
+    const nextSpawnTime = 300 + (rareSpawnCycle * 120);
 
     if (gameTime >= nextSpawnTime) {
         spawnRareEnemy(state);

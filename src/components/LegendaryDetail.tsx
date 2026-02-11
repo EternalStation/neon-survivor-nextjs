@@ -117,19 +117,11 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             SYSTEM CAPABILITY
                         </div>
                         <div style={{ fontSize: '11px', color: '#fff', lineHeight: '1.4', fontWeight: 600 }}>
-                            {hex.description}
+                            {hex.lore}
                         </div>
                     </div>
 
-                    {hex.lore && (
-                        <div style={{
-                            padding: '0 10px', borderLeft: `2px solid ${color}44`, fontStyle: 'italic'
-                        }}>
-                            <div style={{ fontSize: '10px', color: '#64748b', lineHeight: '1.5' }}>
-                                "{hex.lore}"
-                            </div>
-                        </div>
-                    )}
+
                 </div>
 
                 {/* STATS AREA (Tactical Format) */}
@@ -168,7 +160,6 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             isNumeric = true;
                             // Remove number at start and "per kill" but KEEP the (Souls)
                             cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '')
-                                .replace('per kill', '')
                                 .trim();
                         } else if (hex.type === 'RadiationCore' && p.includes('Deals') && p.includes('-')) {
                             const matches = p.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
@@ -228,7 +219,6 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             displayValue = `+${totalValue.toFixed(1)}${hasPercent ? '%' : ''}`;
                             isNumeric = p.toLowerCase().includes('kill');
                             cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '')
-                                .replace('per kill', '')
                                 .trim();
                         } else {
                             if (baseValue > 0 && (hasPercent || tacticalKeywords.some(k => p.includes(k)))) {

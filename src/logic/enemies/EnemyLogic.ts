@@ -51,7 +51,6 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         actualRate += rageGrowth;
     }
 
-    if (state.currentArena === 1) actualRate *= 1.15; // +15% Spawn Rate in Combat Hex
 
     // Extraction Spawn Scaling (Faster and faster)
     if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {

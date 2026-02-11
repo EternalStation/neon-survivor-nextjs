@@ -32,7 +32,7 @@ export function useGameUIHandlers({
 }: UseGameUIHandlersProps) {
 
     const triggerPortal = useCallback(() => {
-        const cost = 0;
+        const cost = Math.floor(1 + gameState.current.gameTime / 60);
 
         // Block portal use during evacuation (One way trip only)
         if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(gameState.current.extractionStatus) || gameState.current.portalOneTimeUse) {

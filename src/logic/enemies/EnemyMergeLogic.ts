@@ -98,8 +98,8 @@ export function manageMerges(state: GameState) {
 
             // Retain identity status if merging zombies
             if (host.isNecroticZombie) {
-                host.palette = ['#0f172a', '#4f46e5', '#818cf8']; // Void Indigo
-                host.eraPalette = ['#0f172a', '#4f46e5', '#818cf8'];
+                host.palette = ['#818cf8', '#4f46e5', '#0f172a']; // Void Indigo (Brightest first)
+                host.eraPalette = ['#818cf8', '#4f46e5', '#0f172a'];
             } else if (host.isZombie) {
                 host.palette = ['#4ade80', '#22c55e', '#166534']; // Friendly Undead Green
                 host.eraPalette = ['#4ade80', '#22c55e', '#166534'];

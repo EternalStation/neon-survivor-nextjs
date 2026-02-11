@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Meteorite } from '../../logic/core/types';
 import { getMeteoriteImage, RARITY_COLORS, RARITY_ORDER, PerkFilter, matchesFilter } from './ModuleUtils';
+import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
 
 interface InventoryPanelProps {
     inventory: (Meteorite | null)[];
@@ -17,14 +18,14 @@ interface InventoryPanelProps {
     onToggleRecycle: () => void;
     onResearch?: (index: number) => void;
     recyclingAnim?: boolean;
-    coreFilter: { quality: string, rarity: string, arena: string };
-    setCoreFilter: React.Dispatch<React.SetStateAction<{ quality: string, rarity: string, arena: string }>>;
+    coreFilter: { quality: string | string[], rarity: string | string[], arena: string | string[] };
+    setCoreFilter: React.Dispatch<React.SetStateAction<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>>;
     perkFilters: Record<number, PerkFilter>;
     setPerkFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
 }
 
 const PAIR_COMBOS = ['All', 'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF'];
-const QUALITIES = ['All', 'PRI', 'DAM', 'BRO', 'COR'];
+const QUALITIES = ['All', 'PRI', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
 const ARENAS = ['All', 'ECO', 'COM', 'DEF'];
 
 
@@ -49,6 +50,27 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     setPerkFilters
 }) => {
     // State lifted to ModuleMenu for persistence
+    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const [massRecycleCandidate, setMassRecycleCandidate] = useState<{ type: 'SELECTED' | 'GHOSTS', indices: number[] } | null>(null);
+
+    const toggleFilterValue = (key: 'quality' | 'rarity' | 'arena', value: string) => {
+        const current = coreFilter[key] || ['All'];
+        let newValues: string[] = Array.isArray(current) ? [...current] : [current as string];
+
+        if (value === 'All') {
+            newValues = ['All'];
+        } else {
+            if (newValues.includes('All')) newValues = [];
+
+            if (newValues.includes(value)) {
+                newValues = newValues.filter(v => v !== value);
+                if (newValues.length === 0) newValues = ['All'];
+            } else {
+                newValues.push(value);
+            }
+        }
+        setCoreFilter(prev => ({ ...prev, [key]: newValues }));
+    };
 
     const matchesFilterLocal = (item: Meteorite | null): boolean => {
         return matchesFilter(item, coreFilter, perkFilters);
@@ -190,25 +212,28 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     };
 
     const isFilterActive =
-        coreFilter.quality !== 'All' ||
-        coreFilter.rarity !== 'All' ||
-        coreFilter.arena !== 'All' ||
+        (Array.isArray(coreFilter.quality) ? !coreFilter.quality.includes('All') : coreFilter.quality !== 'All') ||
+        (Array.isArray(coreFilter.rarity) ? !coreFilter.rarity.includes('All') : coreFilter.rarity !== 'All') ||
+        (Array.isArray(coreFilter.arena) ? !coreFilter.arena.includes('All') : coreFilter.arena !== 'All') ||
         Object.values(perkFilters).some(f => f.active);
 
     const displayInventory = [...inventory, ...Array(Math.max(0, 320 - inventory.length)).fill(null)];
 
+    // ... [Styles preserved]
     const selectStyle: React.CSSProperties = {
         background: '#0f172a',
         border: '1px solid #3b82f6',
         color: '#fff',
-        fontSize: '9px',
-        fontWeight: 900,
-        padding: '2px 4px',
+        fontSize: '8px',
+        fontWeight: 600,
+        padding: '2px 6px',
         borderRadius: '4px',
         width: '100%',
         cursor: 'pointer',
         boxSizing: 'border-box',
-        height: '20px'
+        height: '22px',
+        display: 'flex',
+        alignItems: 'center'
     };
 
     const labelStyle: React.CSSProperties = {
@@ -225,6 +250,88 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
             ...prev,
             [lvl]: { ...prev[lvl], ...updates }
         }));
+    };
+
+    // Helper to render Multi-Select Dropdowns
+    const renderMultiSelect = (
+        key: 'quality' | 'rarity' | 'arena',
+        options: string[],
+        label: string,
+        colors?: Record<string, string>,
+        getLabel?: (opt: string) => string
+    ) => {
+        const selected = Array.isArray(coreFilter[key]) ? coreFilter[key] as string[] : [coreFilter[key] as string];
+        const isAll = selected.includes('All');
+        const count = isAll ? 'ALL' : `${selected.length}`;
+        const isOpen = activeDropdown === key;
+
+        return (
+            <div style={{ position: 'relative', width: '100%' }}>
+                <span style={labelStyle}>{label}</span>
+                <div
+                    onClick={() => setActiveDropdown(isOpen ? null : key)}
+                    style={{ ...selectStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: isAll ? '#fff' : '#3b82f6' }}
+                >
+                    <span>{isAll ? 'ALL' : (selected.length === 1 ? (getLabel ? getLabel(selected[0]) : selected[0]) : `${count} SELECTED`)}</span>
+                    <span style={{ fontSize: '8px', opacity: 0.7 }}>▼</span>
+                </div>
+
+                {isOpen && (
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            position: 'absolute', top: '100%', left: 0, width: '100%',
+                            background: '#0f172a', border: '1px solid #3b82f6', borderRadius: '4px',
+                            zIndex: 2000, maxHeight: '400px', overflowY: 'auto',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                            marginTop: '2px'
+                        }}>
+                        <div
+                            onClick={() => toggleFilterValue(key, 'All')}
+                            style={{
+                                padding: '6px 8px', fontSize: '8px', cursor: 'pointer',
+                                background: isAll ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                color: '#fff', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                display: 'flex', alignItems: 'center'
+                            }}
+                        >
+                            ALL
+                        </div>
+                        {options.map(opt => {
+                            if (opt === 'All') return null;
+                            const isSelected = selected.includes(opt);
+                            const color = colors ? (colors[opt] || '#fff') : '#fff';
+                            return (
+                                <div key={opt}
+                                    onClick={() => toggleFilterValue(key, opt)}
+                                    style={{
+                                        padding: '6px 8px', fontSize: '8px', cursor: 'pointer',
+                                        background: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                        color: color, fontWeight: isSelected ? 600 : 400,
+                                        display: 'flex', alignItems: 'center', gap: '6px'
+                                    }}
+                                >
+                                    <div style={{
+                                        width: '6px', height: '6px',
+                                        border: `1px solid ${color}`,
+                                        background: isSelected ? color : 'transparent',
+                                        borderRadius: '2px'
+                                    }} />
+                                    {getLabel ? getLabel(opt) : opt}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                {/* Backdrop to close */}
+                {isOpen && (
+                    <div
+                        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1999 }}
+                        onClick={() => setActiveDropdown(null)}
+                    />
+                )}
+            </div>
+        );
     };
 
     return (
@@ -260,53 +367,30 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         flexDirection: 'column',
                         gap: '8px'
                     }}>
-                    {/* TOP ROW: CORE + SORT/RESET + RECYCLE */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end' }}>
+                    {/* TOP ROW: FILTER DROPDOWNS */}
+                    <div className="filter-controls" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end', position: 'relative', zIndex: 200 }}>
                         {/* TYPE */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            <span style={labelStyle}>TYPE</span>
-                            <select style={{ ...selectStyle, color: coreFilter.quality === 'All' ? '#fff' : (coreFilter.quality === 'PRI' ? '#3b82f6' : coreFilter.quality === 'DAM' ? '#f59e0b' : coreFilter.quality === 'BRO' ? '#94a3b8' : '#a855f7') }} value={coreFilter.quality} onChange={e => setCoreFilter({ ...coreFilter, quality: e.target.value })}>
-                                {QUALITIES.map(q => {
-                                    let color = '#fff';
-                                    if (q === 'PRI') color = '#3b82f6'; // Pristine - Blue
-                                    if (q === 'DAM') color = '#f59e0b'; // Damaged - Orange
-                                    if (q === 'BRO') color = '#94a3b8'; // Broken - Grey
-                                    if (q === 'COR') color = '#a855f7'; // Corrupted - Purple
-                                    return <option key={q} value={q} style={{ color }}>{q}</option>;
-                                })}
-                            </select>
+                            {renderMultiSelect('quality', QUALITIES, 'TYPE', {
+                                'PRI': '#3b82f6', 'DAM': '#f59e0b', 'BRO': '#94a3b8', 'COR': '#a855f7', 'BLUEPRINTS': '#60a5fa'
+                            }, (opt) => opt === 'BLUEPRINTS' ? 'BP' : opt)}
                         </div>
                         {/* RARITY */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            <span style={labelStyle}>RARITY</span>
-                            <select style={{ ...selectStyle, color: coreFilter.rarity === 'All' ? '#fff' : (RARITY_COLORS as any)[coreFilter.rarity] || '#fff' }} value={coreFilter.rarity} onChange={e => setCoreFilter({ ...coreFilter, rarity: e.target.value })}>
-                                <option value="All" style={{ color: '#fff' }}>ALL</option>
-                                {RARITY_ORDER.map(r => (
-                                    <option key={r} value={r} style={{ color: (RARITY_COLORS as any)[r] }}>
-                                        {r.toUpperCase().slice(0, 3)}
-                                    </option>
-                                ))}
-                            </select>
+                            {renderMultiSelect('rarity', RARITY_ORDER, 'RARITY', RARITY_COLORS as any, (r) => r.substring(0, 3).toUpperCase())}
                         </div>
                         {/* FOUND IN */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            <span style={labelStyle}>FOUND</span>
-                            <select style={{ ...selectStyle, color: coreFilter.arena === 'All' ? '#fff' : (coreFilter.arena === 'ECO' ? '#eab308' : coreFilter.arena === 'DEF' ? '#3b82f6' : '#ef4444') }} value={coreFilter.arena} onChange={e => setCoreFilter({ ...coreFilter, arena: e.target.value })}>
-                                {ARENAS.map(a => {
-                                    let color = '#fff';
-                                    if (a === 'ECO') color = '#eab308'; // Yellow
-                                    if (a === 'DEF') color = '#3b82f6'; // Blue
-                                    if (a === 'COM') color = '#ef4444'; // Red
-                                    return <option key={a} value={a} style={{ color }}>{a}</option>;
-                                })}
-                            </select>
+                            {renderMultiSelect('arena', ARENAS, 'DISCOVERED IN', {
+                                'ECO': '#eab308', 'DEF': '#3b82f6', 'COM': '#ef4444'
+                            })}
                         </div>
                         {/* ACTION CONTROLS GROUP (RESET, SORT) */}
                         <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                             {/* RESET BUTTON (Large Icon) */}
                             <button
                                 onClick={() => {
-                                    setCoreFilter({ quality: 'All', rarity: 'All', arena: 'All' });
+                                    setCoreFilter({ quality: ['All'], rarity: ['All'], arena: ['All'] });
                                     const resetPerks = { ...perkFilters };
                                     Object.keys(resetPerks).forEach((k: any) => {
                                         resetPerks[k] = { ...resetPerks[k], active: false, val: 0 };
@@ -381,18 +465,24 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             const isActive = perkFilters[lvl].active;
 
                             return (
-                                <div key={lvl} style={{
-                                    background: isActive ? `${rarityColor}20` : 'rgba(15, 23, 42, 0.4)',
-                                    border: `1px solid ${isActive ? rarityColor : `${rarityColor}40`}`,
-                                    borderRadius: '4px',
-                                    padding: '6px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '4px',
-                                    transition: 'all 0.2s',
-                                    boxShadow: isActive ? `inset 0 0 10px ${rarityColor}33` : 'none'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+
+                                <div key={lvl}
+                                    onClick={() => updatePerk(lvl, { active: !isActive })}
+                                    style={{
+                                        background: isActive ? `${rarityColor}20` : 'rgba(15, 23, 42, 0.4)',
+                                        border: `1px solid ${isActive ? rarityColor : `${rarityColor}40`}`,
+                                        borderRadius: '4px',
+                                        padding: '6px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px',
+                                        transition: 'all 0.2s',
+                                        boxShadow: isActive ? `inset 0 0 10px ${rarityColor}33` : 'none',
+                                        cursor: 'pointer'
+                                    }}>
+                                    <div
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2px' }}
+                                    >
                                         <span style={{
                                             fontSize: '8px',
                                             fontWeight: 900,
@@ -403,16 +493,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                         }}>
                                             {label}
                                         </span>
-                                        <input
-                                            type="checkbox"
-                                            checked={isActive}
-                                            onChange={e => updatePerk(lvl, { active: e.target.checked })}
-                                            style={{ cursor: 'pointer', width: '12px', height: '12px', accentColor: rarityColor }}
-                                        />
                                     </div>
 
                                     {isActive && (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', animation: 'fadeIn 0.2s' }}>
+                                        <div
+                                            onClick={e => e.stopPropagation()}
+                                            style={{ display: 'flex', flexDirection: 'column', gap: '6px', animation: 'fadeIn 0.2s' }}
+                                        >
                                             {/* Value Row (Universal for L1-L9) */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -525,7 +612,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 <line x1="10" y1="11" x2="10" y2="17"></line>
                                 <line x1="14" y1="11" x2="14" y2="17"></line>
                             </svg>
-                            {isRecycleMode ? "RECYCLING ON" : "RECYCLE"}
+                            RECYCLE
                         </button>
 
                         <button
@@ -535,7 +622,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 inventory.forEach((item, i) => {
                                     if (i >= 10 && item && matchesFilterLocal(item)) targets.push(i);
                                 });
-                                if (targets.length > 0) onMassRecycle(targets);
+                                if (targets.length > 0) {
+                                    setMassRecycleCandidate({ type: 'SELECTED', indices: targets });
+                                }
                             }}
                             disabled={!isRecycleMode}
                             style={{
@@ -564,7 +653,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 inventory.forEach((item, i) => {
                                     if (i >= 10 && item && !matchesFilterLocal(item)) discards.push(i);
                                 });
-                                if (discards.length > 0) onMassRecycle(discards);
+                                if (discards.length > 0) {
+                                    setMassRecycleCandidate({ type: 'GHOSTS', indices: discards });
+                                }
                             }}
                             disabled={!isRecycleMode}
                             style={{
@@ -620,6 +711,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     })()
                 }
             </div >
+            {massRecycleCandidate && (
+                <MassRecycleConfirmationModal
+                    type={massRecycleCandidate.type}
+                    count={massRecycleCandidate.indices.length}
+                    onCancel={() => setMassRecycleCandidate(null)}
+                    onConfirm={() => {
+                        onMassRecycle(massRecycleCandidate.indices);
+                        setMassRecycleCandidate(null);
+                    }}
+                />
+            )}
             <style>{`
                 .inventory-grid::-webkit-scrollbar { width: 6px; }
                 .inventory-grid::-webkit-scrollbar-track { background: transparent; }

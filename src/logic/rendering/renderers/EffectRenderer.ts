@@ -323,25 +323,29 @@ export function renderEpicenterShield(ctx: CanvasRenderingContext2D, state: Game
 }
 
 export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState, filter?: 'void' | 'non-void') {
+    // Group basic particles by color to batch draw calls
+    const colorGroups = new Map<string, { x: number, y: number, size: number, alpha: number }[]>();
+
     state.particles.forEach(p => {
         // Apply filter if specified
         if (filter === 'void' && p.type !== 'void') return;
         if (filter === 'non-void' && p.type === 'void') return;
 
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life < 0.2 ? p.life * 5 : 1;
         if (p.type === 'shard') {
-            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(state.gameTime * 5 + (p.x * 0.1));
+            ctx.save();
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life < 0.2 ? p.life * 5 : 1;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(state.gameTime * 5 + (p.x * 0.1));
             ctx.beginPath(); ctx.moveTo(p.size * 2, 0); ctx.lineTo(-p.size, p.size); ctx.lineTo(-p.size, -p.size); ctx.closePath(); ctx.fill();
             ctx.restore();
         } else if (p.type === 'void') {
             ctx.save();
+            ctx.globalAlpha = p.life < 0.2 ? p.life * 5 : 1;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            // Black hole core
             ctx.fillStyle = '#000000';
             ctx.fill();
-            // Glow border
             ctx.strokeStyle = p.color;
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -352,11 +356,9 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.globalAlpha = alpha;
             const angle = Math.atan2(p.vy, p.vx);
             const radius = p.size;
-            // Center of the arc is offset back so the particle position 'p.x/y' is the leading curve midpoint
             const cx = p.x - Math.cos(angle) * (radius * 0.5);
             const cy = p.y - Math.sin(angle) * (radius * 0.5);
 
-            // 1. BEHIND LAYER (Trail/Pulse)
             ctx.fillStyle = p.color || '#FFFFFF';
             ctx.globalAlpha = alpha * 0.15;
             ctx.beginPath();
@@ -364,7 +366,6 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.arc(cx, cy, radius - 50, angle + 0.75, angle - 0.75, true);
             ctx.fill();
 
-            // 2. MAIN LINES
             ctx.globalAlpha = alpha;
             ctx.strokeStyle = p.color || '#FFFFFF';
             ctx.lineWidth = 3;
@@ -379,7 +380,7 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.restore();
         } else if (p.type === 'bubble') {
             const maxLife = p.maxLife || 60;
-            const progress = 1 - (p.life / maxLife); // 0 to 1
+            const progress = 1 - (p.life / maxLife);
             const alpha = (p.alpha || 0.5);
 
             ctx.save();
@@ -398,29 +399,59 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
                 rimAlpha = alpha * (1 - normP) * 1.0;
             }
 
-            // Outer Glow
             const spotGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.5);
             spotGrad.addColorStop(0, `rgba(163, 230, 53, ${currentAlpha})`);
             spotGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');
             ctx.fillStyle = spotGrad;
             ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.fill();
 
-            // Rim
             ctx.strokeStyle = `rgba(190, 242, 100, ${rimAlpha})`;
             ctx.lineWidth = 1.2;
             ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.stroke();
 
-            // Highlight
             if (progress < 0.8) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${rimAlpha * 0.5})`;
                 ctx.beginPath(); ctx.arc(-size * 0.3, -size * 0.3, size * 0.2, 0, Math.PI * 2); ctx.fill();
             }
             ctx.restore();
         } else {
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            // Collect standard particles for batching
+            const alpha = p.life < 0.2 ? p.life * 5 : 1;
+            if (!colorGroups.has(p.color)) colorGroups.set(p.color, []);
+            colorGroups.get(p.color)!.push({ x: p.x, y: p.y, size: p.size, alpha });
         }
-        ctx.globalAlpha = 1;
     });
+
+    // Draw batched particles
+    colorGroups.forEach((items, color) => {
+        // Group by alpha to avoid too many globalAlpha changes if possible, 
+        // but for simplicity we'll just draw each color in one go if they share alpha logic
+        // Most common case is alpha=1.0
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        items.forEach(item => {
+            if (item.alpha === 1) {
+                ctx.moveTo(item.x + item.size, item.y);
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+            }
+        });
+        ctx.fill();
+
+        // Handle fading particles separately
+        items.forEach(item => {
+            if (item.alpha < 1) {
+                ctx.save();
+                ctx.globalAlpha = item.alpha;
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        });
+    });
+
+    ctx.globalAlpha = 1;
 }
 
 export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: GameState) {

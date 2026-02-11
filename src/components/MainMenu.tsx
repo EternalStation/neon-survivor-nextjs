@@ -14,7 +14,6 @@ interface MainMenuProps {
 export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, username, onLogout }) => {
     const [fading, setFading] = useState(false);
     const [showBlueprint, setShowBlueprint] = useState(false);
-    const [showPatchNotes, setShowPatchNotes] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
@@ -31,13 +30,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.code === 'Escape') {
                 if (showBlueprint) setShowBlueprint(false);
-                if (showPatchNotes) setShowPatchNotes(false);
                 if (showSettings) setShowSettings(false);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showBlueprint, showPatchNotes, showSettings]);
+    }, [showBlueprint, showSettings]);
 
     // Mouse movement for parallax
     useEffect(() => {
@@ -244,9 +242,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                     <button className="btn-logic" onClick={() => setShowBlueprint(true)}>
                         DATABASE
                     </button>
-                    <button className="btn-logic" onClick={() => setShowPatchNotes(true)}>
-                        PATCH NOTES
-                    </button>
                     {onLogout && (
                         <button className="btn-logout" onClick={onLogout}>
                             DISCONNECT
@@ -334,18 +329,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                             <button className="btn-close-blueprint" onClick={() => setShowBlueprint(false)}>CLOSE [ESC]</button>
                         </div>
                         <iframe src="/blueprint.html" className="blueprint-iframe" title="Game Archive" />
-                    </div>
-                </div>
-            )}
-
-            {showPatchNotes && (
-                <div className="blueprint-modal" onClick={() => setShowPatchNotes(false)}>
-                    <div className="blueprint-container" onClick={(e) => e.stopPropagation()}>
-                        <div className="blueprint-header">
-                            <div className="blueprint-title">VOID NEXUS - PATCH NOTES</div>
-                            <button className="btn-close-blueprint" onClick={() => setShowPatchNotes(false)}>CLOSE [ESC]</button>
-                        </div>
-                        <iframe src="/patch-notes.html" className="blueprint-iframe" title="Patch Notes" />
                     </div>
                 </div>
             )}

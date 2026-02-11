@@ -4,6 +4,14 @@ import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../../miss
 export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState, logicalWidth: number, logicalHeight: number) {
     const { camera } = state;
 
+    // Determine visible arenas
+    // If portals locked, only show Arena 0 (Index 0). Otherwise show all.
+    // Note: We access ARENA_CENTERS by index, assuming Order is [0, 1, 2].
+    // ARENA_CENTERS is an array of objects with ids.
+    const visibleArenas = state.portalsUnlocked
+        ? ARENA_CENTERS
+        : ARENA_CENTERS.filter(c => c.id === 0);
+
     // BACKGROUND GRID (Hexagons)
     const drawHexGrid = (r: number) => {
         const hDist = 1.5 * r;
@@ -50,14 +58,18 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
     // Clip the grid to only draw inside arenas (Optimizes fill rate and avoids drawing in void)
     ctx.save();
     ctx.beginPath();
-    ARENA_CENTERS.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
+    visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
     ctx.clip();
 
     drawHexGrid(120);
     ctx.restore();
 }
 
-export function renderMapBoundaries(ctx: CanvasRenderingContext2D) {
+export function renderMapBoundaries(ctx: CanvasRenderingContext2D, state: GameState) {
+    const visibleArenas = state.portalsUnlocked
+        ? ARENA_CENTERS
+        : ARENA_CENTERS.filter(c => c.id === 0);
+
     ctx.save();
 
     // Defensive Reset: Ensure no leaked shadows or styles cause "blinking"
@@ -76,7 +88,7 @@ export function renderMapBoundaries(ctx: CanvasRenderingContext2D) {
     ctx.lineJoin = 'round';
 
     ctx.beginPath();
-    ARENA_CENTERS.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
+    visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
     ctx.stroke();
 
     ctx.restore();
@@ -96,11 +108,10 @@ function buildHexPath(ctx: CanvasRenderingContext2D, center: { x: number, y: num
     ctx.closePath();
 }
 
-export function renderArenaVignette(ctx: CanvasRenderingContext2D) {
-    // Unused: const { camera } = state;
-
-    // Variables left, top, w, h were used for the full-screen void fill which is now removed.
-    // We don't need viewport calculations anymore as we just draw the vignette strokes around the static arenas.
+export function renderArenaVignette(ctx: CanvasRenderingContext2D, state: GameState) {
+    const visibleArenas = state.portalsUnlocked
+        ? ARENA_CENTERS
+        : ARENA_CENTERS.filter(c => c.id === 0);
 
     ctx.save();
 
@@ -125,7 +136,7 @@ export function renderArenaVignette(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = 120;
     ctx.strokeStyle = 'rgba(2, 6, 23, 0.6)';
     ctx.beginPath();
-    ARENA_CENTERS.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
+    visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
     ctx.stroke();
 
     ctx.restore();

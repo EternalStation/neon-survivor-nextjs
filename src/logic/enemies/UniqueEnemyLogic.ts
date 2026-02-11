@@ -6,6 +6,9 @@ import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
 
 export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, count: number) {
+    const existingMinions = state.enemies.filter(m => m.parentId === parent.id && !m.dead && m.shape === 'minion');
+    const startIdx = existingMinions.length;
+
     for (let i = 0; i < count; i++) {
         const offsetAngle = (Math.PI * 2 / count) * i;
         const dist = 60;
@@ -32,6 +35,7 @@ export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, c
             rotationPhase: 0,
             parentId: parent.id,
             minionState: 0, // 0 = Orbiting/Spawning, 1 = Chasing
+            minionIndex: startIdx + i, // Assign a fixed index for formation
             spawnedAt: state.gameTime,
             stunOnHit: isElite, // Still keep the Stun mechanic if it's an Elite spawn
             vx: 0, vy: 0,
@@ -52,7 +56,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
     // Launch Trigger: Player gets too close to Mother (Guard Mode)
     if (e.minionState === 0 && m) {
         const distToMother = Math.hypot(player.x - m.x, player.y - m.y);
-        if (distToMother < 350) { // Removed m.isElite auto-launch to ensure guarding behavior
+        if (distToMother < 350) {
             e.minionState = 1;
             playSfx('shoot');
         }
@@ -60,8 +64,10 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
 
     if (e.minionState === 0 && m) {
         const aM = Math.atan2(player.y - m.y, player.x - m.x);
-        const group = state.enemies.filter(n => n.parentId === m.id && n.minionState === 0 && !n.dead);
-        const idx = group.indexOf(e), row = Math.floor((idx + 1) / 2), side = (idx === 0) ? 0 : (idx % 2 === 1 ? -1 : 1);
+        // Use assigned minionIndex for formation instead of filtering every frame
+        const idx = e.minionIndex || 0;
+        const row = Math.floor((idx + 1) / 2);
+        const side = (idx === 0) ? 0 : (idx % 2 === 1 ? -1 : 1);
         const lX = 180 - (row * 28), lY = side * (row * 32), cA = Math.cos(aM), sA = Math.sin(aM);
         const tx = m.x + (lX * cA - lY * sA), ty = m.y + (lX * sA + lY * cA);
         vx = (tx - e.x) * 0.15; vy = (ty - e.y) * 0.15;

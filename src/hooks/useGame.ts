@@ -328,7 +328,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerPortal,
         fps,
         portalError,
-        portalCost: 0,
+        portalCost: Math.floor(1 + gameState.current.gameTime / 60),
         onViewChassisDetail,
         showBossSkillDetail,
         setShowBossSkillDetail

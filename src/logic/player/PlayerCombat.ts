@@ -32,7 +32,7 @@ export function handlePlayerCombat(
         if (state.frameCount % 10 === 0) {
             const m = getHexMultiplier(state, 'RadiationCore');
             const range = 500;
-            const maxHp = calcStat(player.hp, state.arenaBuffMult);
+            const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
             let dmgAmp = 1.0 * m;
             if (radLvl >= 3) {
                 const missing = 1 - (player.curHp / maxHp);
@@ -41,7 +41,7 @@ export function handlePlayerCombat(
 
             const maxDmgPct = 0.10 * dmgAmp;
             const minDmgPct = 0.05 * dmgAmp;
-            const playerMaxHp = calcStat(player.hp);
+            const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult);
             const enemiesInAura: Enemy[] = [];
 
             state.enemies.forEach(e => {
@@ -187,7 +187,6 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 }
             }
 
-            if (state.currentArena === 1 && !e.isNeutral) rawDmg *= 1.15;
 
             const armorValue = calcStat(player.arm);
             const drCap = 0.95;

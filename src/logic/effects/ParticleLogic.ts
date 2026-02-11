@@ -81,7 +81,6 @@ export function updateParticles(state: GameState) {
             fn.y += fn.vy;
             fn.vy += 0.05; // Gentle float/gravity
             fn.life--;
-            fn.life--;
             return fn.life > 0;
         });
     }

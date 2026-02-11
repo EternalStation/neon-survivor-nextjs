@@ -1,10 +1,11 @@
 import type { GameState, Enemy, ShapeType } from '../core/types';
+import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
-import { trySpawnBlueprint } from '../upgrades/BlueprintLogic';
+import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
@@ -17,7 +18,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     e.dead = true; e.hp = 0;
 
     // Soul Reward Multipliers (Kill Count)
-    let soulCount = 1;
+    let soulCount = 1 * state.xpSoulBuffMult;
     if (e.soulRewardMult !== undefined) {
         soulCount = e.soulRewardMult;
     } else if (e.isElite) {
@@ -94,6 +95,18 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
+    // Tutorial Force Drop: If waiting for first meteorite and none exist and time > 60s
+    if (state.tutorial.isActive &&
+        state.tutorial.currentStep === TutorialStep.COLLECT_METEORITE &&
+        state.gameTime >= 60 &&
+        state.meteorites.length === 0 &&
+        state.inventory.every(slot => slot === null)) { // Strict check: no meteorites at all
+
+        const m = createMeteorite(state, 'scrap', e.x, e.y); // Force drop
+        state.meteorites.push(m);
+        // Don't return, allow normal drops too (though unlikely due to probability)
+    }
+
     // Meteorite Drop Check
     trySpawnMeteorite(state, e.x, e.y);
 
@@ -103,6 +116,18 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
     if (e.boss && state.extractionStatus === 'none') {
+        // UNLOCK PROGRESSION: First Boss Drops Dimensional Gate
+        if (!state.portalsUnlocked) {
+            // Check if we already have it (inventory or blueprints)
+            const hasInv = state.inventory.some(i => i && ((i as any).blueprintType === 'DIMENSIONAL_GATE'));
+            const hasBp = state.blueprints.some(b => b && b.type === 'DIMENSIONAL_GATE');
+
+            if (!hasInv && !hasBp) {
+                dropBlueprint(state, 'DIMENSIONAL_GATE', e.x, e.y);
+                spawnFloatingNumber(state, e.x, e.y, "BLUEPRINT DETECTED", '#a855f7', true);
+            }
+        }
+
         // Boss gives normal XP
         const xpBase = state.player.xp_per_kill.base;
         const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
@@ -132,7 +157,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                 xpBase *= 14; // Elite = 14x XP
             }
 
-            if (state.currentArena === 0) xpBase *= 1.15; // +15% XP in Economic Hex
+            xpBase *= state.xpSoulBuffMult;
 
             // Legendary XP Bonuses
             const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');

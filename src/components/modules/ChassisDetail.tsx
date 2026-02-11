@@ -50,9 +50,10 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                 <div className="chassis-content">
                     {/* Left Column: Lore & Characteristics */}
                     <div className="chassis-column-left">
-                        <section className="chassis-section lore-section">
-                            <h2 className="section-header">NEURAL DATA LOG</h2>
-                            <p className="lore-text">{playerClass.lore}</p>
+                        <section className="chassis-section capability-section">
+                            <h2 className="section-header">PRIMARY AUGMENTATION</h2>
+                            <h3 className="capability-name">{playerClass.capabilityName.toUpperCase()}</h3>
+                            <p className="capability-desc">{playerClass.capabilityDesc}</p>
                         </section>
 
                         <section className="chassis-section">
@@ -97,11 +98,7 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
 
                     {/* Right Column: Skills & Metrics */}
                     <div className="chassis-column-right">
-                        <section className="chassis-section capability-section">
-                            <h2 className="section-header">PRIMARY AUGMENTATION</h2>
-                            <h3 className="capability-name">{playerClass.capabilityName.toUpperCase()}</h3>
-                            <p className="capability-desc">{playerClass.capabilityDesc}</p>
-                        </section>
+
 
                         <section className="chassis-section metrics-section">
                             <h2 className="section-header">PERFORMANCE METRICS</h2>

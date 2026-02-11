@@ -14,7 +14,6 @@ import Leaderboard from '@/components/Leaderboard';
 import { ModuleMenu } from '@/components/ModuleMenu';
 import { LegendarySelectionMenu } from '@/components/LegendarySelectionMenu';
 import { ClassSelection } from '@/components/ClassSelection';
-import { ArenaSelection } from '@/components/ArenaSelection';
 import { type PlayerClass } from '@/logic/core/types';
 
 import { useGameLoop } from '@/hooks/useGame';
@@ -26,7 +25,6 @@ import '@/styles/menu_additions.css';
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
   const [selectingClass, setSelectingClass] = useState(false);
-  const [selectingArena, setSelectingArena] = useState(false);
   const [selectedClass, setSelectedClass] = useState<PlayerClass | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
@@ -51,17 +49,16 @@ export default function Home() {
 
   // Auto-focus logic
   useEffect(() => {
-    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !selectingArena && !showLeaderboard) {
+    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !showLeaderboard) {
       appRef.current?.focus();
     }
-  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, selectingArena, showLeaderboard, hook]);
+  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, showLeaderboard, hook]);
 
   // Reset logic when quitting to main menu
   const handleQuit = () => {
     hook.setShowSettings(false);
     setGameStarted(false);
     setSelectingClass(false);
-    setSelectingArena(false);
     hook.restartGame();
   };
 
@@ -75,26 +72,24 @@ export default function Home() {
     setSelectingClass(true);
   };
 
-  const handleClassSelect = (cls: PlayerClass) => {
+  const handleClassSelect = (cls: PlayerClass, tutorialEnabled: boolean) => {
     setSelectedClass(cls);
     setSelectingClass(false);
-    setSelectingArena(true);
-  };
 
-  const handleArenaSelect = (arenaId: number, tutorialEnabled: boolean = true) => {
+    // Direct Start to Arena 0 (Economic Hex)
+    const arenaId = 0;
     startBGM(arenaId);
-    setSelectingArena(false);
     setGameStarted(true);
-    if (selectedClass) {
-      hook.restartGame(selectedClass, arenaId, username, tutorialEnabled);
-    }
+
+    // Note: We pass 'cls' directly to ensure we use the selected class immediately
+    // even if state update is batched.
+    hook.restartGame(cls, arenaId, username, tutorialEnabled);
   };
 
   const handleRestart = () => {
     hook.restartGame(undefined, 0, undefined, false); // No tutorial on quick restart
     setGameStarted(false);
     setSelectingClass(true);
-    setSelectingArena(false);
   };
 
   if (checkingAuth) {
@@ -128,7 +123,7 @@ export default function Home() {
       onClick={(e) => e.currentTarget.focus()}
     >
 
-      {!gameStarted && !selectingClass && !selectingArena && (
+      {!gameStarted && !selectingClass && (
         <MainMenu
           onStart={handleStart}
           onShowLeaderboard={() => setShowLeaderboard(true)}
@@ -137,7 +132,6 @@ export default function Home() {
         />
       )}
       {selectingClass && <ClassSelection onSelect={handleClassSelect} />}
-      {selectingArena && <ArenaSelection onSelect={handleArenaSelect} />}
 
       {gameStarted && (
         <>
@@ -154,57 +148,69 @@ export default function Home() {
             pointerEvents: 'none'
           }}>
 
-            {!hook.showModuleMenu && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
-                <HUD
-                  gameState={hook.gameState}
-                  upgradeChoices={hook.upgradeChoices}
-                  onUpgradeSelect={hook.handleUpgradeSelect}
-                  gameOver={hook.gameOver}
-                  onRestart={handleRestart}
-                  bossWarning={hook.bossWarning}
-                  fps={hook.fps}
-                  onInventoryToggle={hook.toggleModuleMenu}
-                  portalError={hook.portalError}
-                  portalCost={hook.portalCost}
-                  showSkillDetail={hook.showBossSkillDetail}
-                  setShowSkillDetail={hook.setShowBossSkillDetail}
-                  showStats={hook.showStats}
-                  showUpgradeMenu={!!hook.upgradeChoices}
-                />
+            {/* UI Centering & Confinement Layer (For Ultra-Wide Screens) */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: '50%',
+              width: '100%',
+              height: '100%',
+              maxWidth: '1800px',
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none'
+            }}>
 
-                {isMobile && !hook.gameOver && (
-                  <MobileControls onInput={hook.handleJoystickInput} />
-                )}
+              {!hook.showModuleMenu && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
+                  <HUD
+                    gameState={hook.gameState}
+                    upgradeChoices={hook.upgradeChoices}
+                    onUpgradeSelect={hook.handleUpgradeSelect}
+                    gameOver={hook.gameOver}
+                    onRestart={handleRestart}
+                    bossWarning={hook.bossWarning}
+                    fps={hook.fps}
+                    onInventoryToggle={hook.toggleModuleMenu}
+                    portalError={hook.portalError}
+                    portalCost={hook.portalCost}
+                    showSkillDetail={hook.showBossSkillDetail}
+                    setShowSkillDetail={hook.setShowBossSkillDetail}
+                    showStats={hook.showStats}
+                    showUpgradeMenu={!!hook.upgradeChoices}
+                  />
+
+                  {isMobile && !hook.gameOver && (
+                    <MobileControls onInput={hook.handleJoystickInput} />
+                  )}
+                </div>
+              )}
+
+              {hook.showStats && <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}><div style={{ width: '100%', height: '100%', pointerEvents: 'auto', position: 'relative' }}><StatsMenu gameState={hook.gameState} /></div></div>}
+
+              <div style={{ pointerEvents: hook.showModuleMenu ? 'auto' : 'none' }}>
+                <ModuleMenu
+                  gameState={hook.gameState}
+                  isOpen={hook.showModuleMenu}
+                  onClose={() => hook.setShowModuleMenu(false)}
+                  onSocketUpdate={hook.handleModuleSocketUpdate}
+                  onInventoryUpdate={hook.updateInventorySlot}
+                  onRecycle={hook.recycleMeteorite}
+                  spendDust={hook.spendDust}
+                  onViewChassisDetail={hook.onViewChassisDetail}
+                />
+              </div>
+            </div>
+
+            {/* Full-Screen Modals (Cover entire viewport) */}
+            {hook.showSettings && (
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2000 }}>
+                <SettingsMenu onClose={() => hook.setShowSettings(false)} onRestart={handleRestart} onQuit={handleQuit} />
+                <AudioWidget />
               </div>
             )}
 
-            {hook.showStats && <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}><StatsMenu gameState={hook.gameState} /></div>}
-
-            {hook.showSettings && (
-              <>
-                <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
-                  <SettingsMenu onClose={() => hook.setShowSettings(false)} onRestart={handleRestart} onQuit={handleQuit} />
-                </div>
-                <AudioWidget />
-              </>
-            )}
-
-            <div style={{ pointerEvents: hook.showModuleMenu ? 'auto' : 'none' }}>
-              <ModuleMenu
-                gameState={hook.gameState}
-                isOpen={hook.showModuleMenu}
-                onClose={() => hook.setShowModuleMenu(false)}
-                onSocketUpdate={hook.handleModuleSocketUpdate}
-                onInventoryUpdate={hook.updateInventorySlot}
-                onRecycle={hook.recycleMeteorite}
-                spendDust={hook.spendDust}
-                onViewChassisDetail={hook.onViewChassisDetail}
-              />
-            </div>
-
             {hook.showLegendarySelection && hook.gameState.legendaryOptions && (
-              <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 3000 }}>
                 <LegendarySelectionMenu
                   options={hook.gameState.legendaryOptions}
                   onSelect={hook.handleLegendarySelect}
@@ -213,13 +219,13 @@ export default function Home() {
             )}
 
             {hook.gameOver && (
-              <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10000 }}>
                 <DeathScreen
                   stats={{
                     time: hook.gameState.gameTime,
                     kills: hook.gameState.killCount,
                     bosses: hook.gameState.bossKills,
-                    level: hook.gameState.player.level // Fix: player level is in player object
+                    level: hook.gameState.player.level
                   }}
                   gameState={hook.gameState}
                   onRestart={handleRestart}
@@ -250,28 +256,27 @@ export default function Home() {
               />
             </div>
           </div>
+        </>
+      )}
 
-          {isMobile && !isLandscape && (
-            <div style={{
-              position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh',
-              background: '#020617', zIndex: 9999,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', textAlign: 'center', padding: 20
-            }}>
-              <h2 style={{ color: '#ef4444', marginBottom: 20 }}>NO SIGNAL</h2>
-              <p>INITIATE LANDSCAPE MODE TO ESTABLISH LINK</p>
-              <div style={{ width: 60, height: 100, border: '4px solid #3b82f6', borderRadius: 8, marginTop: 40, animation: 'rotate-phone 2s infinite' }}></div>
-              <style>{`
+      {isMobile && !isLandscape && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: '#020617', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', textAlign: 'center', padding: 20
+        }}>
+          <h2 style={{ color: '#ef4444', marginBottom: 20 }}>NO SIGNAL</h2>
+          <p>INITIATE LANDSCAPE MODE TO ESTABLISH LINK</p>
+          <div style={{ width: 60, height: 100, border: '4px solid #3b82f6', borderRadius: 8, marginTop: 40, animation: 'rotate-phone 2s infinite' }}></div>
+          <style>{`
                  @keyframes rotate-phone {
                    0% { transform: rotate(0deg); }
                    50% { transform: rotate(90deg); }
                    100% { transform: rotate(90deg); }
                  }
                `}</style>
-            </div>
-          )}
-
-        </>
+        </div>
       )}
 
       {showLeaderboard && (

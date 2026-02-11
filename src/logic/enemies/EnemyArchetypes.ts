@@ -28,7 +28,7 @@ export const ARCHETYPES: Record<EnemyArchetype, ArchetypeConfig> = {
     square: {
         shape: 'square',
         name: 'Tank',
-        speedMult: 0.8,
+        speedMult: 0.7,
         hpMult: 2.0,
         spawnRateMult: 0.75,
     },

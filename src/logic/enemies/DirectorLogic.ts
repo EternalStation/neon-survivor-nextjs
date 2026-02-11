@@ -118,8 +118,8 @@ function updateActiveEvent(state: GameState, _step: number) {
                 lastAttack: 0,
                 dead: false,
                 shellStage: 0,
-                palette: ['#1e3a8a', '#3b82f6', '#93c5fd'], // Dark Blue Ghost
-                eraPalette: ['#1e3a8a', '#3b82f6', '#93c5fd'],
+                palette: ['#93c5fd', '#3b82f6', '#1e3a8a'], // Bright Blue Ghost First
+                eraPalette: ['#93c5fd', '#3b82f6', '#1e3a8a'],
                 fluxState: 0,
                 pulsePhase: 0,
                 rotationPhase: 0,

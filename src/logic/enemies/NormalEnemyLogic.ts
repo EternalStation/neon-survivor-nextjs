@@ -144,23 +144,29 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
     let vx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
     let vy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
 
-    // Check for Living Minions
-    const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
-    const orbitingMinions = myMinions.filter(m => m.minionState === 0);
+    // --- OPTIMIZED HIVE LOGIC (Staggered Checks) ---
+    // Only check minions every 10 frames to save performance
+    if (e.minionCount === undefined || state.frameCount % 10 === 0) {
+        const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
+        e.minionCount = myMinions.length;
+        e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
+    }
 
-    // --- PROXIMITY-BASED HIVE LOGIC ---
     const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
-    const hasMinions = myMinions.length > 0;
+    const hasMinions = (e.minionCount || 0) > 0;
 
     // 1. Proximity Aggro Check
-    if (distToPlayer <= 350 && orbitingMinions.length > 0) {
-        orbitingMinions.forEach(m => m.minionState = 1);
+    if (distToPlayer <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
+        state.enemies.forEach(m => {
+            if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
+        });
         playSfx('stun-disrupt');
-        e.angryUntil = Date.now() + 2000; // Stay red for 2 seconds
+        e.angryUntil = state.gameTime + 2.0; // Stay red for 2 seconds
+        e.orbitingMinionIds = []; // Clear local cache to reflect change
     }
 
     // 2. Visual Feedback
-    const isAngry = !!(e.angryUntil && Date.now() < e.angryUntil);
+    const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
     const isWarning = !!(distToPlayer <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
@@ -181,18 +187,21 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
     // --- AGE-BASED DESTRUCTION SEQUENCE (Age > 60s) ---
     const age = state.gameTime - (e.spawnedAt || 0);
     if (age > 60) {
-        if (orbitingMinions.length > 0) {
+        if ((e.minionCount || 0) > 0) {
             // RELEASE ONE BY ONE
-            if (!e.lastAttack) e.lastAttack = Date.now();
-            if (Date.now() - e.lastAttack > 2000) {
-                const victim = orbitingMinions[0];
-                victim.minionState = 1;
-                playSfx('stun-disrupt');
-                e.lastAttack = Date.now();
+            if (!e.lastAttack) e.lastAttack = state.gameTime;
+            if (state.gameTime - (e.lastAttack || 0) > 2.0) {
+                // Find one to launch
+                const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
+                if (victim) {
+                    victim.minionState = 1;
+                    playSfx('stun-disrupt');
+                }
+                e.lastAttack = state.gameTime;
+                e.minionCount = (e.minionCount || 1) - 1; // Decrement local count
             }
             // Pulsate White/Red while dying (Only if NOT in aggro red state)
             if (!isAngry) {
-                // Pulsate White/Red while dying (Removed blinking per user request)
                 e.palette = ['#FFFFFF', '#EF4444', '#7F1D1D'];
                 e.eraPalette = undefined; // OVERRIDE ERA PALETTE
             }
@@ -207,15 +216,10 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
 
     // Normal State / Spawning Logic (Only if age <= 60 and not in aggro)
     if (!isAngry && !isWarning) {
-        // Normal State / Spawning Logic
         if (e.summonState === 1) {
-            // Charging (No Blink per user request)
-            // e.palette = ['#4ade80', '#22c55e', '#166534']; // No longer swapping color to avoid flashing
-            // if (e.originalPalette) e.palette = e.originalPalette; 
-
-            if (Date.now() > (e.timer || 0)) {
+            if (state.gameTime > (e.timer || 0)) {
                 spawnMinion(state, e, false, 3);
-                e.lastAttack = Date.now();
+                e.lastAttack = state.gameTime;
                 e.summonState = 0;
                 if (e.originalPalette) e.palette = e.originalPalette;
             }
@@ -223,11 +227,11 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
             if (e.originalPalette) {
                 e.palette = e.originalPalette;
             }
-            const spawnInterval = 20000;
-            if (!e.lastAttack) e.lastAttack = Date.now();
-            if (Date.now() - e.lastAttack > spawnInterval && myMinions.length < 9) {
+            const spawnInterval = 20.0;
+            if (!e.lastAttack) e.lastAttack = state.gameTime;
+            if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
                 e.summonState = 1;
-                e.timer = Date.now() + 3000;
+                e.timer = state.gameTime + 3.0;
                 playSfx('warning');
             }
         }
@@ -237,25 +241,7 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
 }
 
 export function updateUniquePentagon(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
-    // Unique Pentagons use the same basic Hive logic as Normal ones
-    // But they have "Rare" visuals like trails and higher speed
-
     // Standard Hive Update (Movement + Spawning + Guarding)
     const result = updateNormalPentagon(e, state, dist, dx, dy, currentSpd * 1.2, pushX, pushY); // 20% faster
-
-    // Rare Visuals: Trails (After-images)
-    if (state.frameCount % 5 === 0) {
-        if (!e.trails) e.trails = [];
-        e.trails.push({ x: e.x, y: e.y, alpha: 0.5, rotation: e.rotationPhase || 0 });
-        if (e.trails.length > 5) e.trails.shift();
-    }
-
-    // Rare Visuals: Long Paint Trail (like Snitch)
-    if (!e.longTrail) e.longTrail = [];
-    if (state.frameCount % 3 === 0) {
-        e.longTrail.push({ x: e.x, y: e.y });
-        if (e.longTrail.length > 30) e.longTrail.shift();
-    }
-
     return result;
 }

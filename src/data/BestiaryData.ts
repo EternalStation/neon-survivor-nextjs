@@ -59,7 +59,7 @@ export const BESTIARY_DATA: BestiaryEntry[] = [
         description: 'Heavily armored slow-moving fortress. Designed to absorb punishment and block escape routes.',
         behavior: 'Slow but steady advance. High durability makes them excellent shields for other enemies.',
         stats: {
-            hp: 'X3.0 Base',
+            hp: 'X2.0 Base',
             speed: 'X0.7 Base',
             damage: '15% Max HP',
             xp: 'X1.0 Base'

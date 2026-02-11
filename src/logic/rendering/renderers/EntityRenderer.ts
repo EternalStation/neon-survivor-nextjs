@@ -1,4 +1,5 @@
 import type { GameState } from '../../core/types';
+import { TutorialStep } from '../../core/types';
 
 
 
@@ -60,6 +61,37 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
             }
         }
+        // Tutorial Highlight (First Meteorite Only)
+        if (state.tutorial.isActive &&
+            state.tutorial.currentStep === TutorialStep.COLLECT_METEORITE &&
+            state.gameTime >= 60 &&
+            state.meteorites.length > 0 &&
+            m === state.meteorites[0]) {
+
+            const pulse = 1 + Math.sin(state.gameTime * 5) * 0.2;
+            ctx.filter = `drop-shadow(0 0 10px #00ffff)`;
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 3 / pulse; // Keep stroke consistent visually
+            ctx.beginPath();
+            ctx.arc(0, 0, 40 * pulse, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.filter = 'none';
+
+            // Floating Arrow
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(0, -60 - (pulse * 10));
+            ctx.lineTo(10, -80 - (pulse * 10));
+            ctx.lineTo(-10, -80 - (pulse * 10));
+            ctx.closePath();
+            ctx.fill();
+
+            // Text
+            ctx.font = '900 12px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText("COLLECT", 0, -90 - (pulse * 10));
+        }
+
         ctx.restore();
     });
 }

@@ -46,10 +46,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
 
     // Persistent Filter State (Lifted from InventoryPanel)
-    const [coreFilter, setCoreFilter] = useState({
-        quality: 'All',
-        rarity: 'All',
-        arena: 'All'
+    const [coreFilter, setCoreFilter] = useState<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>({
+        quality: ['All'],
+        rarity: ['All'],
+        arena: ['All']
     });
 
     const [perkFilters, setPerkFilters] = useState<Record<number, PerkFilter>>({
@@ -397,7 +397,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         });
     };
 
-    if (!isOpen) return null;
+
 
     const { moduleSockets } = gameState;
     const meteoriteDust = gameState.player.dust;
@@ -405,51 +405,70 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const extractionFocusActive = gameState.extractionStatus !== 'none' && gameState.extractionStatus !== 'complete';
 
 
-    // Tutorial Spotlight Logic
     const getTutorialHighlight = () => {
         if (!gameState.tutorial.isActive) return null;
         switch (gameState.tutorial.currentStep) {
-            case 10: // TutorialStep.MATRIX_INVENTORY
+            case 10: // MATRIX_WELCOME
+                return null;
+            case 11: // MATRIX_INVENTORY
                 return {
-                    selector: '.inventory-grid', // Needs class name added to InventoryPanel container
+                    selector: '.inventory-grid',
                     text: 'METEORITE STORAGE',
-                    subtext: "Here you can store collected meteorites. Hover over them to see detailed stats."
+                    subtext: "Hover to scan."
                 };
-            case 11: // TutorialStep.MATRIX_SCAN
+            case 12: // MATRIX_SOCKETS
                 return {
-                    selector: '.module-detail-panel', // Needs class
-                    text: 'SCANNER LINK',
-                    subtext: "View detailed statistics, perks, and rarities of selected meteorites here."
-                };
-            case 12: // TutorialStep.MATRIX_FILTERS
-                return {
-                    selector: '.filter-controls', // Needs class
-                    text: 'FILTER ARRAY',
-                    subtext: "Sort and filter meteorites by Rarity, Quality, or specific Perks."
-                };
-            case 13: // TutorialStep.MATRIX_RECYCLE
-                return {
-                    selector: '.recycle-btn', // Needs class
-                    text: 'RECYCLER',
-                    subtext: "Convert unwanted meteorites into Dust, the primary currency for system upgrades."
-                };
-            case 14: // TutorialStep.MATRIX_SOCKETS
-                return {
-                    selector: '.hex-grid-container', // Needs class
+                    selector: null, // Custom Highlight in HexGrid
                     text: 'MODULE SOCKETS',
-                    subtext: "Place meteorites into Diamond Sockets to empower your Hexes."
+                    subtext: "Place in sockets to empower neighbors."
                 };
-            case 15: // TutorialStep.MATRIX_CLASS_DETAIL
+            case 13: // MATRIX_TYPES
                 return {
-                    selector: '.center-class-icon', // Needs class
+                    selector: '.module-detail-panel',
+                    text: 'SCANNER LINK',
+                    subtext: "Observe type and efficiency ranges."
+                };
+            case 14: // MATRIX_ORIGIN
+                return {
+                    selector: '.module-detail-panel',
+                    text: 'ORIGIN DATA',
+                    subtext: "Track source arena."
+                };
+            case 15: // MATRIX_RECYCLE_ACTION
+                return {
+                    selector: '.recycle-btn',
+                    text: 'RECYCLER',
+                    subtext: "Recycle for dust."
+                };
+            case 16: // MATRIX_DUST_USAGE
+                return {
+                    selector: '.dust-display-container',
+                    text: 'RESOURCES',
+                    subtext: "Dust required for actions."
+                };
+            case 17: // MATRIX_QUOTA_MISSION
+                return {
+                    selector: '.dust-display-container',
+                    text: 'MISSION QUOTA',
+                    subtext: "Your mission is to reach quota of 10,000 dust."
+                };
+            case 18: // MATRIX_CLASS_DETAIL
+                return {
+                    selector: '.center-class-icon',
                     text: 'CHASSIS CORE',
-                    subtext: "Click your class icon to view core stats and upgrade paths."
+                    subtext: "Inspect system specs."
                 };
-            case 16: // TutorialStep.MATRIX_QUOTA
+            case 19: // MATRIX_NON_STATIC_METRICS
                 return {
-                    selector: '.dust-display', // Needs class
-                    text: 'EVACUATION QUOTA',
-                    subtext: "Collect 10,000 Dust to initiate emergency evacuation protocol."
+                    selector: '.hex-grid-container',
+                    text: 'OPTIMIZATION',
+                    subtext: "Improve metrics by placement."
+                };
+            case 20: // MATRIX_FILTERS
+                return {
+                    selector: '.filter-controls',
+                    text: 'FILTERS',
+                    subtext: "Sort and filter."
                 };
             default:
                 return null;
@@ -457,6 +476,35 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     };
 
     const activeHighlight = getTutorialHighlight();
+
+    // Imperative Highlight Application
+    React.useEffect(() => {
+        // Clear previous highlights
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+            (el as HTMLElement).style.zIndex = '';
+            (el as HTMLElement).style.position = '';
+        });
+
+        if (activeHighlight && activeHighlight.selector) {
+            // Find all matching elements (handle cases like .center-class-icon which might be SVG)
+            const elements = document.querySelectorAll(activeHighlight.selector);
+            elements.forEach(el => {
+                el.classList.add('tutorial-highlight');
+                // Force z-index stacking context if needed, but CSS !important handles z-index
+                // SVG elements might need specific handling?
+                // .center-class-icon is a <g>, box-shadow won't work on SVG <g> usually.
+                // For SVG, we might need a different class or filter.
+                if (el.tagName === 'g' || activeHighlight.selector.includes('class-icon')) {
+                    // SVG Highlight Logic
+                    (el as SVGElement).style.filter = "drop-shadow(0 0 10px #22d3ee)";
+                    (el as HTMLElement).style.animation = "pulseCyanGlow 2s infinite ease-in-out";
+                }
+            });
+        }
+    }, [gameState.tutorial.currentStep, gameState.tutorial.isActive]);
+
+    if (!isOpen) return null;
 
     return (
         <div
@@ -489,25 +537,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 userSelect: 'none'
             }}>
 
-            {/* Tutorial Overlay Layer */}
-            {activeHighlight && (
-                <div className="tutorial-container">
-                    {/* The dimming is handled by the .tutorial-highlight class which we must apply dynamically to children? 
-                        The CSS solution `box-shadow: 0 0 0 9999px rgba(0,0,0,0.9)` on the HIGHLIGHTED element is easiest.
-                        But we can't easily inject classes into child components from here without props.
-                        Alternatively, we render a semi-transparent overlay HERE with a "hole" (clip-path).
-                        
-                        Better approach for React:
-                        SpotlightOverlay component that takes a rect or selector and renders the dimming around it.
-                        Or, simpler: Just use the CSS class injection if we can traverse DOM (Effect).
-                     */}
-                    <SpotlightOverlay selector={activeHighlight.selector} text={activeHighlight.text} subtext={activeHighlight.subtext} />
-                </div>
-            )}
+            {/* Tutorial Layer - REMOVED: Highlighting looks strange to user */}
 
-            {/* MAIN LAYOUT CONTAINER */}
+
+            {/* MAIN LAYOUT CONTAINER - CENTERED AND CONSTRAINED */}
             <div style={{
-                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                position: 'absolute', top: 0, left: '50%', width: '100%', height: '100%',
+                maxWidth: '1800px', // Standard wide cap to prevent elements from drifting too far
+                transform: 'translateX(-50%)',
                 display: 'flex', pointerEvents: 'none' // Allow clicks only on interactive elements
             }}>
 
@@ -636,7 +673,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 gap: '4px'
                             }}>
                                 {/* DUST RESOURCE DISPLAY */}
-                                <div style={{
+                                <div className="dust-display-container" style={{
                                     flex: '1',
                                     background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%)',
                                     border: '1px solid #475569',
@@ -882,16 +919,8 @@ const SpotlightOverlay: React.FC<{ selector: string, text: string, subtext: stri
                 }
             `}</style>
 
-            {/* The Hint Box */}
-            <div className="tutorial-hint-box" style={{
-                top: Math.max(20, targetRect.top - 120), // Position above if possible
-                left: targetRect.left + targetRect.width / 2 + 20, // To right center
-                // Basic logic to keep it on screen:
-                transform: 'none'
-            }}>
-                <h3>{text}</h3>
-                <p>{subtext}</p>
-            </div>
+            {/* The Hint Box - REMOVED: Handled by global TutorialOverlay */}
+
         </>
     );
 };

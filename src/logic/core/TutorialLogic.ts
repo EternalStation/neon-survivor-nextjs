@@ -1,32 +1,76 @@
 import { GameState, TutorialStep } from './types';
 
-// Configuration for Hints (Hints for steps 10+ are handled inside ModuleMenu overlay)
+// Configuration for Hints (Expanded for Matrix Tour)
 export const TUTORIAL_HINTS: Partial<Record<TutorialStep, { text: string; subtext: string }>> = {
     [TutorialStep.MOVEMENT]: {
-        text: "MOVEMENT",
-        subtext: "WASD / [↑↓←→]"
+        text: "ORBIT",
+        subtext: "Use [WASD] / [Arrows] to move."
     },
-    [TutorialStep.KILL_ENEMY]: {
-        text: "LVL UP",
-        subtext: "ELIMINATE THREATS TO INSTALL PROTOCOLS"
-    },
+
+
     [TutorialStep.LEVEL_UP_MENU]: {
-        text: "INSTALL PROTOCOLS",
-        subtext: "USE [A/D] OR [ARROWS] TO NAVIGATE, [SPACE] TO SELECT"
+        text: "ORBIT",
+        subtext: "Choose one of 3 upgrades every level up. Red sockets below represent rarity — the more the better."
     },
+
     [TutorialStep.UPGRADE_SELECTED_CHECK_STATS]: {
-        text: "STATS",
-        subtext: "PRESS [C] TO ACCESS STATS"
+        text: "ORBIT",
+        subtext: "Check your system [C]."
     },
-    [TutorialStep.COLLECT_METEORITE]: {
-        text: "RESOURCE DETECTED",
-        subtext: ""
-    },
+
+
     [TutorialStep.OPEN_MODULE_MENU]: {
-        text: "HARDWARE ACQUIRED",
-        subtext: "PRESS [TAB] OR [M] TO ACCESS MODULE MATRIX"
+        text: "ORBIT",
+        subtext: "Meteorite collected. Enter Module Matrix to inspect [X]."
+    },
+
+    [TutorialStep.MATRIX_WELCOME]: {
+        text: "ORBIT",
+        subtext: "Welcome to Module Matrix."
+    },
+    [TutorialStep.MATRIX_INVENTORY]: {
+        text: "ORBIT",
+        subtext: "All meteorites will be stored here. You can scan meteorite by hovering over it."
+    },
+    [TutorialStep.MATRIX_SOCKETS]: {
+        text: "ORBIT",
+        subtext: "Every meteorite has its perks that increase efficiency of neighboring hexes and meteorites if placed in a socket on your left."
+    },
+    [TutorialStep.MATRIX_TYPES]: {
+        text: "ORBIT",
+        subtext: "Meteorites can be 4 types: Broken, Damaged, Pristine and Corrupted. Every type has different perk efficiency range that you might get."
+    },
+    [TutorialStep.MATRIX_ORIGIN]: {
+        text: "ORBIT",
+        subtext: "Also you can see in which area you collected the meteorite below in the scanner."
+    },
+    [TutorialStep.MATRIX_RECYCLE_ACTION]: {
+        text: "ORBIT",
+        subtext: "You can recycle meteorites you don't need and get meteorite dust from it."
+    },
+    [TutorialStep.MATRIX_DUST_USAGE]: {
+        text: "ORBIT",
+        subtext: "Replacing meteorites in Matrix menu, activating blueprints, all this requires meteorite dust."
+    },
+    [TutorialStep.MATRIX_QUOTA_MISSION]: {
+        text: "ORBIT",
+        subtext: "Your mission is to reach quota of 10,000 dust."
+    },
+    [TutorialStep.MATRIX_CLASS_DETAIL]: {
+        text: "ORBIT",
+        subtext: "If you click on the central hex in module matrix which represents your class, you can see all about it."
+    },
+    [TutorialStep.MATRIX_NON_STATIC_METRICS]: {
+        text: "ORBIT",
+        subtext: "Non-Static Metrics can be improved by placing meteorites near the hex."
+    },
+    [TutorialStep.MATRIX_FILTERS]: {
+        text: "ORBIT",
+        subtext: "When you will have too much meteorites you can use filters to filter the one you want."
     }
 };
+
+
 
 export const updateTutorial = (gameState: GameState, dt: number) => {
     const { tutorial, player, inventory } = gameState;
@@ -71,11 +115,17 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
     // --- Step Transition Logic ---
     switch (tutorial.currentStep) {
         case TutorialStep.MOVEMENT:
+            // Priority: If player opens upgrade menu before moving, jump to level up hint
+            if (gameState.isUpgradeMenuOpen || gameState.pendingLevelUps > 0) {
+                advanceStep(gameState, TutorialStep.LEVEL_UP_MENU);
+                break;
+            }
             // Condition: 2 distinct keys pressed OR joystick movement
             if (tutorial.pressedKeys.size >= 2 || tutorial.hasMoved) {
                 advanceStep(gameState, TutorialStep.COMBAT); // COMBAT is hidden/internal
             }
             break;
+
 
         case TutorialStep.COMBAT:
             // Wait for first kill
@@ -111,14 +161,10 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
             break;
 
         case TutorialStep.UPGRADE_SELECTED_CHECK_STATS:
-            // Phase 1: Tell him to press C
-            // Phase 2: Once inside C, explain diagram and stats
-            // Phase 3: Wait until C is closed
-            if (tutorial.hasOpenedStats) {
-                // He opened it. Now we wait for him to close it.
-                if (!gameState.showStats && tutorial.stepTimer > 8.0) { // Give them at least 8s to look at stats
-                    advanceStep(gameState, TutorialStep.COLLECT_METEORITE);
-                }
+            // "Analyze performance [C]."
+            // Advance when user has opened and then closed the stats menu
+            if (tutorial.hasOpenedStats && !gameState.showStats) {
+                advanceStep(gameState, TutorialStep.COLLECT_METEORITE);
             }
             break;
 
@@ -136,45 +182,22 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
             }
             break;
 
-        // --- MATRIX TOUR STEPS (Time/Interaction based) ---
+        case TutorialStep.MATRIX_WELCOME:
         case TutorialStep.MATRIX_INVENTORY:
-            // "Show him his meteorites and tell here you will store all..."
-            if (tutorial.stepTimer > 4.0) advanceStep(gameState, TutorialStep.MATRIX_SCAN);
-            break;
-
-        case TutorialStep.MATRIX_SCAN:
-            // "Show scan menu and tell by hovering..."
-            if (tutorial.stepTimer > 5.0) advanceStep(gameState, TutorialStep.MATRIX_FILTERS);
-            break;
-
-        case TutorialStep.MATRIX_FILTERS:
-            // "Highlight filters..."
-            if (tutorial.stepTimer > 5.0) advanceStep(gameState, TutorialStep.MATRIX_RECYCLE);
-            break;
-
-        case TutorialStep.MATRIX_RECYCLE:
-            // "Show recycle button..."
-            if (tutorial.stepTimer > 5.0) advanceStep(gameState, TutorialStep.MATRIX_SOCKETS);
-            break;
-
         case TutorialStep.MATRIX_SOCKETS:
-            // "Highlight sockets..."
-            if (tutorial.stepTimer > 6.0) advanceStep(gameState, TutorialStep.MATRIX_CLASS_DETAIL);
-            break;
-
+        case TutorialStep.MATRIX_TYPES:
+        case TutorialStep.MATRIX_ORIGIN:
+        case TutorialStep.MATRIX_RECYCLE_ACTION:
+        case TutorialStep.MATRIX_DUST_USAGE:
+        case TutorialStep.MATRIX_QUOTA_MISSION:
         case TutorialStep.MATRIX_CLASS_DETAIL:
-            // "Highlight class icon..."
-            if (tutorial.stepTimer > 6.0) advanceStep(gameState, TutorialStep.MATRIX_QUOTA);
-            break;
-
-        case TutorialStep.MATRIX_QUOTA:
-            // "Show quota..."
-            if (tutorial.stepTimer > 6.0) {
-                advanceStep(gameState, TutorialStep.COMPLETE);
-            }
+        case TutorialStep.MATRIX_NON_STATIC_METRICS:
+        case TutorialStep.MATRIX_FILTERS:
+            // No auto-advance. Handled by TutorialOverlay buttons.
             break;
     }
 };
+
 
 const advanceStep = (gameState: GameState, nextStep: TutorialStep) => {
     gameState.tutorial.completedSteps.push(gameState.tutorial.currentStep);

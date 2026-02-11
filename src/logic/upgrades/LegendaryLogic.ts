@@ -104,11 +104,11 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         desc: '0.1% Resist per Kill',
         description: 'Adaptive plating algorithms that strengthen structural integrity based on combat data.',
         lore: 'The Aegis is a living shield. It learns from every hit taken and every enemy destroyed, reinforcing your chassis until it becomes an impenetrable fortress.',
-        category: 'Defensive',
+        category: 'Economic',
         type: 'CombShield',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefShield.png'
+        customIcon: '/assets/hexes/EcoArmor.png'
     },
     KineticBattery: {
         id: 'kin_bat',
@@ -140,11 +140,11 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         desc: 'Time-Scaling Defense',
         description: 'Temporal alloy plating that hardening over time, becoming virtually indestructible the longer you survive.',
         lore: 'Forged outside of time, this armor doesn\'t just resist damage; it denies the very event of impact, rewriting history to keep you intact.',
-        category: 'Economic',
+        category: 'Defensive',
         type: 'ChronoPlating',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoPlating.png'
+        customIcon: '/assets/hexes/DefChromo.png'
     }
 };
 
@@ -173,16 +173,16 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         ],
         EcoXP: [
             ["+0.1 XP per kill"],
-            ["+1 Dust per 50 kills"],
-            ["+0.1% Perk Power for 100 kills"],
-            ["+0.1% XP Gain per kill"],
+            ["+0.01 Dust per kill"],
+            ["+0.01% Meteorite Perk Effectiveness per kill"],
+            ["+0.1% XP per kill"],
             ["MAX LEVEL"]
         ],
         EcoHP: [
             ["+0.1 Max HP per kill"],
             ["+0.1 HP/sec per kill"],
             ["+0.1% Max HP per kill"],
-            ["+0.1% Regen per kill"],
+            ["+0.1% HP/sec per kill"],
             ["MAX LEVEL"]
         ],
         ComLife: [
@@ -221,10 +221,10 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["MAX LEVEL"]
         ],
         CombShield: [
-            ["+1 Armor per kill"],
-            ["0.1% Log-Scaling Collision Resist per kill"],
-            ["0.1% Log-Scaling Projectile Resist per kill"],
-            ["+1% Armor Multiplier per kill"],
+            ["+0.1 Armor per kill"],
+            ["+0.1% DMG reduction from Collision per kill"],
+            ["+0.1% DMG reduction from Projectile per kill"],
+            ["+0.1% Armor per kill"],
             ["MAX LEVEL"]
         ],
         KineticBattery: [
@@ -271,10 +271,10 @@ export function getLegendaryPerkDesc(type: string, level: number, state?: GameSt
 export function getLegendaryOptions(state: GameState): LegendaryHex[] {
     let pool: (keyof typeof LEGENDARY_UPGRADES)[] = ['EcoDMG', 'EcoXP', 'EcoHP'];
 
-    // Arena 0 (Economic / Chrono)
+    // Arena 0 (Economic / CombShield)
     if (state.currentArena === 0) {
-        pool = ['ChronoPlating', 'EcoDMG', 'EcoXP', 'EcoHP'];
-        // Ensure ChronoPlating is always an option if not maxed
+        pool = ['CombShield', 'EcoDMG', 'EcoXP', 'EcoHP'];
+        // Ensure CombShield is always an option if not maxed
     }
 
     // Arena 1 (Combat / Radiation)
@@ -284,7 +284,7 @@ export function getLegendaryOptions(state: GameState): LegendaryHex[] {
 
     // Arena 2 (Defense / Kinetic)
     if (state.currentArena === 2) {
-        pool = ['KineticBattery', 'DefPuddle', 'DefEpi', 'CombShield'];
+        pool = ['KineticBattery', 'DefPuddle', 'DefEpi', 'ChronoPlating'];
     }
 
     return pool.map(typeKey => {
@@ -451,36 +451,46 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         if (hex.type === 'EcoXP') {
             if (statKey === 'xp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
             if (statKey === 'dust_extraction' && hex.level >= 2) {
-                // Return total dust earned since reaching level 2
-                total += Math.floor(getKillsSinceLevel(2) / 50) * multiplier;
+                // Return total dust earned since reaching level 2 (+0.1 per kill)
+                total += Math.floor(getKillsSinceLevel(2) * 0.01) * multiplier;
             }
             if (statKey === 'metric_resonance' && hex.level >= 3) {
-                // Return total % bonus to apply to perks
-                total += (getKillsSinceLevel(3) / 100) * 0.1 * multiplier;
+                // Return total % bonus to apply to perks (+0.01% per kill)
+                // Assuming metric_resonance expects non-percentage float (0.01 = 1%)? Or maybe 0.0001?
+                // Based on previous code (kills/100)*0.1 = kills * 0.001 -> 0.1% per 100 kills? No that was 0.1 (value) for 100 kills.
+                // If the system expects 1.0 = 100%, then 0.01% = 0.0001.
+                total += getKillsSinceLevel(3) * 0.0001 * multiplier;
             }
-            if (statKey === 'xp_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
+            if (statKey === 'xp_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.001 * multiplier;
         }
         if (hex.type === 'EcoHP') {
             if (statKey === 'hp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
-            if (statKey === 'reg_per_kill' && hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
+            if (statKey === 'reg_per_kill') {
+                if (hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
+                if (hex.level >= 4) {
+                    const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
+                    // +0.1% HP/sec per kill -> 0.001 * MaxHP * Kills
+                    total += maxHp * 0.001 * getKillsSinceLevel(4) * multiplier;
+                }
+            }
             if (statKey === 'hp_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.1 * multiplier;
-            if (statKey === 'reg_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
+            // reg_pct_per_kill removed/replaced by reg_per_kill logic for L4
         }
 
         // CombShield Logic
         if (hex.type === 'CombShield') {
-            if (statKey === 'arm_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 1 * multiplier;
+            if (statKey === 'arm_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
             if (statKey === 'col_red_per_kill' && hex.level >= 2) {
-                const stacks = getKillsSinceLevel(2) * multiplier;
-                // Target: 200->~10%, 5000->~50%, 15000->~70%, 100k->~80%
-                // 85 * (x^0.75 / (x^0.75 + 400))
-                total += 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
+                // 0.1% per kill (Linear)
+                // Assuming the system handles capping or dim returns if needed, but user asked for linear?
+                // Let's assume linear accumulation: 1000 kills = 100% reduction.
+                total += getKillsSinceLevel(2) * 0.001 * multiplier;
             }
             if (statKey === 'proj_red_per_kill' && hex.level >= 3) {
-                const stacks = getKillsSinceLevel(3) * multiplier;
-                total += 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
+                // 0.1% per kill (Linear)
+                total += getKillsSinceLevel(3) * 0.001 * multiplier;
             }
-            if (statKey === 'arm_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.01 * multiplier;
+            if (statKey === 'arm_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.001 * multiplier;
         }
 
         // ComLife Logic

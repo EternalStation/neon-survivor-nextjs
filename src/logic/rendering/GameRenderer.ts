@@ -63,7 +63,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         renderBackground(ctx, state, logicalWidth, logicalHeight);
 
         // 2. Map Boundaries
-        renderMapBoundaries(ctx);
+        renderMapBoundaries(ctx, state);
 
         // 2.5 Arena Fog (Vignette for Arena) - Draws ON TOP of background but BELOW entities if we want entities to pop? 
         // User wants "atmosphere" so fog should probably be below entities to simulate ground fog?
@@ -73,7 +73,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         // If so, draw it LATER.
         // Let's draw it AFTER entities (Layer 8.5) so they fade out when leaving?
         // No, let's draw it HERE to hide the "grid" outside.
-        renderArenaVignette(ctx);
+        renderArenaVignette(ctx, state);
 
         // 3. Ground Effects (Area Effects)
         renderAreaEffects(ctx, state);

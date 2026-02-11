@@ -102,15 +102,13 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
 
                 // 1. ARENA BUFFS (Priority 2 - TOP)
                 // Duration is effectively infinite for sorting purposes relative to decaying buffs
-                if (arenaIdx === 0) {
-                    buffs.push({ id: 'eco1', title: 'Econ Hex', buff: `+${15 * surgeMult}% XP Gain`, color: '#22d3ee', remaining: 99999, priority: 2 });
-                    buffs.push({ id: 'eco2', title: 'Econ Hex', buff: `+${15 * surgeMult}% Meteorite drop chance`, color: '#22d3ee', remaining: 99999, priority: 2 });
-                } else if (arenaIdx === 1) {
-                    buffs.push({ id: 'com1', title: 'Combat Hex', buff: `+${15 * surgeMult}% Spawn Rate`, color: '#ef4444', remaining: 99999, priority: 2 });
-                    buffs.push({ id: 'com2', title: 'Combat Hex', buff: `+${15 * surgeMult}% Collision Dmg`, color: '#ef4444', remaining: 99999, priority: 2 });
-                } else if (arenaIdx === 2) {
-                    buffs.push({ id: 'def1', title: 'Defence Hex', buff: `+${20 * surgeMult}% Max HP`, color: '#3b82f6', remaining: 99999, priority: 2 });
-                    buffs.push({ id: 'def2', title: 'Defence Hex', buff: `+${20 * surgeMult}% HP Regen`, color: '#3b82f6', remaining: 99999, priority: 2 });
+                if (arenaIdx === 0 && (gameState.arenaLevels[0] || 0) >= 1) {
+                    buffs.push({ id: 'eco1', title: 'Econ Sector', buff: `+${30 * surgeMult}% XP & Soul Yield`, color: '#22d3ee', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'eco2', title: 'Econ Sector', buff: `+${30 * surgeMult}% Meteorite rate`, color: '#22d3ee', remaining: 99999, priority: 2 });
+                } else if (arenaIdx === 1 && (gameState.arenaLevels[1] || 0) >= 1) {
+                    buffs.push({ id: 'com1', title: 'Combat Sector', buff: `+${30 * surgeMult}% DMG & Atk Spd`, color: '#ef4444', remaining: 99999, priority: 2 });
+                } else if (arenaIdx === 2 && (gameState.arenaLevels[2] || 0) >= 1) {
+                    buffs.push({ id: 'def1', title: 'Defence Sector', buff: `+${30 * surgeMult}% Max HP & Regen`, color: '#3b82f6', remaining: 99999, priority: 2 });
                 }
 
                 // 2. BLUEPRINT BUFFS (Priority 1 - Sorted by Duration)
