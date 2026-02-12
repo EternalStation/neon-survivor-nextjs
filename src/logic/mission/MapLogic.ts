@@ -1,3 +1,4 @@
+import type { MapPOI } from '../core/types';
 
 export const ARENA_RADIUS = 3750; // Increased by 3x (1250 -> 3750)
 export const MAP_GAP = 400;
@@ -261,3 +262,70 @@ export function getRandomMapPosition(): { x: number, y: number } {
     const arenaId = Math.floor(Math.random() * ARENA_CENTERS.length);
     return getRandomPositionInArena(arenaId);
 }
+
+export function generateMapPOIs(): MapPOI[] {
+    const pois: MapPOI[] = [];
+    let idCounter = 1;
+
+    ARENA_CENTERS.forEach(arena => {
+        // 1. One Overclock Transmitter per arena
+        const ocPos = getRandomPositionInArena(arena.id);
+        // Ensure it's not too close to the center (spawn) if it's arena 0
+        pois.push({
+            id: idCounter++,
+            type: 'overclock',
+            x: ocPos.x,
+            y: ocPos.y,
+            radius: 400, // Large zone for doubling XP/Spawn
+            arenaId: arena.id,
+            active: false, // Starts inactive
+            progress: 0,
+            activationProgress: 0,
+            activeDuration: 0,
+            cooldown: 0,
+            respawnTimer: 30, // 30s initial delay
+            lastUsed: 0
+        });
+
+        // 2. One Anomaly Beacon per arena
+        let abPos;
+        let attempts = 0;
+        while (attempts < 10) {
+            abPos = getRandomPositionInArena(arena.id);
+            const distToOC = Math.hypot(abPos.x - ocPos.x, abPos.y - ocPos.y);
+            if (distToOC > 1000) break; // Ensure they are spread out
+            attempts++;
+        }
+
+        pois.push({
+            id: idCounter++,
+            type: 'anomaly',
+            x: abPos!.x,
+            y: abPos!.y,
+            radius: 300, // Range for summoning
+            arenaId: arena.id,
+            active: true,
+            progress: 0,
+            activationProgress: 0,
+            activeDuration: 0,
+            cooldown: 0,
+            respawnTimer: 30, // 30s initial delay
+            lastUsed: 0
+        });
+    });
+
+    return pois;
+}
+
+export function relocatePOI(poi: MapPOI) {
+    const newPos = getRandomPositionInArena(poi.arenaId);
+    poi.x = newPos.x;
+    poi.y = newPos.y;
+    poi.progress = 0;
+    poi.activationProgress = 0;
+    poi.activeDuration = 0;
+    poi.cooldown = 0;
+    poi.respawnTimer = 30; // 30s before it reappears
+    poi.active = (poi.type === 'anomaly');
+}
+

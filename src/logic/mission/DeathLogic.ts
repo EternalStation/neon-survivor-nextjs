@@ -18,17 +18,25 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     e.dead = true; e.hp = 0;
 
     // Soul Reward Multipliers (Kill Count)
-    let soulCount = 1 * state.xpSoulBuffMult;
+    let baseSouls = 1;
     if (e.soulRewardMult !== undefined) {
-        soulCount = e.soulRewardMult;
+        baseSouls = e.soulRewardMult;
     } else if (e.isElite) {
-        soulCount = 12; // Default elite = 12 kills
+        baseSouls = 12; // Default elite = 12 kills
     } else if (e.shape === 'worm' && e.wormRole === 'head') {
-        soulCount = 50; // Big reward for head
+        baseSouls = 50; // Big reward for head
     }
+
+    // Apply Eco Buff (Only affects Legendary scaling, not displayed kill count)
+    const soulCount = baseSouls * state.xpSoulBuffMult;
 
     state.killCount += soulCount;
     state.score += soulCount;
+
+    // Track unbuffed kills for HUD
+    state.rawKillCount = (state.rawKillCount || state.killCount) + baseSouls;
+
+
 
     // --- EcoXP Lvl 2: Dust Extraction ---
     const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP');
@@ -110,7 +118,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     // Meteorite Drop Check
     trySpawnMeteorite(state, e.x, e.y);
 
-    // Blueprint Drop Check (5% from Elites)
+    // Blueprint Drop Check (15% from Elites)
     if (e.isElite) {
         trySpawnBlueprint(state, e.x, e.y);
     }
@@ -158,6 +166,21 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             }
 
             xpBase *= state.xpSoulBuffMult;
+
+            // --- POI EFFECTS: Overclock XP Bonus ---
+            let overclockActive = false;
+            state.pois.forEach(poi => {
+                if (poi.type === 'overclock' && poi.active) {
+                    const d = Math.hypot(state.player.x - poi.x, state.player.y - poi.y);
+                    if (d < poi.radius) {
+                        overclockActive = true;
+                    }
+                }
+            });
+
+            if (overclockActive) {
+                xpBase *= 2.0; // Double XP in Overclock zone
+            }
 
             // Legendary XP Bonuses
             const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');

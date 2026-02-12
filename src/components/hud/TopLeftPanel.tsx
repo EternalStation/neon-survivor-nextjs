@@ -49,12 +49,12 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
     return (
         <div style={{ position: 'absolute', top: 15, left: 15, pointerEvents: 'none', zIndex: 10 }}>
             <div className="kills" style={{ color: '#22d3ee', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', fontSize: 24, fontWeight: 800 }}>
-                {score.toString().padStart(4, '0')}
+                {(gameState.rawKillCount || gameState.killCount || 0).toString().padStart(4, '0')}
             </div>
-            <div className="stat-row" style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
+            <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 LVL {player.level}
             </div>
-            <div className="stat-row" style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
+            <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 {Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}
             </div>
 
@@ -147,6 +147,21 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
                     });
                 }
 
+                // 2.3 OVERCLOCK POI BUFF (Priority 1.5 - Between Arena and Blueprints)
+                gameState.pois.forEach(poi => {
+                    if (poi.type === 'overclock' && poi.active) {
+                        const timeLeft = Math.max(0, Math.ceil(30 - poi.activeDuration));
+                        buffs.push({
+                            id: 'overclock_' + poi.id,
+                            title: `OVERCLOCK (${timeLeft}s)`,
+                            buff: 'XP +100% | SPAWN +100%',
+                            color: '#22d3ee',
+                            remaining: timeLeft,
+                            priority: 1.5
+                        });
+                    }
+                });
+
                 // SORTING LOGIC
                 // 1. Priority Descending (Arena > Blueprints)
                 // 2. Remaining Time Descending
@@ -167,7 +182,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
             {/* RESEARCH PROGRESS INDICATORS */}
             {gameState.blueprints.map((bp, i) => {
                 if (bp && bp.status === 'researching' && bp.researchFinishTime) {
-                    const timeLeft = Math.max(0, ((bp.researchFinishTime - Date.now()) / 1000)).toFixed(1);
+                    const timeLeft = Math.max(0, (bp.researchFinishTime - gameState.gameTime)).toFixed(1);
                     return (
                         <div key={`research-${i}`} style={{
                             marginTop: 6, display: 'flex', alignItems: 'center', gap: 8,
@@ -203,7 +218,8 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
             })}
 
             {/* STUN INDICATOR (Keep Separate/Bottom) */}
-            {player.stunnedUntil && Date.now() < player.stunnedUntil && (
+            {/* STUN INDICATOR (Keep Separate/Bottom) */}
+            {player.stunnedUntil && gameState.gameTime < player.stunnedUntil && (
                 <div style={{
                     marginTop: 10,
                     display: 'flex',
@@ -221,7 +237,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
                         borderRadius: '50%', boxShadow: '0 0 8px #EF4444'
                     }} />
                     <span style={{ color: '#EF4444', fontSize: 10, fontWeight: 900, letterSpacing: 1 }}>
-                        ENGINE DISABLED ({Math.ceil((player.stunnedUntil - Date.now()) / 1000)}s)
+                        ENGINE DISABLED ({Math.ceil(player.stunnedUntil - gameState.gameTime)}s)
                     </span>
                 </div>
             )}

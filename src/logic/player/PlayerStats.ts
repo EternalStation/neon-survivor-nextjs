@@ -20,7 +20,7 @@ export function updatePlayerStats(state: GameState) {
 
     player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill') + (player.chronoArmorBonus || 0);
     player.arm.hexMult = calculateLegendaryBonus(state, 'arm_pct_per_kill');
-    player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_missing_hp');
+    player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_conditional');
 
     player.dmg.hexFlat = calculateLegendaryBonus(state, 'dmg_per_kill');
     player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill') + calculateLegendaryBonus(state, 'dmg_pct_per_hp');
@@ -29,8 +29,18 @@ export function updatePlayerStats(state: GameState) {
     player.atk.hexFlat = calculateLegendaryBonus(state, 'ats_per_kill');
     player.atk.hexMult = calculateLegendaryBonus(state, 'ats_pct_per_kill');
     player.atk.hexMult2 = 0;
+    player.cooldownReduction = 0;
 
-    // Arena Buffs (Multiplier based)
+    // --- LEGENDARY HEX LOGIC ---
+
+    // TOXIC SWAMP (DefPuddle - Defense)
+    // Moved up to apply stats before calculation
+    if (player.buffs?.puddleRegen) {
+        player.reg.hexMult = (player.reg.hexMult || 0) + 25; // +25% Regen
+        player.hp.hexMult = (player.hp.hexMult || 0) + 25;   // +25% Max HP
+    }
+
+    // ARENA BUFFS
     const currentArenaLevel = state.arenaLevels[state.currentArena] || 0;
     const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
     const baseBuff = 0.3; // 30% Base Buff
@@ -44,24 +54,19 @@ export function updatePlayerStats(state: GameState) {
     const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
     let regenAmount = (calcStat(player.reg, state.hpRegenBuffMult) / 60);
 
-    if (player.buffs?.puddleRegen) {
-        regenAmount *= 1.25; // +25% Regen in Puddle (Lvl 3)
-    }
-
     if (player.buffs?.systemSurge && state.gameTime < player.buffs.systemSurge.end) {
         const surge = player.buffs.systemSurge;
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
     }
 
-    // --- LEGENDARY HEX LOGIC ---
-
     // KINETIC BATTERY (Defense - Arena 2)
     const kinLvl = getHexLevel(state, 'KineticBattery');
     if (kinLvl >= 1) {
         if (kinLvl >= 2) {
+            // Updated Lvl 2: Shield = 100% Armor (from 500%)
             if (!player.kineticShieldTimer || state.gameTime >= player.kineticShieldTimer) {
                 const totalArmor = calcStat(player.arm);
-                const shieldAmount = totalArmor * 5;
+                const shieldAmount = totalArmor * 1.0;
                 if (!player.shieldChunks) player.shieldChunks = [];
 
                 player.shieldChunks = player.shieldChunks.filter(c => (c as any).source !== 'kinetic');
@@ -76,14 +81,20 @@ export function updatePlayerStats(state: GameState) {
             }
         }
         if (kinLvl >= 4) {
-            const totalArmor = calcStat(player.arm);
-            const bonusRegen = totalArmor * 0.005;
-            const baseRegenSum = player.reg.base + player.reg.flat + (player.reg.hexFlat || 0);
-            if (baseRegenSum > 0) {
-                player.reg.hexMult2 = (bonusRegen / baseRegenSum) * 100;
-            } else {
-                player.reg.hexFlat = (player.reg.hexFlat || 0) + bonusRegen;
-            }
+            // Updated Lvl 4: CD Reduction per minute
+            const kinHex = state.moduleSockets.hexagons.find(h => h?.type === 'KineticBattery');
+            const startTime = kinHex?.timeAtLevel?.[4] ?? state.gameTime;
+            const elapsed = state.gameTime - startTime;
+            const minutes = Math.floor(elapsed / 60);
+            // 0.25% per minute
+            player.cooldownReduction = minutes * 0.0025;
+        } else {
+            if (!player.cooldownReduction) player.cooldownReduction = 0;
+            // Note: If Chrono also sets this, we need to be careful not to overwrite if they stack.
+            // Currently logic assumed one or the other. Let's make it additive if needed, but for now we set it.
+            // Actually, let's init it to 0 at start of update function if we want to be safe, but updatePlayerStats assumes it's building up.
+            // For safety: Logic below for Chrono might overwrite if we are not careful.
+            // Let's use a temporary accumulator or just let them overwrite if mutually exclusive (they are different legendary hexes, can have both).
         }
     }
 
@@ -109,14 +120,13 @@ export function updatePlayerStats(state: GameState) {
     }
 
     if (chronoLvl >= 4) {
-        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
-        const startTime = chronoHex?.timeAtLevel?.[4] ?? state.gameTime;
-        const elapsed = state.gameTime - startTime;
-        const minutes = Math.floor(elapsed / 60);
-        const m = getHexMultiplier(state, 'ChronoPlating');
-        player.cooldownReduction = minutes * 0.0025 * m;
-    } else {
-        player.cooldownReduction = 0;
+        // Updated Lvl 4: HP Regen increased by 0.5% OF ARMOR
+        const totalArmor = calcStat(player.arm);
+        const bonusRegen = totalArmor * 0.005;
+        // Apply directly to regen calculation logic?
+        // We need to add it to 'player.reg.flat' or similar for this frame.
+        // Or just add to 'regenAmount'.
+        regenAmount += (bonusRegen / 60);
     }
 
     // Apply Regen

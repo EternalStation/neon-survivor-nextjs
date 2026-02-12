@@ -25,6 +25,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
         b.life--;
 
         // Collision with Map Boundary (Walls)
+        // CHECK BREAKABLE WALLS FIRST (They are "inside" or "on" the boundary)
+
+        if (bulletRemoved) continue;
+
         if (!isInMap(b.x, b.y)) {
             // --- CLASS MODIFIER: Malware-Prime Glitch Bounce ---
             if (player.playerClass === 'malware') {

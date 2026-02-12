@@ -1,5 +1,6 @@
 import type { GameState } from '../core/types';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';
+import { renderPOIs } from './renderers/PoiRenderer';
 import { renderPlayer } from './renderers/PlayerRenderer';
 import { renderEnemies } from './renderers/EnemyRenderer';
 import { renderDrones, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
@@ -64,6 +65,10 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
         // 2. Map Boundaries
         renderMapBoundaries(ctx, state);
+
+        // 2.2 Interactive POIs (Towers, Beacons)
+        renderPOIs(ctx, state);
+
 
         // 2.5 Arena Fog (Vignette for Arena) - Draws ON TOP of background but BELOW entities if we want entities to pop? 
         // User wants "atmosphere" so fog should probably be below entities to simulate ground fog?

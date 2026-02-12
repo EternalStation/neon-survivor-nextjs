@@ -62,7 +62,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
     TEMPORAL_GUARD: {
         type: 'TEMPORAL_GUARD',
         name: 'Temporal Guard',
-        serial: 'GUAR_D',
+        serial: 'GUAR-D',
         desc: 'Block lethal hit, teleport to random safe location (min 2500u offset) and grant 1.5s immunity. Duration 300s.',
         cost: 100,
         duration: 300 // 5 min
@@ -79,7 +79,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         type: 'SECTOR_UPGRADE_ECO',
         name: 'Sector Override: ECO',
         serial: 'ECO-OVR',
-        desc: 'Unlocks Economic Sector Protocol: +30% Extraction Efficiency (XP & Soul Yield). Permanent.',
+        desc: 'Unlocks Economic Sector Protocol: +30% EXP and Soul Harvest. Permanent.',
         cost: 200,
         duration: -1 // Permanent
     },

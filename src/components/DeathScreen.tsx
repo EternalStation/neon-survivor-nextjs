@@ -143,7 +143,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 height: '100%', width: '100%', background: '#050505',
                 position: 'absolute', top: 0, left: 0, zIndex: 10000,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                textAlign: 'center'
+                textAlign: 'center', pointerEvents: 'auto'
             }}>
                 <div style={{
                     fontSize: 72, fontWeight: 900, letterSpacing: 8,
@@ -230,7 +230,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '10px 0 250px'
+            padding: '10px 0 250px',
+            pointerEvents: 'auto'
         }}>
             {/* Action Buttons */}
             <div style={{ position: 'fixed', top: 20, right: 30, display: 'flex', alignItems: 'center', gap: 15, zIndex: 12000 }}>

@@ -11,8 +11,8 @@ export function calcStat(s: PlayerStats, arenaMult: number = 1): number {
 export function getDefenseReduction(armor: number, cap: number = 0.95): number {
     if (armor <= 0) return 0;
     const cappedArmor = Math.min(armor, 999999);
-    // Log-scaling armor: tuned so 95% reduction is reached around ~300k armor
-    // R = 0.146324 * log10(A + 1)^1.1
-    const reduction = 0.146324 * Math.pow(Math.log10(cappedArmor + 1), 1.1);
+    // Twice as hard to scale (divisor 2) and sharper power curve
+    // Tuned so: A=16 -> ~9%, A=200k -> 90%, A=~328k -> 95%
+    const reduction = 0.0945 * Math.pow(Math.log10(cappedArmor / 2 + 1), 1.4);
     return Math.min(cap, reduction);
 }

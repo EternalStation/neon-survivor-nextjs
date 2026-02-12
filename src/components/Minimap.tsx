@@ -110,23 +110,31 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
         ctx.arc(player.x, player.y, 400, 0, Math.PI * 2); // Visible dot
         ctx.fill();
 
-        // Draw Enemies (Removed per user request)
-        /*
-        enemies.forEach(e => {
-            if (e.boss) {
+        // Draw POIs
+        gameState.pois.forEach(poi => {
+            if (poi.respawnTimer > 0 || poi.arenaId !== gameState.currentArena) return;
+
+            ctx.save();
+            ctx.translate(poi.x, poi.y);
+
+            if (poi.type === 'overclock') {
+                ctx.fillStyle = '#22d3ee';
+                ctx.font = 'bold 800px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('XP', 0, 0);
+            } else if (poi.type === 'anomaly') {
                 ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, 600, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.font = 'bold 1000px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('☠', 0, 0);
             }
+            ctx.restore();
         });
-        */
 
         ctx.restore();
-    }, [player.x, player.y, enemies, gameState.extractionShipPos, gameState.gameTime]); // Update on frame (actually driven by parent render, useEffect might lag behind 60fps loop if not carefully managed. But for minimap 60fps react render is okay-ish or we can refactor to direct hook)
-
-    // Note: Parent updates state 60fps? 
-    // `useGameLoop` uses `setUiState` to force re-render components. So this receives fresh `gameState`.
+    }, [player.x, player.y, enemies, gameState.extractionShipPos, gameState.gameTime, gameState.pois]);
 
     return (
         <div style={{
@@ -137,10 +145,10 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
             height: 150,
             borderRadius: '50%',
             overflow: 'hidden',
-            border: '2px solid rgba(100, 116, 139, 0.5)', // Semi-transparent border
+            border: '2px solid rgba(100, 116, 139, 0.5)',
             boxShadow: '0 0 20px rgba(0,0,0,0.2)',
             backgroundColor: 'transparent',
-            zIndex: 5 // Behind upgrade menu
+            zIndex: 5
         }}>
             <canvas ref={canvasRef} width={150} height={150} />
         </div>

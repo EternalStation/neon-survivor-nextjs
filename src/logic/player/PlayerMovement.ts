@@ -90,6 +90,8 @@ export function handlePlayerMovement(
                 const ang = (Math.PI / 3) * i;
                 const hx = tx + Math.cos(ang) * hitboxR;
                 const hy = ty + Math.sin(ang) * hitboxR;
+
+                // If checking map bounds fail, check if we are in portal
                 if (!isInMap(hx, hy) && !isInActivePortal(hx, hy, state)) return false;
             }
             return true;
@@ -288,3 +290,4 @@ export function isInActivePortal(x: number, y: number, state: GameState): boolea
 
     return false;
 }
+

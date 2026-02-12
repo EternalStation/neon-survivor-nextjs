@@ -209,6 +209,13 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 reducedDmg = 0;
             }
 
+            // Epicenter Level 2 (DMG reduction increased by 50% while channeling)
+            if (player.immobilized && getHexLevel(state, 'DefEpi') >= 2) {
+                const epiDmgRed = reducedDmg * 0.5;
+                player.damageBlocked += epiDmgRed;
+                reducedDmg *= 0.5;
+            }
+
             if (player.invincibleUntil && state.gameTime < player.invincibleUntil) {
                 player.damageBlocked += reducedDmg;
                 reducedDmg = 0;
@@ -331,7 +338,7 @@ export function triggerKineticBatteryZap(state: GameState, source: { x: number, 
     if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + 5.0) return;
 
     state.player.lastKineticShockwave = now;
-    const shockDmg = calcStat(state.player.arm) * 5;
+    const shockDmg = calcStat(state.player.arm) * 1.0; // Updated to 100% Armor
 
     let first: Enemy | null = null;
     let minD = Infinity;

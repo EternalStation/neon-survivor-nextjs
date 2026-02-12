@@ -200,7 +200,11 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                                                     {bp.type === 'QUANTUM_SCRAPPER' ? (
                                                         <span style={{ fontSize: '0.5rem' }}>USES: {Math.max(0, gameState.activeBlueprintCharges[bp.type] || 0)}</span>
                                                     ) : (
-                                                        <span>{Math.max(0, Math.ceil(gameState.activeBlueprintBuffs[bp.type]! - gameState.gameTime) - 1)}s</span>
+                                                        <span>
+                                                            {(gameState.activeBlueprintBuffs[bp.type]! > gameState.gameTime + 90000)
+                                                                ? 'PERMANENT'
+                                                                : Math.max(0, Math.ceil(gameState.activeBlueprintBuffs[bp.type]! - gameState.gameTime) - 1) + 's'}
+                                                        </span>
                                                     )}
                                                 </div>
                                             )}

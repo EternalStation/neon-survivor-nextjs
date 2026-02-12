@@ -174,12 +174,12 @@ export function useGameLogic({
                     if (e.dead) return;
                     const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
                     if (dist < range + e.size) {
-                        const slowAmt = effect.level >= 4 ? 0.30 : 0.20;
+                        const slowAmt = effect.level >= 4 ? 0.40 : 0.20;
                         e.slowFactor = Math.max(e.slowFactor || 0, slowAmt);
-                        const dmgAmp = effect.level >= 4 ? 1.3 : 1.2;
+                        const dmgAmp = effect.level >= 4 ? 1.4 : 1.2;
                         e.takenDamageMultiplier = Math.max(e.takenDamageMultiplier || 1.0, dmgAmp);
 
-                        if (effect.level >= 2) {
+                        if (effect.level >= 1) { // Lvl 1 deals 5% Max HP/sec
                             const dotDmg = (e.maxHp * 0.05) * step;
                             let appliedDmg = dotDmg;
                             if (e.legionId) {
@@ -207,7 +207,7 @@ export function useGameLogic({
                 });
             } else if (effect.type === 'epicenter') {
                 const range = 500;
-                const pulseInterval = 0.5;
+                const pulseInterval = 1.0; // Changed from 0.5 to 1.0s
                 effect.pulseTimer = (effect.pulseTimer || 0) + step;
 
                 const slowAmt = effect.level >= 4 ? 0.80 : 0.70;
@@ -228,7 +228,7 @@ export function useGameLogic({
 
                 if (effect.pulseTimer >= pulseInterval) {
                     effect.pulseTimer = 0;
-                    const dmgPct = effect.level >= 4 ? 0.35 : 0.25;
+                    const dmgPct = effect.level >= 4 ? 0.35 : 0.25; // 25% base, 35% at Lvl 4
                     const pDmg = calcStat(state.player.dmg);
                     const dmg = pDmg * dmgPct;
 

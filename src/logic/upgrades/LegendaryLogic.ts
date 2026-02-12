@@ -207,17 +207,17 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["MAX LEVEL"]
         ],
         DefPuddle: [
-            ["20% Slow", "20% Dmg Taken"],
-            ["5% Max HP/sec Acid DMG"],
-            ["+25% Stand-in Max HP", "+25% Stand-in Regen"],
-            ["30% Slow", "30% Dmg Taken"],
+            ["Acid deals 5% Enemy Max HP/sec. Duration 10s"],
+            ["Acid Slows enemies by 20% and Damage Received +20%"],
+            ["While in Acid: +25% Max HP and +25% Regen/sec"],
+            ["Acid Slows enemies by 40% and Damage Received +40%"],
             ["MAX LEVEL"]
         ],
         DefEpi: [
-            ["70% Spike Slow", "25% Spike Dmg/0.5s"],
-            ["-50% Channeling Dmg Taken"],
-            ["3s Invulnerable Start"],
-            ["80% Spike Slow", "35% Spike Dmg/0.5s"],
+            ["Channeling spikes 10s. 70% Slow, 25% DMG/sec. 30s CD"],
+            ["Channeling: +50% Damage Reduction"],
+            ["Spikes: 3s Damage Immunity on start"],
+            ["Channeling: 80% Slow, 35% DMG/sec. 30s CD"],
             ["MAX LEVEL"]
         ],
         CombShield: [
@@ -228,10 +228,10 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["MAX LEVEL"]
         ],
         KineticBattery: [
-            ["On-Hit Shockwave (500% Armor Dmg, 10 Targets, 5s CD)"],
-            ["Gain Shield (500% Armor, Refresh 1min)"],
-            ["+1% Armor per 1% Missing HP"],
-            ["0.5% of armour goes to hp/sec"],
+            ["On-hit Shockwave 10 targets (100% Armor DMG, 5s CD)"],
+            ["Gain Shield 100% Armor. 1 min Refresh"],
+            ["HP < 50%: ARMOR increased by 100%"],
+            ["Gain 0.25% Cooldown Reduction per minute"],
             ["MAX LEVEL"]
         ],
         RadiationCore: [
@@ -242,11 +242,11 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["MAX LEVEL"]
         ],
         ChronoPlating: [
-            ["1% Dmg & ATS from Armour as %"],
-            ["+1% Damage per 100 HP"],
+            ["DMG% & ATS% increased by 1% of your Armor"],
+            ["+1% DMG for every 100 HP you have"],
             ["Double Armor every 5 minutes"],
-            ["+0.25% Cooldown Reduction per minute"],
-            ["MERGABLE"]
+            ["HP/sec increased by 0.5% OF YOUR ARMOR"],
+            ["MAX LEVEL"]
         ]
     };
     const list = perks[type];
@@ -500,14 +500,11 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
 
         // Kinetic Battery Logic
         if (hex.type === 'KineticBattery') {
-            if (statKey === 'arm_pct_missing_hp' && hex.level >= 3) {
-                const missing = 1 - (state.player.curHp / Math.max(1, (state.player.hp.base + state.player.hp.flat) * state.player.hp.mult));
-                const pctMissing = Math.max(0, missing * 100);
-                total += pctMissing * multiplier;
-            }
-            if (statKey === 'reg_from_armor' && hex.level >= 4) {
-                // Return the % of armor that is added to regen
-                total += 0.5 * multiplier;
+            if (statKey === 'arm_pct_conditional' && hex.level >= 3) {
+                const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
+                if (state.player.curHp < maxHp * 0.5) {
+                    total += 100 * multiplier;
+                }
             }
         }
 
@@ -523,15 +520,16 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
 
         // Chrono Plating Logic
         if (hex.type === 'ChronoPlating') {
-            // Lvl 1: +1% Flat Damage and ATS based on Armor
+            // Lvl 1: DMG% & ATS% increased by 1% of your Armor
             if (hex.level >= 1) {
                 const totalArmor = calcStat(state.player.arm);
-                if (statKey === 'dmg_pct_per_kill') total += totalArmor * 0.01 * multiplier;
-                if (statKey === 'ats_pct_per_kill') total += totalArmor * 0.01 * multiplier;
+                // 1% per point of armor -> totalArmor * 1
+                if (statKey === 'dmg_pct_per_kill') total += totalArmor * 1.0 * multiplier;
+                if (statKey === 'ats_pct_per_kill') total += totalArmor * 1.0 * multiplier;
             }
-            // Lvl 2: +1% Damage for every 100 HP
+            // Lvl 2: +1% DMG for every 100 HP
             if (statKey === 'dmg_pct_per_hp' && hex.level >= 2) {
-                const maxHp = (state.player.hp.base + state.player.hp.flat) * state.player.hp.mult;
+                const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
                 total += (maxHp / 100) * 1.0 * multiplier;
             }
         }

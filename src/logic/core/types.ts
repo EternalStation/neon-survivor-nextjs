@@ -542,6 +542,24 @@ export type GameEventType =
     | 'nano_infection'
     | 'clockwork_arena';
 
+export type POIType = 'overclock' | 'anomaly';
+
+export interface MapPOI {
+    id: number;
+    type: POIType;
+    x: number;
+    y: number;
+    radius: number;
+    arenaId: number;
+    active: boolean;
+    progress: number; // For anomaly summoning (0-100)
+    activationProgress: number; // For overclock activation (0-100)
+    activeDuration: number; // How long it's been active (seconds)
+    cooldown: number; // Cooldown timer (seconds)
+    respawnTimer: number; // Timer before relocated POI appears (seconds)
+    lastUsed: number; // Timestamp
+}
+
 export interface GameEvent {
     type: GameEventType;
     startTime: number;
@@ -550,6 +568,7 @@ export interface GameEvent {
     data?: any; // Event specific storage (e.g. original values to restore)
     pendingZombieSpawns?: Array<{ x: number; y: number; shape: ShapeType; spd: number; maxHp: number; size: number; spawnAt: number }>;
 }
+
 
 export interface GameState {
     player: Player;
@@ -562,6 +581,7 @@ export interface GameState {
     camera: Vector;
     score: number;
     killCount: number; // Dedicated kill counter
+    rawKillCount: number; // Unbuffed kill counter for UI display
     bossKills: number; // Track boss kills separately
     gameTime: number;
     meteoritesPickedUp: number;
@@ -579,6 +599,7 @@ export interface GameState {
     rareRewardActive?: boolean; // Flag to show "Increased Rarity" text on next level up
     spawnTimer: number; // For start/restart animation
     unpauseDelay?: number; // Grace period after closing menus
+
     hasPlayedSpawnSound?: boolean;
     bossPresence: number; // 0 to 1 smooth transition for boss effects
     critShake: number; // Screenshake intensity from crits
@@ -594,10 +615,11 @@ export interface GameState {
         activeLegionId?: string;
     };
     lastLegionWindow?: number; // Track which 10m window last had a legion event
-
+    pois: MapPOI[];
 
     // Portal / Multiverse Props
     currentArena: number; // ID of the arena the player is currently in
+    lastArena?: number; // Previous arena to detect transitions
     portalsUnlocked: boolean; // Are portals usable?
     arenaLevels: Record<number, number>; // Level of each arena (0 = No Buffs, 1 = Base, 2+ = Enhanced)
     portalState: 'closed' | 'warn' | 'open' | 'transferring';
@@ -708,6 +730,10 @@ export interface Meteorite {
         sameType?: number;
         hexType?: number;
     };
+    // Loot Props
+    type?: 'dust_pile' | 'meteorite';
+    amount?: number; // For dust piles
+
     // Blueprint System
     blueprintBoosted?: boolean;
     isBlueprint?: boolean;

@@ -1,5 +1,5 @@
 import type { GameState, Player, PlayerClass } from './types';
-import { ARENA_CENTERS } from '../mission/MapLogic';
+import { ARENA_CENTERS, generateMapPOIs } from '../mission/MapLogic';
 import { GAME_CONFIG } from './GameConfig';
 
 export const createInitialPlayer = (selectedClass?: PlayerClass, startingArenaId: number = 0): Player => {
@@ -88,6 +88,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     },
     score: 0,
     killCount: 0,
+    rawKillCount: 0,
     bossKills: 0,
     gameTime: 0,
     meteoritesPickedUp: 0,
@@ -111,9 +112,11 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     activeEvent: null,
     nextEventCheckTime: 60, // First check at 1 minute
     directorState: { necroticCycle: -1, legionCycle: -1 },
+    pois: generateMapPOIs(),
 
     // Portal / Arena Defaults
     currentArena: startingArenaId,
+    lastArena: startingArenaId,
     portalsUnlocked: false, // Default to locked
     portalState: 'closed',
     portalTimer: 240, // 240s = 4 minutes (Cycle)

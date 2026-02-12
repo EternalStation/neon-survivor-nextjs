@@ -217,7 +217,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -646,6 +646,26 @@ export function playSfx(type: SfxType) {
     }
     else if (type === 'eruption') {
         playSfx('impact');
+    }
+    else if (type === 'power-up') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, t);
+        osc.frequency.exponentialRampToValueAtTime(880, t + 0.3);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.2 * sfxVolume, t + 0.05);
+        g.gain.linearRampToValueAtTime(0, t + 0.3);
+        osc.start(t);
+        osc.stop(t + 0.3);
+    }
+    else if (type === 'power-down') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, t);
+        osc.frequency.exponentialRampToValueAtTime(110, t + 0.4);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.2 * sfxVolume, t + 0.05);
+        g.gain.linearRampToValueAtTime(0, t + 0.4);
+        osc.start(t);
+        osc.stop(t + 0.4);
     }
 }
 

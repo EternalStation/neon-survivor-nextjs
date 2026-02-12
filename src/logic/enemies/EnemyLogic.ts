@@ -1,5 +1,5 @@
-import type { GameState, Enemy } from '../core/types';
-import { isInMap, ARENA_CENTERS, getHexDistToWall, getArenaIndex, getRandomPositionInArena } from '../mission/MapLogic';
+import type { GameState, Enemy, MapPOI } from '../core/types';
+import { isInMap, ARENA_CENTERS, getHexDistToWall, getArenaIndex, getRandomPositionInArena, relocatePOI } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
@@ -57,9 +57,120 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         actualRate *= (state.extractionPowerMult || 1.0);
     }
 
+    // --- ARENA TRANSITION: POI RESET ---
+    if (state.lastArena === undefined) state.lastArena = state.currentArena;
+    if (state.lastArena !== state.currentArena) {
+        state.lastArena = state.currentArena;
+        // When entering a new arena, reset its POIs with a 30s delay
+        state.pois.forEach(poi => {
+            if (poi.arenaId === state.currentArena) {
+                poi.respawnTimer = 30;
+                poi.active = (poi.type === 'anomaly'); // Reset to default state
+                poi.progress = 0;
+                poi.activationProgress = 0;
+                poi.activeDuration = 0;
+            }
+        });
+    }
+
+    // --- POI EFFECTS: Overclock ---
+    let overclockActive = false;
+    state.pois.forEach(poi => {
+        if (poi.type === 'overclock') {
+            if (poi.respawnTimer > 0) {
+                poi.respawnTimer -= step;
+                if (poi.respawnTimer <= 0) {
+                    poi.respawnTimer = 0;
+                    // It reappears (already moved by relocatePOI)
+                }
+                return;
+            }
+
+            if (poi.cooldown > 0) {
+                poi.cooldown -= step;
+                if (poi.cooldown < 0) poi.cooldown = 0;
+            }
+
+            const d = Math.hypot(player.x - poi.x, player.y - poi.y);
+            const inRange = d < poi.radius;
+
+            if (poi.active) {
+                // Currently Active: Track duration and leave conditions
+                overclockActive = true;
+                poi.activeDuration += step;
+
+                if (!inRange || poi.activeDuration >= 30) {
+                    poi.active = false;
+                    playSfx('power-down');
+                    relocatePOI(poi); // Move and set respawn timer
+                }
+            } else if (poi.cooldown === 0) {
+                // Inactive and Off Cooldown: Try to activate
+                if (inRange) {
+                    poi.activationProgress += step * 20; // 5 seconds to 100
+                    if (poi.activationProgress >= 100) {
+                        poi.active = true;
+                        poi.activationProgress = 100;
+                        poi.activeDuration = 0;
+                        playSfx('power-up');
+                        spawnFloatingNumber(state, poi.x, poi.y, "OVERCLOCK ACTIVE", '#22d3ee', true);
+                    }
+                } else {
+                    if (poi.activationProgress > 0) {
+                        poi.activationProgress -= step * 40;
+                        if (poi.activationProgress < 0) poi.activationProgress = 0;
+                    }
+                }
+            }
+        }
+    });
+
+    if (overclockActive) {
+        actualRate *= 2.0; // Double spawn rate in Overclock zone
+    }
+
     if (Math.random() < actualRate / 60 && state.portalState !== 'transferring') {
         spawnEnemy(state);
     }
+
+    // --- POI EFFECTS: Anomaly Summoning ---
+    state.pois.forEach(poi => {
+        if (poi.type === 'anomaly') {
+            if (poi.respawnTimer > 0) {
+                poi.respawnTimer -= step;
+                if (poi.respawnTimer <= 0) {
+                    poi.respawnTimer = 0;
+                }
+                return;
+            }
+
+            if (poi.cooldown > 0) {
+                poi.cooldown -= step;
+                if (poi.cooldown < 0) poi.cooldown = 0;
+            }
+
+            const d = Math.hypot(player.x - poi.x, player.y - poi.y);
+            if (poi.active && poi.cooldown === 0 && d < poi.radius) {
+                poi.progress += step * 5.0; // 20 seconds to 100
+
+                if (poi.progress >= 100) {
+                    const minutesRaw = gameTime / 60;
+                    const current10MinCycle = Math.floor(minutesRaw / 10);
+                    const tier = Math.min(3, current10MinCycle + 1);
+
+                    spawnEnemy(state, poi.x, poi.y, undefined, true, tier);
+                    spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
+                    playSfx('warning');
+
+                    relocatePOI(poi); // Move and set respawn timer
+                }
+            } else if (poi.progress > 0) {
+                const decaySpeed = step * 2.5;
+                poi.progress -= decaySpeed;
+                if (poi.progress < 0) poi.progress = 0;
+            }
+        }
+    });
 
     // Rare Spawning Logic
     if (state.portalState !== 'transferring' && state.extractionStatus === 'none') {

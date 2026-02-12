@@ -50,6 +50,7 @@ export const HUD: React.FC<HUDProps> = ({
     }
 
     if (isTutorialLayerOnly) {
+        if (gameOver && gameState.extractionStatus !== 'complete') return null;
         return <TutorialOverlay gameState={gameState} />;
     }
 

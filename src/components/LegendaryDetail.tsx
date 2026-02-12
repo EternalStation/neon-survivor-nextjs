@@ -134,11 +134,11 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                         AUGMENTATION DATA
                     </div>
                     {hex.perks && hex.perks.map((p, i) => {
-                        const soulsMatch = p.match(/\((\d+) Souls\)/);
-                        const levelKills = soulsMatch ? parseInt(soulsMatch[1]) : 0;
+                        const soulsMatch = p.match(/\(([\d\.]+) Souls\)/);
+                        const levelKills = soulsMatch ? parseFloat(soulsMatch[1]) : 0;
 
                         // Strip souls count for base number parsing to avoid picking up souls as the value
-                        const strippedForBase = p.replace(/\(\d+ Souls\)/, '');
+                        const strippedForBase = p.replace(/\([\d\.]+ Souls\)/, '');
                         const baseMatch = strippedForBase.match(/(\d+\.?\d*)/);
                         let baseValue: number | string = baseMatch ? parseFloat(baseMatch[1]) : 0;
 
@@ -226,6 +226,16 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                                 displayValue = `${hasPercent ? '+' : ''}${amplified.toFixed(1)}${hasPercent ? '%' : ''}`;
                                 isNumeric = true;
                                 cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '').trim();
+
+                                // Update Souls breakdown if multiplier is active
+                                if (soulsMatch && multiplier > 1) {
+                                    const rawSouls = parseFloat(soulsMatch[1]);
+                                    const effectiveSouls = rawSouls * multiplier;
+                                    cleanLabel = cleanLabel.replace(
+                                        /\([\d\.]+ Souls\)/,
+                                        `(${rawSouls.toFixed(0)} x ${(multiplier * 100).toFixed(0)}% = ${effectiveSouls.toFixed(1)} Souls)`
+                                    );
+                                }
                             }
                         }
 

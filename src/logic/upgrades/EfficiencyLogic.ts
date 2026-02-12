@@ -138,23 +138,19 @@ function getMeteoriteNeighbors(state: GameState, idx: number) {
 
     let neighborIdxs: number[] = [];
     if (isInner) {
-        // Inner diamond (i) connects to adjacent inners and the corresponding outer
-        // Also connects to the "next" outer ring diamond
+        // Inner diamond (idx) connects to:
+        // 1. Adjacent inners: (idx + 5) % 6 and (idx + 1) % 6
+        // 2. Corresponding outer: idx + 6
         neighborIdxs = [
-            (idx + 5) % 6,       // Prev inner
-            (idx + 1) % 6,       // Next inner
-            idx + 6,             // Direct outer
-            ((idx + 5) % 6) + 6  // Outer neighbor
+            (idx + 5) % 6,
+            (idx + 1) % 6,
+            idx + 6
         ];
     } else {
-        // Outer diamond (i+6) connects to its two inner neighbors
-        // and adjacent outer diamonds
-        const i = idx - 6;
+        // Outer diamond (idx) connects to:
+        // 1. Corresponding inner: idx - 6
         neighborIdxs = [
-            i,                   // Direct inner
-            (i + 1) % 6,         // Next inner
-            ((i + 5) % 6) + 6,   // Prev outer
-            ((i + 1) % 6) + 6    // Next outer
+            idx - 6
         ];
     }
 
