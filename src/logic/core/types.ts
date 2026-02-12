@@ -409,6 +409,8 @@ export interface Enemy {
     distGoal?: number;
     critGlitchUntil?: number;
     slowFactor?: number; // 0-1 (e.g. 0.3 = 30% slow)
+    slowUntil?: number; // Timestamp
+    slowPercentVal?: number; // 0-1
     takenDamageMultiplier?: number; // e.g. 1.2 = +20% dmg taken
     // Hive-Mother Infection
     isInfected?: boolean;

@@ -2,6 +2,7 @@ import type { GameState, MapPOI } from '../../core/types';
 
 export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState) {
     state.pois.forEach(poi => {
+        if (poi.arenaId !== state.currentArena) return; // Only render current arena POIs
         if (poi.respawnTimer > 0) return; // Skip if in the 30s relocation phase
 
         ctx.save();
@@ -11,6 +12,8 @@ export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState) {
             renderOverclock(ctx, state, poi);
         } else if (poi.type === 'anomaly') {
             renderAnomaly(ctx, state, poi);
+        } else if (poi.type === 'turret') {
+            renderTurret(ctx, state, poi);
         }
 
         ctx.restore();
@@ -270,6 +273,221 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
         ctx.fillStyle = '#94a3b8';
         ctx.textAlign = 'center';
         ctx.fillText(`DORMANT: ${Math.ceil(poi.cooldown)}s`, 0, 80);
+    }
+}
+
+function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI) {
+    const time = state.gameTime;
+    const isOverheated = poi.cooldown > 0;
+    const isActive = poi.active;
+    const variant = poi.turretVariant || 'fire';
+
+    let baseColor = '#F59E0B'; // Fire (Amber)
+    if (variant === 'ice') baseColor = '#22d3ee'; // Ice (Cyan)
+    if (variant === 'heal') baseColor = '#4ade80'; // Heal (Green)
+
+    const color = isActive ? baseColor : (isOverheated ? '#EF4444' : '#64748B'); // Active Color, Red Overheat, or Slate dormant
+
+    // 1. Range Display (When Player Nearby or Helping)
+    // Only show if player is close enough to care or repairing
+    const dToPlayer = Math.hypot(state.player.x - poi.x, state.player.y - poi.y);
+    if (dToPlayer < poi.radius + 100 || poi.activationProgress > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = color;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.arc(0, 0, poi.radius, 0, Math.PI * 2); // Activation Radius
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // 2. Turret Base (Hexagon)
+    ctx.save();
+    ctx.fillStyle = '#1e293b'; // Dark slate base
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    const baseSize = 25;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const x = Math.cos(angle) * baseSize;
+        const y = Math.sin(angle) * baseSize;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Turret Head (Rotating)
+    ctx.save();
+
+    // Rotation Logic:
+    // Heal: Always faces player
+    // Fire/Ice: Faces shot direction (or idle spin)
+    let headRotation = poi.rotation || 0;
+    if (variant === 'heal') {
+        headRotation = Math.atan2(state.player.y - poi.y, state.player.x - poi.x);
+    } else if (isActive && !poi.rotation) {
+        // Idle spin if active but no target? Or just keep last rotation?
+        // User liked "not spinning randomly".
+        // Let's keep it static if no target, or slow scan.
+        headRotation = Math.sin(time) * 0.5; // Slow scan
+    }
+
+    ctx.rotate(headRotation);
+
+    // HEAD MODELS
+    if (variant === 'heal') {
+        // HEAL TURRET: Single energy emitter, no guns
+        // Base plate
+        ctx.fillStyle = '#14532d'; // Dark Green
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Emitter
+        ctx.fillStyle = '#4ade80'; // Bright Green
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#4ade80';
+        ctx.beginPath();
+        ctx.arc(8, 0, 6, 0, Math.PI * 2); // Offset towards player
+        ctx.fill();
+
+        // Connectors
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-4, 0);
+        ctx.lineTo(8, 0);
+        ctx.stroke();
+
+    } else if (variant === 'ice') {
+        // ICE TURRET: Single Gun + Frost Flanges
+        ctx.fillStyle = color;
+        ctx.fillRect(0, -5, 20, 10); // Single barrel
+
+        // Flanges
+        ctx.fillStyle = '#bae6fd'; // Light blue
+        ctx.beginPath();
+        ctx.moveTo(10, -5); ctx.lineTo(5, -12); ctx.lineTo(15, -5);
+        ctx.moveTo(10, 5); ctx.lineTo(5, 12); ctx.lineTo(15, 5);
+        ctx.fill();
+
+    } else {
+        // FIRE TURRET: Dual Guns (Existing)
+        ctx.fillStyle = color;
+        ctx.fillRect(-8, -8, 24, 6); // Barrel 1
+        ctx.fillRect(-8, 2, 24, 6); // Barrel 2
+    }
+
+    // Central Hub (Common)
+    ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // 4. Icons Above Turret (New Requirement)
+    ctx.save();
+    ctx.translate(0, -50); // Float above
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = baseColor;
+    ctx.fillStyle = baseColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 24px Orbitron'; // Large Icon Font
+
+    let icon = '🔥'; // Fire
+    if (variant === 'ice') icon = '❄️';
+    if (variant === 'heal') icon = '✚'; // Green Plus
+
+    ctx.fillText(icon, 0, 0);
+    ctx.restore();
+
+    // 4. Heal Tether (Specific to Heal Variant)
+    if (variant === 'heal' && isActive) {
+        const dToPlayer = Math.hypot(state.player.x - poi.x, state.player.y - poi.y);
+        if (dToPlayer <= 800) { // Turret Range
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#4ade80';
+
+            // Draw energy beam
+            ctx.beginPath();
+            ctx.moveTo(0, 0); // Turret center (relative)
+            // Calculate player relative pos
+            const relX = state.player.x - poi.x;
+            const relY = state.player.y - poi.y;
+
+            // Zigzag effect
+            const segments = 10;
+            for (let i = 1; i <= segments; i++) {
+                const t = i / segments;
+                const tx = relX * t;
+                const ty = relY * t;
+                const noise = (Math.random() - 0.5) * 10;
+                ctx.lineTo(tx + noise, ty + noise);
+            }
+            ctx.stroke();
+
+            // Pulse on player
+            ctx.fillStyle = '#4ade80';
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(relX, relY, 20 + Math.sin(time * 10) * 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
+    // 4. Overheat / Repair Progress
+    if (poi.activationProgress > 0) {
+        const barWidth = 60;
+        const barHeight = 6;
+        const yOffset = -40;
+
+        ctx.fillStyle = '#000';
+        renderRoundRect(ctx, -barWidth / 2, yOffset, barWidth, barHeight, 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#F59E0B';
+        renderRoundRect(ctx, -barWidth / 2, yOffset, barWidth * (poi.activationProgress / 100), barHeight, 2);
+        ctx.fill();
+
+        // Cost Display
+        const cost = poi.turretCost || 10;
+        ctx.font = 'bold 12px Orbitron';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(`REPAIR: ${cost} DUST`, 0, yOffset - 10);
+    }
+
+    // 5. Status Text
+    if (isActive) {
+        const timeLeft = Math.ceil(30 - poi.activeDuration);
+        ctx.font = 'bold 12px Orbitron';
+        ctx.fillStyle = '#F59E0B';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${timeLeft}s`, 0, 45);
+    } else if (isOverheated) {
+        ctx.font = 'bold 12px Orbitron';
+        ctx.fillStyle = '#EF4444';
+        ctx.textAlign = 'center';
+        ctx.fillText(`OVERHEAT: ${Math.ceil(poi.cooldown)}s`, 0, 45);
+    } else if (dToPlayer < poi.radius) {
+        const cost = (10 * Math.pow(2, poi.turretUses || 0));
+        ctx.font = 'bold 12px Orbitron';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(`REPAIR [${cost} DUST]`, 0, 45);
     }
 }
 
