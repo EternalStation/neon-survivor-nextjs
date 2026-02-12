@@ -690,6 +690,11 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             e.slowFactor = 0; // Reset for next frame
         }
 
+        // Apply Duration-based Slow (e.g. Ice Turret)
+        if (e.slowUntil && e.slowUntil > state.gameTime) {
+            currentSpd *= (1 - (e.slowPercentVal || 0));
+        }
+
         // Calculate Velocity using Delegates
         let v = { vx: 0, vy: 0 };
         const isFeared = e.fearedUntil && e.fearedUntil > state.gameTime;

@@ -352,6 +352,15 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             }
 
             if (dist < hitRadius) {
+                // Apply Slow Effect (Ice Turret)
+                if (b.slowPercent) {
+                    const duration = b.freezeDuration || 2.0;
+                    e.slowUntil = now + duration;
+                    e.slowPercentVal = Math.max(e.slowPercentVal || 0, b.slowPercent);
+
+                    // Visual Frost Effect (Blue Particles)
+                    spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 3);
+                }
                 // --- ComCrit Lvl 3: Death Mark Amplification ---
                 const critLevel = getHexLevel(state, 'ComCrit');
                 let damageAmount = b.dmg;

@@ -218,6 +218,10 @@ export interface Bullet {
     ringRadius?: number;
     ringVisualIntensity?: number;
     ringAmmo?: number; // Count of fused bullets
+    // Turret Props
+    isTrace?: boolean;
+    slowPercent?: number;
+    freezeDuration?: number;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm';
@@ -542,7 +546,7 @@ export type GameEventType =
     | 'nano_infection'
     | 'clockwork_arena';
 
-export type POIType = 'overclock' | 'anomaly';
+export type POIType = 'overclock' | 'anomaly' | 'turret';
 
 export interface MapPOI {
     id: number;
@@ -558,6 +562,12 @@ export interface MapPOI {
     cooldown: number; // Cooldown timer (seconds)
     respawnTimer: number; // Timer before relocated POI appears (seconds)
     lastUsed: number; // Timestamp
+    // Turret Props
+    turretVariant?: 'fire' | 'ice' | 'heal';
+    turretUses?: number;
+    turretCost?: number;
+    lastShot?: number;
+    rotation?: number;
 }
 
 export interface GameEvent {

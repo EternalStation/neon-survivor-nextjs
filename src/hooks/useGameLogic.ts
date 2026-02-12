@@ -17,6 +17,7 @@ import { calcStat } from '../logic/utils/MathUtils';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { spawnBullet } from '../logic/combat/ProjectileSpawning';
 import { updateTutorial } from '../logic/core/TutorialLogic';
+import { updateTurrets } from '../logic/mission/TurretLogic';
 
 interface UseGameLogicProps {
     gameState: React.MutableRefObject<GameState>;
@@ -139,6 +140,7 @@ export function useGameLogic({
         }
 
         // Area Effects
+        updateTurrets(state, step);
         for (let i = state.areaEffects.length - 1; i >= 0; i--) {
             const effect = state.areaEffects[i];
             effect.duration -= step;
