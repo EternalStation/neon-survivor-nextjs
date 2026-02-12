@@ -56,6 +56,20 @@ export function renderProjectiles(ctx: CanvasRenderingContext2D, state: GameStat
             return; // Skip default bullet rendering
         }
 
+        if (b.isMist) {
+            // Mist/Smoke Rendering
+            const alpha = 0.3 * (b.life / 40);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = b.color || '#bae6fd';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = b.color || '#bae6fd';
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
+        }
+
         if (isMalware || !b.isNanite) {
             // Priority: Malware Bounce Color > Bullet Color > Default Cyan
             // Malware `projectileLogic` already sets b.color to Orange/Red on bounce.

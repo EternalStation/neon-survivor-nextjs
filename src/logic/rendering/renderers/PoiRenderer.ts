@@ -364,15 +364,22 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.stroke();
 
     } else if (variant === 'ice') {
-        // ICE TURRET: Single Gun + Frost Flanges
+        // ICE THROWER: Wide nozzle + Frost Flanges
         ctx.fillStyle = color;
-        ctx.fillRect(0, -5, 20, 10); // Single barrel
+        // Tapered nozzle
+        ctx.beginPath();
+        ctx.moveTo(0, -8);
+        ctx.lineTo(24, -12);
+        ctx.lineTo(24, 12);
+        ctx.lineTo(0, 8);
+        ctx.closePath();
+        ctx.fill();
 
         // Flanges
         ctx.fillStyle = '#bae6fd'; // Light blue
         ctx.beginPath();
-        ctx.moveTo(10, -5); ctx.lineTo(5, -12); ctx.lineTo(15, -5);
-        ctx.moveTo(10, 5); ctx.lineTo(5, 12); ctx.lineTo(15, 5);
+        ctx.moveTo(12, -10); ctx.lineTo(8, -18); ctx.lineTo(20, -10);
+        ctx.moveTo(12, 10); ctx.lineTo(8, 18); ctx.lineTo(20, 10);
         ctx.fill();
 
     } else {
@@ -483,7 +490,7 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.textAlign = 'center';
         ctx.fillText(`OVERHEAT: ${Math.ceil(poi.cooldown)}s`, 0, 45);
     } else if (dToPlayer < poi.radius) {
-        const cost = (10 * Math.pow(2, poi.turretUses || 0));
+        const cost = poi.turretCost || (10 * Math.pow(2, poi.turretUses || 0));
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';

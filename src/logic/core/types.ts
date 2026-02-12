@@ -222,6 +222,8 @@ export interface Bullet {
     isTrace?: boolean;
     slowPercent?: number;
     freezeDuration?: number;
+    isMist?: boolean;
+    isVisualOnly?: boolean;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm';

@@ -5,10 +5,10 @@ import { calcStat } from '../utils/MathUtils';
 
 const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 10;
-const TURRET_FIRE_RATE = 1 / 8; // 8 shots per second
+const TURRET_FIRE_RATE = 1 / 4; // 4 shots per second (Up from 8 for better damage number visibility)
 const TURRET_DURATION = 30;
 const TURRET_COOLDOWN = 60;
-const REPAIR_SPEED = 33.34; // 3 seconds (~33.34%/sec)
+const REPAIR_SPEED = 50; // 2 seconds (50%/sec)
 
 export function updateTurrets(state: GameState, step: number) {
     const turrets = state.pois.filter(p => p.type === 'turret' && p.arenaId === state.currentArena);
@@ -29,7 +29,7 @@ export function updateTurrets(state: GameState, step: number) {
                 // Determine Cost
                 const uses = turret.turretUses || 0;
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
-                turret.turretCost = cost;
+                turret.turretCost = cost; // Store for renderer
 
                 if (state.player.dust >= cost) {
                     // Increase repair progress
@@ -78,9 +78,11 @@ export function updateTurrets(state: GameState, step: number) {
 
                 // Heal Range (Keep standard range or slightly smaller? Let's use standard)
                 if (dToPlayer <= TURRET_RANGE) {
-                    // Heal 5% Max HP per second
+                    // Heal 5% + 2% per extra use
+                    const uses = turret.turretUses || 1;
+                    const healPercent = 0.05 + (uses - 1) * 0.02;
                     const maxHp = calcStat(state.player.hp);
-                    const healAmount = (maxHp * 0.05) * step;
+                    const healAmount = (maxHp * healPercent) * step;
                     state.player.curHp = Math.min(maxHp, state.player.curHp + healAmount);
 
                     // Visual feedback occasionally?
@@ -119,13 +121,25 @@ export function updateTurrets(state: GameState, step: number) {
                     const minutes = state.gameTime / 60;
                     const estBaseHP = 60 * Math.pow(1.2, minutes);
 
+                    const uses = turret.turretUses || 1;
+                    const scale = Math.pow(2, uses - 1);
+
                     if (variant === 'ice') {
-                        // ICE TURRET: 25% Dmg, Single Target, Slows 70%
-                        const damage = Math.ceil(estBaseHP * 0.25);
-                        spawnTurretBullet(state, turret.x, turret.y, angle, damage, 'ice');
+                        // ICE THROWER: Mist effect in a cone
+                        // Consolidate damage into fewer ticks to prevent "0" damage strings
+                        const damagePerSecondMult = 0.05 * scale;
+                        const damagePerShot = Math.ceil(estBaseHP * damagePerSecondMult * TURRET_FIRE_RATE);
+
+                        // Fire 1 "Core" damage particle and 4 visual-only particles
+                        const coneAngle = 30 * Math.PI / 180;
+                        for (let i = 0; i < 5; i++) {
+                            const spread = (Math.random() - 0.5) * coneAngle;
+                            const isCore = i === 0;
+                            spawnTurretBullet(state, turret.x, turret.y, angle + spread, isCore ? damagePerShot : 0, 'ice', !isCore);
+                        }
                     } else {
-                        // FIRE TURRET: 15% Dmg, Infinite Pierce, Dual Trace
-                        const damage = Math.ceil(estBaseHP * 0.15);
+                        // FIRE TURRET: 15% * scale Dmg, Infinite Pierce, Dual Trace
+                        const damage = Math.ceil(estBaseHP * 0.15 * scale);
                         const offset = 10;
                         spawnTurretBullet(state, turret.x + Math.cos(angle + Math.PI / 2) * offset, turret.y + Math.sin(angle + Math.PI / 2) * offset, angle, damage, 'fire');
                         spawnTurretBullet(state, turret.x + Math.cos(angle - Math.PI / 2) * offset, turret.y + Math.sin(angle - Math.PI / 2) * offset, angle, damage, 'fire');
@@ -136,9 +150,9 @@ export function updateTurrets(state: GameState, step: number) {
     });
 }
 
-function spawnTurretBullet(state: GameState, x: number, y: number, angle: number, dmg: number, variant: string) {
+function spawnTurretBullet(state: GameState, x: number, y: number, angle: number, dmg: number, variant: string, isVisualOnly: boolean = false) {
     const isIce = variant === 'ice';
-    const spd = isIce ? 12 : 25; // Ice is slower bullet, Fire is fast trace
+    const spd = isIce ? (10 + Math.random() * 5) : 25; // Ice mist is slower, Fire is fast trace
 
     const bullet: Bullet = {
         id: Math.random(),
@@ -148,16 +162,18 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         dmg,
-        pierce: isIce ? 1 : 999999, // Fire pierces all
-        life: 60,
+        pierce: 999999, // Both pierce
+        life: isIce ? (60 + Math.random() * 20) : 60, // Mist lasts longer for range
         isEnemy: false,
         hits: new Set(),
-        size: isIce ? 6 : 2,
-        color: isIce ? '#22d3ee' : '#F59E0B',
-        isTrace: !isIce, // Only Fire is trace
+        size: isIce ? (15 + Math.random() * 20) : 2, // Mist is much larger
+        color: isIce ? '#bae6fd' : '#F59E0B',
+        isTrace: !isIce,
+        isMist: isIce,
         slowPercent: isIce ? 0.7 : undefined, // 70% slow
         freezeDuration: isIce ? 3.0 : undefined, // 3s Slow Duration
-        spawnTime: Date.now()
+        spawnTime: Date.now(),
+        isVisualOnly
     };
     state.bullets.push(bullet);
 }
