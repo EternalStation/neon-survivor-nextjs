@@ -20,10 +20,11 @@ export function handlePlayerCombat(
     // --- Kinetic Battery Skill Sync ---
     const kinSkill = player.activeSkills.find(s => s.type === 'KineticBattery');
     if (kinSkill) {
+        const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
         const boltElapsed = state.gameTime - (player.lastKineticShockwave || 0);
-        const boltCD = Math.max(0, 5.0 - boltElapsed);
+        const boltCD = Math.max(0, (5.0 * cdMod) - boltElapsed);
         kinSkill.cooldown = boltCD;
-        kinSkill.cooldownMax = 5.0;
+        kinSkill.cooldownMax = 5.0 * cdMod;
     }
 
     // RADIATION CORE (Combat - Arena 1)
@@ -51,7 +52,7 @@ export function handlePlayerCombat(
                 let tickDmg = 0;
 
                 if (radLvl >= 4) {
-                    tickDmg += (e.maxHp * 0.01 * dmgAmp) / 6;
+                    tickDmg += (e.maxHp * 0.02 * dmgAmp) / 6;
                 }
 
                 if (d < range) {
@@ -76,7 +77,7 @@ export function handlePlayerCombat(
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
                         const isAuraSource = d < range;
-                        const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (Math.floor(state.gameTime * 2) > Math.floor((state.gameTime - 1 / 60) * 2));
+                        const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (state.frameCount % 30 === 0);
 
                         if (shouldShowText) {
                             const color = isAuraSource ? '#22c55e' : '#4ade80';
@@ -335,7 +336,8 @@ export function triggerKineticBatteryZap(state: GameState, source: { x: number, 
     const actualKinLvl = getHexLevel(state, 'KineticBattery');
     if (actualKinLvl < 1) return;
     const now = state.gameTime;
-    if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + 5.0) return;
+    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (state.player.cooldownReduction || 0));
+    if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + (5.0 * cdMod)) return;
 
     state.player.lastKineticShockwave = now;
     const shockDmg = calcStat(state.player.arm) * 1.0; // Updated to 100% Armor
@@ -382,7 +384,8 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 target.hp -= zap.dmg;
                 spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
                 if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
-                spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 10);
+                // Increased life to 15 for better visibility
+                spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 15);
                 state.particles.push({ x: target.x, y: target.y, vx: 0, vy: 0, life: 10, color: '#60a5fa', size: 20, type: 'shockwave', alpha: 0.8 });
                 zap.currentIndex++;
                 zap.nextZapTime = state.gameTime + 0.016;
@@ -413,12 +416,22 @@ export function spawnLightning(state: GameState, x1: number, y1: number, x2: num
         }
 
         const segDist = Math.hypot(targetX - lastX, targetY - lastY);
-        const dots = Math.floor(segDist / 2);
+        const dots = Math.floor(segDist / 1.5); // Slightly more dots for denser line
         for (let j = 0; j < dots; j++) {
             const tt = j / dots;
             const px = lastX + (targetX - lastX) * tt, py = lastY + (targetY - lastY) * tt;
-            state.particles.push({ x: px, y: py, vx: 0, vy: 0, life: lifeOverride || 6, color: '#fff', size: 0.2, type: 'spark', alpha: 1.0 });
-            state.particles.push({ x: px, y: py, vx: 0, vy: 0, life: lifeOverride ? lifeOverride + 2 : 8, color: color, size: isBranch ? 0.8 : 1.5, type: 'spark', alpha: 0.4 });
+            // Core white line
+            state.particles.push({
+                x: px, y: py, vx: 0, vy: 0,
+                life: lifeOverride || 6, color: '#fff',
+                size: 1.2, type: 'spark', alpha: 1.0
+            });
+            // Outer glow
+            state.particles.push({
+                x: px, y: py, vx: 0, vy: 0,
+                life: (lifeOverride ? lifeOverride + 2 : 8), color: color,
+                size: isBranch ? 2.5 : 4.5, type: 'spark', alpha: 0.6
+            });
         }
 
         if (isStraight && !isBranch) {

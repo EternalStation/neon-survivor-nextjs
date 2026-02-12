@@ -4,7 +4,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
 
 const TURRET_RANGE = 800;
-const TURRET_BASE_COST = 10;
+const TURRET_BASE_COST = 5;
 const TURRET_FIRE_RATE = 1 / 4; // 4 shots per second (Up from 8 for better damage number visibility)
 const TURRET_DURATION = 30;
 const TURRET_COOLDOWN = 60;

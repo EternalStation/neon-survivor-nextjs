@@ -210,24 +210,6 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             <div style={{ height: 10 }}>
                 {conflict && <p style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, textAlign: 'center', margin: 0, letterSpacing: 1 }}>⚠ KEY ALREADY ASSIGNED</p>}
             </div>
-
-            <button
-                onClick={onBack}
-                style={{
-                    marginTop: 0,
-                    padding: '10px',
-                    background: 'transparent',
-                    border: '1px solid #94a3b8',
-                    color: '#94a3b8',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    width: '100%',
-                    fontWeight: 900,
-                    fontSize: 12
-                }}
-            >
-                BACK
-            </button>
             <style>{`
                 .listening-pulse {
                     animation: pulse-blue 1s infinite;

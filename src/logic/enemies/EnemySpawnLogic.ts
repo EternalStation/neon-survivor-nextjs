@@ -34,7 +34,7 @@ export function getEventPalette(state: GameState): [string, string, string] | nu
     return null;
 }
 
-export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: ShapeType, isBoss: boolean = false, bossTier?: number) {
+export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: ShapeType, isBoss: boolean = false, bossTier?: number, isAnomaly: boolean = false) {
     const { player, gameTime } = state;
     const { shapeDef, eraPalette, fluxState } = getProgressionParams(gameTime);
 
@@ -90,13 +90,21 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1)); // 10-20 min
     const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)); // 20+ min
 
-    const size = isBoss ? (isLvl3 ? 60 : (isLvl2 ? 50 : 50)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
     const bossHpMult = 25 + Math.floor(minutes);
     let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
+    if (isAnomaly) hp *= 1.5;
 
+    // Boss Size Scaling
+    const baseSize = isBoss ? (isLvl3 ? 80 : (isLvl2 ? 70 : 65)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
+    const size = isAnomaly ? baseSize * 1.2 : baseSize; // Anomaly is 20% larger than normal boss tiers
 
     const eventPalette = getEventPalette(state);
-    const finalPalette = eventPalette || eraPalette.colors;
+    let finalPalette = eventPalette || eraPalette.colors;
+
+    // Anomaly Palette: Hell Theme (Orange / Red / Dark Red)
+    if (isAnomaly) {
+        finalPalette = ['#f59e0b', '#ef4444', '#7f1d1d'];
+    }
 
     const newEnemy: Enemy = {
         id: Math.random(),
@@ -105,13 +113,13 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         size,
         hp,
         maxHp: hp,
-        spd: 2.4 * SHAPE_DEFS[chosenShape].speedMult,
+        spd: 2.4 * SHAPE_DEFS[chosenShape].speedMult * (isAnomaly ? 1.10 : 1.0), // Anomaly is 10% faster
         boss: isBoss,
         bossType: isBoss ? Math.floor(Math.random() * 2) : 0,
         bossAttackPattern: 0,
         bossTier: bossTier || 0, // 0 = Auto
         dead: false,
-        shape: chosenShape as ShapeType,
+        shape: (isAnomaly ? 'abomination' : chosenShape) as ShapeType,
         shellStage: 2,
         palette: finalPalette,
         eraPalette: finalPalette,
@@ -128,11 +136,12 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         knockback: { x: 0, y: 0 },
         isRare: false,
         isElite: false,
+        isAnomaly: isAnomaly,
         spawnedAt: state.gameTime,
         isFlanker: !isBoss && ['circle', 'triangle', 'square'].includes(chosenShape) && Math.random() < 0.10,
         flankAngle: Math.random() * Math.PI * 2,
         flankDistance: 400 + Math.random() * 200,
-        particleOrbit: ['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0
+        particleOrbit: isAnomaly ? 180 : (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0) // Anomaly has intense orbit
     };
 
     state.enemies.push(newEnemy);

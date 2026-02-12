@@ -176,6 +176,17 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 cheatBuffer = '';
             }
 
+            // K1 - Suicide
+            if (cheatBuffer.endsWith('k1')) {
+                gameState.current.player.curHp = 0;
+                gameState.current.gameOver = true;
+                gameState.current.player.deathCause = 'SIMULATION TERMINATED (DEBUG)';
+                setGameOver(true);
+                import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
+                console.log('[CHEAT] Player Suicide Triggered via K1');
+                cheatBuffer = '';
+            }
+
             // L1 - Level Up
             if (cheatBuffer.endsWith('l1')) {
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;

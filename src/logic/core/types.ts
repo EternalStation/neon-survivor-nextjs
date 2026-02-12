@@ -226,7 +226,7 @@ export interface Bullet {
     isVisualOnly?: boolean;
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -483,6 +483,8 @@ export interface Enemy {
     wormOrbitRadius?: number;
     wormTrueDamage?: number; // True damage percentage (pierces armor/reduction)
     wormPromotionTimer?: number; // Timing for split promotion
+    isAnomaly?: boolean;
+    anomalyBurnTimer?: number;
     dieOnCollision?: boolean;
 }
 
@@ -520,6 +522,7 @@ export interface LegendaryHex {
     lore?: string;
     perks?: string[];
     allPerks?: string[][];
+    statBonuses?: Record<string, number>; // Baked-in bonuses per kill (Snapshotted with Efficiency)
 }
 
 export interface UpgradeChoice {

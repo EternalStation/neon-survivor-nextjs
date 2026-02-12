@@ -241,19 +241,34 @@ export function getArenaIndex(x: number, y: number): number {
     return index;
 }
 
-export function getRandomPositionInArena(arenaId: number): { x: number, y: number } {
+export function getRandomPositionInArena(arenaId: number, minWallDist: number = 0): { x: number, y: number } {
     const arena = ARENA_CENTERS.find(c => c.id === arenaId) || ARENA_CENTERS[0];
-    let x, y;
-    while (true) {
+    let x = arena.x;
+    let y = arena.y;
+    let attempts = 0;
+    while (attempts < 100) {
         const rx = (Math.random() - 0.5) * 2 * ARENA_RADIUS;
         const ry = (Math.random() - 0.5) * 2 * ARENA_RADIUS;
 
         if (textHex(rx, ry, ARENA_RADIUS)) {
-            x = arena.x + rx;
-            y = arena.y + ry;
+            const tx = arena.x + rx;
+            const ty = arena.y + ry;
+
+            if (minWallDist > 0) {
+                const { dist } = getHexDistToWall(tx, ty);
+                if (dist < minWallDist) {
+                    attempts++;
+                    continue;
+                }
+            }
+
+            x = tx;
+            y = ty;
             break;
         }
+        attempts++;
     }
+
     return { x, y };
 }
 
@@ -268,8 +283,8 @@ export function generateMapPOIs(): MapPOI[] {
     let idCounter = 1;
 
     ARENA_CENTERS.forEach(arena => {
-        // 1. One Overclock Transmitter per arena
-        const ocPos = getRandomPositionInArena(arena.id);
+        // 1. One Overclock Transmitter per arena (User Request: > 400px from walls)
+        const ocPos = getRandomPositionInArena(arena.id, 400);
         // Ensure it's not too close to the center (spawn) if it's arena 0
         pois.push({
             id: idCounter++,
@@ -291,7 +306,7 @@ export function generateMapPOIs(): MapPOI[] {
         let abPos;
         let attempts = 0;
         while (attempts < 10) {
-            abPos = getRandomPositionInArena(arena.id);
+            abPos = getRandomPositionInArena(arena.id, 400); // User Request: > 400px from walls
             const distToOC = Math.hypot(abPos.x - ocPos.x, abPos.y - ocPos.y);
             if (distToOC > 1000) break; // Ensure they are spread out
             attempts++;
@@ -325,9 +340,9 @@ export function generateMapPOIs(): MapPOI[] {
                 // 1. Distance from other POIs
                 const tooCloseToPoi = pois.some(p => Math.hypot(p.x - tPos.x, p.y - tPos.y) < 600);
 
-                // 2. Distance from Walls (User Request: > 200px)
+                // 2. Distance from Walls (User Request: Now 400px for consistency)
                 const { dist: wallDist } = getHexDistToWall(tPos.x, tPos.y);
-                const tooCloseToWall = wallDist < 200;
+                const tooCloseToWall = wallDist < 400;
 
                 if (!tooCloseToPoi && !tooCloseToWall) break;
                 tries++;
@@ -338,7 +353,7 @@ export function generateMapPOIs(): MapPOI[] {
                 type: 'turret',
                 x: tPos!.x,
                 y: tPos!.y,
-                radius: 120, // Activation zone
+                radius: 170, // Activation zone (Increased by ~40% from 120)
                 arenaId: arena.id,
                 active: false,
                 progress: 0,
@@ -348,7 +363,7 @@ export function generateMapPOIs(): MapPOI[] {
                 respawnTimer: 0, // Permanent position? Or respawn if destroyed? "Overheat recharge" suggests permanent.
                 lastUsed: 0,
                 turretUses: 0,
-                turretCost: 10, // Initial cost
+                turretCost: 5, // Initial cost (User Request)
                 lastShot: 0,
                 turretVariant: ['fire', 'ice', 'heal'][i] as any // Guaranteed: 0=Fire, 1=Ice, 2=Heal
             });
@@ -359,7 +374,8 @@ export function generateMapPOIs(): MapPOI[] {
 }
 
 export function relocatePOI(poi: MapPOI) {
-    const newPos = getRandomPositionInArena(poi.arenaId);
+    const minWall = (poi.type === 'anomaly' || poi.type === 'overclock') ? 400 : 200;
+    const newPos = getRandomPositionInArena(poi.arenaId, minWall);
     poi.x = newPos.x;
     poi.y = newPos.y;
     poi.progress = 0;

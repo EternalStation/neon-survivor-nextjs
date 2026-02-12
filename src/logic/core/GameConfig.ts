@@ -33,8 +33,8 @@ export const GAME_CONFIG = {
         MERGE_XP_MULT_PENTAGON: 7,
         MERGE_XP_MULT_DEFAULT: 14,
         MERGE_SIZE_MULT: 1.55,
-        MERGE_SOUL_MULT_PENTAGON: 6,
-        MERGE_SOUL_MULT_DEFAULT: 12,
+        MERGE_SOUL_MULT_PENTAGON: 5,
+        MERGE_SOUL_MULT_DEFAULT: 10,
 
         // Contact Damage
         MINION_DAMAGE_RATIO: 0.15,

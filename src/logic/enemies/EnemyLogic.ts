@@ -5,6 +5,7 @@ import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { calcStat } from '../utils/MathUtils';
 
 // Modular Enemy Logic
 import { updateNormalCircle, updateNormalTriangle, updateNormalSquare, updateNormalDiamond, updateNormalPentagon, updateUniquePentagon } from './NormalEnemyLogic';
@@ -151,16 +152,21 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
             const d = Math.hypot(player.x - poi.x, player.y - poi.y);
             if (poi.active && poi.cooldown === 0 && d < poi.radius) {
-                poi.progress += step * 5.0; // 20 seconds to 100
+                poi.progress += step * 10.0; // 10 seconds to 100 (User Request)
 
                 if (poi.progress >= 100) {
                     const minutesRaw = gameTime / 60;
                     const current10MinCycle = Math.floor(minutesRaw / 10);
                     const tier = Math.min(3, current10MinCycle + 1);
 
-                    spawnEnemy(state, poi.x, poi.y, undefined, true, tier);
+                    spawnEnemy(state, poi.x, poi.y, undefined, true, tier, true);
                     spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
                     playSfx('warning');
+
+                    // Push player away on spawn to prevent instant collision (Stronger: 55 -> 65)
+                    const pushAngle = Math.atan2(player.y - poi.x, player.x - poi.x);
+                    player.knockback.x = Math.cos(pushAngle) * 65;
+                    player.knockback.y = Math.sin(pushAngle) * 65;
 
                     relocatePOI(poi); // Move and set respawn timer
                 }
@@ -470,12 +476,43 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         const params = getProgressionParams(gameTime);
         e.fluxState = params.fluxState;
 
-        if (!e.isNeutral && !e.isRare && !e.isNecroticZombie && e.shape !== 'worm' && e.shape !== 'glitcher') {
+        if (!e.isNeutral && !e.isRare && !e.isNecroticZombie && e.shape !== 'worm' && e.shape !== 'glitcher' && !e.isAnomaly) {
             const eventPalette = getEventPalette(state);
             e.eraPalette = eventPalette || params.eraPalette.colors;
-        } else if (e.shape === 'worm') {
-            // Hard enforce worm palette to be safe
-            e.eraPalette = undefined; // Force it to use its unique palette
+        } else if (e.shape === 'worm' || e.isAnomaly) {
+            // Hard enforce unique palette
+            e.eraPalette = undefined;
+        }
+
+        // --- ANOMALY BOSS RADIANCE (Burn Damage & Lava Floor) ---
+        if (e.isAnomaly && !e.dead) {
+            const burnRadius = 300; // Large hellish aura
+            const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+
+            // Add slow demonic rotation (Visual spin)
+            // e.rotationPhase is used by the renderer for the base orientation.
+            // We want it to spin slowly so the "mass" feels alive.
+            e.rotationPhase = (e.rotationPhase || 0) + 0.02;
+
+            // Visual Lava Floor/Flames (Flickering embers on ground)
+            if (state.frameCount % 2 === 0) { // Faster flicker for denser lava look
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * burnRadius;
+                // Changed from #f59e0b (yellow/amber) to red/orange shades and 'spark' type
+                const lavaColor = Math.random() > 0.5 ? '#ef4444' : '#f97316';
+                spawnParticles(state, e.x + Math.cos(angle) * r, e.y + Math.sin(angle) * r, lavaColor, 1, 6, 12, 'spark');
+            }
+
+            if (distToPlayer < burnRadius) {
+                // Deal burn damage (2% Player Max HP per second as requested)
+                const burnTick = 10; // Every 10 frames
+                if (state.frameCount % burnTick === 0) {
+                    // 2% / (6 ticks per sec)
+                    const dmg = (calcStat(player.hp) * 0.02) / (60 / burnTick);
+                    player.curHp -= dmg;
+                    spawnParticles(state, player.x, player.y, '#ff0000', 3, 5, 10, 'spark');
+                }
+            }
         }
 
         // Particle Leakage (Starts at 30m, stronger at 60m+)

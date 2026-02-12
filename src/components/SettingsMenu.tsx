@@ -110,7 +110,7 @@ export const SettingsMenu = ({ onClose, onRestart, onQuit, mode = 'game' }: Sett
                     )}
                     {activeTab === 'controls' && (
                         <button className="btn-settings-primary" onClick={() => setActiveTab('general')}>
-                            BACK TO SETTINGS
+                            BACK
                         </button>
                     )}
                 </div>

@@ -167,8 +167,8 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         EcoDMG: [
             ["+0.1 DMG per kill"],
             ["+0.1 ATS per kill"],
-            ["+0.1 DMG% per kill"],
-            ["+0.1 ATS% per kill"],
+            ["+0.1% DMG per kill"],
+            ["+0.1% ATS per kill"],
             ["MAX LEVEL"]
         ],
         EcoXP: [
@@ -238,7 +238,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["Deals 5.0-10.0% Player Max HP/sec in 500 AOE (Closer = More Dmg)"],
             ["Heal 0.2% Max HP/sec per Aura Enemy"],
             ["+1% Radiation Aura Dmg per 1% Missing HP"],
-            ["Global Decay: Enemies lose 1.0% Max HP/sec Map-wide"],
+            ["Global Decay: Enemies lose 2.0% Max HP/sec Map-wide"],
             ["MAX LEVEL"]
         ],
         ChronoPlating: [
@@ -368,6 +368,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
 
         syncLegendaryHex(state, selection);
         state.pendingLegendaryHex = selection;
+        if (!state.pendingLegendaryHex.statBonuses) state.pendingLegendaryHex.statBonuses = {};
         state.showLegendarySelection = false;
         state.showModuleMenu = true;
         state.isPaused = true;
@@ -429,6 +430,40 @@ export function getHexMultiplier(state: GameState, type: LegendaryType): number 
     return 1 + hexEfficiency;
 }
 
+export function recordLegendarySouls(state: GameState, souls: number) {
+    state.moduleSockets.hexagons.forEach(hex => {
+        if (!hex) return;
+        if (!hex.statBonuses) hex.statBonuses = {};
+
+        const multiplier = getHexMultiplier(state, hex.type);
+
+        if (hex.type === 'EcoDMG') {
+            if (hex.level >= 1) hex.statBonuses['dmg_per_kill'] = (hex.statBonuses['dmg_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 2) hex.statBonuses['ats_per_kill'] = (hex.statBonuses['ats_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 3) hex.statBonuses['dmg_pct_per_kill'] = (hex.statBonuses['dmg_pct_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 4) hex.statBonuses['ats_pct_per_kill'] = (hex.statBonuses['ats_pct_per_kill'] || 0) + souls * 0.1 * multiplier;
+        }
+        if (hex.type === 'EcoXP') {
+            if (hex.level >= 1) hex.statBonuses['xp_per_kill'] = (hex.statBonuses['xp_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 2) hex.statBonuses['dust_extraction'] = (hex.statBonuses['dust_extraction'] || 0) + souls * 0.01 * multiplier;
+            if (hex.level >= 3) hex.statBonuses['metric_resonance'] = (hex.statBonuses['metric_resonance'] || 0) + souls * 0.01 * multiplier;
+            if (hex.level >= 4) hex.statBonuses['xp_pct_per_kill'] = (hex.statBonuses['xp_pct_per_kill'] || 0) + souls * 0.1 * multiplier;
+        }
+        if (hex.type === 'EcoHP') {
+            if (hex.level >= 1) hex.statBonuses['hp_per_kill'] = (hex.statBonuses['hp_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 2) hex.statBonuses['reg_per_kill_flat'] = (hex.statBonuses['reg_per_kill_flat'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 3) hex.statBonuses['hp_pct_per_kill'] = (hex.statBonuses['hp_pct_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 4) hex.statBonuses['reg_per_kill_pct'] = (hex.statBonuses['reg_per_kill_pct'] || 0) + souls * 0.1 * multiplier;
+        }
+        if (hex.type === 'CombShield') {
+            if (hex.level >= 1) hex.statBonuses['arm_per_kill'] = (hex.statBonuses['arm_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 2) hex.statBonuses['col_red_per_kill'] = (hex.statBonuses['col_red_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 3) hex.statBonuses['proj_red_per_kill'] = (hex.statBonuses['proj_red_per_kill'] || 0) + souls * 0.1 * multiplier;
+            if (hex.level >= 4) hex.statBonuses['arm_pct_per_kill'] = (hex.statBonuses['arm_pct_per_kill'] || 0) + souls * 0.1 * multiplier;
+        }
+    });
+}
+
 export function calculateLegendaryBonus(state: GameState, statKey: string, skipMultiplier: boolean = false): number {
     let total = 0;
     state.moduleSockets.hexagons.forEach((hex) => {
@@ -437,60 +472,42 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         const multiplier = skipMultiplier ? 1.0 : getHexMultiplier(state, hex.type);
         const kl = hex.killsAtLevel || { [1]: hex.killsAtAcquisition };
 
-        const getKillsSinceLevel = (lvl: number) => {
-            const startKills = kl[lvl] ?? state.killCount;
-            return Math.max(0, state.killCount - startKills);
+        const getBonusSoulsSinceLevel = (lvl: number) => {
+            const startKills = kl[lvl] ?? state.rawKillCount;
+            const rawKillsSince = Math.max(0, state.rawKillCount - startKills);
+            // Apply unbuffed kills * current efficiency mult
+            return rawKillsSince * multiplier;
         };
 
-        if (hex.type === 'EcoDMG') {
-            if (statKey === 'dmg_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
-            if (statKey === 'ats_per_kill' && hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
-            if (statKey === 'dmg_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.1 * multiplier;
-            if (statKey === 'ats_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.1 * multiplier;
+        if (hex.type === 'EcoDMG' && hex.statBonuses) {
+            if (statKey === 'dmg_per_kill') total += (hex.statBonuses['dmg_per_kill'] || 0);
+            if (statKey === 'ats_per_kill') total += (hex.statBonuses['ats_per_kill'] || 0);
+            if (statKey === 'dmg_pct_per_kill') total += (hex.statBonuses['dmg_pct_per_kill'] || 0);
+            if (statKey === 'ats_pct_per_kill') total += (hex.statBonuses['ats_pct_per_kill'] || 0);
         }
-        if (hex.type === 'EcoXP') {
-            if (statKey === 'xp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
-            if (statKey === 'dust_extraction' && hex.level >= 2) {
-                // Return total dust earned since reaching level 2 (+0.1 per kill)
-                total += Math.floor(getKillsSinceLevel(2) * 0.01) * multiplier;
-            }
-            if (statKey === 'metric_resonance' && hex.level >= 3) {
-                // Return total % bonus to apply to perks (+0.01% per kill)
-                // Assuming metric_resonance expects non-percentage float (0.01 = 1%)? Or maybe 0.0001?
-                // Based on previous code (kills/100)*0.1 = kills * 0.001 -> 0.1% per 100 kills? No that was 0.1 (value) for 100 kills.
-                // If the system expects 1.0 = 100%, then 0.01% = 0.0001.
-                total += getKillsSinceLevel(3) * 0.0001 * multiplier;
-            }
-            if (statKey === 'xp_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.001 * multiplier;
+        if (hex.type === 'EcoXP' && hex.statBonuses) {
+            if (statKey === 'xp_per_kill') total += (hex.statBonuses['xp_per_kill'] || 0);
+            if (statKey === 'dust_extraction') total += Math.floor(hex.statBonuses['dust_extraction'] || 0);
+            if (statKey === 'metric_resonance') total += (hex.statBonuses['metric_resonance'] || 0);
+            if (statKey === 'xp_pct_per_kill') total += (hex.statBonuses['xp_pct_per_kill'] || 0);
         }
-        if (hex.type === 'EcoHP') {
-            if (statKey === 'hp_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
+        if (hex.type === 'EcoHP' && hex.statBonuses) {
+            if (statKey === 'hp_per_kill') total += (hex.statBonuses['hp_per_kill'] || 0);
             if (statKey === 'reg_per_kill') {
-                if (hex.level >= 2) total += getKillsSinceLevel(2) * 0.1 * multiplier;
-                if (hex.level >= 4) {
+                total += (hex.statBonuses['reg_per_kill_flat'] || 0);
+                if (hex.statBonuses['reg_per_kill_pct']) {
                     const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
-                    // +0.1% HP/sec per kill -> 0.001 * MaxHP * Kills
-                    total += maxHp * 0.001 * getKillsSinceLevel(4) * multiplier;
+                    // reg_per_kill_pct is the baked-in % points (0.1 per soul * gems)
+                    total += maxHp * (hex.statBonuses['reg_per_kill_pct'] / 100);
                 }
             }
-            if (statKey === 'hp_pct_per_kill' && hex.level >= 3) total += getKillsSinceLevel(3) * 0.1 * multiplier;
-            // reg_pct_per_kill removed/replaced by reg_per_kill logic for L4
+            if (statKey === 'hp_pct_per_kill') total += (hex.statBonuses['hp_pct_per_kill'] || 0);
         }
-
-        // CombShield Logic
-        if (hex.type === 'CombShield') {
-            if (statKey === 'arm_per_kill' && hex.level >= 1) total += getKillsSinceLevel(1) * 0.1 * multiplier;
-            if (statKey === 'col_red_per_kill' && hex.level >= 2) {
-                // 0.1% per kill (Linear)
-                // Assuming the system handles capping or dim returns if needed, but user asked for linear?
-                // Let's assume linear accumulation: 1000 kills = 100% reduction.
-                total += getKillsSinceLevel(2) * 0.001 * multiplier;
-            }
-            if (statKey === 'proj_red_per_kill' && hex.level >= 3) {
-                // 0.1% per kill (Linear)
-                total += getKillsSinceLevel(3) * 0.001 * multiplier;
-            }
-            if (statKey === 'arm_pct_per_kill' && hex.level >= 4) total += getKillsSinceLevel(4) * 0.001 * multiplier;
+        if (hex.type === 'CombShield' && hex.statBonuses) {
+            if (statKey === 'arm_per_kill') total += (hex.statBonuses['arm_per_kill'] || 0);
+            if (statKey === 'col_red_per_kill') total += (hex.statBonuses['col_red_per_kill'] || 0);
+            if (statKey === 'proj_red_per_kill') total += (hex.statBonuses['proj_red_per_kill'] || 0);
+            if (statKey === 'arm_pct_per_kill') total += (hex.statBonuses['arm_pct_per_kill'] || 0);
         }
 
         // ComLife Logic

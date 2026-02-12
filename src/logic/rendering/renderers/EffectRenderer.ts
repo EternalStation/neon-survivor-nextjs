@@ -438,16 +438,26 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
         });
         ctx.fill();
 
-        // Handle fading particles separately
+        // Handle fading and translucent particles with batching
+        const alphaGroups = new Map<number, { x: number, y: number, size: number }[]>();
         items.forEach(item => {
             if (item.alpha < 1) {
-                ctx.save();
-                ctx.globalAlpha = item.alpha;
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+                const roundedAlpha = Math.round(item.alpha * 20) / 20; // Group by 0.05 steps
+                if (!alphaGroups.has(roundedAlpha)) alphaGroups.set(roundedAlpha, []);
+                alphaGroups.get(roundedAlpha)!.push(item);
             }
+        });
+
+        alphaGroups.forEach((groupItems, alpha) => {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            groupItems.forEach(item => {
+                ctx.moveTo(item.x + item.size, item.y);
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+            });
+            ctx.fill();
+            ctx.restore();
         });
     });
 

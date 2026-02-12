@@ -1,7 +1,7 @@
 import type { GameState, Enemy, ShapeType } from '../core/types';
 import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
-import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier } from '../upgrades/LegendaryLogic';
+import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
 import { trySpawnMeteorite, createMeteorite } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
@@ -22,7 +22,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     if (e.soulRewardMult !== undefined) {
         baseSouls = e.soulRewardMult;
     } else if (e.isElite) {
-        baseSouls = 12; // Default elite = 12 kills
+        baseSouls = e.shape === 'pentagon' ? 5 : 10; // 5 for pentagons, 10 for others (10-merge)
     } else if (e.shape === 'worm' && e.wormRole === 'head') {
         baseSouls = 50; // Big reward for head
     }
@@ -32,6 +32,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     state.killCount += soulCount;
     state.score += soulCount;
+    recordLegendarySouls(state, soulCount);
 
     // Track unbuffed kills for HUD
     state.rawKillCount = (state.rawKillCount || state.killCount) + baseSouls;
@@ -124,9 +125,11 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
     if (e.boss && state.extractionStatus === 'none') {
+        state.bossKills++; // Track boss kills correctly
+
         // UNLOCK PROGRESSION: First Boss Drops Dimensional Gate
-        if (!state.portalsUnlocked) {
-            // Check if we already have it (inventory or blueprints)
+        if (state.bossKills === 1 && !state.portalsUnlocked) {
+            // Check if we already have it (safety check)
             const hasInv = state.inventory.some(i => i && ((i as any).blueprintType === 'DIMENSIONAL_GATE'));
             const hasBp = state.blueprints.some(b => b && b.type === 'DIMENSIONAL_GATE');
 

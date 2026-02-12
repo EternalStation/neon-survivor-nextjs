@@ -144,6 +144,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             return (
                                 <>
                                     <StatRow label="Health" stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={hpMult} />
+                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={regMult} />
                                     <StatRow label="Damage" stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} />
                                     <StatRow
                                         label="Attack Speed"
@@ -157,7 +158,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             return `(${sps.toFixed(2)}/s)`;
                                         })()}
                                     />
-                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={regMult} />
                                     <StatRow
                                         label="Armor"
                                         stat={player.arm}

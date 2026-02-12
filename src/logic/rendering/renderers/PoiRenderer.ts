@@ -477,7 +477,16 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.fillText(`REPAIR: ${cost} DUST`, 0, yOffset - 10);
     }
 
-    // 5. Status Text
+    // 5. Level Indicator (| | |)
+    const level = (poi.turretUses || 0) + 1;
+    const marks = '|'.repeat(level).split('').join(' ');
+    ctx.font = 'bold 16px Orbitron';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = 1.0;
+    ctx.fillText(marks, 0, 32);
+
+    // 6. Status Text
     if (isActive) {
         const timeLeft = Math.ceil(30 - poi.activeDuration);
         ctx.font = 'bold 12px Orbitron';

@@ -313,6 +313,43 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
             ctx.restore();
         }
+
+        // --- ANOMALY BOSS VISUALS (Molten Ground & Hellish Presence) ---
+        if (e.isAnomaly && !e.dead) {
+            ctx.save();
+            const time = state.gameTime;
+            const burnRadius = 300;
+            const pulse = 1.0 + Math.sin(time * 4) * 0.05;
+
+            // 1. Molten Ground Zone (Similar to Ritual)
+            const grad = ctx.createRadialGradient(e.x, e.y, 50, e.x, e.y, burnRadius * pulse);
+            grad.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); // Inner Orange
+            grad.addColorStop(0.7, 'rgba(239, 68, 68, 0.15)'); // Outer Red
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            const edgePoints = 32;
+            for (let i = 0; i <= edgePoints; i++) {
+                const ang = (i / edgePoints) * Math.PI * 2;
+                const r = (burnRadius * pulse) + Math.sin(ang * 8 + time * 5) * 15;
+                const px = e.x + Math.cos(ang) * r;
+                const py = e.y + Math.sin(ang) * r;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.fill();
+
+            // 2. Central Heat Distortion Glow
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = '#f59e0b';
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.size * 1.8, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.restore();
+        }
     });
 
     enemies.forEach(e => {
@@ -589,7 +626,124 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const offset = Math.sin((py / size) * 4 + (state.gameTime * 10)) * warpAmp;
                 return { x: px + offset, y: py };
             };
-            if (e.shape === 'circle') {
+            if (e.shape === 'abomination') {
+                // ANOMALY BOSS: The "Demon Face" - Sinister, Horned, Jagged Silhouette
+                const points = 24; // More points for finer detail
+                const seed = (e.id || 0.5) * 777;
+
+                // 1. MAIN SKULL/HEAD MASS (Jagged and non-uniform)
+                ctx.beginPath();
+                for (let i = 0; i <= points; i++) {
+                    const ang = (i / points) * Math.PI * 2;
+                    // Distort shape to be slightly taller/ovoid
+                    const stretch = 1.0 + Math.abs(Math.sin(ang)) * 0.2;
+                    // Jitter for jaggedness
+                    const jitter = Math.sin(seed + i * 1.5 + state.gameTime * 4) * (size * 0.15);
+                    const r = (size * stretch) + jitter;
+                    const p = wp(Math.cos(ang) * r, Math.sin(ang) * r);
+                    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+
+                // 2. THORNS & FACE ORIENTATION (Locked on player)
+                // We calculate the angle to player and subtract the context's current rotation (e.rotationPhase)
+                // so that the face Always looks at the player regardless of how the head mass spins.
+                const dx = state.player.x - e.x;
+                const dy = state.player.y - e.y;
+                const angleToPlayer = Math.atan2(dy, dx);
+                // The base face orientation is -PI/2 (Forward).
+                // We need the relative angle to counter-rotate the internal features.
+                const relativeAngle = angleToPlayer - (e.rotationPhase || 0) + Math.PI / 2;
+
+                ctx.save();
+                ctx.rotate(relativeAngle);
+
+                const drawHorn = (side: number) => {
+                    const hornBaseAngle = -Math.PI / 2 + (0.8 * side);
+                    // Longer, more "thorn-like" spikes
+                    const hornLen = size * 1.5;
+                    const hP1 = wp(Math.cos(hornBaseAngle - 0.2) * size * 0.8, Math.sin(hornBaseAngle - 0.2) * size * 0.8);
+                    const hP2 = wp(Math.cos(hornBaseAngle) * (size + hornLen), Math.sin(hornBaseAngle) * (size + hornLen) - (size * 0.4));
+                    const hP3 = wp(Math.cos(hornBaseAngle + 0.2) * size * 0.8, Math.sin(hornBaseAngle + 0.2) * size * 0.8);
+                    ctx.moveTo(hP1.x, hP1.y);
+                    ctx.lineTo(hP2.x, hP2.y);
+                    ctx.lineTo(hP3.x, hP3.y);
+                    ctx.closePath();
+                };
+                drawHorn(1);
+                drawHorn(-1);
+
+                // Additional "Thorns" (Spikes) always pointing at player
+                const drawSpike = (offsetAngle: number, lenMult: number) => {
+                    const ang = -Math.PI / 2 + offsetAngle;
+                    const len = size * lenMult;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(ang - 0.1) * size * 0.9, Math.sin(ang - 0.1) * size * 0.9);
+                    ctx.lineTo(Math.cos(ang) * (size + len), Math.sin(ang) * (size + len));
+                    ctx.lineTo(Math.cos(ang + 0.1) * size * 0.9, Math.sin(ang + 0.1) * size * 0.9);
+                    ctx.fill();
+                    ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+                };
+                ctx.fillStyle = coreColor;
+                drawSpike(-0.4, 0.8);
+                drawSpike(0.4, 0.8);
+                drawSpike(0, 1.2);
+
+                if (isCore) {
+                    // DEMONIC FEATURES (Now tracked via rotation)
+                    ctx.fillStyle = '#0a0a0a'; // Deep Void Black for pits
+
+                    // SINISTER SLIT EYES
+                    const eyeY = -size * 0.35;
+                    const eyeX = size * 0.45;
+                    const eyeW = size * 0.4;
+                    const eyeH = size * 0.15;
+
+                    const drawEye = (side: number) => {
+                        ctx.save();
+                        ctx.translate(side * eyeX, eyeY);
+                        ctx.rotate(0.3 * side + Math.sin(state.gameTime * 8) * 0.05);
+                        ctx.beginPath();
+                        ctx.moveTo(-eyeW / 2, 0);
+                        ctx.quadraticCurveTo(0, -eyeH, eyeW / 2, 0);
+                        ctx.quadraticCurveTo(0, eyeH / 4, -eyeW / 2, 0);
+                        ctx.fill();
+
+                        // Burning Pupil
+                        ctx.fillStyle = '#ff4400';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#ff4400';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, eyeH * 0.6, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    };
+                    drawEye(1);
+                    drawEye(-1);
+
+                    // JAGGED VOID MOUTH
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.beginPath();
+                    const mouthY = size * 0.3;
+                    const mWidth = size * 0.7;
+                    ctx.moveTo(-mWidth, mouthY);
+                    for (let i = 0; i <= 8; i++) {
+                        const mx = -mWidth + (i / 8) * (mWidth * 2);
+                        const toothOffset = i % 2 === 0 ? size * 0.35 : 0;
+                        const my = mouthY + toothOffset + Math.sin(state.gameTime * 5 + i) * 4;
+                        ctx.lineTo(mx, my);
+                    }
+                    ctx.lineTo(mWidth, mouthY);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Interior Glow particles
+                    if (state.frameCount % 10 === 0) {
+                        spawnParticles(state, e.x, e.y, '#ef4444', 1, 4, 15, 'spark');
+                    }
+                }
+                ctx.restore(); // Restore orientation tracking
+            } else if (e.shape === 'circle') {
                 if (warpAmp > 0) {
                     for (let i = 0; i <= 20; i++) {
                         const theta = (i / 20) * Math.PI * 2;

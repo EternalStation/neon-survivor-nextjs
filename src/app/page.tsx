@@ -203,7 +203,7 @@ export default function Home() {
 
             {/* Full-Screen Modals (Cover entire viewport) */}
             {hook.showSettings && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2000 }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20000, pointerEvents: 'auto' }}>
                 <SettingsMenu onClose={() => hook.setShowSettings(false)} onRestart={handleRestart} onQuit={handleQuit} />
                 <AudioWidget />
               </div>

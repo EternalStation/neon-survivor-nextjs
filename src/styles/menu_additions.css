@@ -707,7 +707,8 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 5000;
-    padding: 40px;
+    padding: 20px;
+    overflow-y: auto;
     animation: fadeIn 0.3s ease-out;
 }
 
@@ -716,7 +717,8 @@ body {
     max-width: 800px;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 15px;
+    margin: auto;
 }
 
 .settings-header {
@@ -724,9 +726,11 @@ body {
     font-size: 32px;
     font-weight: 900;
     letter-spacing: 12px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
+    padding-top: 40px;
+    /* Moves text lower within the block */
     border-bottom: 2px solid var(--neon-cyan);
-    padding-bottom: 15px;
+    padding-bottom: 12px;
     text-shadow: 0 0 15px var(--neon-cyan);
     text-transform: uppercase;
 }
@@ -735,7 +739,7 @@ body {
     display: flex;
     gap: 15px;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
 }
 
 .settings-tab {
