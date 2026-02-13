@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
                 message: 'Run submitted successfully',
                 run: {
                     id: run.id,
-                    score: run.score,
+                    score: run.score.toString(), // Convert BigInt to string
                     completedAt: run.completed_at,
                     rank: rankResult[0].rank,
                 },

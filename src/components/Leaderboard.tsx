@@ -53,10 +53,15 @@ const FinalStatItem = ({ label, value, color = '#fff' }: { label: string, value:
     </div>
 );
 
-const formatLargeNum = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-    return num.toLocaleString();
+const formatLargeNum = (num: number | string) => {
+    const value = typeof num === 'string' ? parseFloat(num) : num;
+    if (isNaN(value)) return '0';
+
+    if (value >= 1000000000000) return (value / 1000000000000).toFixed(1) + 'T';
+    if (value >= 1000000000) return (value / 1000000000).toFixed(1) + 'B';
+    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+    if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+    return value.toLocaleString();
 };
 
 const formatTime = (seconds: number) => {
