@@ -96,6 +96,9 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     };
 
     const formatDmg = (val: number) => {
+        if (val >= 1000000000000000) return (val / 1000000000000000).toFixed(1) + 'Q';
+        if (val >= 1000000000000) return (val / 1000000000000).toFixed(1) + 'T';
+        if (val >= 1000000000) return (val / 1000000000).toFixed(1) + 'B';
         if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
         if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
         return Math.floor(val).toString();

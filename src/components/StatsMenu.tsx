@@ -12,6 +12,15 @@ import { DROP_TABLE } from '../logic/mission/LootLogic';
 
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 
+const formatStatValue = (val: number) => {
+    if (val >= 1000000000000000) return (val / 1000000000000000).toFixed(1) + 'Q';
+    if (val >= 1000000000000) return (val / 1000000000000).toFixed(1) + 'T';
+    if (val >= 1000000000) return (val / 1000000000).toFixed(1) + 'B';
+    if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+    if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
+    return (Math.round(val * 10) / 10).toLocaleString();
+};
+
 interface StatsMenuProps {
     gameState: GameState;
 }
@@ -26,7 +35,7 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
 
     const formatNum = (val: number) => {
         if (isPercent) return Math.round(val).toLocaleString();
-        return (Math.round(val * 10) / 10).toLocaleString();
+        return formatStatValue(val);
     };
 
     const displayTotal = isPercent ? `${formatNum(total)}%` : formatNum(total);
@@ -243,7 +252,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                         )}
                                                         <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
                                                         <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
-                                                            {Math.round(total).toLocaleString()}
+                                                            {formatStatValue(Math.round(total))}
                                                         </span>
                                                     </>
                                                 );
