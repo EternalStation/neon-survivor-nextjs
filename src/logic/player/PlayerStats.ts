@@ -10,24 +10,24 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     const player = overridePlayer || state.player;
 
     // Calculate and assign Hex bonuses to player stats for this frame
-    player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill');
-    player.hp.hexMult = calculateLegendaryBonus(state, 'hp_pct_per_kill');
+    player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill', false, player);
+    player.hp.hexMult = calculateLegendaryBonus(state, 'hp_pct_per_kill', false, player);
     player.hp.hexMult2 = 0;
 
-    player.reg.hexFlat = calculateLegendaryBonus(state, 'reg_per_kill');
-    player.reg.hexMult = calculateLegendaryBonus(state, 'reg_pct_per_kill');
+    player.reg.hexFlat = calculateLegendaryBonus(state, 'reg_per_kill', false, player);
+    player.reg.hexMult = calculateLegendaryBonus(state, 'reg_pct_per_kill', false, player);
     player.reg.hexMult2 = 0;
 
-    player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill') + (player.chronoArmorBonus || 0);
-    player.arm.hexMult = calculateLegendaryBonus(state, 'arm_pct_per_kill');
-    player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_conditional');
+    player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill', false, player) + (player.chronoArmorBonus || 0);
+    player.arm.hexMult = calculateLegendaryBonus(state, 'arm_pct_per_kill', false, player);
+    player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_conditional', false, player);
 
-    player.dmg.hexFlat = calculateLegendaryBonus(state, 'dmg_per_kill');
-    player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill') + calculateLegendaryBonus(state, 'dmg_pct_per_hp');
+    player.dmg.hexFlat = calculateLegendaryBonus(state, 'dmg_per_kill', false, player);
+    player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill', false, player) + calculateLegendaryBonus(state, 'dmg_pct_per_hp', false, player);
     player.dmg.hexMult2 = 0;
 
-    player.atk.hexFlat = calculateLegendaryBonus(state, 'ats_per_kill');
-    player.atk.hexMult = calculateLegendaryBonus(state, 'ats_pct_per_kill');
+    player.atk.hexFlat = calculateLegendaryBonus(state, 'ats_per_kill', false, player);
+    player.atk.hexMult = calculateLegendaryBonus(state, 'ats_pct_per_kill', false, player);
     player.atk.hexMult2 = 0;
     player.cooldownReduction = 0;
 

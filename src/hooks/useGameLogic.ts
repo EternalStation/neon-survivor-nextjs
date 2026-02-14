@@ -360,7 +360,7 @@ export function useGameLogic({
             d.y = player.y + Math.sin(d.a + (i * 2)) * 60;
             if (Date.now() - d.last > 800) {
                 const droneDmgMult = player.droneCount > 3 ? Math.pow(2, player.droneCount - 3) : 1;
-                spawnBullet(state, d.x, d.y, player.targetAngle, calcStat(player.dmg, state.dmgAtkBuffMult) * droneDmgMult, player.pierce);
+                spawnBullet(state, player, d.x, d.y, player.targetAngle, calcStat(player.dmg, state.dmgAtkBuffMult) * droneDmgMult, player.pierce);
                 d.last = Date.now();
             }
         });

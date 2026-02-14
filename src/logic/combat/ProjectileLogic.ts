@@ -12,13 +12,23 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { getDefenseReduction } from '../utils/MathUtils';
 
 export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void) {
-    const { bullets, enemyBullets, player } = state;
+    const { bullets, enemyBullets } = state;
     const now = state.gameTime;
 
     // --- PLAYER BULLETS ---
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
+        const owner = b.ownerId ? (state.players[b.ownerId] || state.player) : state.player;
         let bulletRemoved = false;
+
+        // Ensure hits is a Set (serialization back-compat)
+        if (!(b.hits instanceof Set)) {
+            const oldHits = b.hits;
+            b.hits = new Set();
+            if (oldHits && typeof oldHits === 'object') {
+                Object.values(oldHits).forEach((v: any) => b.hits.add(v));
+            }
+        }
         // Collision with Enemies
         b.x += b.vx;
         b.y += b.vy;
@@ -31,7 +41,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
         if (!isInMap(b.x, b.y)) {
             // --- CLASS MODIFIER: Malware-Prime Glitch Bounce ---
-            if (player.playerClass === 'malware') {
+            if (owner.playerClass === 'malware') {
                 b.bounceCount = (b.bounceCount || 0) + 1;
 
                 // User Request: +20% Damage per bounce (Multiplicative) - Scaled with Resonance
@@ -73,8 +83,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             spawnParticles(state, b.x, b.y, b.color || '#22d3ee', 4);
 
             // --- AIGIS Optimization: Decrement Ring Count if orbiting bullet hits wall ---
-            if (b.vortexState === 'orbiting' && b.orbitDist && state.player.aigisRings?.[b.orbitDist]) {
-                const ringData = state.player.aigisRings[b.orbitDist];
+            if (b.vortexState === 'orbiting' && b.orbitDist && owner.aigisRings?.[b.orbitDist]) {
+                const ringData = owner.aigisRings[b.orbitDist];
                 if (ringData.count > 0) {
                     ringData.count--;
                     ringData.totalDmg -= b.dmg;
@@ -86,7 +96,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
         }
 
         // --- Malware Trail Management ---
-        if (player.playerClass === 'malware' && (b.bounceCount || 0) > 0) {
+        if (owner.playerClass === 'malware' && (b.bounceCount || 0) > 0) {
             if (!b.trails) b.trails = [];
             b.trails.unshift({ x: b.x, y: b.y });
             // Minimum trail starts after first bounce (bounceCount = 1)
@@ -122,8 +132,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
         if (b.vortexState === 'orbiting') {
             b.orbitAngle = (b.orbitAngle || 0) + 0.05;
             const dist = b.orbitDist || 125;
-            b.x = player.x + Math.cos(b.orbitAngle) * dist;
-            b.y = player.y + Math.sin(b.orbitAngle) * dist;
+            b.x = owner.x + Math.cos(b.orbitAngle) * dist;
+            b.y = owner.y + Math.sin(b.orbitAngle) * dist;
             // Update velocity so it "looks" like it's moving for hit detection (approx)
             b.vx = 0; b.vy = 0;
         }
@@ -131,13 +141,13 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
         // --- AIGIS RING LOGIC ---
         if (b.isRing) {
             // 1. Keep centered on player
-            b.x = player.x;
-            b.y = player.y;
+            b.x = owner.x;
+            b.y = owner.y;
 
             // 2. Defusion Check
             // User Request: "after the bullet amount will drop to like notaml one that we can actualyl diffrencate"
             const THRESHOLD = 190; // Hysteresis: Merge at 200, Defuse at 190
-            const currentCount = state.player.aigisRings?.[b.ringRadius!]?.count || 0;
+            const currentCount = owner.aigisRings?.[b.ringRadius!]?.count || 0;
 
             // Update our internal ammo checking against the global source of truth
             // (In case spawning logic added more ammo while we were a ring)
@@ -149,7 +159,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 bulletRemoved = true; // Mark for removal
 
                 // Spawn individual bullets
-                const ringData = state.player.aigisRings![b.ringRadius!];
+                const ringData = owner.aigisRings![b.ringRadius!];
                 const countToSpawn = ringData.count;
                 const avgDmg = ringData.count > 0 ? (ringData.totalDmg / ringData.count) : 0;
                 // Don't modify global count here, we are just "visualizing" them now.
@@ -166,8 +176,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         vortexState: 'orbiting',
                         orbitAngle: angle,
                         orbitDist: b.ringRadius,
-                        x: player.x + Math.cos(angle) * b.ringRadius!,
-                        y: player.y + Math.sin(angle) * b.ringRadius!,
+                        x: owner.x + Math.cos(angle) * b.ringRadius!,
+                        y: owner.y + Math.sin(angle) * b.ringRadius!,
                         dmg: avgDmg, // Give them average damage
                         color: b.color,
                         life: 999999,
@@ -214,7 +224,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             if (wallInfo.dist < (b.ringRadius! + WALL_BUFFER)) {
                 // The ring is scratching the wall.
                 // Drop ammo rapidly (5 per frame = ~12 frames to kill a ring of 60)
-                const ringData = state.player.aigisRings![b.ringRadius!];
+                const ringData = owner.aigisRings![b.ringRadius!];
                 if (ringData.count > 0) {
                     const avgDmg = ringData.totalDmg / ringData.count;
 
@@ -263,7 +273,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     // HIT!
 
                     // Calculate Single Bullet Damage
-                    const ringData = state.player.aigisRings![b.ringRadius!];
+                    const ringData = owner.aigisRings![b.ringRadius!];
                     if (ringData.count <= 0) break; // Should trigger defuse next frame
 
                     const avgDmg = ringData.totalDmg / ringData.count;
@@ -279,7 +289,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                     // Apply Damage to Enemy
                     e.hp -= avgDmg;
-                    player.damageDealt += avgDmg;
+                    owner.damageDealt += avgDmg;
 
                     // Visuals
                     // Don't spawn floating number every time? Maybe only crits or every 5 hits?
@@ -329,7 +339,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     b.vy = Math.sin(reflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
 
                     // --- MALWARE BOUNCE LOGIC (Color Shift) ---
-                    if (player.playerClass === 'malware') {
+                    if (owner.playerClass === 'malware') {
                         b.bounceCount = (b.bounceCount || 0) + 1;
                         if (b.bounceCount === 1) {
                             b.color = '#fb923c';
@@ -399,7 +409,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         b.vy = Math.sin(deflectAngle) * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
 
                         // --- MALWARE BOUNCE LOGIC (Deflection counts as bounce) ---
-                        if (player.playerClass === 'malware') {
+                        if (owner.playerClass === 'malware') {
                             b.bounceCount = (b.bounceCount || 0) + 1;
                             if (b.bounceCount === 1) {
                                 b.color = '#fb923c';
@@ -474,20 +484,20 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 // 0.5 Thorns Logic (Reflect Damage)
                 if (e.thorns && e.thorns > 0 && damageAmount > 0) {
                     const reflected = damageAmount * e.thorns;
-                    state.player.curHp -= reflected;
-                    state.player.lastHitDamage = reflected;
-                    state.player.killerHp = e.hp;
-                    state.player.killerMaxHp = e.maxHp;
+                    owner.curHp -= reflected;
+                    owner.lastHitDamage = reflected;
+                    owner.killerHp = e.hp;
+                    owner.killerMaxHp = e.maxHp;
                     const displayDmg = Math.round(reflected);
                     if (displayDmg > 0) {
-                        spawnFloatingNumber(state, state.player.x, state.player.y, `-${displayDmg}`, '#FF0000', true);
+                        spawnFloatingNumber(state, owner.x, owner.y, `-${displayDmg}`, '#FF0000', true);
                     }
-                    spawnParticles(state, state.player.x, state.player.y, '#FF0000', 3);
+                    spawnParticles(state, owner.x, owner.y, '#FF0000', 3);
 
-                    if (state.player.curHp <= 0 && !state.gameOver) {
-                        state.player.curHp = 0;
+                    if (owner.curHp <= 0 && !state.gameOver) {
+                        owner.curHp = 0;
                         state.gameOver = true;
-                        state.player.deathCause = `Killed by Boss Thorns (${e.shape})`;
+                        owner.deathCause = `Killed by Boss Thorns (${e.shape})`;
                         if (onEvent) onEvent('game_over');
                     }
                 }
@@ -527,7 +537,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                         linkedTargets.forEach(target => {
                             target.hp -= splitDmg;
-                            player.damageDealt += splitDmg; // Total damage dealt remains same, just split
+                            owner.damageDealt += splitDmg; // Total damage dealt remains same, just split
                             spawnFloatingNumber(state, target.x, target.y, Math.round(splitDmg).toString(), linkColor, false);
                             spawnParticles(state, target.x, target.y, linkColor, 2);
 
@@ -541,7 +551,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     } else {
                         // Standard Single Target
                         e.hp -= damageAmount;
-                        player.damageDealt += damageAmount;
+                        owner.damageDealt += damageAmount;
                         b.hits.add(e.id);
                     }
 
@@ -552,14 +562,14 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
                 // --- CLASS MODIFIER: Event-Horizon Gravimetric Pull ---
-                if (player.playerClass === 'eventhorizon') {
+                if (owner.playerClass === 'eventhorizon') {
                     const now = state.gameTime;
                     const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
                     const cooldownDuration = 10 * cdMod; // 10 seconds * reduction
                     const blackholeDuration = 3; // 3 seconds
 
                     // Check if blackhole is off cooldown
-                    if (!player.blackholeCooldown || now >= player.blackholeCooldown) {
+                    if (!owner.blackholeCooldown || now >= owner.blackholeCooldown) {
                         // Create persistent blackhole area effect
                         state.areaEffects.push({
                             id: Date.now(),
@@ -575,19 +585,19 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         playSfx('impact'); // Heavier feedback
 
                         // Set cooldown
-                        player.blackholeCooldown = now + cooldownDuration;
+                        owner.blackholeCooldown = now + cooldownDuration;
                     }
                 }
 
                 // --- CLASS MODIFIER: Hive-Mother Nanite Swarm ---
-                if (player.playerClass === 'hivemother' && !b.isNanite) {
+                if (owner.playerClass === 'hivemother' && !b.isNanite) {
                     const resonance = getChassisResonance(state);
                     const multiplier = 1 + resonance;
                     const swarmDmgPerSecPct = 5 * multiplier;
 
                     e.isInfected = true;
                     e.infectedUntil = 999999999; // Keep as fallback/legacy check
-                    const basePower = calcStat(player.dmg);
+                    const basePower = calcStat(owner.dmg);
                     e.infectionDmg = basePower * (swarmDmgPerSecPct / 100); // 5%/sec * resonance, 1 tick per second
                 }
 
@@ -605,9 +615,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
                     const dmCooldown = 10 * cdMod;
 
-                    if (!player.lastDeathMark || state.gameTime - player.lastDeathMark > dmCooldown) {
+                    if (!owner.lastDeathMark || state.gameTime - owner.lastDeathMark > dmCooldown) {
                         e.deathMarkExpiry = state.gameTime + 3; // 3 seconds
-                        player.lastDeathMark = state.gameTime;
+                        owner.lastDeathMark = state.gameTime;
                         // Visual for Mark?
                         spawnParticles(state, e.x, e.y, '#8800FF', 8); // Reduced count
                         playSfx('rare-spawn'); // Sound cue
@@ -619,21 +629,21 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     // "Lifesteal from dmg dealth of projectiles"
                     const heal = damageAmount * 0.03;
 
-                    const maxHp = calcStat(player.hp);
-                    const missing = maxHp - player.curHp;
+                    const maxHp = calcStat(owner.hp);
+                    const missing = maxHp - owner.curHp;
 
                     if (heal <= missing) {
-                        player.curHp += heal;
+                        owner.curHp += heal;
                     } else {
-                        player.curHp = maxHp;
+                        owner.curHp = maxHp;
                         // Lvl 2: Overheal Shield Chunks (Dynamic Max HP Cap)
                         if (lifeLevel >= 2) {
                             const overflow = heal - missing;
                             let shieldGain = overflow * 2.0; // Double stolen health
 
-                            if (!player.shieldChunks) player.shieldChunks = [];
+                            if (!owner.shieldChunks) owner.shieldChunks = [];
 
-                            const currentLifestealShield = player.shieldChunks
+                            const currentLifestealShield = owner.shieldChunks
                                 .filter(c => (c as any).source === 'lifesteal')
                                 .reduce((s, c) => s + c.amount, 0);
 
@@ -643,7 +653,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                             if (currentLifestealShield < lifestealCap) {
                                 // Cap to lifestealCap
                                 shieldGain = Math.min(shieldGain, lifestealCap - currentLifestealShield);
-                                player.shieldChunks.push({
+                                owner.shieldChunks.push({
                                     amount: shieldGain,
                                     expiry: now + 3.0,
                                     source: 'lifesteal'
@@ -669,7 +679,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                     if (reflectDmg > 0) {
                         // Thorns are reduced by armor
-                        const armorValue = calcStat(player.arm);
+                        const armorValue = calcStat(owner.arm);
                         const drCap = 0.95;
                         const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
 
@@ -677,16 +687,16 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         // But we already have it here. Let's make sure it's only if kinLvl >= 1
                         const kinLvl = getHexLevel(state, 'KineticBattery');
                         const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                        if (kinLvl >= 1 && triggerZap) triggerZap(state, player, kinLvl);
-                        const safeDmg = Math.min(reflectDmg, player.curHp - 1);
+                        if (kinLvl >= 1 && triggerZap) triggerZap(state, owner);
+                        const safeDmg = Math.min(reflectDmg, owner.curHp - 1);
 
                         if (safeDmg > 0) {
                             // Check Shield First
-                            if (player.shieldChunks && player.shieldChunks.length > 0) {
+                            if (owner.shieldChunks && owner.shieldChunks.length > 0) {
                                 // Apply to chunks
                                 let rem = safeDmg;
                                 let absorbed = 0;
-                                for (const chunk of player.shieldChunks) {
+                                for (const chunk of owner.shieldChunks) {
                                     if (chunk.amount >= rem) {
                                         chunk.amount -= rem;
                                         absorbed += rem;
@@ -697,35 +707,35 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                                         chunk.amount = 0;
                                     }
                                 }
-                                player.shieldChunks = player.shieldChunks.filter((c: any) => c.amount > 0);
+                                owner.shieldChunks = owner.shieldChunks.filter((c: any) => c.amount > 0);
                                 const finalThornDmg = safeDmg - absorbed;
 
                                 if (finalThornDmg > 0) {
-                                    player.curHp -= finalThornDmg;
-                                    player.damageTaken += finalThornDmg;
+                                    owner.curHp -= finalThornDmg;
+                                    owner.damageTaken += finalThornDmg;
                                 }
                             } else {
-                                player.curHp -= safeDmg;
-                                player.damageTaken += safeDmg;
+                                owner.curHp -= safeDmg;
+                                owner.damageTaken += safeDmg;
                             }
 
-                            player.lastHitDamage = safeDmg;
-                            player.killerHp = e.hp;
-                            player.killerMaxHp = e.maxHp;
+                            owner.lastHitDamage = safeDmg;
+                            owner.killerHp = e.hp;
+                            owner.killerMaxHp = e.maxHp;
 
                             if (onEvent) onEvent('player_hit', { dmg: safeDmg }); // Trigger red flash
-                            spawnParticles(state, player.x, player.y, '#FF0000', 3); // Visual feedback
+                            spawnParticles(state, owner.x, owner.y, '#FF0000', 3); // Visual feedback
 
                             const displayDmg = Math.round(safeDmg);
                             if (displayDmg > 0) {
-                                spawnFloatingNumber(state, player.x, player.y, displayDmg.toString(), '#ef4444', false);
+                                spawnFloatingNumber(state, owner.x, owner.y, displayDmg.toString(), '#ef4444', false);
                             }
 
                             // Explicit Death Check for Thorns
-                            if (player.curHp <= 0) {
-                                player.curHp = 0;
+                            if (owner.curHp <= 0) {
+                                owner.curHp = 0;
                                 state.gameOver = true;
-                                player.deathCause = 'Executed by Elite Square Thorns';
+                                owner.deathCause = 'Executed by Elite Square Thorns';
                                 if (onEvent) onEvent('game_over');
                             }
                         }
@@ -758,7 +768,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         e.palette = ['#EF4444', '#DC2626', '#B91C1C']; // Red Shift
 
                         // Phase 3 Stats
-                        e.spd = state.player.speed * 1.4; // 1.4x Player Speed
+                        e.spd = owner.speed * 1.4; // 1.4x Player Speed
                         e.invincibleUntil = now + 2.0; // 2s Immunity
 
                         // Refresh Skills
@@ -803,8 +813,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     bulletRemoved = true;
 
                     // --- AIGIS Optimization: Decrement Ring Count if orbiting bullet dies ---
-                    if (b.vortexState === 'orbiting' && b.orbitDist && state.player.aigisRings?.[b.orbitDist]) {
-                        const ringData = state.player.aigisRings[b.orbitDist];
+                    if (b.vortexState === 'orbiting' && b.orbitDist && owner.aigisRings?.[b.orbitDist]) {
+                        const ringData = owner.aigisRings[b.orbitDist];
                         if (ringData.count > 0) {
                             ringData.count--;
                             ringData.totalDmg -= b.dmg;
@@ -820,8 +830,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             bullets.splice(i, 1);
 
             // --- AIGIS Optimization: Decrement Ring Count if orbiting bullet dies (natural expiry or boundary) ---
-            if (b.vortexState === 'orbiting' && b.orbitDist && state.player.aigisRings?.[b.orbitDist]) {
-                const ringData = state.player.aigisRings[b.orbitDist];
+            if (b.vortexState === 'orbiting' && b.orbitDist && owner.aigisRings?.[b.orbitDist]) {
+                const ringData = owner.aigisRings[b.orbitDist];
                 if (ringData.count > 0) {
                     ringData.count--;
                     ringData.totalDmg -= b.dmg;
@@ -870,81 +880,84 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             continue;
         }
 
-        const distP = Math.hypot(player.x - eb.x, player.y - eb.y);
-        if (distP < player.size + 10) {
-            const armorValue = calcStat(player.arm);
-            const armRedMult = 1 - getDefenseReduction(armorValue);
+        // Check collision with ALL players
+        const playersList = Object.values(state.players);
+        for (const p of playersList) {
+            const distP = Math.hypot(p.x - eb.x, p.y - eb.y);
+            if (distP < p.size + 10) {
+                const armorValue = calcStat(p.arm);
+                const armRedMult = 1 - getDefenseReduction(armorValue);
 
-            const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill');
-            const projRed = Math.min(80, projRedRaw); // Cap at 80% reduction
-            const projRedMult = 1 - (projRed / 100);
+                const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, p);
+                const projRed = Math.min(80, projRedRaw); // Cap at 80% reduction
+                const projRedMult = 1 - (projRed / 100);
 
-            const rawDmg = eb.dmg;
-            const dmgAfterArmor = rawDmg * armRedMult;
-            const blockedByArmor = rawDmg - dmgAfterArmor;
+                const rawDmg = eb.dmg;
+                const dmgAfterArmor = rawDmg * armRedMult;
+                const blockedByArmor = rawDmg - dmgAfterArmor;
 
-            const finalProjDmg = dmgAfterArmor * projRedMult;
-            const blockedByProj = dmgAfterArmor - finalProjDmg;
+                const finalProjDmg = dmgAfterArmor * projRedMult;
+                const blockedByProj = dmgAfterArmor - finalProjDmg;
 
-            player.damageBlockedByArmor += blockedByArmor;
-            player.damageBlockedByProjectileReduc += blockedByProj;
-            player.damageBlocked += (blockedByArmor + blockedByProj);
+                p.damageBlockedByArmor += blockedByArmor;
+                p.damageBlockedByProjectileReduc += blockedByProj;
+                p.damageBlocked += (blockedByArmor + blockedByProj);
 
-            const dmg = finalProjDmg;
+                const dmg = finalProjDmg;
 
-            // Check Shield Chunks
-            let absorbedDmg = 0;
-            if (player.shieldChunks && player.shieldChunks.length > 0) {
-                // Sort by soonest expiring
-                player.shieldChunks.sort((a, b) => a.expiry - b.expiry);
-                let remainingToAbsorb = dmg;
-                for (let k = 0; k < player.shieldChunks.length; k++) {
-                    const chunk = player.shieldChunks[k];
-                    if (chunk.amount >= remainingToAbsorb) {
-                        chunk.amount -= remainingToAbsorb;
-                        absorbedDmg += remainingToAbsorb;
-                        remainingToAbsorb = 0;
-                        break;
-                    } else {
-                        absorbedDmg += chunk.amount;
-                        remainingToAbsorb -= chunk.amount;
-                        chunk.amount = 0;
+                // Check Shield Chunks
+                let absorbedDmg = 0;
+                if (p.shieldChunks && p.shieldChunks.length > 0) {
+                    p.shieldChunks.sort((a: any, b: any) => a.expiry - b.expiry);
+                    let remainingToAbsorb = dmg;
+                    for (let k = 0; k < p.shieldChunks.length; k++) {
+                        const chunk = p.shieldChunks[k];
+                        if (chunk.amount >= remainingToAbsorb) {
+                            chunk.amount -= remainingToAbsorb;
+                            absorbedDmg += remainingToAbsorb;
+                            remainingToAbsorb = 0;
+                            break;
+                        } else {
+                            absorbedDmg += chunk.amount;
+                            remainingToAbsorb -= chunk.amount;
+                            chunk.amount = 0;
+                        }
+                    }
+                    p.shieldChunks = p.shieldChunks.filter((c: any) => c.amount > 0);
+                }
+
+                const finalDmg = Math.max(0, dmg - absorbedDmg);
+                p.damageBlockedByShield += absorbedDmg;
+                p.damageBlocked += absorbedDmg;
+
+                if (dmg > 0) {
+                    const kinLvl = getHexLevel(state, 'KineticBattery');
+                    if (kinLvl >= 1) {
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (triggerZap) triggerZap(state, p);
+                    }
+
+                    if (finalDmg > 0) {
+                        p.curHp -= finalDmg;
+                        p.damageTaken += finalDmg;
+                        p.lastHitDamage = finalDmg;
+                        if (onEvent) onEvent('player_hit', { dmg: finalDmg, playerId: p.id });
+                    }
+
+                    if (p.curHp <= 0 && !state.gameOver) {
+                        // In multiplayer, if ANY player dies, is it game over? 
+                        // Usually yes for survivors, or they become ghosts.
+                        // For now we keep the existing logic.
+                        state.gameOver = true;
+                        p.deathCause = 'Died from Enemy Projectile';
+                        if (onEvent) onEvent('game_over');
                     }
                 }
-                player.shieldChunks = player.shieldChunks.filter(c => c.amount > 0);
+                spawnFloatingNumber(state, p.x, p.y, Math.round(dmg).toString(), '#ef4444', false);
+
+                enemyBullets.splice(i, 1);
+                break; // Break the player list loop as this bullet is now gone
             }
-
-            const finalDmg = Math.max(0, dmg - absorbedDmg);
-            player.damageBlockedByShield += absorbedDmg;
-            player.damageBlocked += absorbedDmg;
-            // User: "dmg blocked not working should show how much was blocked by armorm, Colision dmg reduction and projcetile reducitom"
-            // I'll keep the breakdown separate as requested.
-
-            if (dmg > 0) {
-                // Kinetic Battery: Trigger Zap on Hit (even if shielded)
-                const kinLvl = getHexLevel(state, 'KineticBattery');
-                if (kinLvl >= 1) {
-                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                    if (triggerZap) triggerZap(state, player, kinLvl);
-                }
-
-                if (finalDmg > 0) {
-                    player.curHp -= finalDmg;
-                    player.damageTaken += finalDmg;
-                    player.lastHitDamage = finalDmg;
-                    if (onEvent) onEvent('player_hit', { dmg: finalDmg });
-                }
-
-                if (player.curHp <= 0 && !state.gameOver) {
-                    state.gameOver = true;
-                    player.deathCause = 'Died from Enemy Projectile';
-                    if (onEvent) onEvent('game_over');
-                }
-            }
-            spawnFloatingNumber(state, player.x, player.y, Math.round(dmg).toString(), '#ef4444', false);
-
-            enemyBullets.splice(i, 1);
-            continue;
         }
 
         if (eb.life <= 0) {
@@ -952,8 +965,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
         }
     }
 
-    // Shield Cleanup
-    if (player.shieldChunks) {
-        player.shieldChunks = player.shieldChunks.filter(c => now < c.expiry && c.amount > 0);
-    }
+    // Shield Cleanup for ALL players
+    Object.values(state.players).forEach(p => {
+        if (p.shieldChunks) {
+            p.shieldChunks = p.shieldChunks.filter((c: any) => now < c.expiry && c.amount > 0);
+        }
+    });
 }

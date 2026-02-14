@@ -140,29 +140,20 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                     {/* Stats Table */}
                     <div className="stats-calculations" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
                         {(() => {
-                            const arenaIdx = getArenaIndex(player.x, player.y);
-                            const surgeMult = gameState.activeBlueprintBuffs['ARENA_SURGE'] ? 2.0 : 1.0;
-                            let hpMult = arenaIdx === 2 ? 1 + (0.2 * surgeMult) : 1;
-                            let regMult = arenaIdx === 2 ? 1 + (0.2 * surgeMult) : 1;
-
-                            if (player.buffs?.puddleRegen) {
-                                hpMult *= 1.25;
-                                regMult *= 1.25;
-                            }
-
                             return (
                                 <>
-                                    <StatRow label="Health" stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={hpMult} />
-                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={regMult} />
-                                    <StatRow label="Damage" stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} />
+                                    <StatRow label="Health" stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label="Damage" stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
                                     <StatRow
                                         label="Attack Speed"
                                         stat={player.atk}
                                         legendaryBonusFlat={player.atk.hexFlat || 0}
                                         legendaryBonusPct={player.atk.hexMult || 0}
+                                        arenaMult={gameState.dmgAtkBuffMult}
                                         extraInfo={(() => {
                                             // Updated formula: 300 atk = 1.65/s, 500 atk = 3/s, 20000 atk = ~10/s
-                                            const score = calcStat(player.atk);
+                                            const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
                                             const sps = 2.64 * Math.log(score / 100) - 1.25;
                                             return `(${sps.toFixed(2)}/s)`;
                                         })()}

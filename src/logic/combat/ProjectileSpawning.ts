@@ -1,4 +1,4 @@
-import type { GameState } from '../core/types';
+import type { GameState, Player } from '../core/types';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
@@ -11,17 +11,14 @@ import { PALETTES } from '../core/constants';
 import { getPlayerThemeColor } from '../utils/helpers';
 
 // Helper: Trigger Shockwave
-export function triggerShockwave(state: GameState, angle: number, level: number) {
-    // Lvl 1: 75% dmg, 450 range (was 2500, then 500)
-    // Lvl 3: 125% dmg, 600 range (was 3750, then 750)
-    // Lvl 4: Backwards wave too
-
+export function triggerShockwave(state: GameState, player: Player, angle: number, level: number) {
+    // ...
     const range = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_RANGE.LVL3 : GAME_CONFIG.SKILLS.WAVE_RANGE.LVL1;
     const damageMult = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL3 : GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL1;
     const coneHalfAngle = 0.7; // ~80 degrees total
-    const themeColor = getPlayerThemeColor(state);
+    const themeColor = getPlayerThemeColor(state, player);
 
-    const playerDmg = calcStat(state.player.dmg);
+    const playerDmg = calcStat(player.dmg);
     const waveDmg = playerDmg * damageMult;
 
     const castWave = (waveAngle: number) => {
@@ -31,8 +28,8 @@ export function triggerShockwave(state: GameState, angle: number, level: number)
         const waveLife = (range / speed) * 1.5; // Lingers slightly longer for visual overlap
 
         state.particles.push({
-            x: state.player.x,
-            y: state.player.y,
+            x: player.x,
+            y: player.y,
             vx: Math.cos(waveAngle) * speed,
             vy: Math.sin(waveAngle) * speed,
             life: waveLife,
@@ -48,8 +45,8 @@ export function triggerShockwave(state: GameState, angle: number, level: number)
         // Damage Logic (Instant Hitscan for gameplay feel, visualization catches up)
         state.enemies.forEach(e => {
             if (e.dead || e.isFriendly || e.isZombie) return;
-            const dx = e.x - state.player.x;
-            const dy = e.y - state.player.y;
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
             const dist = Math.hypot(dx, dy);
 
             if (dist < range) {
@@ -79,7 +76,7 @@ export function triggerShockwave(state: GameState, angle: number, level: number)
 
                     if (dmgDealt > 0) {
                         e.hp -= dmgDealt;
-                        state.player.damageDealt += dmgDealt;
+                        player.damageDealt += dmgDealt;
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
                         // Flash hit effect
                         spawnParticles(state, e.x, e.y, '#EF4444', 3);
@@ -102,8 +99,8 @@ export function triggerShockwave(state: GameState, angle: number, level: number)
     }
 }
 
-export function spawnBullet(state: GameState, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
-    if (state.player.immobilized) return;
+export function spawnBullet(state: GameState, player: Player, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
+    if (player.immobilized) return;
     const spd = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
 
     // --- ComCrit Logic ---
@@ -130,7 +127,7 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
 
     let isHyperPulse = false;
     let bulletSize = 4;
-    let pClass = PLAYER_CLASSES.find(c => c.id === state.player.playerClass);
+    let pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
     let bulletColor: string | undefined = pClass?.themeColor;
     let bulletPierce = pierce;
     // Malware pierce logic is now handled in player.pierce initialization in GameState.ts
@@ -138,30 +135,30 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
     // --- ComWave Logic ---
     const waveLevel = getHexLevel(state, 'ComWave');
     if (waveLevel > 0) {
-        state.player.shotsFired = (state.player.shotsFired || 0) + 1;
-        if (state.player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
-            triggerShockwave(state, angle + offsetAngle, waveLevel);
+        player.shotsFired = (player.shotsFired || 0) + 1;
+        if (player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
+            triggerShockwave(state, player, angle + offsetAngle, waveLevel);
         }
     }
 
     // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
-    if (state.player.playerClass === 'stormstrike') {
+    if (player.playerClass === 'stormstrike') {
         const now = Date.now();
         // Initialize if undefined
-        if (!state.player.lastCosmicStrikeTime) {
-            state.player.lastCosmicStrikeTime = 0; // Ready immediately? Or start on cooldown? Usually ready.
+        if (!player.lastCosmicStrikeTime) {
+            player.lastCosmicStrikeTime = 0; // Ready immediately? Or start on cooldown? Usually ready.
         }
 
         const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
         const cooldown = 8000 * cdMod; // 8 Seconds Static * Reduction
-        if (now - state.player.lastCosmicStrikeTime >= cooldown) {
+        if (now - player.lastCosmicStrikeTime >= cooldown) {
             // Orbital Strike Trigger
             playSfx('lock-on'); // Targeting sound
-            state.player.lastCosmicStrikeTime = now;
+            player.lastCosmicStrikeTime = now;
 
             // Determine Impact Point
-            let tx = state.player.targetX;
-            let ty = state.player.targetY;
+            let tx = player.targetX;
+            let ty = player.targetY;
 
             // Range-limited Targeting Logic (1000px)
             const maxRange = 1000;
@@ -178,7 +175,7 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
             } else {
                 // Fallback if no enemies within range: Project out from cursor/aim up to maxRange
                 const angleToUse = (tx !== undefined && ty !== undefined)
-                    ? Math.atan2(ty - state.player.y, tx - state.player.x)
+                    ? Math.atan2(ty - player.y, tx - player.x)
                     : (angle + offsetAngle);
 
                 tx = x + Math.cos(angleToUse) * maxRange;
@@ -200,7 +197,7 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
                 duration: 0.3, // 0.3s delay (Reverted to ensure hits)
                 creationTime: Date.now(),
                 level: 1,
-                casterId: state.player.playerClass === 'stormstrike' ? 1 : 0
+                casterId: player.playerClass === 'stormstrike' ? 1 : 0
             });
 
             // Visual Marker immediately
@@ -212,12 +209,13 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
 
     // --- CLASS MODIFIERS: Stinger -> Stinger id is gone, replaced by others. 
     // Wait, I should use the new IDs.
-    const classStats = PLAYER_CLASSES.find(c => c.id === state.player.playerClass);
+    const classStats = PLAYER_CLASSES.find(c => c.id === player.playerClass);
     const resonance = getChassisResonance(state);
 
     const bulletId = Math.random();
     const b: any = {
         id: bulletId,
+        ownerId: player.id,
         x, y,
         vx: Math.cos(angle + offsetAngle) * spd,
         vy: Math.sin(angle + offsetAngle) * spd,
@@ -238,20 +236,20 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
     };
 
     // --- CLASS MODIFIERS: Aigis-Vortex Initial State ---
-    if (state.player.playerClass === 'aigis') {
+    if (player.playerClass === 'aigis') {
         const RING_THRESHOLD = 200; // Updated per user request
 
         // Helper to handle ring logic
         const handleRingSpawn = (baseBullet: any, distance: number) => {
             // Ensure map exists (backwards compat)
-            if (!state.player.aigisRings) state.player.aigisRings = {};
+            if (!player.aigisRings) player.aigisRings = {};
 
             // Get or Init Ring Data
-            if (!state.player.aigisRings[distance]) {
-                state.player.aigisRings[distance] = { count: 0, totalDmg: 0 };
+            if (!player.aigisRings[distance]) {
+                player.aigisRings[distance] = { count: 0, totalDmg: 0 };
             }
 
-            const ringData = state.player.aigisRings[distance];
+            const ringData = player.aigisRings[distance];
 
             // If we are ALREADY at/above threshold, we just add ammo/damage to the existing ring
             // (Or create the ring if it doesn't exist yet visually but logic says we should)
@@ -265,7 +263,7 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
                 if (existingRing) {
                     existingRing.ringAmmo = ringData.count;
                     // Update dmg? We might want the ring to update its damage dynamically or per tick
-                    // For now, let's keep it simple: Ring Bullet Logic will reference `state.player.aigisRings[dist]` for damage calc
+                    // For now, let's keep it simple: Ring Bullet Logic will reference `player.aigisRings[dist]` for damage calc
                     return;
                 } else {
                     // Threshold reached but no ring? Trigger FUSION.
@@ -293,8 +291,8 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
                     // Spawn The Ring Entity
                     const ringProj: any = {
                         id: Math.random(),
-                        x: state.player.x,
-                        y: state.player.y,
+                        x: player.x,
+                        y: player.y,
                         vx: 0, vy: 0,
                         dmg: 0, // Damage is calculated dynamically from totalDmg / count ratio
                         pierce: 999999,
@@ -312,7 +310,7 @@ export function spawnBullet(state: GameState, x: number, y: number, angle: numbe
                     state.bullets.push(ringProj);
 
                     // Visual Flare
-                    spawnParticles(state, state.player.x, state.player.y, baseBullet.color || '#22d3ee', 20);
+                    spawnParticles(state, player.x, player.y, baseBullet.color || '#22d3ee', 20);
                     playSfx('rare-spawn'); // Fusion sound
                     return;
                 }

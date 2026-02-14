@@ -200,6 +200,7 @@ export interface PlayerClass {
 
 export interface Bullet {
     id: number;
+    ownerId?: string;
     x: number;
     y: number;
     vx: number;

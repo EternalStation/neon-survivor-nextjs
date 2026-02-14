@@ -1,5 +1,5 @@
 
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy, Player } from '../core/types';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
@@ -9,6 +9,7 @@ import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
+import { spawnBullet } from '../combat/ProjectileSpawning';
 
 export function handlePlayerCombat(
     state: GameState,
@@ -16,7 +17,7 @@ export function handlePlayerCombat(
     onEvent?: (type: string, data?: any) => void,
     overridePlayer?: any
 ) {
-    const player = overridePlayer || state.player;
+    const player: Player = overridePlayer || state.player;
 
     // --- Kinetic Battery Skill Sync ---
     const kinSkill = player.activeSkills.find((s: any) => s.type === 'KineticBattery');
@@ -135,8 +136,22 @@ export function handlePlayerCombat(
         }
     }
 
+    // SHOOTING LOGIC
+    const now = state.gameTime;
+    const atkAtkValue = calcStat(player.atk, state.dmgAtkBuffMult);
+    const shotsPerSec = Math.max(0.1, 2.64 * Math.log(atkAtkValue / 100) - 1.25);
+    const atkDelay = 1 / shotsPerSec;
+    if (now - (player.lastShot || 0) >= atkDelay) {
+        // Only host or guest for themselves should trigger firing logic
+        // But in this logic loop, we only run for players we control or if we are the host.
+        player.lastShot = now;
+        const dmg = calcStat(player.dmg, state.dmgAtkBuffMult);
+        spawnBullet(state, player, player.x, player.y, player.targetAngle, dmg, player.pierce);
+        playSfx('shoot');
+    }
+
     // Contact Damage
-    handleEnemyContact(state, onEvent);
+    handleEnemyContact(state, onEvent, player);
 
     // Pending Zaps
     processPendingZaps(state, onEvent);
@@ -175,7 +190,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     const splitDmg = e.maxHp / linkedTargets.length;
                     linkedTargets.forEach(target => {
                         target.hp -= splitDmg;
-                        state.player.damageDealt += splitDmg;
+                        player.damageDealt += splitDmg;
                         spawnFloatingNumber(state, target.x, target.y, Math.round(splitDmg).toString(), linkColor, false);
                     });
                     if (!e.boss) e.hp = 0;
@@ -195,7 +210,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
             const drCap = 0.95;
             const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
 
-            if (kinLvl >= 1) triggerKineticBatteryZap(state, player, kinLvl);
+            if (kinLvl >= 1) triggerKineticBatteryZap(state, player);
 
             const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill');
             const colRedMult = 1 - (Math.min(80, colRedRaw) / 100);
@@ -337,21 +352,25 @@ function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: stri
     }
 }
 
-export function triggerKineticBatteryZap(state: GameState, source: { x: number, y: number }, _kinLvl: number) {
-    const actualKinLvl = getHexLevel(state, 'KineticBattery');
-    if (actualKinLvl < 1) return;
+export function triggerKineticBatteryZap(state: GameState, player: Player, source?: { x: number, y: number }) {
+    const kinLvl = getHexLevel(state, 'KineticBattery');
+    if (kinLvl < 1) return;
     const now = state.gameTime;
-    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (state.player.cooldownReduction || 0));
-    if (state.player.lastKineticShockwave && now < state.player.lastKineticShockwave + (5.0 * cdMod)) return;
+    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
+    if (player.lastKineticShockwave && now < player.lastKineticShockwave + (5.0 * cdMod)) return;
 
-    state.player.lastKineticShockwave = now;
-    const shockDmg = calcStat(state.player.arm) * 1.0; // Updated to 100% Armor
+    player.lastKineticShockwave = now;
+    const shockDmg = calcStat(player.arm) * 1.0; // Updated to 100% Armor
+
+    // Default source to player if missing
+    const sx = source ? source.x : player.x;
+    const sy = source ? source.y : player.y;
 
     let first: Enemy | null = null;
     let minD = Infinity;
     state.enemies.forEach(target => {
         if (target.dead || target.isNeutral) return;
-        const d = Math.hypot(target.x - source.x, target.y - source.y);
+        const d = Math.hypot(target.x - sx, target.y - sy);
         if (d < minD) { minD = d; first = target; }
     });
 
@@ -373,7 +392,7 @@ export function triggerKineticBatteryZap(state: GameState, source: { x: number, 
 
         state.pendingZaps.push({
             targetIds, dmg: shockDmg, nextZapTime: now, currentIndex: 0,
-            sourcePos: { x: source.x, y: source.y }, history: []
+            sourcePos: { x: sx, y: sy }, history: []
         });
         playSfx('wall-shock');
     }

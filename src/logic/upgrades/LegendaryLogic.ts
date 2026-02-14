@@ -1,4 +1,4 @@
-import type { GameState, LegendaryHex, LegendaryType } from '../core/types';
+import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/types';
 import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 
@@ -435,7 +435,8 @@ export function recordLegendarySouls(state: GameState, souls: number) {
     // but the logic is now fully dynamic in calculateLegendaryBonus
 }
 
-export function calculateLegendaryBonus(state: GameState, statKey: string, skipMultiplier: boolean = false): number {
+export function calculateLegendaryBonus(state: GameState, statKey: string, skipMultiplier: boolean = false, overridePlayer?: Player): number {
+    const player = overridePlayer || state.player;
     let total = 0;
     state.moduleSockets.hexagons.forEach((hex) => {
         if (!hex) return;
@@ -509,7 +510,7 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
                 // Lvl 4: 0.1% of MaxHP per soul
                 const lvl4Souls = getSoulsSinceLevel(4);
                 if (lvl4Souls > 0) {
-                    const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
+                    const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
                     total += maxHp * (lvl4Souls * 0.001); // 0.1% = 0.001
                 }
             }
@@ -539,8 +540,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         // Kinetic Battery Logic
         if (hex.type === 'KineticBattery') {
             if (statKey === 'arm_pct_conditional' && hex.level >= 3) {
-                const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
-                if (state.player.curHp < maxHp * 0.5) {
+                const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
+                if (player.curHp < maxHp * 0.5) {
                     total += 100 * multiplier;
                 }
             }
@@ -550,7 +551,7 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         if (hex.type === 'RadiationCore') {
             // Lvl 3: Aura damage increases by 1% for every 1% of missing HP
             if (statKey === 'aura_dmg_missing_hp' && hex.level >= 3) {
-                const missing = 1 - (state.player.curHp / Math.max(1, state.player.hp.flat + state.player.hp.base));
+                const missing = 1 - (player.curHp / Math.max(1, player.hp.flat + player.hp.base));
                 const pctMissing = Math.max(0, missing * 100);
                 total += pctMissing * 0.01 * multiplier;
             }
@@ -560,14 +561,14 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         if (hex.type === 'ChronoPlating') {
             // Lvl 1: DMG% & ATS% increased by 1% of your Armor
             if (hex.level >= 1) {
-                const totalArmor = calcStat(state.player.arm);
+                const totalArmor = calcStat(player.arm);
                 // 1% per point of armor -> totalArmor * 1
                 if (statKey === 'dmg_pct_per_kill') total += totalArmor * 1.0 * multiplier;
                 if (statKey === 'ats_pct_per_kill') total += totalArmor * 1.0 * multiplier;
             }
             // Lvl 2: +1% DMG for every 100 HP
             if (statKey === 'dmg_pct_per_hp' && hex.level >= 2) {
-                const maxHp = calcStat(state.player.hp, state.hpRegenBuffMult);
+                const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
                 total += (maxHp / 100) * 1.0 * multiplier;
             }
         }
