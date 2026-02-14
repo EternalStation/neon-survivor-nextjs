@@ -9,6 +9,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
 import { PALETTES } from '../core/constants';
 import { getPlayerThemeColor } from '../utils/helpers';
+import { networkManager } from '../networking/NetworkManager';
 
 // Helper: Trigger Shockwave
 export function triggerShockwave(state: GameState, player: Player, angle: number, level: number) {
@@ -356,6 +357,19 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
     state.bullets.push(b);
 
+    // Multiplayer: Sync bullet spawn to other players (Host only)
+    if (state.multiplayer.active && state.multiplayer.isHost) {
+        networkManager.broadcastBulletSpawn({
+            x: b.x,
+            y: b.y,
+            angle: angle + offsetAngle,
+            dmg: b.dmg,
+            pierce: b.pierce,
+            ownerId: player.id,
+            color: b.color,
+            isEnemy: false
+        });
+    }
 }
 
 export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
@@ -380,4 +394,17 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         color: brightColor, // Ignore passed color, use bright era color
         size: 4
     });
+
+    // Multiplayer Sync
+    if (state.multiplayer.active && state.multiplayer.isHost) {
+        networkManager.broadcastBulletSpawn({
+            x, y,
+            angle,
+            dmg,
+            pierce: 0,
+            ownerId: 'enemy',
+            color: brightColor,
+            isEnemy: true
+        });
+    }
 }

@@ -5,6 +5,18 @@ export type NetworkMessage =
     | { type: 'JOIN_REQUEST'; payload: { name: string } }
     | { type: 'JOIN_ACCEPT'; payload: { state: Partial<GameState>; peerIds: string[] } }
     | { type: 'STATE_UPDATE'; payload: Partial<GameState> }
+    | {
+        type: 'LITE_STATE_UPDATE'; payload: {
+            players?: Array<{ id: string, x: number, y: number, hp: number, angle: number }>,
+            enemies?: Array<{ id: number, x: number, y: number, hp: number }>,
+            time: number
+        }
+    }
+    | {
+        type: 'BULLET_SPAWN'; payload: {
+            x: number, y: number, angle: number, dmg: number, pierce: number, ownerId: string, color?: string, isEnemy: boolean
+        }
+    }
     | { type: 'INPUT_UPDATE'; payload: { id: string; keys: Record<string, boolean>; vector: { x: number; y: number }; mouse: { x: number; y: number } } }
     | { type: 'READY_STATUS'; payload: { id: string; ready: boolean } }
     | { type: 'START_GAME'; payload: { startTime: number } }
@@ -20,6 +32,8 @@ export class NetworkManager {
     private isHost: boolean = false;
     private onStateUpdate: ((state: Partial<GameState>) => void) | null = null;
     private onInputUpdate: ((id: string, data: any) => void) | null = null;
+    private onLiteStateUpdate: ((data: any) => void) | null = null;
+    private onBulletSpawn: ((data: any) => void) | null = null;
     private onPlayerJoin: ((id: string, name: string) => void) | null = null;
     private onReadyUpdate: ((id: string, ready: boolean) => void) | null = null;
     private onClassUpdate: ((id: string, classId: string) => void) | null = null;
@@ -122,6 +136,12 @@ export class NetworkManager {
             case 'STATE_UPDATE':
                 if (this.onStateUpdate) this.onStateUpdate(msg.payload);
                 break;
+            case 'LITE_STATE_UPDATE':
+                if (this.onLiteStateUpdate) this.onLiteStateUpdate(msg.payload);
+                break;
+            case 'BULLET_SPAWN':
+                if (this.onBulletSpawn) this.onBulletSpawn(msg.payload);
+                break;
             case 'INPUT_UPDATE':
                 if (this.onInputUpdate) this.onInputUpdate(msg.payload.id, msg.payload);
                 // IF HOST: Relay to others
@@ -170,6 +190,24 @@ export class NetworkManager {
         });
     }
 
+    public broadcastLiteState(payload: any): void {
+        if (!this.isHost) return;
+        this.broadcast({
+            type: 'LITE_STATE_UPDATE',
+            payload
+        });
+    }
+
+    public broadcastBulletSpawn(payload: {
+        x: number, y: number, angle: number, dmg: number, pierce: number, ownerId: string, color?: string, isEnemy: boolean
+    }): void {
+        if (!this.isHost) return;
+        this.broadcast({
+            type: 'BULLET_SPAWN',
+            payload
+        });
+    }
+
     public broadcast(msg: NetworkMessage): void {
         Object.values(this.connections).forEach(conn => {
             if (conn.open) conn.send(msg);
@@ -192,6 +230,8 @@ export class NetworkManager {
 
     public setCallbacks(callbacks: {
         onStateUpdate?: (state: Partial<GameState>) => void;
+        onLiteStateUpdate?: (data: any) => void;
+        onBulletSpawn?: (data: any) => void;
         onInputUpdate?: (id: string, data: any) => void;
         onPlayerJoin?: (id: string, name: string) => void;
         onReadyUpdate?: (id: string, ready: boolean) => void;
@@ -199,6 +239,8 @@ export class NetworkManager {
         onStartGame?: (startTime: number) => void;
     }) {
         this.onStateUpdate = callbacks.onStateUpdate || null;
+        this.onLiteStateUpdate = callbacks.onLiteStateUpdate || null;
+        this.onBulletSpawn = callbacks.onBulletSpawn || null;
         this.onInputUpdate = callbacks.onInputUpdate || null;
         this.onPlayerJoin = callbacks.onPlayerJoin || null;
         this.onReadyUpdate = callbacks.onReadyUpdate || null;
