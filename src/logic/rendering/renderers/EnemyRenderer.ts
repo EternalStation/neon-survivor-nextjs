@@ -318,7 +318,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         if (e.isAnomaly && !e.dead) {
             ctx.save();
             const time = state.gameTime;
-            const burnRadius = 300;
+            const burnRadius = 390; // Logic radius is 390
             const pulse = 1.0 + Math.sin(time * 4) * 0.05;
 
             // 1. Molten Ground Zone (Similar to Ritual)
@@ -339,13 +339,26 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
             ctx.fill();
 
-            // 2. Central Heat Distortion Glow
+            // 2. Central Heat Distortion Glow - REMOVED to avoid confusion with "Circle" shape
+            // Instead, maybe draw a jagged "aura" or just rely on the shape itself doing the work.
+            // Let's add a jagged, sinister aura that matches the Bull/Demon theme.
             ctx.shadowBlur = 40;
-            ctx.shadowColor = '#f59e0b';
+            ctx.shadowColor = '#dc2626';
             ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.6;
             ctx.beginPath();
-            ctx.arc(e.x, e.y, e.size * 1.8, 0, Math.PI * 2);
+
+            // Draw a rough, spiky aura instead of a circle
+            const auraPoints = 16;
+            for (let i = 0; i <= auraPoints; i++) {
+                const ang = (i / auraPoints) * Math.PI * 2;
+                const r = e.size * (1.6 + Math.sin(ang * 5 + time * 8) * 0.2);
+                const px = e.x + Math.cos(ang) * r;
+                const py = e.y + Math.sin(ang) * r;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
             ctx.stroke();
 
             ctx.restore();
@@ -627,122 +640,113 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 return { x: px + offset, y: py };
             };
             if (e.shape === 'abomination') {
-                // ANOMALY BOSS: The "Demon Face" - Sinister, Horned, Jagged Silhouette
-                const points = 24; // More points for finer detail
-                const seed = (e.id || 0.5) * 777;
-
-                // 1. MAIN SKULL/HEAD MASS (Jagged and non-uniform)
-                ctx.beginPath();
-                for (let i = 0; i <= points; i++) {
-                    const ang = (i / points) * Math.PI * 2;
-                    // Distort shape to be slightly taller/ovoid
-                    const stretch = 1.0 + Math.abs(Math.sin(ang)) * 0.2;
-                    // Jitter for jaggedness
-                    const jitter = Math.sin(seed + i * 1.5 + state.gameTime * 4) * (size * 0.15);
-                    const r = (size * stretch) + jitter;
-                    const p = wp(Math.cos(ang) * r, Math.sin(ang) * r);
-                    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-                }
-                ctx.closePath();
-
-                // 2. THORNS & FACE ORIENTATION (Locked on player)
-                // We calculate the angle to player and subtract the context's current rotation (e.rotationPhase)
-                // so that the face Always looks at the player regardless of how the head mass spins.
+                // ANOMALY BOSS: TRUE BULL HEAD SHAPE
+                // No random jitter on vertices to keep shape clean and recognizable
+                // Face orientation: locked on player
                 const dx = state.player.x - e.x;
                 const dy = state.player.y - e.y;
                 const angleToPlayer = Math.atan2(dy, dx);
-                // The base face orientation is -PI/2 (Forward).
-                // We need the relative angle to counter-rotate the internal features.
+                // Points UP by default, so +90 deg correction
                 const relativeAngle = angleToPlayer - (e.rotationPhase || 0) + Math.PI / 2;
 
                 ctx.save();
                 ctx.rotate(relativeAngle);
 
+                // --- 1. BULL HEAD SILHOUETTE ---
+                // Wide forehead, narrowing to a strong snout
+                const s = size; // Base scale
+                const snoutW = s * 0.5;
+                const snoutH = s * 0.9;
+                const headCW = s * 0.8; // Cheek width (half)
+                const headCY = -s * 0.2; // Cheek Y pos
+
+                ctx.beginPath();
+                // Start top center (between horns)
+                ctx.moveTo(0, -s * 0.8);
+                // Top Right Head
+                ctx.lineTo(s * 0.5, -s * 0.8);
+                // Right Temple
+                ctx.lineTo(headCW, -s * 0.5);
+                // Right Cheekbone (widest)
+                ctx.lineTo(headCW, headCY);
+                // Right Jaw -> Snout connection
+                ctx.lineTo(snoutW, s * 0.4);
+                // Right Nostril flare
+                ctx.lineTo(snoutW * 1.2, s * 0.7);
+                // Snout bottom (Chin)
+                ctx.lineTo(0, s * 1.0);
+                // Left Nostril flare
+                ctx.lineTo(-snoutW * 1.2, s * 0.7);
+                // Left Jaw -> Snout connection
+                ctx.lineTo(-snoutW, s * 0.4);
+                // Left Cheekbone
+                ctx.lineTo(-headCW, headCY);
+                // Left Temple
+                ctx.lineTo(-headCW, -s * 0.5);
+                // Top Left Head
+                ctx.lineTo(-s * 0.5, -s * 0.8);
+                // Close at top center
+                ctx.lineTo(0, -s * 0.8);
+                ctx.closePath();
+
+                // --- 2. LONG HORNS ---
+                // Drawn as separate path to ensure they look sharp and attached
                 const drawHorn = (side: number) => {
-                    const hornBaseAngle = -Math.PI / 2 + (0.8 * side);
-                    // Longer, more "thorn-like" spikes
-                    const hornLen = size * 1.5;
-                    const hP1 = wp(Math.cos(hornBaseAngle - 0.2) * size * 0.8, Math.sin(hornBaseAngle - 0.2) * size * 0.8);
-                    const hP2 = wp(Math.cos(hornBaseAngle) * (size + hornLen), Math.sin(hornBaseAngle) * (size + hornLen) - (size * 0.4));
-                    const hP3 = wp(Math.cos(hornBaseAngle + 0.2) * size * 0.8, Math.sin(hornBaseAngle + 0.2) * size * 0.8);
-                    ctx.moveTo(hP1.x, hP1.y);
-                    ctx.lineTo(hP2.x, hP2.y);
-                    ctx.lineTo(hP3.x, hP3.y);
-                    ctx.closePath();
+                    const hornBaseX = side * s * 0.5;
+                    const hornBaseY = -s * 0.8;
+                    const hornTipX = side * s * 2.2; // Very wide/long
+                    const hornTipY = -s * 1.4; // Foreward/Upward curve
+
+                    // Base Connection
+                    ctx.moveTo(hornBaseX, hornBaseY);
+                    // Outer Curve to Tip
+                    ctx.quadraticCurveTo(
+                        side * s * 1.5, -s * 0.7, // Control point: wide out
+                        hornTipX, hornTipY        // Tip
+                    );
+                    // Inner Curve back to Head (thinner tip, thick base)
+                    ctx.quadraticCurveTo(
+                        side * s * 0.9, -s * 0.4, // Control point: closer to head
+                        hornBaseX - (side * s * 0.2), hornBaseY + (s * 0.3) // Inner base
+                    );
                 };
                 drawHorn(1);
                 drawHorn(-1);
 
-                // Additional "Thorns" (Spikes) always pointing at player
-                const drawSpike = (offsetAngle: number, lenMult: number) => {
-                    const ang = -Math.PI / 2 + offsetAngle;
-                    const len = size * lenMult;
-                    ctx.beginPath();
-                    ctx.moveTo(Math.cos(ang - 0.1) * size * 0.9, Math.sin(ang - 0.1) * size * 0.9);
-                    ctx.lineTo(Math.cos(ang) * (size + len), Math.sin(ang) * (size + len));
-                    ctx.lineTo(Math.cos(ang + 0.1) * size * 0.9, Math.sin(ang + 0.1) * size * 0.9);
-                    ctx.fill();
-                    ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
-                };
-                ctx.fillStyle = coreColor;
-                drawSpike(-0.4, 0.8);
-                drawSpike(0.4, 0.8);
-                drawSpike(0, 1.2);
-
+                // Draw Core or Detail
                 if (isCore) {
-                    // DEMONIC FEATURES (Now tracked via rotation)
-                    ctx.fillStyle = '#0a0a0a'; // Deep Void Black for pits
+                    ctx.closePath(); // Ensure main path closed if just filling core
+                    // For core pass, maybe just a smaller diamond in center?
+                    // The function continues to fill/strike current path...
+                } else {
+                    // --- FACE DETAILS (Eyes, Nostrils) ---
+                    // We draw these as "holes" (canvas winding rule) or separate fills?
+                    // Render function fills current path with 'InnerColor'.
+                    // We'll draw details on TOP after this function returns via separate logic?
+                    // No, `renderEnemies` calls `drawShape(size, true); ctx.fill();`
+                    // So we are defining the path TO BE FILLED.
 
-                    // SINISTER SLIT EYES
-                    const eyeY = -size * 0.35;
-                    const eyeX = size * 0.45;
-                    const eyeW = size * 0.4;
-                    const eyeH = size * 0.15;
+                    // Let's add eyes/nostrils as holes in the path by drawing them counter-clockwise?
+                    // Or just let main fill happen, and draw details later?
+                    // The renderer logic is:
+                    // 1. Stroke Outer (Larger)
+                    // 2. Fill Inner (Normal)
+                    // 3. Boss Overlay (Black clip)
 
-                    const drawEye = (side: number) => {
-                        ctx.save();
-                        ctx.translate(side * eyeX, eyeY);
-                        ctx.rotate(0.3 * side + Math.sin(state.gameTime * 8) * 0.05);
-                        ctx.beginPath();
-                        ctx.moveTo(-eyeW / 2, 0);
-                        ctx.quadraticCurveTo(0, -eyeH, eyeW / 2, 0);
-                        ctx.quadraticCurveTo(0, eyeH / 4, -eyeW / 2, 0);
-                        ctx.fill();
-
-                        // Burning Pupil
-                        ctx.fillStyle = '#ff4400';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#ff4400';
-                        ctx.beginPath();
-                        ctx.arc(0, 0, eyeH * 0.6, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.restore();
-                    };
-                    drawEye(1);
-                    drawEye(-1);
-
-                    // JAGGED VOID MOUTH
-                    ctx.fillStyle = '#0a0a0a';
-                    ctx.beginPath();
-                    const mouthY = size * 0.3;
-                    const mWidth = size * 0.7;
-                    ctx.moveTo(-mWidth, mouthY);
-                    for (let i = 0; i <= 8; i++) {
-                        const mx = -mWidth + (i / 8) * (mWidth * 2);
-                        const toothOffset = i % 2 === 0 ? size * 0.35 : 0;
-                        const my = mouthY + toothOffset + Math.sin(state.gameTime * 5 + i) * 4;
-                        ctx.lineTo(mx, my);
-                    }
-                    ctx.lineTo(mWidth, mouthY);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // Interior Glow particles
-                    if (state.frameCount % 10 === 0) {
-                        spawnParticles(state, e.x, e.y, '#ef4444', 1, 4, 15, 'spark');
-                    }
+                    // To make them visible "inside", we can rely on proper geometry or the boss overlay.
+                    // But user said "looks like a crown and 2 eyes". 
+                    // Let's stick to the silhouette for the fill.
                 }
-                ctx.restore(); // Restore orientation tracking
+
+                if (!isCore) {
+                    // Custom Detail Rendering (manually invoked here as cheat since we are inside path def)
+                    // We can't really draw *pixels* here because we are building a path for fill/stroke.
+                    // BUT, the renderer calls `drawShape` then `ctx.stroke()`.
+                    // If we want details, we have to wait or cheat.
+                }
+
+                ctx.restore();
+                // End of 'abomination' shape block
             } else if (e.shape === 'circle') {
                 if (warpAmp > 0) {
                     for (let i = 0; i <= 20; i++) {

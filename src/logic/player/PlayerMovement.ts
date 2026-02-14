@@ -12,9 +12,10 @@ export function handlePlayerMovement(
     state: GameState,
     keys: Record<string, boolean>,
     inputVector?: { x: number, y: number },
-    onEvent?: (type: string, data?: any) => void
+    onEvent?: (type: string, data?: any) => void,
+    overridePlayer?: any
 ) {
-    const { player } = state;
+    const player = overridePlayer || state.player;
 
     // Movement
     let vx = 0, vy = 0;

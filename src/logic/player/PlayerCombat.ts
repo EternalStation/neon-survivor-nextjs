@@ -13,9 +13,10 @@ import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 export function handlePlayerCombat(
     state: GameState,
     mouseOffset?: { x: number, y: number },
-    onEvent?: (type: string, data?: any) => void
+    onEvent?: (type: string, data?: any) => void,
+    overridePlayer?: any
 ) {
-    const { player } = state;
+    const player = overridePlayer || state.player;
 
     // --- Kinetic Battery Skill Sync ---
     const kinSkill = player.activeSkills.find(s => s.type === 'KineticBattery');
@@ -141,13 +142,14 @@ export function handlePlayerCombat(
     processPendingZaps(state, onEvent);
 }
 
-export function handleEnemyContact(state: GameState, onEvent?: (type: string, data?: any) => void) {
-    const { player } = state;
+export function handleEnemyContact(state: GameState, onEvent?: (type: string, data?: any) => void, overridePlayer?: any) {
+    const player = overridePlayer || state.player;
     const now = state.gameTime;
     const kinLvl = getHexLevel(state, 'KineticBattery');
 
     state.enemies.forEach(e => {
         if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground') return;
+        if (e.spawnGracePeriod && e.spawnGracePeriod > 0) return; // Boss just spawned, no collision yet
 
         const dToE = Math.hypot(e.x - player.x, e.y - player.y);
         const contactDist = e.size + 18;
@@ -253,6 +255,9 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 if (actualDmg > 0) {
                     player.curHp -= actualDmg;
                     player.damageTaken += actualDmg;
+                    player.lastHitDamage = actualDmg;
+                    player.killerHp = e.hp;
+                    player.killerMaxHp = e.maxHp;
                 }
                 spawnFloatingNumber(state, player.x, player.y, Math.round(damageToApply).toString(), '#ef4444', false);
             }

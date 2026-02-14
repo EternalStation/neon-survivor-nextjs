@@ -96,7 +96,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 
     // Boss Size Scaling
     const baseSize = isBoss ? (isLvl3 ? 80 : (isLvl2 ? 70 : 65)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
-    const size = isAnomaly ? baseSize * 1.2 : baseSize; // Anomaly is 20% larger than normal boss tiers
+    const size = isAnomaly ? baseSize * 1.0 : baseSize; // Anomaly same size as normal boss tier
 
     const eventPalette = getEventPalette(state);
     let finalPalette = eventPalette || eraPalette.colors;
@@ -145,6 +145,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     };
 
     state.enemies.push(newEnemy);
+    return newEnemy;
 }
 
 export function spawnRareEnemy(state: GameState) {

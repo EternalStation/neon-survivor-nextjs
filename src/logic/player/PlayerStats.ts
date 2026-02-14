@@ -6,8 +6,8 @@ import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 
-export function updatePlayerStats(state: GameState) {
-    const { player } = state;
+export function updatePlayerStats(state: GameState, overridePlayer?: any) {
+    const player = overridePlayer || state.player;
 
     // Calculate and assign Hex bonuses to player stats for this frame
     player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill');

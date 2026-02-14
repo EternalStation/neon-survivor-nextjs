@@ -57,6 +57,7 @@ const formatLargeNum = (num: number | string) => {
     const value = typeof num === 'string' ? parseFloat(num) : num;
     if (isNaN(value)) return '0';
 
+    if (value >= 1000000000000000) return (value / 1000000000000000).toFixed(1) + 'Q';
     if (value >= 1000000000000) return (value / 1000000000000).toFixed(1) + 'T';
     if (value >= 1000000000) return (value / 1000000000).toFixed(1) + 'B';
     if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';

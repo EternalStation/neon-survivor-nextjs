@@ -1,4 +1,4 @@
-import type { MapPOI } from '../core/types';
+import type { GameState, MapPOI } from '../core/types';
 
 export const ARENA_RADIUS = 3750; // Increased by 3x (1250 -> 3750)
 export const MAP_GAP = 400;
@@ -386,3 +386,148 @@ export function relocatePOI(poi: MapPOI) {
     poi.active = (poi.type === 'anomaly');
 }
 
+
+// --- CORRUPTION LOGIC ---
+
+export const CORRUPTION_START_TIME = 0; // Immediate start for testing
+
+// Revert to 60 * 60 for production after testing, or keep low for testing as requested.
+// User initially said "60-70 mins", then "every 5 seconds... for now".
+// Let's use a scale: 0 -> full in X seconds.
+export const CORRUPTION_MAX_TIME = 60; // 60s as requested for testing
+
+export const SAFE_ZONE_PORTAL_RADIUS = 700;
+export const SAFE_ZONE_POI_RADIUS = 600;
+export const SAFE_ZONE_BOSS_RADIUS = 900;
+export const SAFE_ZONE_SHIP_RADIUS = 900;
+
+export const HEX_GRID_SIZE = 120; // Must match renderer
+
+// Corruption Stages
+export enum CorruptionStage {
+    HEALTHY = 0,
+    WARNING = 1, // Obsidian/Dark
+    ACTIVE = 2   // Red/Damage
+}
+
+export function getCorruptionProgress(gameTime: number): number {
+    if (gameTime < CORRUPTION_START_TIME) return 0;
+    const progress = (gameTime - CORRUPTION_START_TIME) / CORRUPTION_MAX_TIME;
+    return Math.min(Math.max(progress, 0), 1.0);
+}
+
+export function getSafeZones(state: GameState): { x: number, y: number, r: number }[] {
+    const zones: { x: number, y: number, r: number }[] = [];
+    const currentArenaId = state.currentArena;
+    if (currentArenaId === undefined) return zones; // Safety check
+
+    const currentArenaCenter = ARENA_CENTERS.find(c => c.id === currentArenaId) || ARENA_CENTERS[0];
+
+    // 1. Portals
+    const activePortals = PORTALS.filter(p => p.from === currentArenaId);
+    activePortals.forEach(p => {
+        const wall = getHexWallLine(currentArenaCenter.x, currentArenaCenter.y, ARENA_RADIUS, p.wall);
+        const cx = (wall.x1 + wall.x2) / 2;
+        const cy = (wall.y1 + wall.y2) / 2;
+        zones.push({ x: cx, y: cy, r: SAFE_ZONE_PORTAL_RADIUS });
+    });
+
+    // Also Incoming Portals (Important for returning player safety)
+    const incomingPortals = PORTALS.filter(p => p.to === currentArenaId);
+    incomingPortals.forEach(p => {
+        // Find the wall where I arrive from. 
+        // If I arrive from X to Y, I arrive at the wall that connects Y to X.
+        // That is the "reverse portal".
+        const rev = PORTALS.find(rp => rp.from === currentArenaId && rp.to === p.from);
+        if (rev) {
+            const wall = getHexWallLine(currentArenaCenter.x, currentArenaCenter.y, ARENA_RADIUS, rev.wall);
+            const cx = (wall.x1 + wall.x2) / 2;
+            const cy = (wall.y1 + wall.y2) / 2;
+            // Check duplicates just in case?
+            if (!zones.some(z => Math.hypot(z.x - cx, z.y - cy) < 100)) {
+                zones.push({ x: cx, y: cy, r: SAFE_ZONE_PORTAL_RADIUS });
+            }
+        }
+    });
+
+
+    // 2. Active POIs
+    if (state.pois) {
+        state.pois.forEach(poi => {
+            if (poi.arenaId !== currentArenaId) return;
+            zones.push({ x: poi.x, y: poi.y, r: SAFE_ZONE_POI_RADIUS });
+        });
+    }
+
+    // 3. Bosses
+    if (state.enemies) {
+        state.enemies.forEach(e => {
+            if (e.boss && !e.dead) {
+                zones.push({ x: e.x, y: e.y, r: SAFE_ZONE_BOSS_RADIUS });
+            }
+        });
+    }
+
+    // 4. Extraction Ship
+    if (state.extractionStatus && ['arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+        if (state.extractionShipPos && state.extractionTargetArena === currentArenaId) {
+            zones.push({ x: state.extractionShipPos.x, y: state.extractionShipPos.y, r: SAFE_ZONE_SHIP_RADIUS });
+        }
+    }
+
+    return zones;
+}
+
+// Get stage for a specific hex coordinate (pixel center)
+export function getHexPointStage(hx: number, hy: number, state: GameState): CorruptionStage {
+    // 1. Is it safe?
+    // Optimization: Check only if "progress > 0" first?
+    // Safe zones override everything.
+    const safeZones = getSafeZones(state);
+    for (const zone of safeZones) {
+        if (Math.hypot(hx - zone.x, hy - zone.y) < zone.r) {
+            return CorruptionStage.HEALTHY;
+        }
+    }
+
+    // 2. Check Depth
+    const { dist } = getHexDistToWall(hx, hy);
+    const progress = getCorruptionProgress(state.gameTime);
+
+    // Inward Erosion
+    // Max Distance (Center) is H = R * sqrt(3) / 2.
+    // If progress is 0, corruption starts at H relative to center? No, start at wall.
+    // Distance from wall: 0 (Wall) -> H (Center).
+    // Corruption Depth: 0 -> H+buffer.
+
+    const H = ARENA_RADIUS * Math.sqrt(3) / 2;
+    // We want stages. 
+    // Stage 2 (Red): The core corruption wave.
+    // Stage 1 (Obsidian): A warning buffer AHEAD of the red wave.
+
+    const waveDepth = H * progress * 1.5; // Main wave position
+
+    // If dist to wall < waveDepth -> Stage 2 (Unless Safe)
+    if (dist < waveDepth) {
+        return CorruptionStage.ACTIVE;
+    }
+
+    // If dist to wall < waveDepth + WarningBuffer -> Stage 1
+    const warningBuffer = 600; // 5 hexes or so
+    if (dist < waveDepth + warningBuffer) {
+        return CorruptionStage.WARNING;
+    }
+
+    return CorruptionStage.HEALTHY;
+}
+
+export function isPointInCorruption(x: number, y: number, state: GameState): boolean {
+    // Round position to nearest hex center for consistency? 
+    // Or just check exact point?
+    // For grid effect, we should probably check the exact point against the thresholds.
+    // But since the renderer draws HEXES, the logic should ideally match the hex grid.
+    // However, figuring out "which hex does (x,y) belong to" in axial coords is standard.
+    // Let's just use the point logic directly. The visual grid is just a sampling.
+
+    return getHexPointStage(x, y, state) === CorruptionStage.ACTIVE;
+}

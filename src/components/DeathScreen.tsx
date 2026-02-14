@@ -297,6 +297,12 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <StatItem label="Portals" value={displayStats.portals} color="#a855f7" />
                             <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
                             <StatItem label="Fatal Event" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
+                            {gameState.player.lastHitDamage !== undefined && (
+                                <StatItem label="Killing Blow" value={formatDmg(gameState.player.lastHitDamage)} color="#f87171" />
+                            )}
+                            {gameState.player.killerMaxHp !== undefined && (
+                                <StatItem label="Killer HP" value={formatDmg(gameState.player.killerMaxHp)} color="#f59e0b" />
+                            )}
 
                             <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
                                 SECTOR ALLOCATION

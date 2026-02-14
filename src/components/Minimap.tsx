@@ -103,12 +103,24 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
             ctx.restore();
         }
 
-        // Draw Player
-        ctx.fillStyle = '#22d3ee';
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, 400, 0, Math.PI * 2); // Visible dot
-        ctx.fill();
+        // Draw Players
+        if (gameState.players) {
+            Object.values(gameState.players).forEach(p => {
+                const isMe = p.id === gameState.multiplayer.myId;
+                ctx.fillStyle = isMe ? '#22d3ee' : '#4ade80'; // Cyan for me, Green for others
+                ctx.globalAlpha = 1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 400, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        } else {
+            // Fallback for single player
+            ctx.fillStyle = '#22d3ee';
+            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 400, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // Draw POIs
         gameState.pois.forEach(poi => {

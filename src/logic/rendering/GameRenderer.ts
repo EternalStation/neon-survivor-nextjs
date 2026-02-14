@@ -66,6 +66,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         // 2. Map Boundaries
         renderMapBoundaries(ctx, state);
 
+
         // 2.2 Interactive POIs (Towers, Beacons)
         renderPOIs(ctx, state);
 
@@ -101,7 +102,18 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         renderEnemies(ctx, state, meteoriteImages);
 
         // 8. Player (Drawn ON TOP of enemies to prevent clipping/coloring issues)
-        renderPlayer(ctx, state, meteoriteImages);
+        // Render all players
+        if (state.players) {
+            Object.values(state.players).forEach(p => {
+                renderPlayer(ctx, p, state, meteoriteImages);
+            });
+        } else {
+            // Fallback for single player if players map is missing
+            renderPlayer(ctx, state.player, state, meteoriteImages);
+        }
+
+        // Render shield for local player (or all if we had shield data)
+        // renderPlayer handles shield rendering now if it's on the player object
         renderEpicenterShield(ctx, state);
 
         // 9. Particles & Floating Numbers (in front of enemies)

@@ -81,9 +81,9 @@ export function useGameUIHandlers({
         return false;
     }, [gameState, setPortalError, setUiState]);
 
-    const restartGame = useCallback((selectedClass?: PlayerClass, startingArenaId: number = 0, username?: string, tutorialEnabled: boolean = true) => {
+    const restartGame = useCallback((selectedClass?: PlayerClass, startingArenaId: number = 0, username?: string, tutorialEnabled: boolean = true, gameMode: 'single' | 'multiplayer' = 'single', multiplayerConfig: any = null) => {
         const classToUse = selectedClass || gameState.current.moduleSockets.center || undefined;
-        gameState.current = createInitialGameState(classToUse, startingArenaId, tutorialEnabled);
+        gameState.current = createInitialGameState(classToUse, startingArenaId, tutorialEnabled, gameMode, multiplayerConfig);
         if (username) gameState.current.playerName = username;
 
         setGameOver(false);

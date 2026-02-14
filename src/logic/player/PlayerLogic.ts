@@ -13,9 +13,10 @@ export function updatePlayer(
     keys: Record<string, boolean>,
     onEvent?: (type: string, data?: any) => void,
     inputVector?: { x: number, y: number },
-    mouseOffset?: { x: number, y: number }
+    mouseOffset?: { x: number, y: number },
+    overridePlayer?: any // Type Player but avoid circular dep or import if possible
 ) {
-    const { player } = state;
+    const player = overridePlayer || state.player;
     const now = state.gameTime;
 
     // Shield Cleanup
@@ -29,23 +30,27 @@ export function updatePlayer(
     if (state.playerPosHistory.length > GAME_CONFIG.PLAYER.HISTORY_LENGTH) state.playerPosHistory.pop();
 
     // Spawn Animation Logic
-    if (state.spawnTimer > 0) {
-        state.spawnTimer -= 1 / 60;
-        if (state.spawnTimer > 0.3) return; // Allow movement in last 0.3s
+    if (player.spawnTimer === undefined) player.spawnTimer = 0; // Fix: Default to 0 (visible) if undefined
+
+    if (player.spawnTimer > 0) {
+        player.spawnTimer -= 1 / 60;
+        if (player.spawnTimer > 0.3) return; // Allow movement in last 0.3s
     }
 
     // 1. Movement & Wall Collision
-    handlePlayerMovement(state, keys, inputVector, onEvent);
+    handlePlayerMovement(state, keys, inputVector, onEvent, player);
 
-    // Camera Follow
-    state.camera.x = player.x - CANVAS_WIDTH / 2;
-    state.camera.y = player.y - CANVAS_HEIGHT / 2;
+    // Camera Follow (Only for local player - currently state.player is local)
+    if (player.id === state.player.id) {
+        state.camera.x = player.x - CANVAS_WIDTH / 2;
+        state.camera.y = player.y - CANVAS_HEIGHT / 2;
+    }
 
     // 2. Stat Update & Sync (Regen, Hex Passives)
-    updatePlayerStats(state);
+    updatePlayerStats(state, player);
 
     // 3. Combat & Aiming (Radiation Core, contact damage, death logic)
-    handlePlayerCombat(state, mouseOffset, onEvent);
+    handlePlayerCombat(state, mouseOffset, onEvent, player);
 
     // Attach trigger function for other modules (Projectile/UniqueEnemy)
     if (!(state as any).triggerKineticBatteryZap) {

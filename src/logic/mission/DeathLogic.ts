@@ -127,6 +127,22 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     if (e.boss && state.extractionStatus === 'none') {
         state.bossKills++; // Track boss kills correctly
 
+        // --- ANOMALY BOSS DEATH LOGIC ---
+        if (e.isAnomaly) {
+            // Find the POI associated with this boss (it should be inactive and near spawn, but we just check distance)
+            const anomalyPoi = state.pois.find(p => p.type === 'anomaly' && !p.active && Math.hypot(p.x - e.x, p.y - e.y) < 1500); // 1500px generous range
+
+            if (anomalyPoi) {
+                // Trigger relocation now
+                import('./MapLogic').then(({ relocatePOI }) => {
+                    relocatePOI(anomalyPoi);
+                    // Override respawn timer to 30s as requested
+                    anomalyPoi.respawnTimer = 30;
+                    spawnFloatingNumber(state, anomalyPoi.x, anomalyPoi.y, "RITUAL CLEARED", '#4ade80', true);
+                });
+            }
+        }
+
         // UNLOCK PROGRESSION: First Boss Drops Dimensional Gate
         if (state.bossKills === 1 && !state.portalsUnlocked) {
             // Check if we already have it (safety check)

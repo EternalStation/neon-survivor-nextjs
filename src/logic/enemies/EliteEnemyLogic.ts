@@ -202,6 +202,9 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
             if (finalActualDmg > 0) {
                 player.curHp -= finalActualDmg;
                 player.damageTaken += finalActualDmg;
+                player.lastHitDamage = finalActualDmg;
+                player.killerHp = e.hp;
+                player.killerMaxHp = e.maxHp;
                 const beamColor = e.palette ? e.palette[0] : '#f87171';
                 spawnFloatingNumber(state, player.x, player.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
 

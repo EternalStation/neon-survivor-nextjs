@@ -5,8 +5,8 @@ import { spawnParticles } from '../../effects/ParticleLogic';
 import { GAME_CONFIG } from '../../core/GameConfig';
 import { getHexLevel } from '../../upgrades/LegendaryLogic';
 
-export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
-    const { player } = state;
+export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
+    // const { player } = state; // No longer extracting from state
     ctx.save();
 
     // Ghost Mode (Temporal Guard)
@@ -68,14 +68,17 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    if (state.spawnTimer > 0) {
-        ctx.shadowBlur = 30 * (state.spawnTimer / GAME_CONFIG.PLAYER.SPAWN_DURATION);
+    // Use individual player spawnTimer, default 0 for safety (Visible)
+    const spawnTimer = (player.spawnTimer !== undefined) ? player.spawnTimer : 0;
+
+    if (spawnTimer > 0) {
+        ctx.shadowBlur = 30 * (spawnTimer / GAME_CONFIG.PLAYER.SPAWN_DURATION);
         ctx.shadowColor = themeColor;
 
         // Progress reach 1.0 when spawnTimer hits 0
         // To remove "delay", we could scale progress to reach 1.0 when timer is at e.g. 0.1s
         const duration = GAME_CONFIG.PLAYER.SPAWN_DURATION;
-        const progress = Math.min(1.0, Math.max(0, duration - state.spawnTimer) / (duration * 0.9)); // Reaches 1.0 at 90% of duration
+        const progress = Math.min(1.0, Math.max(0, duration - spawnTimer) / (duration * 0.9)); // Reaches 1.0 at 90% of duration
         const ease = 1 - Math.pow(1 - progress, 3);
         const spin = (1.0 - ease) * Math.PI * 4;
         ctx.rotate(spin);
@@ -113,12 +116,13 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
         const currentDist = startDist - (startDist - finalDist) * ease;
 
         ctx.globalAlpha = Math.min(1, ease * 2);
-        const hexSockets = state.moduleSockets.hexagons;
+        const hexSockets = player.moduleSockets?.hexagons || [];
         for (let i = 0; i < 6; i++) {
             const angle = (Math.PI / 3) * i; // Match UI placement (0, 60, 120...)
             const cx = currentDist * Math.cos(angle);
             const cy = currentDist * Math.sin(angle);
             drawHexagon(cx, cy, cellSize);
+
 
             // Draw Legendary Icon in spawn
             const hex = hexSockets[i];
@@ -162,7 +166,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
         }
 
         const cellDistance = cellSize * Math.sqrt(3);
-        const hexSockets = state.moduleSockets.hexagons;
+        const hexSockets = player.moduleSockets?.hexagons || [];
         for (let i = 0; i < 6; i++) {
             ctx.save(); // STRICT ISOLATION START
 
@@ -230,7 +234,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, state: GameState, me
     ctx.restore();
 
     // --- SHIELD RIPPLE (Active Shield Chunks) ---
-    const totalShield = (player.shieldChunks || []).reduce((sum, c) => sum + c.amount, 0);
+    const totalShield = (player.shieldChunks || []).reduce((sum: number, c: any) => sum + c.amount, 0);
     if (totalShield > 0) {
         ctx.save();
         ctx.translate(player.x, player.y);

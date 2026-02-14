@@ -477,14 +477,13 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.fillText(`REPAIR: ${cost} DUST`, 0, yOffset - 10);
     }
 
-    // 5. Level Indicator (| | |)
+    // 5. Level Indicator (LVL X)
     const level = (poi.turretUses || 0) + 1;
-    const marks = '|'.repeat(level).split('').join(' ');
     ctx.font = 'bold 16px Orbitron';
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.globalAlpha = 1.0;
-    ctx.fillText(marks, 0, 32);
+    ctx.fillText(`LVL ${level}`, 0, 52);
 
     // 6. Status Text
     if (isActive) {
@@ -492,18 +491,18 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#F59E0B';
         ctx.textAlign = 'center';
-        ctx.fillText(`${timeLeft}s`, 0, 45);
+        ctx.fillText(`${timeLeft}s`, 0, 68);
     } else if (isOverheated) {
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#EF4444';
         ctx.textAlign = 'center';
-        ctx.fillText(`OVERHEAT: ${Math.ceil(poi.cooldown)}s`, 0, 45);
+        ctx.fillText(`OVERHEAT: ${Math.ceil(poi.cooldown)}s`, 0, 68);
     } else if (dToPlayer < poi.radius) {
         const cost = poi.turretCost || (10 * Math.pow(2, poi.turretUses || 0));
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(`REPAIR [${cost} DUST]`, 0, 45);
+        ctx.fillText(`REPAIR [${cost} DUST]`, 0, 68);
     }
 }
 

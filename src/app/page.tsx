@@ -14,7 +14,9 @@ import Leaderboard from '@/components/Leaderboard';
 import { ModuleMenu } from '@/components/ModuleMenu';
 import { LegendarySelectionMenu } from '@/components/LegendarySelectionMenu';
 import { ClassSelection } from '@/components/ClassSelection';
+import { LobbyScreen } from '@/components/LobbyScreen';
 import { type PlayerClass } from '@/logic/core/types';
+import { PLAYER_CLASSES } from '@/logic/core/classes';
 
 import { useGameLoop } from '@/hooks/useGame';
 import { useWindowScale } from '@/hooks/useWindowScale';
@@ -24,6 +26,7 @@ import '@/styles/menu_additions.css';
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
+  const [showMultiplayerLobby, setShowMultiplayerLobby] = useState(false);
   const [selectingClass, setSelectingClass] = useState(false);
   const [selectedClass, setSelectedClass] = useState<PlayerClass | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -70,6 +73,18 @@ export default function Home() {
 
   const handleStart = () => {
     setSelectingClass(true);
+  };
+
+  const handleStartMultiplayer = () => {
+    setShowMultiplayerLobby(true);
+  };
+
+  const handleMultiplayerGameStart = (mode: 'multiplayer', config: any, classId: string) => {
+    const cls = PLAYER_CLASSES.find(c => c.id === classId);
+    setShowMultiplayerLobby(false);
+    setGameStarted(true);
+    // @ts-ignore
+    hook.restartGame(cls, 0, username, false, 'multiplayer', config);
   };
 
   const handleClassSelect = (cls: PlayerClass, tutorialEnabled: boolean) => {
@@ -123,14 +138,23 @@ export default function Home() {
       onClick={(e) => e.currentTarget.focus()}
     >
 
-      {!gameStarted && !selectingClass && (
+      {!gameStarted && !selectingClass && !showMultiplayerLobby && (
         <MainMenu
           onStart={handleStart}
+          onStartMultiplayer={handleStartMultiplayer}
           onShowLeaderboard={() => setShowLeaderboard(true)}
           username={username}
           onLogout={handleLogout}
         />
       )}
+
+      {showMultiplayerLobby && (
+        <LobbyScreen
+          onStartGame={handleMultiplayerGameStart}
+          onBack={() => setShowMultiplayerLobby(false)}
+        />
+      )}
+
       {selectingClass && <ClassSelection onSelect={handleClassSelect} />}
 
       {gameStarted && (

@@ -475,6 +475,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 if (e.thorns && e.thorns > 0 && damageAmount > 0) {
                     const reflected = damageAmount * e.thorns;
                     state.player.curHp -= reflected;
+                    state.player.lastHitDamage = reflected;
+                    state.player.killerHp = e.hp;
+                    state.player.killerMaxHp = e.maxHp;
                     const displayDmg = Math.round(reflected);
                     if (displayDmg > 0) {
                         spawnFloatingNumber(state, state.player.x, state.player.y, `-${displayDmg}`, '#FF0000', true);
@@ -706,6 +709,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                                 player.damageTaken += safeDmg;
                             }
 
+                            player.lastHitDamage = safeDmg;
+                            player.killerHp = e.hp;
+                            player.killerMaxHp = e.maxHp;
+
                             if (onEvent) onEvent('player_hit', { dmg: safeDmg }); // Trigger red flash
                             spawnParticles(state, player.x, player.y, '#FF0000', 3); // Visual feedback
 
@@ -924,6 +931,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 if (finalDmg > 0) {
                     player.curHp -= finalDmg;
                     player.damageTaken += finalDmg;
+                    player.lastHitDamage = finalDmg;
                     if (onEvent) onEvent('player_hit', { dmg: finalDmg });
                 }
 

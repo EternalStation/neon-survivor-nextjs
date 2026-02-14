@@ -151,6 +151,25 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             }
 
             const d = Math.hypot(player.x - poi.x, player.y - poi.y);
+            // Tick down anomaly spawn delay timer
+            if (poi.anomalySpawnDelay !== undefined && poi.anomalySpawnDelay > 0) {
+                poi.anomalySpawnDelay -= step;
+                if (poi.anomalySpawnDelay <= 0) {
+                    poi.anomalySpawnDelay = undefined;
+                    const tier = poi.anomalySpawnTier || 1;
+                    poi.anomalySpawnTier = undefined;
+                    const boss = spawnEnemy(state, poi.x, poi.y, undefined, true, tier, true);
+                    if (boss) {
+                        boss.shape = 'abomination'; // Force override to ensure Bull Head shape
+                        boss.isAnomaly = true;
+                        boss.spawnGracePeriod = 0.5; // 0.5s no collision damage
+                    }
+                    // relocatePOI(poi); // DISABLED: Relocate on death now
+                    poi.active = false; // Disable interaction
+                    poi.progress = 0;
+                }
+            }
+
             if (poi.active && poi.cooldown === 0 && d < poi.radius) {
                 poi.progress += step * 10.0; // 10 seconds to 100 (User Request)
 
@@ -159,16 +178,18 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     const current10MinCycle = Math.floor(minutesRaw / 10);
                     const tier = Math.min(3, current10MinCycle + 1);
 
-                    spawnEnemy(state, poi.x, poi.y, undefined, true, tier, true);
-                    spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
-                    playSfx('warning');
-
-                    // Push player away on spawn to prevent instant collision (Stronger: 55 -> 65)
-                    const pushAngle = Math.atan2(player.y - poi.x, player.x - poi.x);
+                    // Push player away first, then delay the actual spawn
+                    const pushAngle = Math.atan2(player.y - poi.y, player.x - poi.x);
                     player.knockback.x = Math.cos(pushAngle) * 65;
                     player.knockback.y = Math.sin(pushAngle) * 65;
 
-                    relocatePOI(poi); // Move and set respawn timer
+                    spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
+                    playSfx('warning');
+
+                    // Set spawn delay — boss spawns after 0.2s
+                    poi.anomalySpawnDelay = 0.2;
+                    poi.anomalySpawnTier = tier;
+                    poi.progress = 0;
                 }
             } else if (poi.progress > 0) {
                 const decaySpeed = step * 2.5;
@@ -486,7 +507,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         // --- ANOMALY BOSS RADIANCE (Burn Damage & Lava Floor) ---
         if (e.isAnomaly && !e.dead) {
-            const burnRadius = 300; // Large hellish aura
+            const burnRadius = 390; // Increased by 30% (was 300)
             const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
 
             // Add slow demonic rotation (Visual spin)
@@ -494,23 +515,16 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             // We want it to spin slowly so the "mass" feels alive.
             e.rotationPhase = (e.rotationPhase || 0) + 0.02;
 
-            // Visual Lava Floor/Flames (Flickering embers on ground)
-            if (state.frameCount % 2 === 0) { // Faster flicker for denser lava look
-                const angle = Math.random() * Math.PI * 2;
-                const r = Math.random() * burnRadius;
-                // Changed from #f59e0b (yellow/amber) to red/orange shades and 'spark' type
-                const lavaColor = Math.random() > 0.5 ? '#ef4444' : '#f97316';
-                spawnParticles(state, e.x + Math.cos(angle) * r, e.y + Math.sin(angle) * r, lavaColor, 1, 6, 12, 'spark');
-            }
-
             if (distToPlayer < burnRadius) {
-                // Deal burn damage (2% Player Max HP per second as requested)
+                // Deal burn damage (5% Player Max HP per second as requested)
                 const burnTick = 10; // Every 10 frames
                 if (state.frameCount % burnTick === 0) {
-                    // 2% / (6 ticks per sec)
-                    const dmg = (calcStat(player.hp) * 0.02) / (60 / burnTick);
+                    // 5% / (6 ticks per sec)
+                    const dmg = (calcStat(player.hp) * 0.05) / (60 / burnTick);
                     player.curHp -= dmg;
-                    spawnParticles(state, player.x, player.y, '#ff0000', 3, 5, 10, 'spark');
+                    player.damageTaken += dmg; // Track damage taken
+                    player.lastHitDamage = dmg;
+                    spawnFloatingNumber(state, player.x, player.y, `-${Math.round(dmg)}`, '#ef4444', false);
                 }
             }
         }
@@ -542,6 +556,12 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         if (e.frozen && e.frozen > 0) {
             e.frozen -= 1 / 60;
             return;
+        }
+
+        // Count down spawn grace period (no collision damage during this)
+        if (e.spawnGracePeriod && e.spawnGracePeriod > 0) {
+            e.spawnGracePeriod -= step;
+            if (e.spawnGracePeriod <= 0) e.spawnGracePeriod = undefined;
         }
 
         // Reset Frame-based Multipliers (but not for bosses - they manage their own)
@@ -651,11 +671,24 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             // DO NOT RETURN - let boss/enemy AI continue to process
         }
 
-        // Target Determination (Mutual Aggression)
+        // Target Determination (Nearest Player)
         let targetX = player.x;
         let targetY = player.y;
         let dist = Math.hypot(player.x - e.x, player.y - e.y);
-        // Enemies target nearest: Player or Active Zombie
+
+        // Check all players if multiplayer
+        if (state.players && Object.keys(state.players).length > 1) {
+            Object.values(state.players).forEach(p => {
+                const d = Math.hypot(p.x - e.x, p.y - e.y);
+                if (d < dist) {
+                    dist = d;
+                    targetX = p.x;
+                    targetY = p.y;
+                }
+            });
+        }
+
+        // Enemies target active Zombie if closer (and not Boss)
         for (const z of state.enemies) {
             if (z.isZombie && z.zombieState === 'active' && !z.dead) {
                 if (e.boss) continue;

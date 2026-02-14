@@ -10,6 +10,7 @@ import { useGameLogic } from './useGameLogic';
 import { useGameUIHandlers } from './useGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
+import { useMultiplayerGame } from './useMultiplayerGame';
 
 export function useGameLoop(gameStarted: boolean) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,6 +110,11 @@ export function useGameLoop(gameStarted: boolean) {
         setBossWarning,
         bossWarning
     });
+
+    // Multiplayer Hook
+    const { sendInputToHost } = useMultiplayerGame(gameState, gameStarted);
+
+
 
     useEffect(() => {
         const qualities = ['Broken', 'Damaged', 'New'];
@@ -234,6 +240,10 @@ export function useGameLoop(gameStarted: boolean) {
             if (['requested', 'waiting'].includes(state.extractionStatus) || state.portalBlockedByWorms) {
                 updateExtraction(state, safeDt);
                 setUiState(p => p + 1);
+            }
+
+            if (gameStarted && !state.multiplayer.isHost && state.multiplayer.active) {
+                sendInputToHost(keys.current, inputVector.current, mousePos.current);
             }
 
             updateBGMPhase(state.gameTime);

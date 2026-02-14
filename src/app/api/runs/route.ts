@@ -82,17 +82,33 @@ export async function POST(request: NextRequest) {
 
         const run = result[0];
 
-        // Calculate rank:
-        // Priority 1: death_cause = 'EVACUATED' (success)
-        // Priority 2: survival_time (descending)
-        const rankResult = await sql`
-      SELECT COUNT(*) + 1 as rank
-      FROM game_runs
-      WHERE 
-        (death_cause = 'EVACUATED' AND ${deathCause || 'Unknown'} != 'EVACUATED')
-        OR (death_cause = ${deathCause || 'Unknown'} AND survival_time > ${run.survival_time})
-        OR (death_cause != 'EVACUATED' AND ${deathCause || 'Unknown'} = 'EVACUATED' AND 1=0) 
-    `;
+        // Calculate rank: (PATCH SPECIFIC)
+        // Logic:
+        // 1. IF I EVACUATED: Rank is 1 + count of (Others who Evacuated FASTER)
+        // 2. IF I DIED: Rank is 1 + count of (Anyone who Evacuated OR Anyone who Died LATER)
+
+        let rankResult;
+        const myCause = deathCause || 'Unknown';
+
+        if (myCause === 'EVACUATED') {
+            rankResult = await sql`
+                SELECT COUNT(*) + 1 as rank
+                FROM game_runs
+                WHERE patch_version = ${patchVersion}
+                AND death_cause = 'EVACUATED' 
+                AND survival_time < ${survivalTime}
+            `;
+        } else {
+            rankResult = await sql`
+                SELECT COUNT(*) + 1 as rank
+                FROM game_runs
+                WHERE patch_version = ${patchVersion}
+                AND (
+                    death_cause = 'EVACUATED'
+                    OR (death_cause != 'EVACUATED' AND survival_time > ${survivalTime})
+                )
+            `;
+        }
 
         return NextResponse.json(
             {

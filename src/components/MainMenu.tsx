@@ -6,12 +6,13 @@ import { SettingsMenu } from './SettingsMenu';
 
 interface MainMenuProps {
     onStart: () => void;
+    onStartMultiplayer?: () => void;
     onShowLeaderboard: () => void;
     username?: string;
     onLogout?: () => void;
 }
 
-export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, username, onLogout }) => {
+export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer, onShowLeaderboard, username, onLogout }) => {
     const [fading, setFading] = useState(false);
     const [showBlueprint, setShowBlueprint] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -54,6 +55,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
         setTimeout(() => {
             onStart();
         }, 1000);
+    };
+
+    const handleMultiplayerStart = () => {
+        // No fade for lobby, just switch
+        if (onStartMultiplayer) onStartMultiplayer();
     };
 
     // --- ENHANCED CANVAS BACKGROUND ---
@@ -232,6 +238,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onShowLeaderboard, 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', alignItems: 'center', pointerEvents: 'auto' }}>
                     <button className="btn-start" onClick={handleStart}>
                         <span>ENTER VOID</span>
+                    </button>
+                    <button className="btn-logic" style={{ border: '1px solid #a855f7', color: '#a855f7' }} onClick={handleMultiplayerStart}>
+                        MULTIPLAYER VOID
                     </button>
                     <button className="btn-logic" onClick={onShowLeaderboard}>
                         LEADERBOARD

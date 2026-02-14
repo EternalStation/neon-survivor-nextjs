@@ -70,9 +70,17 @@ export interface AreaEffect {
 }
 
 export interface Player {
+    id: string;
     x: number;
     y: number;
     size: number;
+    // Multiplayer Input Buffer
+    currentInput?: {
+        keys: Record<string, boolean>;
+        vector: { x: number, y: number };
+        mouse: { x: number, y: number };
+    };
+
     speed: number;
     dust: number;
     hp: PlayerStats;
@@ -127,9 +135,13 @@ export interface Player {
     lastCosmicStrikeTime?: number; // For Cosmic Beam class tracking
     blackholeCooldown?: number; // Timestamp when next blackhole can be created (Event Horizon)
     deathCause?: string; // Reason for game over
+    lastHitDamage?: number; // Final hit damage that killed the player
+    killerHp?: number; // HP of the enemy that killed the player
+    killerMaxHp?: number; // Max HP of the enemy that killed the player
     // Blueprint System
     temporalGuardActive?: boolean;
     phaseShiftUntil?: number; // Timestamp for ghost state (no dmg dealt/taken)
+    spawnTimer?: number; // Individual spawn animation timer
 
     // Boss Capabilities
     kineticBattery?: boolean; // Arena 2 Boss Drop
@@ -320,6 +332,7 @@ export interface Enemy {
     untargetable?: boolean; // If true, player bullets won't home in on it
     phase3AudioTriggered?: boolean; // Flag for Phase 3 Audio Trigger
     spawnedAt?: number; // GameTime when spawned
+    spawnGracePeriod?: number; // Countdown where enemy deals no collision damage
 
     // Snitch AI Props
     // Snitch AI Props
@@ -575,6 +588,8 @@ export interface MapPOI {
     turretCost?: number;
     lastShot?: number;
     rotation?: number;
+    anomalySpawnDelay?: number; // Timer before anomaly boss actually spawns
+    anomalySpawnTier?: number; // Stored boss tier for delayed spawn
 }
 
 export interface GameEvent {
@@ -714,6 +729,18 @@ export interface GameState {
 
     // Spawn Logic
     firstMeteoriteSpawned?: boolean;
+
+    // Multiplayer State
+    gameMode: 'single' | 'multiplayer';
+    players: Record<string, Player>;
+    multiplayer: {
+        active: boolean;
+        isHost: boolean;
+        myId: string;
+        peerIds: string[];
+    };
+    readyStatus: Record<string, boolean>;
+    sharedXp: number;
 }
 
 export type MeteoriteRarity = 'scrap' | 'anomalous' | 'quantum' | 'astral' | 'radiant' | 'void' | 'eternal' | 'divine' | 'singularity';

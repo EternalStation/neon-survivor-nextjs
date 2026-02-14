@@ -4,10 +4,6 @@ import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../../miss
 export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState, logicalWidth: number, logicalHeight: number) {
     const { camera } = state;
 
-    // Determine visible arenas
-    // If portals locked, only show Arena 0 (Index 0). Otherwise show all.
-    // Note: We access ARENA_CENTERS by index, assuming Order is [0, 1, 2].
-    // ARENA_CENTERS is an array of objects with ids.
     const visibleArenas = state.portalsUnlocked
         ? ARENA_CENTERS
         : ARENA_CENTERS.filter(c => c.id === 0);
@@ -28,12 +24,10 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
         const startY = Math.floor((cY - vH / 2) / vDist) - 1;
         const endY = Math.ceil((cY + vH / 2) / vDist) + 2;
 
-        ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.25;
-        // Defensive Reset
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = '#1e293b';
 
         for (let i = startX; i <= endX; i++) {
             for (let j = startY; j <= endY; j++) {
@@ -52,10 +46,9 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.stroke();
             }
         }
-        ctx.globalAlpha = 1.0;
     };
 
-    // Clip the grid to only draw inside arenas (Optimizes fill rate and avoids drawing in void)
+    // Clip the grid to only draw inside arenas
     ctx.save();
     ctx.beginPath();
     visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
@@ -181,4 +174,9 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
 
         ctx.restore();
     });
+}
+
+export function renderCorruption(ctx: CanvasRenderingContext2D, state: GameState) {
+    // Deprecated: Now handled directly by renderBackground via hex coloring.
+    // Keeping function stub if called elsewhere, but empty.
 }
