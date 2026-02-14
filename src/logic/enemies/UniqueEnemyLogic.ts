@@ -53,17 +53,31 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
     const m = state.enemies.find(p => p.id === e.parentId);
     if (!m || m.dead) e.minionState = 1;
 
-    // Launch Trigger: Player gets too close to Mother (Guard Mode)
+    // Launch Trigger: Any player gets too close to Mother (Guard Mode)
     if (e.minionState === 0 && m) {
-        const distToMother = Math.hypot(player.x - m.x, player.y - m.y);
-        if (distToMother < 350) {
+        const players = state.players ? Object.values(state.players) : [state.player];
+        let nearestDist = Infinity;
+        players.forEach(p => {
+            const d = Math.hypot(p.x - m.x, p.y - m.y);
+            if (d < nearestDist) nearestDist = d;
+        });
+
+        if (nearestDist < 350) {
             e.minionState = 1;
             playSfx('shoot');
         }
     }
 
     if (e.minionState === 0 && m) {
-        const aM = Math.atan2(player.y - m.y, player.x - m.x);
+        const players = state.players ? Object.values(state.players) : [state.player];
+        let nearestPlayer: any = players[0];
+        let minD = Infinity;
+        players.forEach(p => {
+            const d = Math.hypot(p.x - m.x, p.y - m.y);
+            if (d < minD) { minD = d; nearestPlayer = p; }
+        });
+
+        const aM = Math.atan2(nearestPlayer.y - m.y, nearestPlayer.x - m.x);
         // Use assigned minionIndex for formation instead of filtering every frame
         const idx = e.minionIndex || 0;
         const row = Math.floor((idx + 1) / 2);
@@ -71,7 +85,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
         const lX = 180 - (row * 28), lY = side * (row * 32), cA = Math.cos(aM), sA = Math.sin(aM);
         const tx = m.x + (lX * cA - lY * sA), ty = m.y + (lX * sA + lY * cA);
         vx = (tx - e.x) * 0.15; vy = (ty - e.y) * 0.15;
-        e.rotationPhase = Math.atan2(player.y - e.y, player.x - e.x);
+        e.rotationPhase = Math.atan2(nearestPlayer.y - e.y, nearestPlayer.x - e.x);
     } else {
         const lT = state.gameTime - (e.spawnedAt || 0), tA = Math.atan2(dy, dx), cMA = Math.atan2(vy || dy, vx || dx);
         let diff = tA - cMA; while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
@@ -88,7 +102,15 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         e.dead = true; state.rareSpawnActive = false;
         playSfx('rare-despawn'); return { vx: 0, vy: 0 };
     }
-    const dToP = Math.hypot(player.x - e.x, player.y - e.y);
+    const players = state.players ? Object.values(state.players) : [state.player];
+    let nearestPlayer: any = players[0];
+    let minD = Infinity;
+    players.forEach(p => {
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < minD) { minD = d; nearestPlayer = p; }
+    });
+
+    const dToP = minD;
 
     // Check wall proximity - teleport if too close to walls
     const { dist: wallDist, normal: wallNormal } = getHexDistToWall(e.x, e.y);
@@ -96,8 +118,8 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         // Too close to wall - teleport to safe position
         const a = Math.random() * Math.PI * 2;
         const d = 600 + Math.random() * 200;
-        let tx = player.x + Math.cos(a) * d;
-        let ty = player.y + Math.sin(a) * d;
+        let tx = nearestPlayer.x + Math.cos(a) * d;
+        let ty = nearestPlayer.y + Math.sin(a) * d;
 
         // Ensure teleport target is valid and far from walls
         let attempts = 0;
@@ -239,7 +261,8 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         }
     }
     if (dToP < 250) {
-        const ang = Math.atan2(e.y - player.y, e.x - player.x);
+        const target = nearestPlayer;
+        const ang = Math.atan2(e.y - target.y, e.x - target.x);
         vx = Math.cos(ang) * e.spd * 2; vy = Math.sin(ang) * e.spd * 2;
         e.lockedTargetX = undefined;
     }
@@ -447,8 +470,16 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         const angle = Math.atan2(dy, dx);
 
         let spd = 1.92 * 1.5; // Base Speed
-        // Frenzy if near player (Legacy logic kept for flavor)
-        if (state.enemies.some(o => !o.dead && !o.isZombie && Math.hypot(o.x - player.x, o.y - player.y) < 300)) {
+        // Frenzy if near any player (Legacy logic kept for flavor)
+        const players = state.players ? Object.values(state.players) : [state.player];
+        let nearAnyPlayer = false;
+        players.forEach(p => {
+            if (state.enemies.some(o => !o.dead && !o.isZombie && Math.hypot(o.x - p.x, o.y - p.y) < 300)) {
+                nearAnyPlayer = true;
+            }
+        });
+
+        if (nearAnyPlayer) {
             spd *= 2.0;
         }
 
@@ -535,15 +566,23 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         return { vx: 0, vy: 0 };
     }
 
-    // 1. BLINK (Teleport when player is too close)
-    const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+    // 1. BLINK (Teleport when any player is too close)
+    const players = state.players ? Object.values(state.players) : [state.player];
+    let nearestDist = Infinity;
+    let nearestPlayer: any = players[0];
+    players.forEach(p => {
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < nearestDist) { nearestDist = d; nearestPlayer = p; }
+    });
+
+    const distToPlayer = nearestDist;
     const blinkCooldown = 6; // 6 seconds
     if (distToPlayer < 300 && (!e.lastBlink || now - e.lastBlink > blinkCooldown) && !e.glitchDecoy) {
         const oldX = e.x, oldY = e.y;
         const angle = Math.random() * Math.PI * 2;
         const dist = 400 + Math.random() * 200;
-        let tx = player.x + Math.cos(angle) * dist;
-        let ty = player.y + Math.sin(angle) * dist;
+        let tx = nearestPlayer.x + Math.cos(angle) * dist;
+        let ty = nearestPlayer.y + Math.sin(angle) * dist;
 
         if (isInMap(tx, ty)) {
             e.x = tx; e.y = ty;

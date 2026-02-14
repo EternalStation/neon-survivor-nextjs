@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { GameState, UpgradeChoice, PlayerClass, TutorialStep } from '../logic/core/types';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../logic/core/constants';
 import { updatePlayer } from '../logic/player/PlayerLogic';
 import { updateEnemies } from '../logic/enemies/EnemyLogic';
 import { updateDirector } from '../logic/enemies/DirectorLogic';
@@ -175,8 +176,11 @@ export function useGameLogic({
             state.hasPlayedSpawnSound = true;
         }
 
-        state.camera.x = state.player.x;
-        state.camera.y = state.player.y;
+        // Camera Follow (for local player)
+        // Follow the local player from the players map (or fallback to state.player for single-player)
+        const localPlayer = (state.players && state.players[state.multiplayer.myId]) || state.player;
+        state.camera.x = localPlayer.x;
+        state.camera.y = localPlayer.y;
 
         // --- HOST ONLY LOGIC ---
         if (isHost) {

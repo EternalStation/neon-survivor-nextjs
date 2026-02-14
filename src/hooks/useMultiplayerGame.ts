@@ -13,27 +13,63 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
             onStateUpdate: (remoteState: Partial<GameState>) => {
                 if (!gameState.current.multiplayer.isHost) {
                     // Merge state from host
-                    // TODO: add lerping/interpolation for smooth movement
-                    // For now, hard sync crucial data
+                    // For client: Trust host for most data, but preserve local prediction for own player
+                    const myId = gameState.current.multiplayer.myId;
+
                     if (remoteState.players) {
-                        // Preserve currentInput for prediction
+                        // Preserve currentInput and local position for smoother client-side prediction
                         if (gameState.current.players) {
                             Object.keys(remoteState.players).forEach(pid => {
                                 const oldP = gameState.current.players[pid];
-                                if (oldP && (oldP as any).currentInput && remoteState.players && remoteState.players[pid]) {
-                                    (remoteState.players[pid] as any).currentInput = (oldP as any).currentInput;
+                                const newP = remoteState.players![pid];
+
+                                if (oldP && newP) {
+                                    // Preserve currentInput for all players
+                                    if ((oldP as any).currentInput) {
+                                        (newP as any).currentInput = (oldP as any).currentInput;
+                                    }
+
+                                    // For local player: preserve position for client-side prediction
+                                    // but sync critical stats like HP, spawnTimer, etc.
+                                    if (pid === myId) {
+                                        const localX = oldP.x;
+                                        const localY = oldP.y;
+                                        const localKnockback = oldP.knockback;
+                                        const localSpawnTimer = oldP.spawnTimer;
+
+                                        // Sync everything from host
+                                        Object.assign(oldP, newP);
+
+                                        // But keep local position and spawnTimer for smoother movement
+                                        // Only override if difference is large (desync correction)
+                                        const posDiff = Math.hypot(localX - newP.x, localY - newP.y);
+                                        if (posDiff < 100) {
+                                            oldP.x = localX;
+                                            oldP.y = localY;
+                                            oldP.knockback = localKnockback;
+                                        }
+
+                                        // Keep local spawnTimer to ensure smooth spawn animation
+                                        if (localSpawnTimer !== undefined && localSpawnTimer < (newP.spawnTimer || 0)) {
+                                            oldP.spawnTimer = localSpawnTimer;
+                                        }
+                                    } else {
+                                        // For remote players, just update the reference
+                                        gameState.current.players[pid] = newP;
+                                    }
+                                } else if (newP) {
+                                    // New player joined
+                                    gameState.current.players[pid] = newP;
                                 }
                             });
+                        } else {
+                            // First time receiving players
+                            gameState.current.players = remoteState.players;
                         }
 
-                        gameState.current.players = remoteState.players;
-
-                        // Update local player ref to match what host says (optional, or trust local prediction)
-                        const myId = gameState.current.multiplayer.myId;
-                        if (remoteState.players[myId]) {
-                            // Simple reconciliation: Trust host for HP/stats, maybe keep local pos for smoothness?
-                            // For MVP: snap to host
-                            Object.assign(gameState.current.player, remoteState.players[myId]);
+                        // Update local player ref to match the players map
+                        if (gameState.current.players[myId]) {
+                            gameState.current.player = gameState.current.players[myId];
                         }
                     }
                     if (remoteState.enemies) gameState.current.enemies = remoteState.enemies;
@@ -41,7 +77,7 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
                     // ... sync other entities
 
                     // Sync Global timers/state
-                    if (remoteState.gameTime) gameState.current.gameTime = remoteState.gameTime;
+                    if (remoteState.gameTime !== undefined) gameState.current.gameTime = remoteState.gameTime;
                     // ... etc
                 }
             },
@@ -52,7 +88,9 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
 
                 const players = gameState.current.players;
                 if (players && players[id]) {
-                    (players[id] as any).currentInput = inputData;
+                    const p = players[id];
+                    // Defensive: Ensure currentInput exists as a place to store it
+                    (p as any).currentInput = inputData;
                 }
             }
         });

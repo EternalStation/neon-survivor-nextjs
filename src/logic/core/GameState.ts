@@ -41,7 +41,8 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         playerClass: selectedClass?.id,
         kineticShieldTimer: 0,
         aigisRings: {},
-        spawnTimer: GAME_CONFIG.PLAYER.SPAWN_DURATION
+        spawnTimer: GAME_CONFIG.PLAYER.SPAWN_DURATION,
+        inventory: Array(30).fill(null)
     };
 
     if (selectedClass) {
@@ -119,7 +120,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
     return {
         gameMode,
-        player, // Keep local player ref for convenience
+        player: players[myId], // Reference to player in the players map, not a separate copy
         players,
         multiplayer: {
             active: gameMode === 'multiplayer',

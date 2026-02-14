@@ -40,11 +40,7 @@ export function updatePlayer(
     // 1. Movement & Wall Collision
     handlePlayerMovement(state, keys, inputVector, onEvent, player);
 
-    // Camera Follow (Only for local player - currently state.player is local)
-    if (player.id === state.player.id) {
-        state.camera.x = player.x - CANVAS_WIDTH / 2;
-        state.camera.y = player.y - CANVAS_HEIGHT / 2;
-    }
+    // Camera is updated centrally in useGameLogic.ts
 
     // 2. Stat Update & Sync (Regen, Hex Passives)
     updatePlayerStats(state, player);

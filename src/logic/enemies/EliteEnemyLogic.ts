@@ -20,15 +20,23 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
     if (e.eliteState === 0) {
         if (dist < 600 && (!e.timer || state.gameTime > e.timer)) {
             e.eliteState = 1; e.timer = state.gameTime + 0.5;
-
         }
         const a = Math.atan2(dy, dx);
         vx = Math.cos(a) * currentSpd + pushX; vy = Math.sin(a) * currentSpd + pushY;
     } else if (e.eliteState === 1) {
         vx = 0; vy = 0; e.rotationPhase = (e.rotationPhase || 0) + 0.2;
         if (state.gameTime > (e.timer || 0)) {
-            const ta = Math.atan2(player.y - e.y, player.x - e.x);
-            e.lockedTargetX = player.x + Math.cos(ta) * 200; e.lockedTargetY = player.y + Math.sin(ta) * 200;
+            // Find nearest player for the charge lock
+            const players = state.players ? Object.values(state.players) : [state.player];
+            let nearestP: any = players[0];
+            let minD = Infinity;
+            players.forEach(p => {
+                const d = Math.hypot(p.x - e.x, p.y - e.y);
+                if (d < minD) { minD = d; nearestP = p; }
+            });
+
+            const ta = Math.atan2(nearestP.y - e.y, nearestP.x - e.x);
+            e.lockedTargetX = nearestP.x + Math.cos(ta) * 200; e.lockedTargetY = nearestP.y + Math.sin(ta) * 200;
             e.dashState = ta; e.eliteState = 2; e.timer = state.gameTime + 0.5;
         }
     } else if (e.eliteState === 2) {
@@ -163,62 +171,52 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
         e.lockedTargetY = e.y + Math.sin(e.dashState || 0) * 3000;
 
         const laserAngle = e.dashState || 0;
-        const px = player.x - e.x;
-        const py = player.y - e.y;
-        const pDist = Math.hypot(px, py);
-        const pAngle = Math.atan2(py, px);
-        const angleDiff = Math.abs(pAngle - laserAngle);
 
         // Massive 3000 Range
-        if (angleDiff < 0.1 && pDist < 3000 && !e.hasHitThisBurst) {
-            e.hasHitThisBurst = true;
-            // Damage: 5% of ELITE DIAMOND MAX HP
-            // This makes them scale insanely hard if they have millions of HP? 
-            // "5% of Elite Diamond MAX HP". Yes.
-            // Should armor reduce this? "ignores defense/shielding"
-            // "ignores defense/shielding" usually implies True Damage.
-            // But previous code applied Armor.
-            // Requirement: "5% of Player's Max HP (ignores defense/shielding, flat percentage). no - 5% of Elite Diamond MAX HP"
-            // Does the "No" apply to "ignores defense"? 
-            // "no - 5% of Elite Diamond MAX HP" likely replaces "5% of Player's Max HP".
-            // I will assume it DOES IGNORE defense/shielding as stated in the first part, because "no" was about the source of the 5%.
-            // Wait, "ignores defense/shielding" means armor doesn't reduce it.
-            // And "shielding" usually refers to normal shield? Or Legendary Shield?
-            // "flat percentage" suggests pure damage.
+        const players = state.players ? Object.values(state.players) : [state.player];
+        players.forEach(p => {
+            const px = p.x - e.x;
+            const py = p.y - e.y;
+            const pDist = Math.hypot(px, py);
+            const pAngle = Math.atan2(py, px);
+            const angleDiff = Math.abs(pAngle - laserAngle);
 
-            const rawDmg = e.maxHp * 0.04;
+            if (angleDiff < 0.1 && pDist < 3000 && !e.hasHitThisBurst) {
+                e.hasHitThisBurst = true;
+                const rawDmg = e.maxHp * 0.04;
 
-            // LASER REDUCTION LOGIC
-            // User: Lasers are reduced by armor, but NOT by projectile reduction
-            const armorObject = player.arm; // This is the PlayerStats object
-            const armorValue = calcStat(armorObject);
-            const reduction = getDefenseReduction(armorValue);
-            const finalActualDmg = rawDmg * (1 - reduction);
+                // LASER REDUCTION LOGIC
+                // User: Lasers are reduced by armor, but NOT by projectile reduction
+                const armorObject = p.arm; // This is the PlayerStats object
+                const armorValue = calcStat(armorObject);
+                const reduction = getDefenseReduction(armorValue);
+                const finalActualDmg = rawDmg * (1 - reduction);
 
-            // Track Stats
-            player.damageBlockedByArmor += (rawDmg - finalActualDmg);
-            player.damageBlocked += (rawDmg - finalActualDmg);
+                // Track Stats
+                p.damageBlockedByArmor += (rawDmg - finalActualDmg);
+                p.damageBlocked += (rawDmg - finalActualDmg);
 
-            if (finalActualDmg > 0) {
-                player.curHp -= finalActualDmg;
-                player.damageTaken += finalActualDmg;
-                player.lastHitDamage = finalActualDmg;
-                player.killerHp = e.hp;
-                player.killerMaxHp = e.maxHp;
-                const beamColor = e.palette ? e.palette[0] : '#f87171';
-                spawnFloatingNumber(state, player.x, player.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
+                if (finalActualDmg > 0) {
+                    p.curHp -= finalActualDmg;
+                    p.damageTaken += finalActualDmg;
+                    p.lastHitDamage = finalActualDmg;
+                    p.killerHp = e.hp;
+                    p.killerMaxHp = e.maxHp;
+                    const beamColor = e.palette ? e.palette[0] : '#f87171';
+                    spawnFloatingNumber(state, p.x, p.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
 
-                // Kinetic Battery: Trigger Zap on Laser Hit
-                const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                if (triggerZap) triggerZap(state, player, 1);
+                    // Kinetic Battery: Trigger Zap on Laser Hit
+                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                    if (triggerZap) triggerZap(state, p, 1);
+                }
+
+                if (p.curHp <= 0 && !state.gameOver) {
+                    state.gameOver = true;
+                    p.deathCause = 'Incinerated by Elite Diamond Laser';
+                    if (onEvent) onEvent('game_over');
+                }
             }
-
-            if (player.curHp <= 0 && !state.gameOver) {
-                state.gameOver = true;
-                player.deathCause = 'Incinerated by Elite Diamond Laser';
-                if (onEvent) onEvent('game_over');
-            }
-        }
+        });
 
         // --- ZOMBIE INSTA-KILL BY LASER ---
         state.enemies.forEach(z => {
@@ -310,11 +308,18 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
     }
 
-    const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
+    // Multiplayer-aware proximity check
+    const players = state.players ? Object.values(state.players) : [state.player];
+    let distToNearest = Infinity;
+    players.forEach(p => {
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < distToNearest) distToNearest = d;
+    });
+
     const hasMinions = (e.minionCount || 0) > 0;
 
     // 1. Proximity Aggro Check
-    if (distToPlayer <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
+    if (distToNearest <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
         state.enemies.forEach(m => {
             if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
         });
@@ -325,7 +330,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
 
     // 2. Visual Feedback
     const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
-    const isWarning = !!(distToPlayer <= 500 && hasMinions && !isAngry);
+    const isWarning = !!(distToNearest <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
         // Full Red (Aggro State)

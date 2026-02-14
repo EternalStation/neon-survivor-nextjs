@@ -35,7 +35,10 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     recordLegendarySouls(state, soulCount);
 
     // Track unbuffed kills for HUD
-    state.rawKillCount = (state.rawKillCount || state.killCount) + baseSouls;
+    if (state.rawKillCount === undefined) {
+        state.rawKillCount = 0;
+    }
+    state.rawKillCount += baseSouls;
 
 
 

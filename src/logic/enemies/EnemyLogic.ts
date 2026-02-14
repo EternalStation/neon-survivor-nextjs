@@ -92,8 +92,15 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 if (poi.cooldown < 0) poi.cooldown = 0;
             }
 
-            const d = Math.hypot(player.x - poi.x, player.y - poi.y);
-            const inRange = d < poi.radius;
+            // Check all players for proximity to POI
+            const players = state.players ? Object.values(state.players) : [state.player];
+            let inRange = false;
+            let nearestDist = Infinity;
+            players.forEach(p => {
+                const d = Math.hypot(p.x - poi.x, p.y - poi.y);
+                if (d < poi.radius) inRange = true;
+                if (d < nearestDist) nearestDist = d;
+            });
 
             if (poi.active) {
                 // Currently Active: Track duration and leave conditions
@@ -150,7 +157,19 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 if (poi.cooldown < 0) poi.cooldown = 0;
             }
 
-            const d = Math.hypot(player.x - poi.x, player.y - poi.y);
+            const players = state.players ? Object.values(state.players) : [state.player];
+            let inRange = false;
+            let nearestPlayer: any = players[0];
+            let nearestDist = Infinity;
+            players.forEach(p => {
+                const d = Math.hypot(p.x - poi.x, p.y - poi.y);
+                if (d < poi.radius) inRange = true;
+                if (d < nearestDist) {
+                    nearestDist = d;
+                    nearestPlayer = p;
+                }
+            });
+
             // Tick down anomaly spawn delay timer
             if (poi.anomalySpawnDelay !== undefined && poi.anomalySpawnDelay > 0) {
                 poi.anomalySpawnDelay -= step;
@@ -170,7 +189,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 }
             }
 
-            if (poi.active && poi.cooldown === 0 && d < poi.radius) {
+            if (poi.active && poi.cooldown === 0 && inRange) {
                 poi.progress += step * 10.0; // 10 seconds to 100 (User Request)
 
                 if (poi.progress >= 100) {
@@ -179,9 +198,9 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     const tier = Math.min(3, current10MinCycle + 1);
 
                     // Push player away first, then delay the actual spawn
-                    const pushAngle = Math.atan2(player.y - poi.y, player.x - poi.x);
-                    player.knockback.x = Math.cos(pushAngle) * 65;
-                    player.knockback.y = Math.sin(pushAngle) * 65;
+                    const pushAngle = Math.atan2(nearestPlayer.y - poi.y, nearestPlayer.x - poi.x);
+                    nearestPlayer.knockback.x = Math.cos(pushAngle) * 65;
+                    nearestPlayer.knockback.y = Math.sin(pushAngle) * 65;
 
                     spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
                     playSfx('warning');
@@ -508,25 +527,29 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         // --- ANOMALY BOSS RADIANCE (Burn Damage & Lava Floor) ---
         if (e.isAnomaly && !e.dead) {
             const burnRadius = 390; // Increased by 30% (was 300)
-            const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+
+            // Apply burn to all players in range
+            const players = state.players ? Object.values(state.players) : [state.player];
+
+            players.forEach(p => {
+                const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
+
+                if (distToPlayer < burnRadius) {
+                    // Deal burn damage (5% Player Max HP per second as requested)
+                    const burnTick = 10; // Every 10 frames
+                    if (state.frameCount % burnTick === 0) {
+                        // 5% / (6 ticks per sec)
+                        const dmg = (calcStat(p.hp) * 0.05) / (60 / burnTick);
+                        p.curHp -= dmg;
+                        p.damageTaken += dmg; // Track damage taken
+                        p.lastHitDamage = dmg;
+                        spawnFloatingNumber(state, p.x, p.y, `-${Math.round(dmg)}`, '#ef4444', false);
+                    }
+                }
+            });
 
             // Add slow demonic rotation (Visual spin)
-            // e.rotationPhase is used by the renderer for the base orientation.
-            // We want it to spin slowly so the "mass" feels alive.
             e.rotationPhase = (e.rotationPhase || 0) + 0.02;
-
-            if (distToPlayer < burnRadius) {
-                // Deal burn damage (5% Player Max HP per second as requested)
-                const burnTick = 10; // Every 10 frames
-                if (state.frameCount % burnTick === 0) {
-                    // 5% / (6 ticks per sec)
-                    const dmg = (calcStat(player.hp) * 0.05) / (60 / burnTick);
-                    player.curHp -= dmg;
-                    player.damageTaken += dmg; // Track damage taken
-                    player.lastHitDamage = dmg;
-                    spawnFloatingNumber(state, player.x, player.y, `-${Math.round(dmg)}`, '#ef4444', false);
-                }
-            }
         }
 
         // Particle Leakage (Starts at 30m, stronger at 60m+)

@@ -37,18 +37,8 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         ctx.scale(zoom, zoom);
         ctx.translate(-camera.x, -camera.y);
 
-        // Screen Shake Logic
-        if (state.spawnTimer > 0 || state.bossPresence > 0.01) {
-            let intensity = 0;
-            if (state.spawnTimer > 0) intensity += state.spawnTimer * 5;
-            if (state.bossPresence > 0) {
-                intensity += 3 * state.bossPresence;
-                if (Math.random() < 0.05 * state.bossPresence) intensity += 15 * state.bossPresence;
-            }
-            const shakeX = (Math.random() - 0.5) * (intensity + (state.critShake || 0));
-            const shakeY = (Math.random() - 0.5) * (intensity + (state.critShake || 0));
-            ctx.translate(shakeX, shakeY);
-        }
+        // Screen Shake Logic - DISABLED
+        // Screen shake removed per user request
 
         // Global Darken for Boss
         if (state.bossPresence > 0.01) {

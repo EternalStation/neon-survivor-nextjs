@@ -265,22 +265,38 @@ export function updateLoot(state: GameState) {
         item.vx *= 0.95;
         item.vy *= 0.95;
 
-        const dx = player.x - item.x;
-        const dy = player.y - item.y;
-        const dist = Math.hypot(dx, dy);
+        // Check all players for magnetism
+        const players = state.players ? Object.values(state.players) : [state.player];
+        let nearestPlayerWithSpace: any = null;
+        let minPlayerDist = Infinity;
+
+        players.forEach(p => {
+            const hasSPACE = p.inventory.slice(10).some(slot => slot === null);
+            if (hasSPACE) {
+                const d = Math.hypot(p.x - item.x, p.y - item.y);
+                if (d < minPlayerDist) {
+                    minPlayerDist = d;
+                    nearestPlayerWithSpace = p;
+                }
+            }
+        });
 
         // Magnet Logic
-        // Magnet Logic (Only if storage indices 10+ have space)
-        const hasSPACE = inventory.slice(10).some(slot => slot === null);
-
-        if (dist < MAGNET_RANGE && hasSPACE) {
+        if (nearestPlayerWithSpace && minPlayerDist < MAGNET_RANGE) {
             item.magnetized = true;
+            item.targetPlayer = nearestPlayerWithSpace; // Store target for pull logic
         } else {
             // If no space, or out of range, drop magnet
             item.magnetized = false;
+            item.targetPlayer = null;
         }
 
-        if (item.magnetized) {
+        if (item.magnetized && item.targetPlayer) {
+            const target = item.targetPlayer;
+            const dx = target.x - item.x;
+            const dy = target.y - item.y;
+            const dist = Math.hypot(dx, dy);
+
             // Accelerate towards player
             const speed = 12; // Fast magnetic pull
             const angle = Math.atan2(dy, dx);
@@ -290,8 +306,7 @@ export function updateLoot(state: GameState) {
             // Pickup Logic
             if (dist < PICKUP_RANGE) {
                 // Try to add to inventory
-                // User Request: Skip Row 1 (Safe Slots: 0-9)
-                // Items go directly into Storage (Index 10+)
+                const inventory = target.inventory;
                 let emptySlotIndex = -1;
                 for (let j = 10; j < inventory.length; j++) {
                     if (inventory[j] === null) {
@@ -304,7 +319,7 @@ export function updateLoot(state: GameState) {
                     // Add to inventory
                     item.isNew = true;
                     inventory[emptySlotIndex] = item;
-                    state.meteoritesPickedUp++;
+                    state.meteoritesPickedUp++; // This is global for now, which is fine
                     playSfx('shoot'); // Pickup sound
                     meteorites.splice(i, 1);
                 }

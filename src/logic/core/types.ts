@@ -155,6 +155,8 @@ export interface Player {
     chronoArmorBonus?: number;
     // Aigis Optimization
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
+    // Inventory
+    inventory: (import('./types').Meteorite | null)[];
 }
 
 export interface ClassMetric {
@@ -783,6 +785,7 @@ export interface Meteorite {
     isBlueprint?: boolean;
     blueprintType?: BlueprintType;
     name?: string; // For blueprints to show name instead of rarity
+    targetPlayer?: import('./types').Player | null;
 }
 
 export type BlueprintType =

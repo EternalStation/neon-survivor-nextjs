@@ -152,11 +152,18 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
         e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
     }
 
-    const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
+    // Multiplayer-aware proximity check
+    const players = state.players ? Object.values(state.players) : [state.player];
+    let distToNearest = Infinity;
+    players.forEach(p => {
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < distToNearest) distToNearest = d;
+    });
+
     const hasMinions = (e.minionCount || 0) > 0;
 
     // 1. Proximity Aggro Check
-    if (distToPlayer <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
+    if (distToNearest <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
         state.enemies.forEach(m => {
             if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
         });
@@ -167,7 +174,7 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
 
     // 2. Visual Feedback
     const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
-    const isWarning = !!(distToPlayer <= 500 && hasMinions && !isAngry);
+    const isWarning = !!(distToNearest <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
         // Full Red (Aggro State)
