@@ -43,7 +43,7 @@ export function handlePlayerMovement(
             if (player.buffs) player.buffs.epicenterShield = 0;
 
             // Skill icon inactive
-            const skill = player.activeSkills.find(s => s.type === 'DefEpi');
+            const skill = player.activeSkills.find((s: any) => s.type === 'DefEpi');
             if (skill) skill.inUse = false;
         }
     }
@@ -167,7 +167,7 @@ export function handlePlayerMovement(
                         chunk.amount = 0;
                     }
                 }
-                player.shieldChunks = player.shieldChunks.filter(c => c.amount > 0);
+                player.shieldChunks = player.shieldChunks.filter((c: any) => c.amount > 0);
                 player.damageBlockedByShield += absorbed;
                 player.damageBlocked += absorbed;
             }

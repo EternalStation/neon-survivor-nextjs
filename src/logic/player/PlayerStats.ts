@@ -69,7 +69,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
                 const shieldAmount = totalArmor * 1.0;
                 if (!player.shieldChunks) player.shieldChunks = [];
 
-                player.shieldChunks = player.shieldChunks.filter(c => (c as any).source !== 'kinetic');
+                player.shieldChunks = player.shieldChunks.filter((c: any) => (c as any).source !== 'kinetic');
 
                 player.shieldChunks.push({
                     amount: shieldAmount,

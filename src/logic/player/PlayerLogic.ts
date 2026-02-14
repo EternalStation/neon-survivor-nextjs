@@ -21,7 +21,7 @@ export function updatePlayer(
 
     // Shield Cleanup
     if (player.shieldChunks) {
-        player.shieldChunks = player.shieldChunks.filter(c => now < c.expiry && c.amount > 0);
+        player.shieldChunks = player.shieldChunks.filter((c: any) => now < c.expiry && c.amount > 0);
     }
 
     // Track player position history for laser prediction (last 60 frames = ~1 second at 60fps)

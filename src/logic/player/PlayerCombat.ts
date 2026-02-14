@@ -19,7 +19,7 @@ export function handlePlayerCombat(
     const player = overridePlayer || state.player;
 
     // --- Kinetic Battery Skill Sync ---
-    const kinSkill = player.activeSkills.find(s => s.type === 'KineticBattery');
+    const kinSkill = player.activeSkills.find((s: any) => s.type === 'KineticBattery');
     if (kinSkill) {
         const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
         const boltElapsed = state.gameTime - (player.lastKineticShockwave || 0);
@@ -237,7 +237,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 }
 
                 if (player.shieldChunks && player.shieldChunks.length > 0) {
-                    player.shieldChunks.sort((a, b) => a.expiry - b.expiry);
+                    player.shieldChunks.sort((a: any, b: any) => a.expiry - b.expiry);
                     let rem = damageToApply;
                     for (const chunk of player.shieldChunks) {
                         if (chunk.amount >= rem) {
@@ -246,7 +246,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                             absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0;
                         }
                     }
-                    player.shieldChunks = player.shieldChunks.filter(c => c.amount > 0);
+                    player.shieldChunks = player.shieldChunks.filter((c: any) => c.amount > 0);
                     player.damageBlockedByShield += absorbed;
                     player.damageBlocked += absorbed;
                 }

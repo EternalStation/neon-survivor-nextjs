@@ -20,7 +20,7 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
                         if (gameState.current.players) {
                             Object.keys(remoteState.players).forEach(pid => {
                                 const oldP = gameState.current.players[pid];
-                                if (oldP && (oldP as any).currentInput) {
+                                if (oldP && (oldP as any).currentInput && remoteState.players && remoteState.players[pid]) {
                                     (remoteState.players[pid] as any).currentInput = (oldP as any).currentInput;
                                 }
                             });
