@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { GameState, UpgradeChoice, PlayerClass, TutorialStep } from '../logic/core/types';
+import { PLAYER_CLASSES } from '../logic/core/classes';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../logic/core/constants';
 import { updatePlayer } from '../logic/player/PlayerLogic';
@@ -201,6 +202,22 @@ export function useGameLogic({
                     if (Math.random() < 0.02) spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 1.3, effect.y + (Math.random() - 0.5) * effect.radius * 1.3, '#10b981', 1, 4, 100, 'vapor');
                 } else if (effect.type === 'epicenter') {
                     if (Math.random() < 0.4) spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 1.2, effect.y + (Math.random() - 0.5) * effect.radius * 1.2, ['#ffffff', '#22d3ee', '#0ea5e9'], 1, 3, 30, 'spark');
+                } else if (effect.type === 'orbital_strike') {
+                    // Start of the strike (Charging visual)
+                    if (Math.random() < 0.5) {
+                        spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius, effect.y + (Math.random() - 0.5) * effect.radius, '#06b6d4', 1, 2, 20, 'spark');
+                    }
+                } else if (effect.type === 'blackhole') {
+                    // Blackhole visuals (Event Horizon)
+                    if (Math.random() < 0.3) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * effect.radius;
+                        const px = effect.x + Math.cos(angle) * dist;
+                        const py = effect.y + Math.sin(angle) * dist;
+                        // Suck particles in
+                        // We can't easily do suction with simple spawnParticles, so just spawn static void particles
+                        spawnParticles(state, px, py, '#8b5cf6', 1, 2, 40, 'void');
+                    }
                 }
 
                 if (effect.type === 'puddle') {
@@ -239,17 +256,107 @@ export function useGameLogic({
                         });
                         playSfx('ice-loop');
                     }
+                } else if (effect.type === 'blackhole') {
+                    // Continuous High Damage to Elites/Bosses, Instant Kill (or massive dmg) to minions at center?
+                    // Description: "Instantly consumes normal enemies at core, while Elites take 25% and Bosses take 10% Max HP per second."
+                    const range = effect.radius;
+                    // Pulse every 0.2s for damage? Or every frame?
+                    // Let's do per frame scaled by step.
+                    // Damage per second factors
+                    const eliteDps = 0.25; // 25% MaxHP/sec
+                    const bossDps = 0.10;  // 10% MaxHP/sec
+                    const minionCoreRadius = 100; // Center kill zone
+
+                    state.enemies.forEach(e => {
+                        if (e.dead) return;
+                        const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
+
+                        if (dist < range) {
+                            // Pull Effect (Reverse Knockback)
+                            // Use configured pull strength (Default 5% of 1000px/s reference = 50px/s)
+                            const blackholeClass = PLAYER_CLASSES.find(c => c.id === 'eventhorizon');
+                            const pullPct = blackholeClass?.capabilityMetrics.find(m => m.label === 'Pull Strength')?.value || 5;
+                            const pullSpeed = 1000 * (pullPct / 100);
+                            const pullStrength = pullSpeed * step;
+
+                            const angle = Math.atan2(effect.y - e.y, effect.x - e.x);
+                            e.x += Math.cos(angle) * pullStrength;
+                            e.y += Math.sin(angle) * pullStrength;
+
+                            // Damage Logic
+                            if (e.boss) {
+                                const dmg = (e.maxHp * bossDps) * step;
+                                e.hp -= dmg;
+                                state.player.damageDealt += dmg;
+                                if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
+                            } else if (e.isElite || e.isRare) {
+                                const dmg = (e.maxHp * eliteDps) * step;
+                                e.hp -= dmg;
+                                state.player.damageDealt += dmg;
+                                if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
+                            } else {
+                                // Normal Enemies
+                                if (dist < minionCoreRadius) {
+                                    // Instantly consume
+                                    e.hp = 0;
+                                    state.player.damageDealt += e.maxHp;
+                                    spawnParticles(state, e.x, e.y, '#8b5cf6', 5, 2, 30, 'void');
+                                } else {
+                                    // Drag damage
+                                    const dmg = (e.maxHp * 0.5) * step; // 50% HP/sec drag dmg
+                                    e.hp -= dmg;
+                                }
+                            }
+                        }
+                    });
                 }
 
                 if (effect.duration <= 0) {
+                    if (effect.type === 'orbital_strike') {
+                        // Trigger Massive Damage on Expiry
+                        const range = effect.radius;
+                        const pDmg = calcStat(state.player.dmg, state.dmgAtkBuffMult);
+                        const dmg = pDmg * 1.5; // 150% Damage
+
+                        state.enemies.forEach(e => {
+                            if (e.dead) return;
+                            const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
+                            if (dist < range) {
+                                e.hp -= dmg;
+                                state.player.damageDealt += dmg;
+                                spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true); // Crit color? Or Theme color
+                                spawnParticles(state, e.x, e.y, '#06b6d4', 5);
+                            }
+                        });
+
+                        // Visual Explosion
+                        spawnParticles(state, effect.x, effect.y, '#06b6d4', 30, 2, 20, 'spark');
+
+                        // Spawn Persistent Crater Effect
+                        state.areaEffects.push({
+                            id: Date.now() + Math.random(),
+                            type: 'crater',
+                            x: effect.x,
+                            y: effect.y,
+                            radius: effect.radius,
+                            duration: 5.0,
+                            creationTime: state.gameTime,
+                            level: effect.level
+                        });
+
+                        playSfx('wall-shock');
+                    }
+
                     if (effect.type === 'epicenter') state.player.immobilized = false;
                     state.areaEffects.splice(i, 1);
                 }
             }
 
-            updateProjectiles(state, eventHandler);
             updateLoot(state);
         }
+
+        // Projectiles update for everyone (Host handles damage, Client handles just movement)
+        updateProjectiles(state, eventHandler);
 
         // Common Updates (Particles, Timers - run on both for smoothness, or Host only? 
         // Particles should probably run on both for visuals, but we rely on Host for important state)

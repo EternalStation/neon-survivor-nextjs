@@ -217,7 +217,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down' | 'ui-click' | 'upgrade' | 'upgrade-confirm' | 'reroll';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -666,6 +666,45 @@ export function playSfx(type: SfxType) {
         g.gain.linearRampToValueAtTime(0, t + 0.4);
         osc.start(t);
         osc.stop(t + 0.4);
+    }
+    else if (type === 'ui-click') {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, t);
+        osc.frequency.linearRampToValueAtTime(1200, t + 0.05);
+        g.gain.setValueAtTime(0.05 * sfxVolume, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        osc.connect(g); g.connect(masterSfxGain as AudioNode);
+        osc.start(t); osc.stop(t + 0.05);
+    }
+    else if (type === 'upgrade' || type === 'upgrade-confirm') {
+        // Positive Chime
+        const base = 440;
+        [base, base * 1.25, base * 1.5].forEach((f, i) => {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, t + i * 0.05);
+            g.gain.setValueAtTime(0, t + i * 0.05);
+            g.gain.linearRampToValueAtTime(0.1 * sfxVolume, t + i * 0.05 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.4);
+            osc.connect(g); g.connect(masterSfxGain as AudioNode);
+            osc.start(t + i * 0.05); osc.stop(t + i * 0.05 + 0.4);
+        });
+    }
+    else if (type === 'reroll') {
+        // Shuffle sound
+        for (let i = 0; i < 5; i++) {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200 + Math.random() * 200, t + i * 0.04);
+            g.gain.setValueAtTime(0.05 * sfxVolume, t + i * 0.04);
+            g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.04 + 0.05);
+            osc.connect(g); g.connect(masterSfxGain as AudioNode);
+            osc.start(t + i * 0.04); osc.stop(t + i * 0.04 + 0.05);
+        }
     }
 }
 

@@ -1,18 +1,37 @@
 import React, { useState } from 'react';
-import type { GameState, Blueprint, BlueprintType } from '../logic/core/types';
+import type { GameState, Blueprint, Meteorite } from '../logic/core/types';
 import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/upgrades/BlueprintLogic';
+import { RecalibrateInterface } from './modules/RecalibrateInterface';
+import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../logic/upgrades/RecalibrateLogic';
+import { getMeteoriteImage } from './modules/ModuleUtils';
 
 interface BlueprintBayProps {
     gameState: GameState;
-    spendDust: (amount: number) => boolean;
     onUpdate: () => void;
     onHoverBlueprint: (bp: Blueprint | null) => void;
+    recalibrateSlot: Meteorite | null;
+    setRecalibrateSlot: (item: Meteorite | null) => void;
+    movedItem: { item: any, source: string, index: number } | null;
+    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
+    onInventoryUpdate: (index: number, item: any) => void;
+    onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
 }
 
-export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust, onUpdate, onHoverBlueprint }) => {
+export const BlueprintBay: React.FC<BlueprintBayProps> = ({
+    gameState,
+    onUpdate,
+    onHoverBlueprint,
+    recalibrateSlot,
+    setRecalibrateSlot,
+    movedItem,
+    setMovedItem,
+    onInventoryUpdate,
+    onSocketUpdate
+}) => {
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
     const [, setTick] = useState(0);
+
 
     React.useEffect(() => {
         const hasResearch = gameState.blueprints.some(bp => bp?.status === 'researching');
@@ -54,187 +73,181 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
 
     return (
         <div className="blueprint-bay">
-            <div className="bay-header">
-                <h3>BLUEPRINT ARCHIVE</h3>
+            {/* MAIN HEADER */}
+            <div className="bay-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: 0, color: '#60a5fa', fontSize: '9px', fontWeight: 900, letterSpacing: '2px' }}>ENGINEERING & ARCHIVE</h3>
+                </div>
             </div>
 
-            <div className="blueprint-grid">
-                {gameState.blueprints.map((bp, idx) => {
-                    const isLocked = idx >= 8;
-                    const isActive = bp && bp.status === 'active';
-                    const isBroken = bp && bp.status === 'broken';
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
-                    return (
-                        <div
-                            key={idx}
-                            className={`blueprint-slot ${isLocked ? 'locked' : bp ? 'occupied' : 'empty'} ${isActive ? 'active' : ''} ${isBroken ? 'broken' : ''}`}
-                            onMouseEnter={() => {
-                                if (!isLocked) {
+                {/* LEFT: RECALIBRATION DROP SLOT (Small Square) */}
+                <div className="recalibrate-drop-section" style={{
+                    flex: '0 0 150px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                }}>
+                    <div
+                        style={{
+                            width: '134px', height: '134px',
+                            position: 'relative',
+                            border: '1px dashed rgba(168, 85, 247, 0.5)',
+                            borderRadius: '6px',
+                            background: 'rgba(168, 85, 247, 0.05)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: recalibrateSlot ? '0 0 15px rgba(168, 85, 247, 0.2)' : 'none'
+                        }}
+                        onMouseUp={(e) => {
+                            if (movedItem && movedItem.source !== 'recalibrate') {
+                                e.stopPropagation();
+
+                                // If already occupied, return current item to inventory
+                                if (recalibrateSlot) {
+                                    let emptyIdx = -1;
+                                    for (let i = 10; i < gameState.inventory.length; i++) {
+                                        if (!gameState.inventory[i]) { emptyIdx = i; break; }
+                                    }
+                                    if (emptyIdx === -1) {
+                                        for (let i = 0; i < 10; i++) {
+                                            if (!gameState.inventory[i]) { emptyIdx = i; break; }
+                                        }
+                                    }
+                                    if (emptyIdx !== -1) {
+                                        onInventoryUpdate(emptyIdx, { ...recalibrateSlot, isNew: false });
+                                    }
+                                }
+
+                                setRecalibrateSlot(movedItem.item);
+                                if (movedItem.source === 'inventory') {
+                                    onInventoryUpdate(movedItem.index, null);
+                                }
+                                if (movedItem.source === 'diamond') {
+                                    onSocketUpdate('diamond', movedItem.index, null);
+                                }
+                                setMovedItem(null);
+                            }
+                        }}
+                    >
+                        {recalibrateSlot ? (
+                            <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <img src={getMeteoriteImage(recalibrateSlot)} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+
+                                <div
+                                    style={{
+                                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                        cursor: 'grab', zIndex: 10
+                                    }}
+                                    onMouseDown={(e) => {
+                                        if (e.button === 0) {
+                                            e.stopPropagation();
+                                            setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
+                                            setRecalibrateSlot(null);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', opacity: 0.4 }}>
+                                <div style={{ fontSize: '16px' }}>🔮</div>
+                                <div style={{ fontSize: '6px', fontWeight: 900 }}>DROP</div>
+                            </div>
+                        )}
+                    </div>
+                    <span style={{ fontSize: '7px', color: '#a855f7', fontWeight: 900, letterSpacing: '0.5px' }}>RECALIBRATE</span>
+                </div>
+
+                {/* RIGHT: BLUEPRINT ARCHIVE (Small Grid - 8 Slots) */}
+                <div className="blueprint-grid" style={{
+                    flex: 1,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 64px)', // 4 Columns, 2 Rows (8 Total)
+                    gap: '6px',
+                    alignContent: 'start'
+                }}>
+
+                    {gameState.blueprints.slice(0, 8).map((bp, idx) => { // 8 OPEN SLOTS AS REQUESTED
+                        const isActive = bp && bp.status === 'active';
+                        const isBroken = bp && bp.status === 'broken';
+
+                        return (
+                            <div
+                                key={idx}
+                                className={`blueprint-slot ${bp ? 'occupied' : 'empty'} ${isActive ? 'active' : ''} ${isBroken ? 'broken' : ''}`}
+                                onMouseEnter={() => {
                                     setHoveredIdx(idx);
                                     if (bp) onHoverBlueprint(bp);
-                                }
-                            }}
-                            onMouseLeave={() => {
-                                setHoveredIdx(null);
-                                onHoverBlueprint(null);
-                            }}
-                            onClick={() => {
-                                if (bp && bp.status !== 'researching') setPromptBlueprint(bp);
-                            }}
-                            style={{
-                                cursor: bp ? 'pointer' : 'default',
-                                position: 'relative'
-                            }}
-                        >
-                            {isLocked ? (
-                                <div className="locked-slot-content">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                    </svg>
-                                    <span style={{ fontSize: '0.45rem', fontWeight: 900, opacity: 0.4 }}>LOCKED</span>
-                                </div>
-                            ) : bp ? (
-                                <div className="blueprint-item">
-                                    {/* BACKGROUND ICON */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        inset: 0,
-                                        backgroundImage: isBroken ? "url('/assets/Icons/BlueprintBroken.png')" : "url('/assets/Icons/Blueprint.png')",
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        opacity: isActive ? 0.4 : isBroken ? 0.6 : 0.8,
-                                        filter: isActive ? 'sepia(1) hue-rotate(180deg) brightness(1.2)' : isBroken ? 'grayscale(1)' : 'none',
-                                        zIndex: 0
-                                    }}></div>
+                                }}
+                                onMouseLeave={() => {
+                                    setHoveredIdx(null);
+                                    onHoverBlueprint(null);
+                                }}
+                                onClick={() => {
+                                    if (bp && bp.status !== 'researching') setPromptBlueprint(bp);
+                                }}
+                                style={{
+                                    cursor: bp ? 'pointer' : 'default',
+                                    position: 'relative'
+                                }}
+                            >
+                                {bp ? (
+                                    <div className="blueprint-item">
+                                        <div style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            backgroundImage: isBroken ? "url('/assets/Icons/BlueprintBroken.png')" : "url('/assets/Icons/Blueprint.png')",
+                                            backgroundSize: '80%',
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'center',
+                                            opacity: isActive ? 0.3 : isBroken ? 0.5 : 0.7,
+                                            filter: isActive ? 'sepia(1) hue-rotate(180deg) brightness(1.2)' : isBroken ? 'grayscale(1)' : 'none',
+                                            zIndex: 0
+                                        }}></div>
 
-                                    {/* OVERLAY CONTENT */}
-                                    <div style={{
-                                        position: 'relative',
-                                        zIndex: 1,
-                                        height: '100%',
-                                        width: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        padding: '0' // REMOVED PADDING to allow full-width bottom
-                                    }}>
-                                        {/* NAME (Padded) */}
-                                        <div style={{ padding: '4px' }}>
-                                            <span className="bp-name" style={{
-                                                fontSize: '0.65rem',
-                                                fontWeight: 900,
-                                                color: '#60a5fa',
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '1px',
-                                                display: 'block',
-                                                textShadow: '0 0 8px rgba(59, 130, 246, 0.8), 0 0 4px rgba(0, 0, 0, 1), 1px 1px 2px rgba(0, 0, 0, 0.9)'
-                                            }}>{bp.status === 'researching' ? '??-???' : (bp.serial || bp.name.substring(0, 5))}</span>
-                                        </div>
-
-                                        {/* STATUS / BUTTONS (Full Width) */}
-                                        <div style={{ width: '100%' }}>
-                                            {!isActive && !isBroken && bp.status !== 'researching' && (
-                                                <div style={{
-                                                    background: 'rgba(59, 130, 246, 0.85)',
-                                                    borderTop: '1px solid #60a5fa',
-                                                    borderBottom: '1px solid #60a5fa', // Ensure borders are clean
+                                        <div style={{
+                                            position: 'relative',
+                                            zIndex: 1,
+                                            height: '100%',
+                                            width: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between'
+                                        }}>
+                                            <div style={{ padding: '2px' }}>
+                                                <span className="bp-name" style={{
                                                     fontSize: '0.45rem',
                                                     fontWeight: 900,
-                                                    padding: '2px 0',
-                                                    color: '#fff',
-                                                    letterSpacing: '0.5px',
-                                                    boxShadow: '0 -2px 4px rgba(0,0,0,0.3)',
-                                                    textAlign: 'center',
-                                                    width: '100%',
-                                                    marginBottom: '4px' // Add margin to float it slightly from bottom or keep 0 if desired? User wanted "to the edge".
-                                                    // Actually, if I want it to the edge of the SLOT, I should remove margin bottom.
-                                                    // But the slot has `overflow: hidden` (Line 342).
-                                                    // Let's keep marginBottom 4px to match previous design aesthetics but ensure width is full.
-                                                    // User said "on left it has some space left". Removing parent padding fixes this.
-                                                    // I will add horizontal margin: 0.
-                                                }}>
-                                                    DEPLOY
-                                                </div>
-                                            )}
-
-                                            {bp.status === 'researching' && (
-                                                <div style={{
-                                                    fontSize: '0.6rem',
-                                                    fontWeight: 900,
-                                                    color: '#fbbf24',
-                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    padding: '2px 0',
-                                                    marginBottom: '4px',
-                                                    width: '100%',
-                                                    background: 'rgba(0, 0, 0, 0.4)'
-                                                }}>
-                                                    <span style={{ fontSize: '0.35rem', opacity: 0.8, letterSpacing: '1px' }}>DECRYPTING</span>
-                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.5rem' }}>
-                                                        {bp.researchFinishTime ? Math.max(0, Math.ceil(bp.researchFinishTime - gameState.gameTime)) + 's' : '...'}
-                                                    </span>
-                                                </div>
-                                            )}
+                                                    color: '#60a5fa',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    textTransform: 'uppercase',
+                                                    display: 'block',
+                                                    textAlign: 'center'
+                                                }}>{bp.status === 'researching' ? '???' : (bp.serial || bp.name.substring(0, 3))}</span>
+                                            </div>
 
                                             {isActive && (
                                                 <div style={{
-                                                    fontSize: '0.6rem',
-                                                    fontWeight: 900,
-                                                    color: '#60a5fa',
-                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    marginBottom: '4px',
-                                                    width: '100%',
-                                                    background: 'rgba(0, 0, 0, 0.4)',
-                                                    padding: '2px 0'
+                                                    fontSize: '0.35rem', color: '#60a5fa', fontWeight: 900,
+                                                    background: 'rgba(0,0,0,0.5)', width: '100%', padding: '1px 0'
                                                 }}>
-                                                    <span style={{ fontSize: '0.35rem', opacity: 0.8 }}>RUNNING</span>
-                                                    {bp.type === 'QUANTUM_SCRAPPER' ? (
-                                                        <span style={{ fontSize: '0.5rem' }}>USES: {Math.max(0, gameState.activeBlueprintCharges[bp.type] || 0)}</span>
-                                                    ) : (
-                                                        <span>
-                                                            {(gameState.activeBlueprintBuffs[bp.type]! > gameState.gameTime + 90000)
-                                                                ? 'PERMANENT'
-                                                                : Math.max(0, Math.ceil(gameState.activeBlueprintBuffs[bp.type]! - gameState.gameTime) - 1) + 's'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {isBroken && (
-                                                <div style={{
-                                                    fontSize: '0.6rem',
-                                                    fontWeight: 900,
-                                                    color: '#ef4444',
-                                                    textShadow: '0 0 5px rgba(0,0,0,1)',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    marginBottom: '4px',
-                                                    width: '100%',
-                                                    background: 'rgba(0, 0, 0, 0.4)',
-                                                    padding: '2px 0'
-                                                }}>
-                                                    <span style={{ fontSize: '0.45rem', opacity: 0.8 }}>BROKEN</span>
+                                                    ON
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="empty-slot-label" style={{ opacity: 0.2 }}>{idx + 1}</div>
-                            )}
-                        </div>
-                    );
-                })}
+                                ) : (
+                                    <div className="empty-slot-label" style={{ opacity: 0.1, fontSize: '8px' }}>{idx + 1}</div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* ACTIVATION PROMPT MODAL */}
@@ -378,43 +391,44 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                 </div>
             )}
 
+
             <style jsx>{`
                 .blueprint-bay {
-                    background: rgba(10, 10, 20, 0.95);
-                    border: 1px solid rgba(59, 130, 246, 0.3);
+                    background: rgba(8, 8, 16, 0.98);
+                    border: 1px solid rgba(59, 130, 246, 0.15);
                     border-radius: 8px;
                     padding: 6px 10px;
                     color: white;
                     font-family: 'Inter', sans-serif;
-                    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
                     margin-top: 8px;
+                    height: 185px;
                 }
 
                 .bay-header {
-                    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+                    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
                     padding-bottom: 2px;
                     margin-bottom: 6px;
                 }
 
                 .bay-header h3 {
                     margin: 0;
-                    letter-spacing: 2px;
-                    color: #60a5fa;
-                    font-size: 0.6rem;
+                    letter-spacing: 3px;
+                    color: #475569;
+                    font-size: 0.55rem;
                     font-weight: 900;
                 }
 
                 .blueprint-grid {
-                    display: grid;
-                    grid-template-columns: repeat(5, 1fr);
-                    gap: 6px;
+                    /* Grid styles inline */
                 }
 
                 .blueprint-slot {
-                    background: rgba(15, 23, 42, 0.8);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    background: rgba(15, 23, 42, 0.6);
+                    border: 1px solid rgba(255, 255, 255, 0.03);
                     border-radius: 4px;
-                    aspect-ratio: 1 / 1;
+                    width: 64px;
+                    height: 64px;
                     position: relative;
                     transition: all 0.2s ease;
                     display: flex;
@@ -424,30 +438,24 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                 }
 
                 .blueprint-slot.occupied {
-                    border-color: rgba(59, 130, 246, 0.4);
+                    border-color: rgba(59, 130, 246, 0.25);
+                    background: rgba(15, 23, 42, 0.9);
                 }
                 
                 .blueprint-slot.occupied:hover {
-                    border-color: #60a5fa;
-                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-                    transform: translateY(-2px);
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+                    transform: translateY(-1px);
                 }
 
                 .blueprint-slot.active {
                     border-color: #3b82f6;
-                    box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.4);
-                    animation: pulseBlue 2s infinite;
-                }
-
-                @keyframes pulseBlue {
-                    0% { box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.2); }
-                    50% { box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.5); }
-                    100% { box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.2); }
+                    box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.2), 0 0 10px rgba(59, 130, 246, 0.1);
                 }
 
                 .blueprint-slot.empty {
                     border-style: dashed;
-                    opacity: 0.5;
+                    opacity: 0.4;
                 }
 
                 .locked-slot-content {
@@ -455,7 +463,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({ gameState, spendDust
                     flex-direction: column;
                     align-items: center;
                     gap: 2px;
-                    color: rgba(255, 255, 255, 0.1);
+                    color: rgba(255, 255, 255, 0.05);
                 }
 
                 .blueprint-item {

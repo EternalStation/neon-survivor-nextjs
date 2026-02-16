@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { GameState } from '../logic/core/types';
 import { networkManager } from '../logic/networking/NetworkManager';
+import { PALETTES } from '../logic/core/constants';
+import { createInitialPlayer } from '../logic/core/GameState';
 
 export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>, gameStarted: boolean) {
     const lastBroadcastTime = useRef(0);
@@ -42,41 +44,67 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
                                 }
                             }
                         } else {
-                            // Remote player: update position directly (or set target for interpolation)
-                            const rp = state.players[lp.id];
-                            if (rp) {
-                                rp.x = lp.x;
-                                rp.y = lp.y;
-                                rp.curHp = lp.hp;
-                                rp.targetAngle = lp.angle;
+                            // Remote player: update position directly (or create if missing)
+                            let rp = state.players[lp.id];
+                            if (!rp) {
+                                // Create missing remote player so they become visible
+                                rp = createInitialPlayer(lp.id);
+                                state.players[lp.id] = rp;
                             }
+                            rp.x = lp.x;
+                            rp.y = lp.y;
+                            rp.curHp = lp.hp;
+                            rp.targetAngle = lp.angle;
                         }
                     });
                 }
 
                 // Sync enemies (lightweight)
                 if (liteState.enemies) {
-                    // This is a simple 1:1 sync. Better approach: track enemies by ID.
-                    const newEnemies: any[] = [];
+                    const state = gameState.current;
+                    const activeIds = new Set(liteState.enemies.map((le: any) => le.id));
+
                     liteState.enemies.forEach((le: any) => {
                         const existing = state.enemies.find(e => e.id === le.id);
                         if (existing) {
-                            existing.x = le.x;
-                            existing.y = le.y;
+                            // Interpolate for smoothness
+                            existing.x += (le.x - existing.x) * 0.5;
+                            existing.y += (le.y - existing.y) * 0.5;
                             existing.hp = le.hp;
-                            newEnemies.push(existing);
                         } else {
-                            // Need to spawn a placeholder enemy?
-                            // This is complex because we don't know the type.
-                            // For now, let's assume we have them or they'll be added via full sync.
+                            // Spawn new enemy proxy
+                            // Note: We don't know the exact type, so we use a default shape.
+                            // The host will eventually send a full STATE_UPDATE with correct types.
+                            state.enemies.push({
+                                id: le.id,
+                                x: le.x,
+                                y: le.y,
+                                hp: le.hp,
+                                maxHp: le.hp,
+                                type: 'circle',
+                                shape: 'circle',
+                                size: 20,
+                                spd: 0,
+                                boss: false,
+                                dead: false,
+                                knockback: { x: 0, y: 0 },
+                                palette: PALETTES[0].colors,
+                                pulsePhase: 0,
+                                rotationPhase: 0
+                            } as any);
                         }
                     });
-                    // state.enemies = newEnemies; // Be careful here, might lose visuals.
+
+                    // Remove enemies that are no longer active according to host
+                    state.enemies = state.enemies.filter(e => activeIds.has(e.id) || e.boss);
                 }
             },
             onBulletSpawn: (data: any) => {
                 const state = gameState.current;
                 if (state.multiplayer.isHost) return;
+
+                // Ignore bullets spawned by ME (they are already predicted locally)
+                if (data.ownerId === state.multiplayer.myId) return;
 
                 // Client-side bullet creation
                 const { x, y, angle, dmg, pierce, ownerId, color, isEnemy } = data;

@@ -363,7 +363,11 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.globalAlpha = alpha * 0.15;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, angle - 0.75, angle + 0.75);
-            ctx.arc(cx, cy, radius - 50, angle + 0.75, angle - 0.75, true);
+            if (radius > 50) {
+                ctx.arc(cx, cy, radius - 50, angle + 0.75, angle - 0.75, true);
+            } else {
+                ctx.lineTo(cx, cy); // Close shape if too small
+            }
             ctx.fill();
 
             ctx.globalAlpha = alpha;
@@ -618,9 +622,25 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
                 ctx.fillStyle = grad;
                 // Optimization: Draw only the puff area, not full screen
                 ctx.fillRect((x + drift) - size, (y + drift) - size, size * 2, size * 2);
+                ctx.fillRect((x + drift) - size, (y + drift) - size, size * 2, size * 2);
             }
             ctx.restore();
         }
+    }
+
+    // 3. Slow Motion Unpause Effects
+    // Flash
+    if (state.flashIntensity && state.flashIntensity > 0) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = `rgba(255, 255, 255, ${state.flashIntensity})`;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    // Timer (only if in slow motion unpause)
+    if (state.unpauseDelay && state.unpauseDelay > 0 && state.unpauseMode === 'slow_motion') {
+        // Text removed as requested by user - just the slow motion and flash remain
     }
 }
 

@@ -1,13 +1,14 @@
 
 import React, { useState, useRef } from 'react';
 import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/core/types';
+import { RARITY_ORDER } from '../logic/core/types';
 
 import { HexGrid } from './modules/HexGrid';
 
 import { InventoryPanel } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
-import { getMeteoriteImage, getDustValue, RARITY_ORDER, PerkFilter, matchesFilter } from './modules/ModuleUtils';
+import { getMeteoriteImage, getDustValue, PerkFilter, matchesFilter } from './modules/ModuleUtils';
 import { isBuffActive, researchBlueprint } from '../logic/upgrades/BlueprintLogic';
 import type { BestiaryEntry } from '../data/BestiaryData';
 import { BlueprintBay } from './BlueprintBay';
@@ -32,7 +33,7 @@ interface ModuleMenuProps {
 }
 
 export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClose, onSocketUpdate, onInventoryUpdate, onRecycle, spendDust, onViewChassisDetail }) => {
-    const [movedItem, setMovedItem] = useState<{ item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex', index: number } | null>(null);
+    const [movedItem, setMovedItem] = useState<{ item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
     const [hoveredItem, setHoveredItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
@@ -44,6 +45,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [dustIndicators, setDustIndicators] = useState<{ id: number, baseValue: number, bonusValue: number }[]>([]);
 
     const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
+    const [recalibrateSlot, setRecalibrateSlot] = useState<Meteorite | null>(null);
 
     // Persistent Filter State (Lifted from InventoryPanel)
     const [coreFilter, setCoreFilter] = useState<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>({
@@ -69,7 +71,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [corruptionCandidate, setCorruptionCandidate] = useState<{ index: number, item: any, source: string, sourceIndex: number } | null>(null);
     const [placementAlert, setPlacementAlert] = useState(false);
     const [archiveFullAlert, setArchiveFullAlert] = useState(false);
-    const [, setRefresh] = useState(0);
+    const [refresh, setRefresh] = useState(0);
 
     const hoverTimeout = useRef<number | null>(null);
 
@@ -86,6 +88,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             setHoveredBlueprint(null);
             setMovedItem(null);
             setSelectedBestiaryEnemy(null);
+            setRecalibrateSlot(null);
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -526,6 +529,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         onSocketUpdate('diamond', movedItem.index, movedItem.item);
                     } else if (movedItem.source === 'inventory') {
                         onInventoryUpdate(movedItem.index, movedItem.item);
+                    } else if (movedItem.source === 'recalibrate') {
+                        setRecalibrateSlot(movedItem.item);
                     }
                     setMovedItem(null);
                 }
@@ -553,14 +558,16 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     width: '40%',
                     height: '100%',
                     position: 'relative',
-                    borderRight: '2px solid rgba(59, 130, 246, 0.3)',
+                    borderRightWidth: '2px',
+                    borderRightStyle: 'solid',
+                    borderRightColor: 'rgba(59, 130, 246, 0.3)',
                     background: 'radial-gradient(circle at 60% 50%, rgba(10, 10, 30, 0.9) 0%, rgba(2, 2, 5, 0.4) 100%)',
                     pointerEvents: 'auto'
                 }}>
                     <HexGrid
                         gameState={gameState}
                         movedItem={movedItem}
-                        onSocketUpdate={onSocketUpdate}
+
                         onInventoryUpdate={onInventoryUpdate}
                         setMovedItem={(item) => {
                             if (gameState.pendingLegendaryHex) {
@@ -568,7 +575,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 setTimeout(() => setPlacementAlert(false), 2000);
                                 return;
                             }
-                            setMovedItem(item);
+                            setMovedItem(item); // Now accepts 'recalibrate' source
                         }}
                         setHoveredItem={setHoveredItem}
                         setLockedItem={setLockedItem}
@@ -587,6 +594,13 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             }
                             handleAttemptRemove(index, item, replaceWith);
                         }}
+                        // Handle drops from RECALIBRATE slot back to HEX
+                        onSocketUpdate={(type, index, item) => {
+                            if (movedItem && movedItem.source === 'recalibrate') {
+                                setRecalibrateSlot(null);
+                            }
+                            onSocketUpdate(type, index, item);
+                        }}
                         onAttemptPlace={(index, item, source, sourceIndex) => {
                             setCorruptionCandidate({ index, item, source, sourceIndex });
                         }}
@@ -600,24 +614,26 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                       */}
                 </div>
 
-                {/* RIGHT: CONTROLS & INVENTORY (60%) - Expanded */}
+                {/* RIGHT: CONTROLS & INVENTORY - Expanded */}
                 <div style={{
-                    width: '60%',
+                    flex: 1, // Takes remaining space
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'row',
-                    borderLeft: '2px solid rgba(59, 130, 246, 0.3)',
+                    borderLeftWidth: '2px',
+                    borderLeftStyle: 'solid',
+                    borderLeftColor: 'rgba(59, 130, 246, 0.3)',
                     pointerEvents: 'auto',
                     position: 'relative'
                 }}>
 
                     <div style={{
-                        flex: '0 0 calc(40% + 50px)', // Increased significantly to handle Singularity tier perks without shifting
+                        flex: '0 0 420px', // STATIC SIZE: 420px (Perfect balance)
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        paddingRight: '10px', // Add offset from inventory
-                        borderRight: 'none' // Remove separator line to use empty space as divider
+                        paddingRight: '0',
+                        borderRight: 'none'
                     }}>
                         {/* DATA PANEL (Top - 9:16 tactical area) */}
                         <div className="module-detail-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -628,7 +644,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 movedItem={movedItem}
                                 hoveredItem={hoveredItem}
                                 lockedItem={lockedItem}
-                                hoveredBlueprint={hoveredBlueprint}
                                 onCancelHoverTimeout={() => {
                                     if (hoverTimeout.current) {
                                         clearTimeout(hoverTimeout.current);
@@ -637,6 +652,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 }}
                                 onMouseLeaveItem={handleMouseLeaveItem}
                                 selectedBestiaryEnemy={selectedBestiaryEnemy}
+                                hoveredBlueprint={hoveredBlueprint}
+                                onUpdate={() => setRefresh(p => p + 1)}
+                                recalibrateSlot={recalibrateSlot}
+                                setRecalibrateSlot={setRecalibrateSlot}
+                                setMovedItem={setMovedItem}
                             />
                         </div>
 
@@ -665,12 +685,13 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 We will need to update InventoryPanel to have the class name `recycle-btn`.
                               */}
 
-                            {/* DUST & EXTRACTION GROUP */}
-                            <div className="dust-display" style={{
+                            {/* RESOURCES ROW: DUST & VOID FLUX (50/50 SPLIT) */}
+                            <div style={{
                                 flex: '1',
                                 display: 'flex',
                                 alignItems: 'stretch',
-                                gap: '4px'
+                                gap: '8px',
+                                width: '100%'
                             }}>
                                 {/* DUST RESOURCE DISPLAY */}
                                 <div className="dust-display-container" style={{
@@ -679,36 +700,32 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                     border: '1px solid #475569',
                                     borderLeft: '4px solid #22d3ee',
                                     borderRadius: '4px',
-                                    padding: '6px 10px',
+                                    padding: '4px 10px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                                    minHeight: '36px',
-                                    position: 'relative' // Added for indicator positioning
+                                    minHeight: '42px',
+                                    position: 'relative'
                                 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{
-                                            width: '20px',
-                                            height: '20px',
+                                            width: '24px',
+                                            height: '24px',
                                             filter: 'drop-shadow(0 0 5px #22d3ee)',
                                         }} />
-                                        <span style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', fontWeight: 700 }}>DUST:</span>
-                                        <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>{Number(meteoriteDust.toFixed(1)).toLocaleString()}</span>
-
-                                        {/* EVACUATION COST LABEL */}
-                                        <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '5px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '15px' }}>
-                                            <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: 900, letterSpacing: '1px' }}>EVACUATION PROTOCOL:</span>
-                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#f87171' }}>10,000 DUST</span>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '9px', color: '#94a3b8', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>DUST</span>
+                                            <span style={{ fontSize: '16px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', lineHeight: 1.2 }}>{Number(meteoriteDust.toFixed(1)).toLocaleString()}</span>
                                         </div>
 
-                                        {/* DUST FLOW INDICATORS (Relocated) */}
-                                        <div style={{ position: 'relative', marginLeft: '30px', width: 0, height: 0, overflow: 'visible' }}>
+                                        {/* DUST FLOW INDICATORS */}
+                                        <div style={{ position: 'relative', marginLeft: '10px', width: 0, height: 0, overflow: 'visible' }}>
                                             {dustIndicators.map((ind, i) => (
                                                 <div key={ind.id} className="float-up-fade" style={{
                                                     position: 'absolute',
                                                     left: 0,
                                                     top: '-10px',
                                                     color: '#fff',
-                                                    fontSize: '18px',
+                                                    fontSize: '16px',
                                                     fontWeight: 900,
                                                     textShadow: '0 0 5px #000, 0 0 10px rgba(34, 211, 238, 0.8)',
                                                     whiteSpace: 'nowrap',
@@ -720,11 +737,36 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                                     {ind.bonusValue > 0 && (
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '5px' }}>
                                                             <span style={{ color: '#fbbf24', textShadow: '0 0 10px #fbbf24' }}>+{ind.bonusValue}</span>
-                                                            <span style={{ fontSize: '9px', background: '#fbbf24', color: '#000', padding: '1px 3px', borderRadius: '2px' }}>CRIT</span>
+                                                            <span style={{ fontSize: '8px', background: '#fbbf24', color: '#000', padding: '0px 2px', borderRadius: '1px', fontWeight: 900 }}>CRIT</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* VOID FLUX RESOURCE DISPLAY */}
+                                <div className="dust-display-container" style={{
+                                    flex: '1',
+                                    background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%)',
+                                    border: '1px solid #475569',
+                                    borderLeft: '4px solid #a855f7',
+                                    borderRadius: '4px',
+                                    padding: '4px 10px',
+                                    display: 'flex', alignItems: 'center',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                    minHeight: '42px'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <img src="/assets/Icons/Void Flux.png" alt="Flux" style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            filter: 'drop-shadow(0 0 5px #a855f7)',
+                                        }} />
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '9px', color: '#e9d5ff', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>VOID FLUX</span>
+                                            <span style={{ fontSize: '16px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)', lineHeight: 1.2 }}>{gameState.player.isotopes.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -745,7 +787,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         <InventoryPanel
                             inventory={gameState.inventory}
                             movedItem={movedItem}
-                            onInventoryUpdate={onInventoryUpdate}
                             onSocketUpdate={onSocketUpdate}
                             setMovedItem={(item) => {
                                 if (gameState.pendingLegendaryHex) {
@@ -754,6 +795,13 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                     return;
                                 }
                                 setMovedItem(item);
+                            }}
+                            onInventoryUpdate={(index, item) => {
+                                if (movedItem && movedItem.source === 'recalibrate') {
+                                    setRecalibrateSlot(null);
+                                }
+                                onInventoryUpdate(index, item);
+                                setRefresh(p => p + 1);
                             }}
                             handleMouseEnterItem={handleMouseEnterItem}
                             handleMouseLeaveItem={handleMouseLeaveItem}
@@ -775,13 +823,28 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             setCoreFilter={setCoreFilter}
                             perkFilters={perkFilters}
                             setPerkFilters={setPerkFilters}
+                            setLockedItem={setLockedItem}
+
+                            refreshKey={refresh}
                         />
 
                         <BlueprintBay
                             gameState={gameState}
-                            spendDust={spendDust}
                             onUpdate={() => setRefresh(prev => prev + 1)}
                             onHoverBlueprint={setHoveredBlueprint}
+                            recalibrateSlot={recalibrateSlot}
+                            setRecalibrateSlot={setRecalibrateSlot}
+                            movedItem={movedItem}
+                            setMovedItem={(item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => {
+                                if (gameState.pendingLegendaryHex) {
+                                    setPlacementAlert(true);
+                                    setTimeout(() => setPlacementAlert(false), 2000);
+                                    return;
+                                }
+                                setMovedItem(item); // Re-enable moved item from BP Bay
+                            }}
+                            onInventoryUpdate={onInventoryUpdate}
+                            onSocketUpdate={onSocketUpdate}
                         />
                     </div>
 

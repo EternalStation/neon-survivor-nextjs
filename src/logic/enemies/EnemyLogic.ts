@@ -699,16 +699,19 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         let targetY = player.y;
         let dist = Math.hypot(player.x - e.x, player.y - e.y);
 
-        // Check all players if multiplayer
-        if (state.players && Object.keys(state.players).length > 1) {
+        // Check all players - find the truly nearest one
+        if (state.players) {
+            let minDist = Infinity;
             Object.values(state.players).forEach(p => {
+                if (p.curHp <= 0) return; // Skip dead players
                 const d = Math.hypot(p.x - e.x, p.y - e.y);
-                if (d < dist) {
-                    dist = d;
+                if (d < minDist) {
+                    minDist = d;
                     targetX = p.x;
                     targetY = p.y;
                 }
             });
+            if (minDist < Infinity) dist = minDist;
         }
 
         // Enemies target active Zombie if closer (and not Boss)
@@ -996,30 +999,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
 // ... (context)
 export function resetEnemyAggro(state: GameState) {
-    state.enemies.forEach(e => {
-        // Reset Elite States
-        if (e.isElite) {
-            e.eliteState = 0;
-            e.timer = state.gameTime + 1.0; // Force a delay before stalking again
-            e.lastAttack = state.gameTime;
-            e.lockedTargetX = undefined;
-            e.lockedTargetY = undefined;
-            e.hasHitThisBurst = false;
-        }
-
-        // Reset Boss States
-        if (e.boss) {
-            if (e.shape === 'circle') e.dashState = 0;
-            if (e.shape === 'triangle') e.berserkState = false;
-            if (e.shape === 'diamond') e.beamState = 0;
-
-            // Shared Boss Timers
-            e.dashTimer = 0;
-            e.beamTimer = 0;
-            e.berserkTimer = 0;
-            e.lastAttack = state.gameTime;
-            e.hasHitThisBurst = false;
-        }
-    });
+    // Disabled aggressive resets to keep enemy animations playing smoothly after pause/slow-mo.
+    // The previous logic was clearing boss timers and elite states, causing them to restart behavior loops.
 }
 

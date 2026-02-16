@@ -2,6 +2,7 @@ import React from 'react';
 import type { GameState, Meteorite, MeteoriteRarity } from '../logic/core/types';
 import './MeteoriteTooltip.css';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
+import { getPerkName, getPerkIcon } from './modules/ModuleUtils';
 
 interface MeteoriteTooltipProps {
     meteorite: Meteorite;
@@ -16,41 +17,35 @@ interface MeteoriteTooltipProps {
 }
 
 const RARITY_COLORS: Record<MeteoriteRarity, string> = {
-    scrap: '#7FFF00',
-    anomalous: '#00C0C0',
-    quantum: '#00FFFF',
-    astral: '#7B68EE',
+    // Removed legacy rarities to match MeteoriteRarity type
+    anomalous: '#60a5fa', // Blue (Anomalous)
     radiant: '#FFD700',
-    void: '#8B0000',
+    abyss: '#8B0000',
     eternal: '#B8860B',
     divine: '#FFFFFF',
     singularity: '#E942FF'
 };
 
 const RARITY_INFO: Record<MeteoriteRarity, { name: string, symbol: string }> = {
-    scrap: { name: 'SALVAGED FRAGMENT', symbol: '◈' },
-    anomalous: { name: 'ANOMALOUS SHARD', symbol: '⬢' },
-    quantum: { name: 'QUANTUM CORE', symbol: '◆' },
-    astral: { name: 'ASTRAL SEED', symbol: '★' },
-    radiant: { name: 'RADIANT STAR', symbol: '✦' },
-    void: { name: 'VOID CATALYST', symbol: '❂' },
-    eternal: { name: 'ETERNAL CORE', symbol: '✵' },
-    divine: { name: 'DIVINE ESSENCE', symbol: '✷' },
-    singularity: { name: 'SINGULARITY POINT', symbol: '✺' }
+    anomalous: { name: 'ANOMALOUS METEORITE', symbol: '✦' },
+    radiant: { name: 'RADIANT STAR', symbol: '❂' },
+    abyss: { name: 'ABYSS CATALYST', symbol: '✵' },
+    eternal: { name: 'ETERNAL CORE', symbol: '✷' },
+    divine: { name: 'DIVINE ESSENCE', symbol: '✺' },
+    singularity: { name: 'SINGULARITY POINT', symbol: '🌌' }
 };
 
 const getMeteoriteImage = (m: Meteorite) => {
-    const assetQuality = m.quality === 'Corrupted' ? 'New' : m.quality;
-    return `/assets/meteorites/M${m.visualIndex}${assetQuality}.png`;
+    return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
 };
 
 const formatDescription = (text: string, highlightColor: string) => {
     // Keywords to highlight - Order matters (longest first to avoid partial matches)
     const keywords = [
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
-        'Legendary Hex', 'PRISTINE', 'DAMAGED', 'BROKEN', 'CORRUPTED',
-        'Type', 'Rarity', 'Arena',
-        'ECO', 'COM', 'DEF',
+        'Legendary', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
+        'Type', 'Rarity', 'Arena', 'Sector',
+        '\\bECO\\b', '\\bCOM\\b', '\\bDEF\\b',
         '\\(Any\\)', 'same level'
     ];
 
@@ -256,12 +251,19 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                         background: `${rarityColor}11`
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <span style={{
-                                fontSize: '14px',
-                                fontWeight: 900,
-                                color: '#fff',
-                                letterSpacing: '1px'
-                            }}>{info.name}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{
+                                    fontSize: '14px',
+                                    fontWeight: 900,
+                                    color: '#fff',
+                                    letterSpacing: '1px'
+                                }}>{info.name}</span>
+                                <span style={{
+                                    fontSize: '9px', padding: '1px 4px',
+                                    background: `${rarityColor}33`, color: rarityColor,
+                                    borderRadius: '2px', fontWeight: 900
+                                }}>V {meteorite.version?.toFixed(1) || '1.0'}</span>
+                            </div>
                             <div style={{
                                 marginTop: '2px',
                                 fontSize: '12px',
@@ -362,24 +364,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             const perkResult = efficiency.perkResults[perk.id];
                             const isActive = perkResult && perkResult.count > 0;
 
-                            const getPerkIcon = (id: string) => {
-                                return '◈';
-                            };
 
-                            const getPerkName = (id: string) => {
-                                if (id === 'base_efficiency') return 'METEORITIC PARTICLE';
-                                if (id === 'neighbor_any_all') return 'PROXIMITY RELAY';
-                                if (id.startsWith('neighbor_any_')) return 'SECTOR AMPLIFIER';
-                                if (id.startsWith('neighbor_new_') || id.startsWith('neighbor_dam_') || id.startsWith('neighbor_bro_')) return 'CONDITION LINK';
-                                if (id === 'neighbor_leg_any') return 'LEGENDARY LIAISON';
-                                if (id.startsWith('neighbor_leg_')) return 'ALPHA CONTROLLER';
-                                if (id.startsWith('pair_')) {
-                                    if (id.endsWith('_lvl')) return 'HARMONY PAIR';
-                                    return 'SYNERGY PAIR';
-                                }
-                                if (id === 'matrix_same_type_rarity') return 'SINGULARITY CORE';
-                                return 'METEORIC PROTOCOL';
-                            };
 
                             const formatVal = (val: number) => {
                                 const rounded = Math.round(val * 10) / 10;
@@ -388,36 +373,35 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
 
                             return (
                                 <div key={idx} className="card-stat-line" style={{
-                                    alignItems: 'flex-start',
-                                    paddingRight: '6px'
+                                    alignItems: 'center',
+                                    paddingRight: '6px',
+                                    display: 'flex',
+                                    gap: '10px',
+                                    minHeight: '42px' // Ensure enough height for 2 lines + padding
                                 }}>
-                                    <span className="bullet" style={{ color: isActive ? rarityColor : '#94a3b8', marginTop: '2px', opacity: isActive ? 1 : 0.6 }}>
+                                    <span className="bullet" style={{ color: isActive ? rarityColor : '#94a3b8', opacity: isActive ? 1 : 0.6 }}>
                                         {getPerkIcon(perk.id)}
                                     </span>
-                                    <div className="content" style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                                <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>{getPerkName(perk.id)}</span>
-                                                <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>({perk.range.min}-{perk.range.max}%)</span>
-                                            </div>
-                                            <span className="value" style={{
-                                                fontSize: '13px',
-                                                color: isActive ? '#fff' : '#94a3b8',
-                                                opacity: isActive ? 1 : 0.4,
-                                                fontWeight: 900,
-                                                marginLeft: '12px',
-                                                textAlign: 'right'
-                                            }}>
-                                                +{formatPct(isActive ? perkResult.activeValue : perk.value, true)}%
-                                            </span>
+                                    <div className="content" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                            <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>{getPerkName(perk.id)}</span>
+                                            <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>({perk.range.min}-{perk.range.max}%)</span>
                                         </div>
-
-
-                                        <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', marginTop: '1px', opacity: 0.9 }}>
+                                        <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', opacity: 0.9 }}>
                                             {formatDescription(perk.description, rarityColor)}
                                             {isActive && perkResult.count > 1 && <span style={{ color: '#FCD34D' }}> (x{perkResult.count})</span>}
                                         </div>
                                     </div>
+                                    <span className="value" style={{
+                                        fontSize: '13px',
+                                        color: isActive ? '#fff' : '#94a3b8',
+                                        opacity: isActive ? 1 : 0.4,
+                                        fontWeight: 900,
+                                        textAlign: 'right',
+                                        minWidth: '45px'
+                                    }}>
+                                        +{formatPct(isActive ? perkResult.activeValue : perk.value, true)}%
+                                    </span>
                                 </div>
                             );
                         })}
@@ -439,10 +423,15 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                     }}>
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>TYPE:</span> <span style={{
-                                color: meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')),
                                 fontSize: '12px',
-                                textShadow: `0 0 10px ${meteorite.quality === 'Corrupted' ? '#a855f7' : (meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24'))}66`
-                            }}>{meteorite.quality === 'New' ? 'PRISTINE' : meteorite.quality.toUpperCase()}{meteorite.quality === 'Corrupted' && <span style={{ fontSize: '9px', marginLeft: '6px', opacity: 0.8, color: '#ef4444' }}>(COST X3 DUST)</span>}</span>
+                                textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}`
+                            }}>{meteorite.quality === 'New' ? 'NEW' : meteorite.quality.toUpperCase()}
+                                {meteorite.isCorrupted && (
+                                    <span style={{ color: '#a855f7', marginLeft: '6px', textShadow: '0 0 10px #a855f7' }}>
+                                        CORRUPTED <span style={{ fontSize: '9px', opacity: 0.8, color: '#ef4444' }}>(COST X3 DUST)</span>
+                                    </span>
+                                )}
+                            </span>
                         </div>
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}

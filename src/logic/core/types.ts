@@ -83,6 +83,7 @@ export interface Player {
 
     speed: number;
     dust: number;
+    isotopes: number;
     hp: PlayerStats;
     curHp: number;
     dmg: PlayerStats;
@@ -634,6 +635,8 @@ export interface GameState {
     rareRewardActive?: boolean; // Flag to show "Increased Rarity" text on next level up
     spawnTimer: number; // For start/restart animation
     unpauseDelay?: number; // Grace period after closing menus
+    unpauseMode?: 'normal' | 'slow_motion'; // Type of unpause transition
+    flashIntensity?: number; // White flash opacity (0-1)
 
     hasPlayedSpawnSound?: boolean;
     bossPresence: number; // 0 to 1 smooth transition for boss effects
@@ -746,8 +749,9 @@ export interface GameState {
     sharedXp: number;
 }
 
-export type MeteoriteRarity = 'scrap' | 'anomalous' | 'quantum' | 'astral' | 'radiant' | 'void' | 'eternal' | 'divine' | 'singularity';
-export type MeteoriteQuality = 'Broken' | 'Damaged' | 'New' | 'Corrupted';
+export type MeteoriteRarity = 'anomalous' | 'radiant' | 'abyss' | 'eternal' | 'divine' | 'singularity';
+export const RARITY_ORDER: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
+export type MeteoriteQuality = 'Broken' | 'Damaged' | 'New';
 
 export interface MeteoritePerk {
     id: string;
@@ -770,6 +774,7 @@ export interface Meteorite {
     discoveredIn: string; // The arena where it was found
     perks: MeteoritePerk[];
     spawnedAt: number; // Timestamp for despawn logic
+    recalibrationCount?: number;
     stats: {
         coreSurge?: number;
         neighbor?: number;
@@ -778,7 +783,7 @@ export interface Meteorite {
         hexType?: number;
     };
     // Loot Props
-    type?: 'dust_pile' | 'meteorite';
+    type?: 'dust_pile' | 'meteorite' | 'void_flux';
     amount?: number; // For dust piles
 
     // Blueprint System
@@ -787,6 +792,8 @@ export interface Meteorite {
     blueprintType?: BlueprintType;
     name?: string; // For blueprints to show name instead of rarity
     targetPlayer?: import('./types').Player | null;
+    isCorrupted?: boolean;
+    version?: number;
 }
 
 export type BlueprintType =

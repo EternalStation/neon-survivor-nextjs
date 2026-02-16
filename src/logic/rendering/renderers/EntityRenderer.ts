@@ -36,26 +36,44 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.globalAlpha = 1.0;
                 ctx.globalCompositeOperation = 'source-over';
             }
+        } else if (m.type === 'void_flux') {
+            const size = 32;
+            const img = (meteoriteImages as any).void_flux;
+            if (img && img.complete && img.naturalWidth !== 0) {
+                ctx.drawImage(img, -size / 2, -size / 2, size, size);
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 4) * 0.2;
+                ctx.drawImage(img, -size / 2 - 4, -size / 2 - 4, size + 8, size + 8);
+                ctx.globalAlpha = 1.0;
+                ctx.globalCompositeOperation = 'source-over';
+            } else {
+                ctx.fillStyle = '#a855f7';
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
         } else {
-            const assetQuality = m.quality === 'Corrupted' ? 'New' : m.quality;
+            const assetQuality = m.quality;
             const imgKey = `M${m.visualIndex}${assetQuality}`;
             const img = meteoriteImages[imgKey];
             if (img && img.complete && img.naturalWidth !== 0) {
                 const size = 32;
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
-                if (m.rarity !== 'scrap') {
-                    ctx.globalCompositeOperation = 'lighter';
-                    ctx.globalAlpha = 0.4;
-                    ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
-                    ctx.globalAlpha = 1.0;
-                    ctx.globalCompositeOperation = 'source-over';
-                }
+                // Always apply glow for now, or maybe only for non-Radiant?
+                // For now, let's just apply it to everything to look nice.
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.4;
+                ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
+                ctx.globalAlpha = 1.0;
+                ctx.globalCompositeOperation = 'source-over';
             } else {
-                let color = '#9ca3af';
-                if (m.rarity === 'anomalous') color = '#14b8a6';
-                else if (m.rarity === 'quantum') color = '#06b6d4';
-                else if (m.rarity === 'astral') color = '#a855f7';
-                else if (m.rarity === 'radiant') color = '#eab308';
+                let color = '#EAB308'; // Radiant (Gold)
+                if (m.rarity === 'anomalous') color = '#60a5fa'; // Blue
+                else if (m.rarity === 'abyss') color = '#4F46E5'; // Abyss (Indigo)
+                else if (m.rarity === 'eternal') color = '#B8860B'; // Eternal (Dark Gold)
+                else if (m.rarity === 'divine') color = '#FFFFFF'; // Divine (White)
+                else if (m.rarity === 'singularity') color = '#E942FF'; // Singularity (Magenta)
+
                 ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.fillStyle = color;
                 ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -6); ctx.lineTo(12, 6); ctx.lineTo(0, 12); ctx.lineTo(-10.5, 7.5); ctx.lineTo(-9, -7.5); ctx.closePath(); ctx.fill();
                 ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();

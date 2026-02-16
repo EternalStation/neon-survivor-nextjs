@@ -9,21 +9,25 @@ import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
 import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
-
-
+import { RecalibrateInterface } from './RecalibrateInterface';
+import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
+import { getMeteoriteImage } from './ModuleUtils';
 
 interface ModuleDetailPanelProps {
     gameState: GameState;
     placementAlert: boolean;
     hoveredHex: { hex: LegendaryHex, index: number, x: number, y: number } | null;
-    movedItem: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex', index: number } | null;
+    movedItem: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null;
     hoveredItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
     lockedItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
-
     hoveredBlueprint: Blueprint | null;
     onCancelHoverTimeout: () => void;
     onMouseLeaveItem: (delay?: number) => void;
     selectedBestiaryEnemy?: BestiaryEntry | null;
+    onUpdate?: () => void;
+    recalibrateSlot: Meteorite | null;
+    setRecalibrateSlot: (item: Meteorite | null) => void;
+    setMovedItem?: (item: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
 }
 
 export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
@@ -36,597 +40,212 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     hoveredBlueprint,
     onCancelHoverTimeout,
     onMouseLeaveItem,
-    selectedBestiaryEnemy
+    selectedBestiaryEnemy,
+    onUpdate,
+    recalibrateSlot,
+    setRecalibrateSlot,
+    setMovedItem
 }) => {
     const terminalRef = React.useRef<HTMLDivElement>(null);
-    const lastTypedCountRef = React.useRef(0);
     const extractionDialogActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
+
     React.useEffect(() => {
         if (terminalRef.current) {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
         }
     }, [gameState.extractionMessageIndex, gameState.extractionStatus]);
 
-    React.useEffect(() => {
-        if (!extractionDialogActive) {
-            lastTypedCountRef.current = 0;
-            return;
-        }
-        const clock = gameState.extractionDialogTime ?? 0;
-        const visibleTotal = EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1)
-            .reduce((sum, msg, i) => {
-                const resolvedText = msg.text
-                    .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                    .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
-                    .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
-                const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
-                const elapsed = Math.max(0, clock - startTime);
-                const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
-                return sum + revealCount;
-            }, 0);
+    const handleExitRecalibrate = () => {
+        if (recalibrateSlot) {
+            // Find empty slot in inventory (Storage 10+ first, then Safe Slots 0-9)
+            let emptyIdx = -1;
+            for (let i = 10; i < gameState.inventory.length; i++) {
+                if (gameState.inventory[i] === null) { emptyIdx = i; break; }
+            }
+            if (emptyIdx === -1) {
+                for (let i = 0; i < 10; i++) {
+                    if (gameState.inventory[i] === null) { emptyIdx = i; break; }
+                }
+            }
 
-        if (visibleTotal > lastTypedCountRef.current) {
-            playTypewriterClick();
-            lastTypedCountRef.current = visibleTotal;
+            if (emptyIdx !== -1) {
+                gameState.inventory[emptyIdx] = { ...recalibrateSlot, isNew: false };
+                setRecalibrateSlot(null);
+                onUpdate?.();
+                playSfx('ui-click');
+            } else {
+                // Return as moved item if inventory is full
+                setMovedItem?.({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
+                setRecalibrateSlot(null);
+            }
         }
-    }, [extractionDialogActive, gameState.extractionDialogTime, gameState.extractionMessageIndex, gameState.extractionStatus, gameState.extractionTargetArena, gameState.extractionSectorLabel]);
-
-    const { moduleSockets } = gameState;
+    };
 
     return (
         <div style={{
             flex: 1,
             width: '100%',
+            height: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            background: 'rgba(5, 5, 15, 0.98)',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            borderColor: '#3b82f6',
+            borderRadius: '8px',
+            boxShadow: '0 0 30px rgba(59, 130, 246, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
-            <div className="data-panel module-detail-panel" style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(5, 5, 15, 0.95)',
-                border: '2px solid #3b82f6',
-                borderRadius: '8px',
-                boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
-                display: 'flex',
-                // Removed overflow: hidden to allow extraction terminal expansion
-                boxSizing: 'border-box',
-                position: 'relative'
+            {/* SCANNER GRID BACKGROUND */}
+            <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                opacity: (recalibrateSlot || lockedItem || hoveredItem || hoveredBlueprint || selectedBestiaryEnemy) ? 0.35 : 1,
+                transition: 'opacity 0.3s'
             }}>
+                {/* PERSPECTIVE GRID */}
+                <div style={{
+                    position: 'absolute', bottom: '-20%', left: '-50%', right: '-50%', height: '80%',
+                    background: 'linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px)',
+                    backgroundSize: '40px 40px',
+                    transform: 'perspective(400px) rotateX(60deg)',
+                    animation: 'grid-pan 15s infinite linear',
+                    maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
+                }} />
+
+                {/* VERTICAL SCAN LINE */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, width: '100%', height: '2px',
+                    background: 'linear-gradient(90deg, transparent, #60a5fa, #3b82f6, #60a5fa, transparent)',
+                    boxShadow: '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.5)',
+                    animation: 'scan-vertical 5s infinite ease-in-out',
+                    zIndex: 2
+                }} />
+            </div>
+
+            {/* CONTENT LAYER */}
+            <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {gameState.pendingLegendaryHex ? (
-                    <LegendaryDetail
-                        hex={gameState.pendingLegendaryHex}
-                        gameState={gameState}
-                        hexIdx={-1}
-                        pending={true}
-                        placementAlert={placementAlert}
-                    />
+                    <LegendaryDetail hex={gameState.pendingLegendaryHex} gameState={gameState} hexIdx={-1} pending={true} placementAlert={placementAlert} />
                 ) : (hoveredHex && !movedItem) ? (
-                    <LegendaryDetail
-                        hex={hoveredHex.hex}
-                        gameState={gameState}
-                        hexIdx={hoveredHex.index}
-                        pending={false}
-                    />
-                ) : lockedItem ? (
-                    <MeteoriteTooltip
-                        meteorite={lockedItem.item}
-                        gameState={gameState}
-                        meteoriteIdx={lockedItem.index}
-                        x={lockedItem.x}
-                        y={lockedItem.y}
-                        isEmbedded={true}
-                    />
-                ) : hoveredItem ? (
-                    hoveredItem.item.isBlueprint ? (
-                        <div style={{
-                            width: '100%', height: '100%',
-                            display: 'flex', flexDirection: 'column',
-                            padding: '15px', color: '#fff',
-                            fontFamily: 'Inter, sans-serif',
-                            position: 'relative'
-                        }}>
-                            {/* HEADER */}
-                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '8px', marginBottom: '10px' }}>
-                                <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#60a5fa', boxShadow: '0 0 5px #60a5fa' }} />
-                                    ARCHIVE ANOMALY
-                                </div>
-                                <div style={{ fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', textShadow: '0 0 10px rgba(59, 130, 246, 0.5)', marginTop: '2px' }}>
-                                    ENCRYPTED DATASET
-                                </div>
-                            </div>
-
-                            {/* CONTENT */}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                                    <div style={{
-                                        border: '1px solid #3b82f6',
-                                        borderRadius: '8px',
-                                        padding: '10px',
-                                        background: 'rgba(59, 130, 246, 0.1)',
-                                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)'
-                                    }}>
-                                        <img
-                                            src="/assets/Icons/Blueprint.png"
-                                            style={{ width: '64px', height: '64px', filter: 'drop-shadow(0 0 10px #3b82f6)' }}
-                                            alt="encrypted blueprint"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={{ fontSize: '11px', lineHeight: '1.6', color: '#94a3b8', fontStyle: 'italic', background: 'rgba(15, 23, 42, 0.5)', padding: '10px', borderRadius: '4px', borderLeft: '2px solid #3b82f6' }}>
-                                    "Deep-space telemetry recovered from an abandoned orbital station. The data appears to contain advanced chassis augmentation protocols, but requires local research processing to initialize."
-                                </div>
-
-                                {/* ANALYSIS BOX */}
-                                <div style={{
-                                    border: '1px dashed rgba(59, 130, 246, 0.4)',
-                                    borderRadius: '6px',
-                                    padding: '12px',
-                                    background: 'rgba(15, 23, 42, 0.3)',
-                                    marginTop: '20px'
-                                }}>
-
-
-
-
-                                    <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', fontStyle: 'italic' }}>
-                                        *Decryption duration varies based on encryption complexity
-                                    </div>
-
-                                    <div style={{
-                                        marginTop: '4px',
-                                        textAlign: 'center',
-                                        color: '#f59e0b',
-                                        fontWeight: 900,
-                                        fontSize: '11px',
-                                        letterSpacing: '1px',
-                                        animation: 'pulse-text 2s infinite'
-                                    }}>
-                                        RIGHT-CLICK TO BEGIN DECRYPTION
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <MeteoriteTooltip
-                            meteorite={hoveredItem.item}
-                            gameState={gameState}
-                            meteoriteIdx={hoveredItem.index}
-                            x={hoveredItem.x}
-                            y={hoveredItem.y}
-                            isEmbedded={true}
-                        />
-                    )
-                ) : hoveredBlueprint ? (
+                    <LegendaryDetail hex={hoveredHex.hex} gameState={gameState} hexIdx={hoveredHex.index} pending={false} />
+                ) : recalibrateSlot ? (
                     <div style={{
-                        width: '100%', height: '100%',
-                        display: 'flex', flexDirection: 'column',
-                        padding: '15px', color: '#fff',
-                        fontFamily: 'Inter, sans-serif',
-                        position: 'relative'
+                        flex: 1,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        position: 'relative', padding: '0'
                     }}>
-                        {/* HEADER */}
-                        <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>
-                                    {hoveredBlueprint.status === 'researching' ? 'UNKNOWN SIGNAL' : 'BLUEPRINT PROTOCOL'}
-                                </div>
-                                <div style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', textShadow: '0 0 10px rgba(59, 130, 246, 0.5)' }}>
-                                    {hoveredBlueprint.status === 'researching' ? '??-???' : hoveredBlueprint.serial}
-                                </div>
-                            </div>
+                        <RecalibrateInterface
+                            item={recalibrateSlot}
+                            gameState={gameState}
+                            onClose={handleExitRecalibrate}
+                            onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
+                            onRerollType={(indices: number[]) => { if (rerollPerkType(gameState, recalibrateSlot, indices)) onUpdate?.(); }}
+                            onRerollValue={(indices: number[]) => { if (rerollPerkValue(gameState, recalibrateSlot, indices)) onUpdate?.(); }}
+                        />
+                        {/* DRAG HANDLE TO EJECT */}
+                        <div
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'auto' }}
+                            onMouseDown={(e) => {
+                                if (e.button === 0 && setMovedItem) {
+                                    e.preventDefault();
+                                    setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
+                                    setRecalibrateSlot(null);
+                                }
+                            }}
+                        />
+                    </div>
+                ) : lockedItem ? (
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
+                    </div>
+                ) : (hoveredItem && hoveredItem.item.isBlueprint) ? (
+                    <div style={{ padding: '30px', color: '#fff', flex: 1 }}>
+                        <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
+                            <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
+                            <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
                         </div>
-
-                        {/* CONTENT */}
-                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', paddingRight: '5px' }}>
-                            {hoveredBlueprint.status === 'researching' ? (
-                                <div style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                    height: '100%', opacity: 0.6, textAlign: 'center'
-                                }}>
-                                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔐</div>
-                                    <div style={{ fontSize: '12px', fontWeight: 900, letterSpacing: '2px', color: '#60a5fa' }}>DATA ENCRYPTED</div>
-                                    <div style={{ fontSize: '10px', marginTop: '5px' }}>RESEARCH REQUIRED TO ACCESS PROTOCOL</div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div style={{ textAlign: 'center', padding: '10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                                        <div style={{ fontSize: '11px', color: '#93c5fd', fontWeight: 700, marginBottom: '2px' }}>DECRYPTED DESIGNATION</div>
-                                        <div style={{ fontSize: '20px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>{hoveredBlueprint.name}</div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                        <img
-                                            src="/assets/Icons/Blueprint.png"
-                                            style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 15px #3b82f6)' }}
-                                            alt="blueprint"
-                                        />
-                                    </div>
-
-                                    <div style={{ fontSize: '12px', lineHeight: '1.5', color: '#cbd5e1', background: 'rgba(15, 23, 42, 0.6)', padding: '10px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                        <div style={{ fontSize: '9px', color: '#3b82f6', fontWeight: 900, marginBottom: '4px' }}>FUNCTIONAL OVERVIEW</div>
-                                        {hoveredBlueprint.desc}
-                                    </div>
-
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900 }}>ACTIVATION COST</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '2px' }}>
-                                                <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{hoveredBlueprint.cost}</span>
-                                                <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '12px', height: '12px' }} />
-                                            </div>
-                                        </div>
-                                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900 }}>
-                                                {hoveredBlueprint.type === 'QUANTUM_SCRAPPER' ? 'CAPACITY' : 'DURATION'}
-                                            </div>
-                                            <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '2px' }}>
-                                                {hoveredBlueprint.type === 'QUANTUM_SCRAPPER' ? '50 USES' : `${hoveredBlueprint.duration}s`}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* STATUS INDICATOR */}
-                                    {hoveredBlueprint.status === 'broken' ? (
-                                        <div style={{ marginTop: '10px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 900, fontSize: '11px', letterSpacing: '1px' }}>
-                                            PROTOCOL DAMAGED
-                                        </div>
-                                    ) : isBuffActive(gameState, hoveredBlueprint.type) ? (
-                                        <div style={{ marginTop: '10px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid #22c55e', color: '#4ade80', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 900, fontSize: '11px', letterSpacing: '1px' }}>
-                                            PROTOCOL ACTIVE
-                                        </div>
-                                    ) : (
-                                        <div style={{ marginTop: '10px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', color: '#60a5fa', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 900, fontSize: '11px', letterSpacing: '1px', opacity: 0.7 }}>
-                                            READY FOR ACTIVATION
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
+                            <div style={{
+                                border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
+                                background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)'
+                            }}>
+                                <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
+                            </div>
+                            <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>RIGHT-CLICK TO BEGIN DECRYPTION</div>
+                        </div>
+                    </div>
+                ) : hoveredItem ? (
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <MeteoriteTooltip meteorite={hoveredItem.item} gameState={gameState} meteoriteIdx={hoveredItem.index} x={0} y={0} isEmbedded={true} />
+                    </div>
+                ) : hoveredBlueprint ? (
+                    <div style={{ padding: '30px', color: '#fff', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
+                            <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '3px' }}>BLUEPRINT PROTOCOL</div>
+                            <div style={{ fontSize: '32px', fontWeight: 900 }}>{hoveredBlueprint.name}</div>
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto', fontSize: '16px', lineHeight: '1.8', color: '#cbd5e1', paddingRight: '15px' }}>
+                            <div style={{ marginBottom: '25px', fontStyle: 'italic', opacity: 0.7, color: '#93c5fd', fontSize: '13px' }}>{hoveredBlueprint.serial}</div>
+                            {hoveredBlueprint.desc}
+                            <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                                <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, marginBottom: '10px', letterSpacing: '1px' }}>ACTIVATION COST</div>
+                                <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#fff' }}>{hoveredBlueprint.cost.toLocaleString()} DUST</div>
+                            </div>
                         </div>
                     </div>
                 ) : selectedBestiaryEnemy ? (
                     <BestiaryDetailView entry={selectedBestiaryEnemy} />
                 ) : extractionDialogActive ? (
-                    // EXTRACTION TERMINAL
-                    <div ref={terminalRef} style={{
-                        width: '100%',
-                        height: '100%',
-                        padding: '20px',
-                        fontFamily: 'monospace',
-                        color: extractionDialogActive ? '#22c55e' : '#4ade80',
-                        overflowY: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        textShadow: '0 0 5px rgba(34, 197, 94, 0.5)',
-                        fontSize: '14px',
-                        lineHeight: '1.4'
-                    }}>
-                        {/* TERMINAL CONTENT */}
-                        {(() => {
-                            const visibleMessages = EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1);
-                            const hasAlert = visibleMessages.some(m => (m as any).isAlert);
-
-                            return (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '12px'
-                                    }}>
-                                    {/* TERMINAL HEADER */}
-                                    <div style={{ borderBottom: '1px solid ' + (hasAlert ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'), paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', opacity: 0.85, color: hasAlert ? '#ef4444' : 'inherit' }}>
-                                        <span>SIGNAL INTERCEPT :: ENCRYPTED</span>
-                                        <span style={{ animation: 'pulse-text 1s infinite' }}>{hasAlert ? 'CRITICAL_ALERT' : 'COMMS_ACTIVE'}</span>
-                                    </div>
-
-                                    {/* MESSAGES */}
-                                    {visibleMessages.map((msg, i) => {
-                                        const resolvedText = msg.text
-                                            .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                                            .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
-                                            .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
-                                        const clock = gameState.extractionDialogTime ?? 0;
-                                        const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
-                                        const elapsed = Math.max(0, clock - startTime);
-                                        const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
-                                        const visibleText = resolvedText.slice(0, revealCount);
-                                        const isYou = (msg as any).speaker === 'you';
-                                        const isAlert = (msg as any).isAlert;
-
-                                        return (
-                                            <div key={i} style={{
-                                                padding: '6px 0',
-                                                borderLeft: !isYou ? (isAlert ? '2px solid #ef4444' : '2px solid #3b82f6') : 'none',
-                                                borderRight: isYou ? '2px solid #f59e0b' : 'none',
-                                                paddingLeft: !isYou ? '10px' : '0',
-                                                paddingRight: isYou ? '10px' : '0',
-                                                textAlign: isYou ? 'right' : 'left',
-                                                alignSelf: isYou ? 'flex-end' : 'flex-start',
-                                                maxWidth: '95%',
-                                                color: isYou ? '#fde68a' : (isAlert ? '#fca5a5' : '#93c5fd'),
-                                                animation: 'typewriter 0.5s ease-out forwards',
-                                                lineHeight: '1.7',
-                                                fontSize: '13px'
-                                            }}>
-                                                <span style={{ color: isYou ? '#fbbf24' : (isAlert ? '#ef4444' : '#60a5fa'), opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
-                                                    {isYou ? 'YOU' : msg.speaker === 'comm' ? 'ORBITAL' : msg.speaker?.toUpperCase()}:
-                                                </span>
-                                                <span style={{ textShadow: isAlert ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>
-                                                    {visibleText}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                    {gameState.extractionStatus === 'requested' && gameState.extractionMessageIndex < 0 && (
-                                        <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
-                                    )}
-                                </div>
-                            );
-                        })()}
-                        )
+                    <div ref={terminalRef} style={{ flex: 1, padding: '32px', fontFamily: 'monospace', color: '#22c55e', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '15px' }}>
+                        <div style={{ borderBottom: '1px solid rgba(34, 197, 94, 0.3)', paddingBottom: '12px', marginBottom: '12px', fontSize: '12px', opacity: 0.7, letterSpacing: '3px' }}>SIGNAL INTERCEPT :: ENCRYPTED COMMS</div>
+                        {EXTRACTION_MESSAGES.slice(0, gameState.extractionMessageIndex + 1).map((msg, i) => (
+                            <div key={i} style={{ padding: '8px 0', borderLeft: msg.speaker === 'you' ? 'none' : '3px solid #3b82f6', borderRight: msg.speaker === 'you' ? '3px solid #f59e0b' : 'none', paddingLeft: msg.speaker === 'you' ? 0 : '20px', paddingRight: msg.speaker === 'you' ? '20px' : 0, textAlign: msg.speaker === 'you' ? 'right' : 'left', alignSelf: msg.speaker === 'you' ? 'flex-end' : 'flex-start', color: msg.speaker === 'you' ? '#fde68a' : '#93c5fd' }}>
+                                <span style={{ fontWeight: 900, opacity: 0.9, marginRight: '12px' }}>{msg.speaker?.toUpperCase()}:</span>
+                                {msg.text}
+                            </div>
+                        ))}
                     </div>
                 ) : (
-                    <div style={{
-                        width: '100%', height: '100%',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: 'linear-gradient(180deg, rgba(2, 6, 23, 0.95) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(2, 6, 23, 0.95) 100%)',
-                        boxShadow: 'inset 0 0 50px rgba(0,0,0,0.8)'
-                    }}>
-                        {/* SCROLLING GRID FLOOR (Perspective) */}
-                        {!extractionDialogActive && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ position: 'relative', width: '220px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {/* Rotating Loading Circle */}
                             <div style={{
-                                position: 'absolute', bottom: '-30%', left: '-50%', right: '-50%', height: '80%',
-                                background: 'linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px)',
-                                backgroundSize: '40px 40px',
-                                transform: 'perspective(300px) rotateX(60deg)',
-                                animation: 'grid-pan 10s infinite linear',
-                                pointerEvents: 'none',
-                                maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
+                                position: 'absolute', width: '100%', height: '100%',
+                                border: '2px solid rgba(59, 130, 246, 0.1)',
+                                borderTop: '2px solid #3b82f6',
+                                borderRadius: '50%',
+                                animation: 'spin-slow 3s infinite cubic-bezier(0.4, 0, 0.2, 1)'
                             }} />
-                        )}
-
-                        {/* SCANNER APERTURE RINGS */}
-                        {!extractionDialogActive && (
-                            <>
-                                <div style={{
-                                    position: 'absolute',
-                                    width: '280px', height: '280px',
-                                    borderRadius: '50%',
-                                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                                    borderTop: '2px solid rgba(59, 130, 246, 0.6)',
-                                    borderBottom: '2px solid rgba(59, 130, 246, 0.6)',
-                                    animation: 'spin-slow 12s infinite linear',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
-                                    <div style={{
-                                        width: '85%', height: '85%',
-                                        borderRadius: '50%',
-                                        border: '1px dashed rgba(59, 130, 246, 0.15)',
-                                        transform: 'rotate(45deg)'
-                                    }} />
-                                </div>
-
-                                <div style={{
-                                    position: 'absolute',
-                                    width: '220px', height: '220px',
-                                    borderRadius: '50%',
-                                    borderLeft: '4px solid rgba(59, 130, 246, 0.4)',
-                                    borderRight: '4px solid rgba(59, 130, 246, 0.4)',
-                                    borderTop: '1px solid transparent',
-                                    borderBottom: '1px solid transparent',
-                                    animation: 'spin-reverse 8s infinite linear',
-                                    opacity: 0.7
-                                }} />
-                            </>
-                        )}
-
-                        {/* LASER SCAN BAR */}
-                        {!extractionDialogActive && (
                             <div style={{
-                                position: 'absolute',
-                                top: 0, left: 0, width: '100%', height: '2px',
-                                background: 'linear-gradient(90deg, transparent, #60a5fa, #3b82f6, #60a5fa, transparent)',
-                                boxShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 0 10px rgba(96, 165, 250, 0.8)',
-                                animation: 'scan-vertical 4s infinite ease-in-out',
-                                zIndex: 5,
-                                opacity: 0.9
+                                position: 'absolute', width: '80%', height: '80%',
+                                border: '1px dashed rgba(96, 165, 250, 0.2)',
+                                borderRadius: '50%',
+                                animation: 'spin-reverse 15s infinite linear'
                             }} />
-                        )}
 
-                        {/* TEXT PROMPTS - CENTERED */}
-                        <div style={{
-                            position: 'absolute',
-                            top: '50%', left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            gap: '15px',
-                            zIndex: 10,
-                            textAlign: 'center',
-                            width: '90%',
-                            height: extractionDialogActive ? 'calc(100% + 40px)' : 'auto',
-                            marginTop: extractionDialogActive ? '-20px' : 0
-                        }}>
-                            {extractionDialogActive ? (() => {
-                                const visibleMessages = EXTRACTION_MESSAGES.slice(0, gameState.extractionStatus === 'waiting' ? EXTRACTION_MESSAGES.length : gameState.extractionMessageIndex + 1);
-                                const hasAlert = visibleMessages.some(m => (m as any).isAlert);
-
-                                return (
-                                    <div
-                                        ref={terminalRef}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            background: hasAlert ? 'rgba(30, 0, 0, 0.94)' : 'rgba(5, 10, 20, 0.92)',
-                                            border: hasAlert ? '1px solid #ef4444' : '1px solid #3b82f6',
-                                            borderRadius: '6px',
-                                            padding: '18px',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '12px',
-                                            overflowY: 'auto',
-                                            boxShadow: hasAlert ? '0 0 30px rgba(239, 68, 68, 0.25), inset 0 0 20px rgba(0,0,0,0.6)' : '0 0 30px rgba(59, 130, 246, 0.25), inset 0 0 20px rgba(0,0,0,0.6)',
-                                            fontFamily: 'monospace',
-                                            color: hasAlert ? '#fca5a5' : '#93c5fd',
-                                            scrollbarWidth: 'none',
-                                            transition: 'all 0.5s ease'
-                                        }}>
-                                        {/* TERMINAL HEADER */}
-                                        <div style={{ borderBottom: '1px solid ' + (hasAlert ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'), paddingBottom: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', opacity: 0.85, color: hasAlert ? '#ef4444' : 'inherit' }}>
-                                            <span>SIGNAL INTERCEPT :: ENCRYPTED</span>
-                                            <span style={{ animation: 'pulse-text 1s infinite' }}>{hasAlert ? 'CRITICAL_ALERT' : 'COMMS_ACTIVE'}</span>
-                                        </div>
-
-                                        {/* MESSAGES */}
-                                        {visibleMessages.map((msg, i) => {
-                                            const resolvedText = msg.text
-                                                .replace('[ARENA_NAME]', ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR")
-                                                .replace('[SECTOR_NAME]', gameState.extractionSectorLabel || "LZ")
-                                                .replace('[PLAYER_NAME]', (gameState.playerName || "PLAYER").toUpperCase());
-                                            const clock = gameState.extractionDialogTime ?? 0;
-                                            const startTime = gameState.extractionMessageTimes?.[i] ?? clock;
-                                            const elapsed = Math.max(0, clock - startTime);
-                                            const revealCount = Math.min(resolvedText.length, Math.floor(elapsed * 12));
-                                            const visibleText = resolvedText.slice(0, revealCount);
-                                            const isYou = (msg as any).speaker === 'you';
-                                            const isAlert = (msg as any).isAlert;
-
-                                            return (
-                                                <div key={i} style={{
-                                                    padding: '6px 0',
-                                                    borderLeft: !isYou ? (isAlert ? '2px solid #ef4444' : '2px solid #3b82f6') : 'none',
-                                                    borderRight: isYou ? '2px solid #f59e0b' : 'none',
-                                                    paddingLeft: !isYou ? '10px' : '0',
-                                                    paddingRight: isYou ? '10px' : '0',
-                                                    textAlign: isYou ? 'right' : 'left',
-                                                    alignSelf: isYou ? 'flex-end' : 'flex-start',
-                                                    maxWidth: '95%',
-                                                    color: isYou ? '#fde68a' : (isAlert ? '#fca5a5' : '#93c5fd'),
-                                                    animation: 'typewriter 0.5s ease-out forwards',
-                                                    lineHeight: '1.7',
-                                                    fontSize: '13px'
-                                                }}>
-                                                    <span style={{ color: isYou ? '#fbbf24' : (isAlert ? '#ef4444' : '#60a5fa'), opacity: 0.8, marginRight: isYou ? 0 : '8px', marginLeft: isYou ? '8px' : 0 }}>
-                                                        {isYou ? 'YOU' : msg.speaker === 'comm' ? 'ORBITAL' : msg.speaker?.toUpperCase()}:
-                                                    </span>
-                                                    <span style={{ textShadow: isAlert ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none' }}>
-                                                        {visibleText}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                        {gameState.extractionStatus === 'requested' && gameState.extractionMessageIndex < 0 && (
-                                            <div style={{ marginTop: '5px', animation: 'pulse-text 0.8s infinite', fontSize: '12px' }}>_ AWAITING DATA...</div>
-                                        )}
-                                    </div>
-                                );
-                            })() : (gameState.extractionStatus === 'active' || gameState.extractionStatus === 'arriving' || gameState.extractionStatus === 'arrived') ? (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '18px', fontWeight: 900, color: '#ef4444', animation: 'pulse-text 1s infinite' }}>
-                                        EVACUATION ACTIVE
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: '#fff', marginTop: '10px', opacity: 0.8 }}>
-                                        PROCEED TO {ARENA_DATA[gameState.extractionTargetArena]?.name || "TARGET SECTOR"}
-                                    </div>
-                                    <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginTop: '5px' }}>
-                                        {Math.max(0, Math.ceil(gameState.extractionTimer))}s
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div style={{
-                                        fontSize: '10px', color: '#3b82f6', fontWeight: 900,
-                                        letterSpacing: '5px', textShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
-                                        opacity: 0.8
-                                    }}>
-                                        AWAITING SIGNAL...
-                                    </div>
-
-                                    {/* DUST COST FOR EXTRACTION (If any) */}
-                                    {gameState.player.dust >= 10000 && (
-                                        <button
-                                            className="evac-button"
-                                            onClick={() => {
-                                                if (gameState.player.dust < 10000) return;
-                                                fadeOutMusic(1.0);
-                                                playSfx('alert');
-                                                gameState.extractionStatus = 'requested';
-                                                gameState.extractionTimer = 3.0;
-                                                gameState.extractionMessageIndex = -1;
-                                                gameState.extractionMessageTimes = [];
-                                                gameState.extractionDialogTime = 0;
-                                                gameState.player.dust -= 10000;
-                                            }}
-                                            style={{
-                                                marginTop: '10px',
-                                                background: 'rgba(239, 68, 68, 0.2)',
-                                                border: '2px solid #ef4444',
-                                                padding: '12px 24px',
-                                                color: '#fff',
-                                                fontWeight: 900,
-                                                fontSize: '14px',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                letterSpacing: '2px',
-                                                textShadow: '0 0 10px #ef4444',
-                                                boxShadow: '0 0 20px rgba(239, 68, 68, 0.3)',
-                                                pointerEvents: 'auto',
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                        >
-                                            REQUEST EVACUATION (10,000 DUST)
-                                        </button>
-                                    )}
-                                </>
-                            )}
+                            <div style={{ textAlign: 'center', zIndex: 1 }}>
+                                <div style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 900, letterSpacing: '6px', opacity: 1, animation: 'pulse-text 2s infinite ease-in-out' }}>WAITING SIGNAL</div>
+                            </div>
                         </div>
-                        <style>{`
-                            @keyframes typewriter {
-                                from { max-height: 0; }
-                                to { max-height: 100px; }
-                            }
-                            .evac-button:hover {
-                                background: rgba(239, 68, 68, 0.4) !important;
-                                transform: scale(1.05);
-                                boxShadow: 0 0 30px rgba(239, 68, 68, 0.5) !important;
-                            }
-                        `}</style>
-
-                        <style>{`
-                            @keyframes grid-pan {
-                                0% { background-position: 0 0; }
-                                100% { background-position: 0 40px; }
-                            }
-                            @keyframes scan-vertical {
-                                0% { top: 10%; opacity: 0; }
-                                15% { opacity: 1; }
-                                85% { opacity: 1; }
-                                100% { top: 90%; opacity: 0; }
-                            }
-                            @keyframes spin-slow {
-                                0% { transform: rotate(0deg); }
-                                100% { transform: rotate(360deg); }
-                            }
-                            @keyframes spin-reverse {
-                                0% { transform: rotate(360deg); }
-                                100% { transform: rotate(0deg); }
-                            }
-                            @keyframes pulse-text {
-                                0%, 100% { opacity: 0.7; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-                                50% { opacity: 1; text-shadow: 0 0 20px rgba(59, 130, 246, 0.9); }
-                            }
-                        `}</style>
                     </div>
-                )
-                }
+                )}
             </div>
+
+            <style>{`
+                @keyframes grid-pan { from { background-position: 0 0; } to { background-position: 0 40px; } }
+                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                @keyframes pulse-text { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+                @keyframes scan-vertical {
+                    0% { top: -5%; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 105%; opacity: 0; }
+                }
+            `}</style>
         </div>
-    )
-}
-
-
-
+    );
+};

@@ -38,7 +38,7 @@ export const TUTORIAL_HINTS: Partial<Record<TutorialStep, { text: string; subtex
     },
     [TutorialStep.MATRIX_TYPES]: {
         text: "ORBIT",
-        subtext: "Meteorites can be 4 types: Broken, Damaged, Pristine and Corrupted. Every type has different perk efficiency range that you might get."
+        subtext: "Meteorites can be 4 types: Broken, Damaged, New and Corrupted. Every type has different perk efficiency range that you might get."
     },
     [TutorialStep.MATRIX_ORIGIN]: {
         text: "ORBIT",

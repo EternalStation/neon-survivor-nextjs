@@ -2,7 +2,7 @@ import type { GameState, Enemy, ShapeType } from '../core/types';
 import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite, createMeteorite } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite, spawnVoidFlux } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
@@ -41,6 +41,18 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     state.rawKillCount += baseSouls;
 
 
+
+    // --- Void Flux Currency Drops ---
+    let fluxDrop = 0;
+    if (e.boss) {
+        fluxDrop = 50;
+    } else if (e.isElite) {
+        fluxDrop = 5 + Math.floor(Math.random() * 6); // 5-10
+    }
+
+    if (fluxDrop > 0) {
+        spawnVoidFlux(state, e.x, e.y, fluxDrop);
+    }
 
     // --- EcoXP Lvl 2: Dust Extraction ---
     const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP');
@@ -114,7 +126,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         state.meteorites.length === 0 &&
         state.inventory.every(slot => slot === null)) { // Strict check: no meteorites at all
 
-        const m = createMeteorite(state, 'scrap', e.x, e.y); // Force drop
+        const m = createMeteorite(state, 'anomalous', e.x, e.y); // Force drop
         state.meteorites.push(m);
         // Don't return, allow normal drops too (though unlikely due to probability)
     }

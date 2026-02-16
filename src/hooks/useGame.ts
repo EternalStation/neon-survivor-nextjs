@@ -29,6 +29,8 @@ export function useGameLoop(gameStarted: boolean) {
     const showModuleMenuRef = useRef(false);
     const showBossSkillDetailRef = useRef(false);
     const upgradeChoicesRef = useRef<UpgradeChoice[] | null>(null);
+    const wasModuleMenuOpenRef = useRef(false); // Track if module menu was just open
+    const wasPausedRef = useRef(false); // Track internal pause state for transition detection
 
     const meteoriteImagesRef = useRef<Record<string, HTMLImageElement>>({});
 
@@ -50,6 +52,11 @@ export function useGameLoop(gameStarted: boolean) {
     showModuleMenuRef.current = showModuleMenu;
     showBossSkillDetailRef.current = showBossSkillDetail;
     upgradeChoicesRef.current = upgradeChoices;
+
+    // Update washer ref while menu is open
+    if (showModuleMenu) {
+        wasModuleMenuOpenRef.current = true;
+    }
 
     // Sync GameState flags
     gameState.current.showModuleMenu = showModuleMenu;
@@ -118,7 +125,7 @@ export function useGameLoop(gameStarted: boolean) {
 
     useEffect(() => {
         const qualities = ['Broken', 'Damaged', 'New'];
-        for (let i = 1; i <= 9; i++) {
+        for (let i = 0; i <= 5; i++) {
             qualities.forEach(q => {
                 const key = `M${i}${q}`;
                 const img = new Image();
@@ -127,7 +134,7 @@ export function useGameLoop(gameStarted: boolean) {
             });
         }
         const zombieImg = new Image();
-        zombieImg.src = '/assets/Enemies/Zombie.png';
+        zombieImg.src = `/assets/Enemies/Zombie.png`;
         (meteoriteImagesRef.current as any).zombie = zombieImg;
         const fearImg = new Image();
         fearImg.src = '/assets/Icons/FearSkill.png';
@@ -147,6 +154,9 @@ export function useGameLoop(gameStarted: boolean) {
         const shipImg = new Image();
         shipImg.src = '/assets/Enteties/Ship.png';
         (meteoriteImagesRef.current as any).ship = shipImg;
+        const fluxImg = new Image();
+        fluxImg.src = '/assets/Icons/Void Flux.png';
+        (meteoriteImagesRef.current as any).void_flux = fluxImg;
 
         workerRef.current = new Worker(new URL('../logic/core/gameWorker.ts', import.meta.url), { type: 'module' });
         workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
@@ -189,14 +199,29 @@ export function useGameLoop(gameStarted: boolean) {
 
             const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current;
 
-            if (!isMenuOpen && state.isPaused) {
-                state.unpauseDelay = 0.2;
+            if (!isMenuOpen && wasPausedRef.current) {
+                // Determine unpause mode based on what was open
+                if (wasModuleMenuOpenRef.current) {
+                    console.log("Unpausing from Module Menu - STARTING SLOW MO (0.8s)");
+                    // Slow Motion Unpause for Module Matrix
+                    state.unpauseDelay = 0.8; // 0.8s duration
+                    state.unpauseMode = 'slow_motion';
+                    wasModuleMenuOpenRef.current = false; // Reset
+                } else {
+                    // Standard Unpause
+                    console.log("Unpausing from Standard Menu");
+                    state.unpauseDelay = 0; // Instant unpause
+                    state.unpauseMode = 'normal';
+                }
                 resetEnemyAggro(state);
             }
-            if (isMenuOpen && !state.isPaused) {
+            if (isMenuOpen && !wasPausedRef.current) {
+                // Pause Just Started
                 Object.keys(keys.current).forEach(k => keys.current[k] = false);
             }
-            state.isPaused = isMenuOpen;
+
+            wasPausedRef.current = !!isMenuOpen; // Update tracker
+            state.isPaused = !!isMenuOpen;
 
             if (showSettingsRef.current) pauseMusic();
             else if (showStatsRef.current || showModuleMenuRef.current) {
@@ -213,21 +238,82 @@ export function useGameLoop(gameStarted: boolean) {
             const FIXED_STEP = 1 / 60;
 
             if (!state.isPaused && !state.gameOver) {
+                // Update Flash Decay
+                if (state.flashIntensity && state.flashIntensity > 0) {
+                    state.flashIntensity -= safeDt * 2; // Fade out over 0.5s approx
+                    if (state.flashIntensity < 0) state.flashIntensity = 0;
+                }
+
                 if (state.unpauseDelay && state.unpauseDelay > 0) {
-                    state.unpauseDelay -= safeDt;
-                    accRef.current = 0;
-                } else {
-                    let steps = 0;
-                    while (accRef.current >= FIXED_STEP && steps < 20 && !state.isPaused && !state.gameOver) {
-                        accRef.current -= FIXED_STEP;
-                        steps++;
-                        updateLogic(state, FIXED_STEP);
-                        if (state.player.curHp <= 0 || state.gameOver) {
-                            if (state.player.curHp < 0) state.player.curHp = 0;
-                            state.gameOver = true;
-                            setGameOver(true);
-                            import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
+                    // Logic for Unpause Transition
+                    if (state.unpauseMode === 'slow_motion') {
+                        // Slow Motion Ramp
+                        const totalDuration = 0.8;
+                        const progress = 1 - (state.unpauseDelay / totalDuration); // 0 -> 1
+
+                        // Check for completion to trigger flash
+                        state.unpauseDelay -= safeDt;
+                        if (state.unpauseDelay <= 0) {
+                            state.unpauseDelay = 0;
+                            state.flashIntensity = 0.8;
+                            accRef.current = 0;
+                            console.log("Slow Mo Complete - FLASH TRIGGERED");
                         }
+
+                        // Apply Time Dilation
+                        // We want real-time to pass normally, but game logic updates fewer times.
+                        // Lerp speed: 0.05 -> 1.0
+                        const currentSpeedObj = 0.05 + (0.95 * progress);
+
+                        // Accumulate time scaled by speed
+                        // But wait, accRef accumulates REAL time (safeDt). 
+                        // To simulate slow motion, we consume accRef slower? 
+                        // Or we multiply the dt passed to updateLogic?
+                        // If physics relies on fixed step 1/60, we must call updateLogic fewer times per second.
+
+                        // Implementation: We effectively scale the accumulation.
+                        // But accRef is already added above (accRef += safeDt).
+                        // Let's modify the loop condition or the timestep?
+                        // Correct approach for fixed timestep slowmo:
+                        // Only "consume" a fraction of the real time for game updates.
+
+                        // Reset accRef deduction for this frame to apply scale
+                        // We need to change how much we ADD to accRef, but we already added safeDt.
+                        // Let's subtract the 'ignored' time from accRef so it doesn't build up a huge buffer to catch up later.
+
+                        // Actually, simpler: 
+                        // If we are in slow motion, we just limit the number of steps or reduce accRef directly?
+                        // Better: Scale the `safeDt` added to `accRef`. But that was lines above.
+                        // Let's retrospectively adjust accRef here.
+
+                        // Undo full addition
+                        accRef.current -= safeDt;
+
+                        // Add scaled addition
+                        accRef.current += safeDt * currentSpeedObj;
+
+                    } else {
+                        // Normal Static Delay (Frozen)
+                        state.unpauseDelay -= safeDt;
+                        accRef.current = 0; // Prevent accumulation during hard freeze
+                    }
+
+                    // If we still have enough for a step after scaling (or if in slow mo), run it
+                    // The standard loop below handles the actual updateLogic calls.
+                    // For 'normal' mode, accRef is 0 so no updates happen.
+                    // For 'slow_motion', accRef grows slowly, so fewer updates happen.
+                }
+
+                let steps = 0;
+                while (accRef.current >= FIXED_STEP && steps < 20 && !state.isPaused && !state.gameOver) {
+                    accRef.current -= FIXED_STEP;
+                    steps++;
+                    updateLogic(state, FIXED_STEP);
+                    if (state.player.curHp <= 0 || state.gameOver) {
+                        if (state.player.curHp < 0) state.player.curHp = 0;
+                        state.gameOver = true;
+                        setGameOver(true);
+                        import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
                     }
                 }
             } else if (state.isPaused && !state.gameOver) {

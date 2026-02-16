@@ -6,6 +6,25 @@ export interface PerkResult {
     count: number;
 }
 
+export function getSector(idx: number): 'Economic' | 'Combat' | 'Defensive' {
+    if (idx === 0 || idx === 1 || idx === 6 || idx === 7) return 'Combat';
+    if (idx === 2 || idx === 3 || idx === 8 || idx === 9) return 'Defensive';
+    return 'Economic'; // 4, 5, 10, 11
+}
+
+function getArenaKey(arenaName: string): 'eco' | 'com' | 'def' {
+    const n = arenaName.toUpperCase();
+    if (n.includes('ECO')) return 'eco';
+    if (n.includes('COM')) return 'com';
+    return 'def';
+}
+
+function getQualityKey(q: string): 'bro' | 'dam' | 'new' {
+    if (q === 'Broken') return 'bro';
+    if (q === 'Damaged') return 'dam';
+    return 'new';
+}
+
 export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: number): { totalBoost: number, perkResults: Record<string, PerkResult>, blueprintBoost: number } {
     const meteorite = state.moduleSockets.diamonds[meteoriteIdx];
     if (!meteorite) return { totalBoost: 0, perkResults: {}, blueprintBoost: 0 };
@@ -14,103 +33,79 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
     const perkResults: Record<string, PerkResult> = {};
 
     const neighbors = getMeteoriteNeighbors(state, meteoriteIdx);
+    const secondaryNeighbors = getMeteoriteNeighbors(state, meteoriteIdx, true);
     const hexConnections = getMeteoriteHexConnections(state, meteoriteIdx);
+    const sector = getSector(meteoriteIdx);
 
     if (meteorite.perks) {
         meteorite.perks.forEach(perk => {
             let count = 0;
-            switch (perk.id) {
-                case 'base_efficiency':
-                    count = 1; // Always active
-                    break;
-                case 'matrix_same_type_rarity':
-                    const currentMet = state.moduleSockets.diamonds[meteoriteIdx];
-                    if (currentMet) {
-                        // Scan ALL 12 sockets, not just neighbors
-                        count = state.moduleSockets.diamonds.filter(m =>
-                            m &&
-                            m.rarity === currentMet.rarity &&
-                            m.discoveredIn === currentMet.discoveredIn &&
-                            m.quality === currentMet.quality
-                        ).length;
+            const pts = perk.id.split('_');
+            const level = pts[0]; // 'lvl1', 'lvl2' etc.
+
+            switch (level) {
+                case 'lvl1': {
+                    // lvl1_{sector}_{hexType}
+                    const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
+                    const targetHexType = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
+                    if (sector === targetSector && hexConnections.some(h => h.category === targetHexType)) {
+                        count = 1;
                     }
                     break;
-                case 'neighbor_any_all':
-                    count = neighbors.meteorites.length;
+                }
+                case 'lvl2': {
+                    // lvl2_{sector}_{neighborQuality}
+                    const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
+                    const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
+                    if (sector === targetSector && neighbors.meteorites.some(m => m.quality === targetQuality)) {
+                        count = neighbors.meteorites.filter(m => m.quality === targetQuality).length;
+                    }
                     break;
-                case 'neighbor_any_eco':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX').length;
+                }
+                case 'lvl3': {
+                    // lvl3_{arena}_{neighborQuality}
+                    const targetArena = pts[1].toUpperCase(); // 'ECO', 'COM', 'DEF'
+                    const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
+                    count = neighbors.meteorites.filter(m => getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality).length;
                     break;
-                case 'neighbor_any_com':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX').length;
+                }
+                case 'lvl4': {
+                    // lvl4_{arena}_{neighborQuality} (Secondary)
+                    const targetArena = pts[1].toUpperCase();
+                    const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
+                    count = secondaryNeighbors.meteorites.filter(m => getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality).length;
                     break;
-                case 'neighbor_any_def':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX').length;
+                }
+                case 'lvl5': {
+                    // lvl5_{sector}_{t1}_{t2}
+                    const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
+                    const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
+                    const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
+                    if (sector === targetSector && hexConnections.length >= 2) {
+                        const categories = [hexConnections[0].category, hexConnections[1].category].sort();
+                        const targets = [t1, t2].sort();
+                        if (categories[0] === targets[0] && categories[1] === targets[1]) count = 1;
+                    }
                     break;
-                case 'neighbor_new_eco':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'New').length;
+                }
+                case 'lvl6': {
+                    // lvl6_{neighborQual}_{t1}_{t2}
+                    const targetQuality = pts[1] === 'bro' ? 'Broken' : (pts[1] === 'dam' ? 'Damaged' : 'New');
+                    const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
+                    const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
+                    const hasQual = neighbors.meteorites.some(m => m.quality === targetQuality);
+                    const isBridge = hexConnections.length >= 2 && (() => {
+                        const categories = [hexConnections[0].category, hexConnections[1].category].sort();
+                        const targets = [t1, t2].sort();
+                        return (categories[0] === targets[0] && categories[1] === targets[1]);
+                    })();
+                    if (hasQual && isBridge) count = 1;
                     break;
-                case 'neighbor_dam_eco':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'Damaged').length;
-                    break;
-                case 'neighbor_bro_eco':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'Broken').length;
-                    break;
-                case 'neighbor_new_com':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX' && m.quality === 'New').length;
-                    break;
-                case 'neighbor_dam_com':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX' && m.quality === 'Damaged').length;
-                    break;
-                case 'neighbor_bro_com':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX' && m.quality === 'Broken').length;
-                    break;
-                case 'neighbor_new_def':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'New').length;
-                    break;
-                case 'neighbor_dam_def':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'Damaged').length;
-                    break;
-                case 'neighbor_bro_def':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'Broken').length;
-                    break;
-                case 'neighbor_cor_eco':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'Corrupted').length;
-                    break;
-                case 'neighbor_cor_com':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'COMBAT HEX' && m.quality === 'Corrupted').length;
-                    break;
-                case 'neighbor_cor_def':
-                    count = neighbors.meteorites.filter(m => m.discoveredIn === 'DEFENCE HEX' && m.quality === 'Corrupted').length;
-                    break;
-                case 'neighbor_leg_any':
-                    count = hexConnections.length;
-                    break;
-                case 'neighbor_leg_eco':
-                    count = hexConnections.filter(h => h.category === 'Economic').length;
-                    break;
-                case 'neighbor_leg_com':
-                    count = hexConnections.filter(h => h.category === 'Combat').length;
-                    break;
-                case 'neighbor_leg_def':
-                    count = hexConnections.filter(h => h.category === 'Defensive').length;
-                    break;
-                case 'pair_eco_eco':
-                case 'pair_eco_com':
-                case 'pair_eco_def':
-                case 'pair_com_com':
-                case 'pair_com_def':
-                case 'pair_def_def':
-                    count = calculatePairBonus(hexConnections, perk.id, 1, false);
-                    break;
-                case 'pair_eco_eco_lvl':
-                case 'pair_eco_com_lvl':
-                case 'pair_eco_def_lvl':
-                case 'pair_com_com_lvl':
-                case 'pair_com_def_lvl':
-                case 'pair_def_def_lvl':
-                    count = calculatePairBonus(hexConnections, perk.id, 1, true);
-                    break;
+                }
+                // Deprecated Fallback
+                case 'base_efficiency': count = 1; break;
+                case 'neighbor_new_eco': count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'New').length; break;
+                // ... other legacy cases can be added if needed, but we replaced the pool.
             }
 
             const resonanceBonus = calculateLegendaryBonus(state, 'metric_resonance', true);
@@ -132,26 +127,46 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
 
 import { calculateLegendaryBonus } from './LegendaryLogic';
 
-function getMeteoriteNeighbors(state: GameState, idx: number) {
+function getMeteoriteNeighbors(state: GameState, idx: number, secondary: boolean = false) {
     const meteorites: Meteorite[] = [];
     const isInner = idx < 6;
 
     let neighborIdxs: number[] = [];
-    if (isInner) {
-        // Inner diamond (idx) connects to:
-        // 1. Adjacent inners: (idx + 5) % 6 and (idx + 1) % 6
-        // 2. Corresponding outer: idx + 6
-        neighborIdxs = [
-            (idx + 5) % 6,
-            (idx + 1) % 6,
-            idx + 6
-        ];
+    if (!secondary) {
+        if (isInner) {
+            neighborIdxs = [(idx + 5) % 6, (idx + 1) % 6, idx + 6];
+        } else {
+            neighborIdxs = [idx - 6];
+        }
     } else {
-        // Outer diamond (idx) connects to:
-        // 1. Corresponding inner: idx - 6
-        neighborIdxs = [
-            idx - 6
-        ];
+        // SECONDARY NEIGHBORS (LVL 4)
+        // Jump over 1.
+        if (isInner) {
+            // Inner (i) connections: (i-1), (i+1), i+6.
+            // Jump over (i-1) -> (i-2)
+            // Jump over (i+1) -> (i+2)
+            // Jump over (i+6)? If i+6 had outer neighbors j, then j would be secondary. 
+            // In our current grid, outer j is only connected to inner j-6.
+            // So if I'm at inner 0, jump over 0+6 (outer 6) -> nothing.
+            // BUT, if I am at inner 0, jump over inner 5 -> outer 11? 
+            // No, jumping over a primary neighbor to find what IT connects to (excluding the source).
+            // Inner 0 -> Inner 1 -> {2, 7}
+            // Inner 0 -> Inner 5 -> {4, 11}
+            // Secondary neighbors for Inner 0: 2, 7, 4, 11. (Total 4 as requested).
+            neighborIdxs = [
+                (idx + 2) % 6,   // Inner jump
+                (idx - 2 + 6) % 6,
+                ((idx + 1) % 6) + 6, // Outer jump via adjacent inner
+                ((idx - 1 + 6) % 6) + 6
+            ];
+        } else {
+            // Outer (o) connects to Inner (o-6).
+            // Jump over (o-6) -> (o-6-1) and (o-6+1). (Total 2 as requested).
+            neighborIdxs = [
+                (idx - 6 + 1) % 6,
+                (idx - 6 - 1 + 6) % 6
+            ];
+        }
     }
 
     neighborIdxs.forEach(nIdx => {
@@ -161,6 +176,8 @@ function getMeteoriteNeighbors(state: GameState, idx: number) {
 
     return { meteorites };
 }
+
+
 
 function getMeteoriteHexConnections(state: GameState, idx: number): LegendaryHex[] {
     const hexes: LegendaryHex[] = [];

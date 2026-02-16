@@ -176,6 +176,16 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 cheatBuffer = '';
             }
 
+            // KP - 1000 Void Flux
+            if (cheatBuffer.endsWith('kp')) {
+                gameState.current.player.isotopes += 1000;
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "+1000 FLUX", '#a855f7', true);
+                playSfx('power-up');
+                console.log('[CHEAT] Added 1000 Void Flux. New Total:', gameState.current.player.isotopes);
+                refreshUI(); // Force Update
+                cheatBuffer = '';
+            }
+
             // K1 - Suicide
             if (cheatBuffer.endsWith('k1')) {
                 gameState.current.player.curHp = 0;
@@ -254,8 +264,9 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             }
 
             // M1-M9 - Spawn Meteorite
-            const rarities: MeteoriteRarity[] = ['scrap', 'anomalous', 'quantum', 'astral', 'radiant', 'void', 'eternal', 'divine', 'singularity'];
-            for (let i = 1; i <= 9; i++) {
+            // M1-M6 - Spawn Meteorite
+            const rarities: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
+            for (let i = 1; i <= 6; i++) {
                 if (cheatBuffer.endsWith(`m${i}`)) {
                     const player = gameState.current.player;
                     const angle = Math.random() * Math.PI * 2;

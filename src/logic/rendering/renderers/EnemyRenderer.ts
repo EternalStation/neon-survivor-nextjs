@@ -571,21 +571,22 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.scale(pulse, pulse);
 
         // --- Spectral Flux: Color Logic ---
-        let coreColor = e.eraPalette?.[2] || e.palette[0];
-        let innerColor = e.eraPalette?.[1] || e.palette[1];
-        let outerColor = e.eraPalette?.[0] || e.palette[2];
+        const p = e.palette || PALETTES[0].colors;
+        let coreColor = e.eraPalette?.[2] || p[0];
+        let innerColor = e.eraPalette?.[1] || p[1];
+        let outerColor = e.eraPalette?.[0] || p[2];
 
         const fState = e.fluxState || 0;
         if (fState === 0) {
             // Prime: High Contrast (Stable)
-            coreColor = e.eraPalette?.[0] || e.palette[0];
-            innerColor = e.eraPalette?.[2] || e.palette[1];
-            outerColor = e.eraPalette?.[1] || e.palette[2];
+            coreColor = e.eraPalette?.[0] || p[0];
+            innerColor = e.eraPalette?.[2] || p[1];
+            outerColor = e.eraPalette?.[1] || p[2];
         } else if (fState === 1) {
             // Resonance: Inner Pulse (Solid)
-            coreColor = e.eraPalette?.[1] || e.palette[0];
-            innerColor = e.eraPalette?.[0] || e.palette[1];
-            outerColor = e.eraPalette?.[2] || e.palette[2];
+            coreColor = e.eraPalette?.[1] || p[0];
+            innerColor = e.eraPalette?.[0] || p[1];
+            outerColor = e.eraPalette?.[2] || p[2];
         } else if (fState === 2) {
             // Radiance: Overloaded Aura (Static Glow)
             coreColor = '#FFFFFF'; // White Hot

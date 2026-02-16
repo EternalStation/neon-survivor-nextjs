@@ -191,6 +191,66 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 <text x={centerX} y={centerY - 440} textAnchor="middle" fill="#94a3b8" fontSize="12" style={{ letterSpacing: '2px', opacity: 0.6 }}>CONSTRUCT SYNERGIES BY SLOTTING METEORITES AND RECOVERED MODULES</text>
                 <line x1={centerX - 250} y1={centerY - 425} x2={centerX + 250} y2={centerY - 425} stroke="#22d3ee" strokeWidth="1" opacity="0.2" />
 
+                {/* SECTORS BACKGROUND (Quad Area) */}
+                <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
+                    {[
+                        { name: 'COM SECTOR', color: '#f87171', indices: [0, 1] },
+                        { name: 'DEF SECTOR', color: '#60a5fa', indices: [2, 3] },
+                        { name: 'ECO SECTOR', color: '#fbbf24', indices: [4, 5] }
+                    ].map((sector, sIdx) => {
+                        const idx0 = sector.indices[0];
+                        const idx1 = sector.indices[1];
+
+                        // Positions
+                        const i0 = innerDiamondPositions[idx0];
+                        const i1 = innerDiamondPositions[idx1];
+                        const o0 = edgeDiamondPositions[idx0];
+                        const o1 = edgeDiamondPositions[idx1];
+
+                        // Text pos: Outside the long edge (o0-o1)
+                        const midOutX = (o0.x + o1.x) / 2;
+                        const midOutY = (o0.y + o1.y) / 2;
+                        const vOutX = midOutX - centerX;
+                        const vOutY = midOutY - centerY;
+                        const lenOut = Math.sqrt(vOutX * vOutX + vOutY * vOutY);
+                        const textR = sector.name === 'COM SECTOR' ? 395 : 390; // Moved closer to the ~400px outer boundary
+                        const textX = centerX + (vOutX / lenOut) * textR;
+                        const textY = centerY + (vOutY / lenOut) * textR;
+
+                        // Points: Outer0 -> Outer1 -> Inner1 -> Inner0
+                        const points = `${o0.x},${o0.y} ${o1.x},${o1.y} ${i1.x},${i1.y} ${i0.x},${i0.y}`;
+
+                        // Text Render Logic
+                        const edgeAngle = Math.atan2(o1.y - o0.y, o1.x - o0.x) * (180 / Math.PI);
+                        // Combat segment (0->1) needs +180 to be readable.
+                        // Economic (4->5) is fine as is.
+                        // Defense (2->3) is -90 (vertical).
+                        const rotation = sector.name === 'COM SECTOR' ? edgeAngle + 180 : edgeAngle;
+
+                        const textElement = (
+                            <text
+                                x={textX}
+                                y={textY}
+                                textAnchor="middle"
+                                fill={sector.color}
+                                fontSize="18"
+                                fontWeight="900"
+                                transform={`rotate(${rotation}, ${textX}, ${textY})`}
+                                style={{ opacity: 0.9, letterSpacing: '4px', textShadow: `0 0 10px ${sector.color}66` }}
+                            >
+                                {sector.name}
+                            </text>
+                        );
+
+                        return (
+                            <g key={sIdx}>
+                                <polygon points={points} fill={sector.color} opacity="0.1" stroke={sector.color} strokeWidth="100" strokeLinejoin="round" />
+                                {textElement}
+                            </g>
+                        );
+                    })}
+                </g>
+
                 {/* 2. MS LINES (Met-Met) */}
                 {/* 2.1 Inner-Inner Adjacent (6) */}
                 {innerDiamondPositions.map((pos, i) => {
@@ -542,7 +602,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     }
 
                                     // Handle Drop on Empty Socket
-                                    if (movedItem.item.quality === 'Corrupted') {
+                                    if (movedItem.item.isCorrupted) {
                                         // Intercept for corruption warning
                                         onAttemptPlace(i, movedItem.item, movedItem.source, movedItem.index);
                                         setMovedItem(null);
@@ -669,7 +729,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                             +{Math.round(calculateMeteoriteEfficiency(gameState, i).totalBoost * 100)}%
                                         </text>
 
-                                        {moduleSockets.diamonds[i]!.quality === 'Corrupted' && (
+                                        {moduleSockets.diamonds[i]!.isCorrupted && (
                                             <g transform={`translate(${pos.x + 22}, ${pos.y - 24})`}>
                                                 <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
                                                 <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>C</text>

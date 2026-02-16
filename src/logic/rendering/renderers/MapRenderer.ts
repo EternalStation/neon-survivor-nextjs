@@ -1,5 +1,6 @@
 import type { GameState } from '../../core/types';
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../../mission/MapLogic';
+import { drawCurvedText } from './TextHelper';
 
 export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState, logicalWidth: number, logicalHeight: number) {
     const { camera } = state;
@@ -112,27 +113,21 @@ export function renderArenaVignette(ctx: CanvasRenderingContext2D, state: GameSt
     // The background grid is now clipped to the arenas, and the screen is cleared to black.
     // So the void is naturally black without needing this expensive "evenodd" fill.
 
-    // 2. Draw "Soft Fade" Edge (Cheaper than shadowBlur)
-    // We draw semi-transparent strokes centered on the boundary.
-    // Half extends into the arena (fog), half extends into the void (invisible).
-    // This creates the atmospheric falloff.
+    // Draw Arena Labels (Curved) - REMOVED PER USER REQUEST
+    /*
+    const r = 120;
+    const hDist = 1.5 * r;
+    const vDist = Math.sqrt(3) * r;
 
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    // Single pass "Glow" using a wider stroke with low opacity is usually enough and fastest
-    // Using 2 layers for better quality
+    // ECO
+    drawCurvedText(ctx, 'ECONOMIC', -hDist * 6, 0, 400, Math.PI, '#fbbf24');
 
-    // Single pass "Glow"
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = 'transparent';
-    ctx.setLineDash([]);
-    ctx.lineWidth = 120;
-    ctx.strokeStyle = 'rgba(2, 6, 23, 0.6)';
-    ctx.beginPath();
-    visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
-    ctx.stroke();
+    // COM
+    drawCurvedText(ctx, 'COMBAT', hDist * 6, 0, 400, 0, '#f87171');
 
-    ctx.restore();
+    // DEF - Top Center
+    drawCurvedText(ctx, 'DEFENSE', 0, -vDist * 7, 400, -Math.PI / 2, '#60a5fa', true);
+    */
 }
 
 export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {

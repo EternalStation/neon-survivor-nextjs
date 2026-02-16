@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, RARITY_ORDER, PerkFilter, matchesFilter } from './ModuleUtils';
+import { RARITY_ORDER } from '../../logic/core/types';
+import { getMeteoriteImage, RARITY_COLORS, PerkFilter, matchesFilter } from './ModuleUtils';
 import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
 
 interface InventoryPanelProps {
@@ -8,7 +9,7 @@ interface InventoryPanelProps {
     movedItem: { item: any, source: string, index: number } | null;
     onInventoryUpdate: (index: number, item: any) => void;
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
-    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex', index: number } | null) => void;
+    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
     handleMouseEnterItem: (item: any, x: number, y: number) => void;
     handleMouseLeaveItem: (delay?: number) => void;
     isRecycleMode: boolean;
@@ -22,10 +23,13 @@ interface InventoryPanelProps {
     setCoreFilter: React.Dispatch<React.SetStateAction<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>>;
     perkFilters: Record<number, PerkFilter>;
     setPerkFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
+    setLockedItem: (item: { item: any, x: number, y: number, index?: number } | null) => void;
+    refreshKey?: number;
+
 }
 
 const PAIR_COMBOS = ['All', 'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF'];
-const QUALITIES = ['All', 'PRI', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
+const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
 const ARENAS = ['All', 'ECO', 'COM', 'DEF'];
 
 
@@ -47,7 +51,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     coreFilter,
     setCoreFilter,
     perkFilters,
-    setPerkFilters
+    setPerkFilters,
+    setLockedItem,
+
 }) => {
     // State lifted to ModuleMenu for persistence
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -103,12 +109,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 onMouseDown={(e) => {
                     if (isRecycleMode) return;
                     if (e.button === 0 && item && !movedItem) {
+                        setLockedItem({ item, x: e.clientX, y: e.clientY, index: idx }); // LOCK ON CLICK
                         if (item.isBlueprint) {
                             return;
                         }
                         e.preventDefault();
                         setMovedItem({ item, source: 'inventory', index: idx });
-                        handleMouseLeaveItem(0);
+                        // handleMouseLeaveItem(0) removed to persist lock
                     }
                 }}
                 onContextMenu={(e) => {
@@ -129,6 +136,21 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             const itemAtTarget = inventory[idx];
                             onInventoryUpdate(idx, { ...movedItem.item });
                             onInventoryUpdate(movedItem.index, itemAtTarget);
+                        } else if (movedItem.source === 'recalibrate') {
+                            // DROP FROM RECALIBRATE INTO INVENTORY
+                            const itemAtTarget = inventory[idx];
+                            if (itemAtTarget) {
+                                // Find first empty slot instead of overwriting
+                                let emptyIdx = -1;
+                                for (let i = 10; i < inventory.length; i++) if (!inventory[i]) { emptyIdx = i; break; }
+                                if (emptyIdx === -1) for (let i = 0; i < 10; i++) if (!inventory[i]) { emptyIdx = i; break; }
+
+                                if (emptyIdx !== -1) {
+                                    onInventoryUpdate(emptyIdx, { ...movedItem.item });
+                                }
+                            } else {
+                                onInventoryUpdate(idx, { ...movedItem.item });
+                            }
                         }
                         setMovedItem(null);
                     }
@@ -139,7 +161,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     background: '#0f172a',
                     border: isRecycleMode && item
                         ? `2px dashed #ef4444`
-                        : `2px solid ${movedItem?.index === idx && movedItem.source === 'inventory' ? '#3b82f6' : (item && isVisible ? (RARITY_COLORS as any)[item.rarity] : '#1e293b')}`,
+                        : `2px solid ${movedItem?.index === idx && movedItem.source === 'inventory' ? '#3b82f6' : (item && isVisible ? (RARITY_COLORS as any)[item.rarity] : '#1e293b')} `,
                     borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     position: 'relative',
                     cursor: isRecycleMode ? (item ? 'crosshair' : 'default') : 'pointer',
@@ -180,7 +202,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         <span style={{ fontSize: '5px', fontWeight: 900, color: '#60a5fa', lineHeight: 1, marginTop: '0.5px' }}>H</span>
                     </div>
                 )}
-                {item?.quality === 'Corrupted' && (
+                {item?.isCorrupted && (
                     <div style={{
                         position: 'absolute', top: '2px', left: '2px',
                         width: '8px', height: '8px',
@@ -262,7 +284,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     ) => {
         const selected = Array.isArray(coreFilter[key]) ? coreFilter[key] as string[] : [coreFilter[key] as string];
         const isAll = selected.includes('All');
-        const count = isAll ? 'ALL' : `${selected.length}`;
+        const count = isAll ? 'ALL' : `${selected.length} `;
         const isOpen = activeDropdown === key;
 
         return (
@@ -313,7 +335,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 >
                                     <div style={{
                                         width: '6px', height: '6px',
-                                        border: `1px solid ${color}`,
+                                        border: `1px solid ${color} `,
                                         background: isSelected ? color : 'transparent',
                                         borderRadius: '2px'
                                     }} />
@@ -372,7 +394,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         {/* TYPE */}
                         <div style={{ gridColumn: 'span 3' }}>
                             {renderMultiSelect('quality', QUALITIES, 'TYPE', {
-                                'PRI': '#3b82f6', 'DAM': '#f59e0b', 'BRO': '#94a3b8', 'COR': '#a855f7', 'BLUEPRINTS': '#60a5fa'
+                                'NEW': '#3b82f6', 'DAM': '#f59e0b', 'BRO': '#94a3b8', 'COR': '#a855f7', 'BLUEPRINTS': '#60a5fa'
                             }, (opt) => opt === 'BLUEPRINTS' ? 'BP' : opt)}
                         </div>
                         {/* RARITY */}
@@ -446,7 +468,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         </div>
                     </div>
 
-                    {/* MASS PERK GRID (3x3) */}
+                    {/* MASS PERK GRID (2x3) */}
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -455,7 +477,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         overflowY: 'auto',
                         paddingRight: '4px'
                     }}>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => {
+                        {[1, 2, 3, 4, 5, 6].map(lvl => {
                             const rarityKey = RARITY_ORDER[lvl - 1];
                             const rarityColor = RARITY_COLORS[rarityKey];
 
@@ -469,15 +491,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 <div key={lvl}
                                     onClick={() => updatePerk(lvl, { active: !isActive })}
                                     style={{
-                                        background: isActive ? `${rarityColor}20` : 'rgba(15, 23, 42, 0.4)',
-                                        border: `1px solid ${isActive ? rarityColor : `${rarityColor}40`}`,
+                                        background: isActive ? `${rarityColor} 20` : 'rgba(15, 23, 42, 0.4)',
+                                        border: `1px solid ${isActive ? rarityColor : `${rarityColor}40`} `,
                                         borderRadius: '4px',
                                         padding: '6px',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: '4px',
                                         transition: 'all 0.2s',
-                                        boxShadow: isActive ? `inset 0 0 10px ${rarityColor}33` : 'none',
+                                        boxShadow: isActive ? `inset 0 0 10px ${rarityColor} 33` : 'none',
                                         cursor: 'pointer'
                                     }}>
                                     <div
@@ -526,20 +548,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                                 />
                                             </div>
 
-                                            {/* Contextual Rows */}
-                                            {(lvl === 3 || lvl === 4 || lvl === 6) && (
-                                                <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
-                                                    {ARENAS.map(a => <option key={a} value={a}>{a} ARENA</option>)}
-                                                </select>
-                                            )}
-                                            {(lvl === 7 || lvl === 8) && (
-                                                <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
-                                                    {PAIR_COMBOS.map(p => <option key={p} value={p}>{p}</option>)}
-                                                </select>
-                                            )}
-                                            {lvl === 4 && (
+                                            {/* Arena/Sector Filter (Shared by all 6 levels) */}
+                                            <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].arena} onChange={e => updatePerk(lvl, { arena: e.target.value })}>
+                                                {ARENAS.map(a => <option key={a} value={a}>{a} {a === 'All' ? '' : 'SECTOR'}</option>)}
+                                            </select>
+
+                                            {/* Quality Filter (L2, L3, L4, L6) */}
+                                            {(lvl === 2 || lvl === 3 || lvl === 4 || lvl === 6) && (
                                                 <select style={{ ...selectStyle, height: '18px', borderColor: rarityColor, color: rarityColor }} value={perkFilters[lvl].matchQuality} onChange={e => updatePerk(lvl, { matchQuality: e.target.value })}>
-                                                    {QUALITIES.map(q => <option key={q} value={q}>{q}</option>)}
+                                                    {QUALITIES.slice(0, 5).map(q => <option key={q} value={q}>{q}</option>)}
                                                 </select>
                                             )}
                                         </div>
@@ -579,11 +596,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     alignItems: 'center',
                     gap: '10px'
                 }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
-                    <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span>
+                    {/* TITLE REMOVED as per request */}
+                    {/* <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span> */}
+                    {/* <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span> */}
 
-                    {/* RECYCLE CONTROLS */}
-                    <div className="recycle-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                    <div className="recycle-btn" style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        width: '100%', justifyContent: 'flex-end',
+                        marginTop: '2px'
+                    }}>
                         <button
                             onClick={onToggleRecycle}
                             style={{
@@ -680,37 +701,24 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 </div>
             </div>
 
-            {/* SCROLLABLE STORAGE AREA */}
+            {/* STORAGE AREA */}
             <div className="inventory-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+                gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', // 10 COLUMNS as requested
                 gridAutoRows: 'min-content',
-                columnGap: '6px',
-                rowGap: '2px',
+                gap: '6px', // Compact gap for 10 columns
                 width: '100%',
-                flex: 1, // Takes remaining space
-                padding: '0 10px 10px 10px',
+                flex: 1,
                 overflowY: 'auto',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                padding: '0 10px 10px 10px'
             }}>
-
                 {/* INVENTORY ITEMS (STORAGE ONLY) */}
                 {
-                    (() => {
-                        const elements: React.ReactNode[] = [];
-
-                        // 1. REMOVED ROW SPACER (Visual Separation for Storage)
-
-
-                        // 3. STORAGE SLOTS (10+) - Pin 0-9 to top
-                        for (let i = 10; i < 320; i++) {
-                            elements.push(renderSlot(displayInventory[i], i, isFilterActive));
-                        }
-
-                        return elements;
-                    })()
+                    displayInventory.slice(10).map((item, i) => renderSlot(item, i + 10, isFilterActive))
                 }
-            </div >
+            </div>
+
             {massRecycleCandidate && (
                 <MassRecycleConfirmationModal
                     type={massRecycleCandidate.type}
@@ -723,55 +731,57 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 />
             )}
             <style>{`
-                .inventory-grid::-webkit-scrollbar { width: 6px; }
-                .inventory-grid::-webkit-scrollbar-track { background: transparent; }
-                .inventory-grid::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
-                .inventory-grid::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes shake {
-                    0% { transform: translate(1px, 1px) rotate(0deg); }
-                    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-                    20% { transform: translate(-3px, 0px) rotate(1deg); }
-                    30% { transform: translate(3px, 2px) rotate(0deg); }
-                    40% { transform: translate(1px, -1px) rotate(1deg); }
-                    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-                    60% { transform: translate(-3px, 1px) rotate(0deg); }
-                    70% { transform: translate(3px, 1px) rotate(-1deg); }
-                    80% { transform: translate(-1px, -1px) rotate(1deg); }
-                    90% { transform: translate(1px, 2px) rotate(0deg); }
-                    100% { transform: translate(1px, -2px) rotate(-1deg); }
+    .inventory - grid:: -webkit - scrollbar { width: 6px; }
+                .inventory - grid:: -webkit - scrollbar - track { background: transparent; }
+                .inventory - grid:: -webkit - scrollbar - thumb { background: rgba(59, 130, 246, 0.3); border - radius: 3px; }
+                .inventory - grid:: -webkit - scrollbar - thumb:hover { background: rgba(59, 130, 246, 0.5); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shake {
+    0 % { transform: translate(1px, 1px) rotate(0deg); }
+    10 % { transform: translate(-1px, -2px) rotate(- 1deg);
+}
+20 % { transform: translate(-3px, 0px) rotate(1deg); }
+30 % { transform: translate(3px, 2px) rotate(0deg); }
+40 % { transform: translate(1px, -1px) rotate(1deg); }
+50 % { transform: translate(-1px, 2px) rotate(- 1deg); }
+60 % { transform: translate(-3px, 1px) rotate(0deg); }
+70 % { transform: translate(3px, 1px) rotate(- 1deg); }
+80 % { transform: translate(-1px, -1px) rotate(1deg); }
+90 % { transform: translate(1px, 2px) rotate(0deg); }
+100 % { transform: translate(1px, -2px) rotate(- 1deg); }
                 }
-                @keyframes pulse-red {
-                    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-                    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-                    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+@keyframes pulse - red {
+    0 % { transform: scale(1); box- shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+}
+70 % { transform: scale(1.1); box- shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+100 % { transform: scale(1); box- shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
                 }
-                .scanner-range {
-                    -webkit-appearance: none;
-                    background: rgba(59, 130, 246, 0.2);
-                    border-radius: 2px;
-                    outline: none;
-                }
-                .scanner-range::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    width: 10px;
-                    height: 10px;
-                    background: #3b82f6;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-                    border: 2px solid #fff;
-                }
-                .scanner-range::-moz-range-thumb {
-                    width: 10px;
-                    height: 10px;
-                    background: #3b82f6;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-                    border: 2px solid #fff;
-                }
-            `}</style>
-        </div >
+                .scanner - range {
+    -webkit - appearance: none;
+    background: rgba(59, 130, 246, 0.2);
+    border - radius: 2px;
+    outline: none;
+}
+                .scanner - range:: -webkit - slider - thumb {
+    -webkit - appearance: none;
+    width: 10px;
+    height: 10px;
+    background: #3b82f6;
+    border - radius: 50 %;
+    cursor: pointer;
+    box - shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    border: 2px solid #fff;
+}
+                .scanner - range:: -moz - range - thumb {
+    width: 10px;
+    height: 10px;
+    background: #3b82f6;
+    border - radius: 50 %;
+    cursor: pointer;
+    box - shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    border: 2px solid #fff;
+}
+`}</style>
+        </div>
     );
 });
