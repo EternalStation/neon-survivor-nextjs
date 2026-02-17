@@ -503,7 +503,10 @@ export interface Enemy {
     isAnomaly?: boolean;
     anomalyGeneration?: number; // Which summon iteration explains stats scaling
     bonusBurnPct?: number; // Stage 3 ramping burn damage
+    bonusBurnRadius?: number; // Stage 3 growing burn radius (pixels)
     stage?: number; // Boss stage (1, 2, 3)
+    stage2StartTime?: number; // Timestamp when Stage 2 started
+    stage3StartTime?: number; // Timestamp when Stage 3 started
     minionsSpawned?: boolean; // Track stage 2 spawn
     anomalyBurnTimer?: number;
     dieOnCollision?: boolean;

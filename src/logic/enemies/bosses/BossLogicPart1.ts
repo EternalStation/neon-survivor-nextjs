@@ -8,41 +8,15 @@ export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, 
     // --- STAGE TRANSITIONS ---
     const hpPct = e.hp / e.maxHp;
 
-    // Stage 2: 60% HP
+    // Stage 2: 60% HP - Growing Burn Radius
     if (e.stage === 1 && hpPct < 0.6) {
         e.stage = 2;
-        // Spawn 5 Minions
-        import('../EnemySpawnLogic').then(({ spawnEnemy }) => {
-            const count = 5;
-            const currentCount = state.enemies.length;
-            for (let i = 0; i < count; i++) {
-                const angle = (i / count) * Math.PI * 2;
-                const mx = e.x + Math.cos(angle) * 100;
-                const my = e.y + Math.sin(angle) * 100;
-                // Minion: 10% Boss HP, fast chase, small size
-                spawnEnemy(state, mx, my, 'abomination', false, 1, false);
-            }
-
-            // Apply stats to the newly spawned minions (manual hack since we don't get returns)
-            // We iterate backwards to find the 5 newest enemies
-            const newTotal = state.enemies.length;
-            const spawnedCount = newTotal - currentCount;
-            for (let i = 0; i < spawnedCount; i++) {
-                const minion = state.enemies[newTotal - 1 - i];
-                if (minion) {
-                    minion.maxHp = e.maxHp * 0.1;
-                    minion.hp = minion.maxHp;
-                    minion.size = 35; // Small version
-                    minion.spd = currentSpd * 1.4; // Faster than base
-                    minion.xpRewardMult = 0; // No XP farming
-                }
-            }
-        });
-        spawnFloatingNumber(state, e.x, e.y, "STAGE 2: MINION HORDE", '#ef4444', true);
+        e.stage2StartTime = state.gameTime; // Track when Stage 2 started for radius growth
+        spawnFloatingNumber(state, e.x, e.y, "STAGE 2: EXPANDING INFERNO", '#ef4444', true);
         playSfx('rare-spawn');
     }
 
-    // Stage 3: 30% HP
+    // Stage 3: 30% HP - Ramping Burn Damage
     if (e.stage === 2 && hpPct < 0.3) {
         e.stage = 3;
         spawnFloatingNumber(state, e.x, e.y, "STAGE 3: ETERNAL FLAME", '#b91c1c', true);
@@ -54,16 +28,31 @@ export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, 
         }
     }
 
-    // --- STAGE 3 LOGIC (Regen + Aura) ---
+    // --- STAGE 2 LOGIC (Growing Burn Radius) ---
+    if (e.stage === 2) {
+        // Grow burn radius by 10px per second in Stage 2
+        if (e.stage2StartTime) {
+            const stage2Duration = state.gameTime - e.stage2StartTime;
+            e.bonusBurnRadius = Math.floor(stage2Duration * 10); // 10px per second
+        }
+    }
+
+    // --- STAGE 3 LOGIC (Regen + Ramping Burn Damage) ---
     if (e.stage === 3) {
+        // Keep Stage 2 radius growth
+        if (e.stage2StartTime) {
+            const stage2Duration = state.gameTime - e.stage2StartTime;
+            e.bonusBurnRadius = Math.floor(stage2Duration * 10); // 10px per second from Stage 2
+        }
+
         if (state.frameCount % 60 === 0) {
-            // Regen 1% HP
-            const heal = e.maxHp * 0.01;
+            // Regen 3% HP per second
+            const heal = e.maxHp * 0.03;
             if (e.hp < e.maxHp) {
                 e.hp = Math.min(e.maxHp, e.hp + heal);
                 spawnFloatingNumber(state, e.x, e.y - 40, `+${Math.round(heal)}`, '#22c55e', false);
             }
-            // Ramp Aura (1% per sec)
+            // Ramp Burn Damage (1% per sec)
             e.bonusBurnPct = (e.bonusBurnPct || 0) + 0.01;
             // Visual feedback for ramp
             spawnFloatingNumber(state, e.x, e.y + 40, "B U R N ++", '#ef4444', false);

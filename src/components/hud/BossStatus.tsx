@@ -169,6 +169,18 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                         }}>
                             {Math.round(boss.hp).toLocaleString()} / {Math.round(boss.maxHp).toLocaleString()} HP
                         </div>
+                        {/* STAGE INDICATOR FOR ABOMINATION BOSS */}
+                        {boss.shape === 'abomination' && boss.stage && (
+                            <div style={{
+                                position: 'absolute', right: 8, top: 0,
+                                color: boss.stage === 3 ? '#b91c1c' : (boss.stage === 2 ? '#ef4444' : '#f87171'),
+                                fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
+                                letterSpacing: 1.5, lineHeight: '16px',
+                                textShadow: `0 0 8px ${boss.stage === 3 ? '#b91c1c' : (boss.stage === 2 ? '#ef4444' : '#f87171')}`
+                            }}>
+                                STAGE {boss.stage}
+                            </div>
+                        )}
                     </div>
 
                     {/* SKILL ICONS SECTION */}

@@ -318,13 +318,38 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         if (e.isAnomaly && !e.dead) {
             ctx.save();
             const time = state.gameTime;
-            const burnRadius = 390; // Logic radius is 390
+
+            // Calculate dynamic burn radius
+            const gen = e.anomalyGeneration || 0;
+            const baseBurnRadius = 390 + (gen * 10); // Base + generation scaling
+            const stage3Bonus = (e.bonusBurnRadius || 0); // Stage 3 growing radius
+            const burnRadius = baseBurnRadius + stage3Bonus;
+
             const pulse = 1.0 + Math.sin(time * 4) * 0.05;
+
+            // Stage-dependent colors (progressively more red)
+            const stage = e.stage || 1;
+            let innerColor = 'rgba(245, 158, 11, 0.4)'; // Stage 1: Orange
+            let outerColor = 'rgba(239, 68, 68, 0.15)'; // Stage 1: Light Red
+            let auraColor = '#ef4444'; // Stage 1: Red
+            let shadowColor = '#dc2626'; // Stage 1: Dark Red
+
+            if (stage === 2) {
+                innerColor = 'rgba(239, 68, 68, 0.5)'; // Stage 2: Bright Red
+                outerColor = 'rgba(220, 38, 38, 0.2)'; // Stage 2: Darker Red
+                auraColor = '#dc2626'; // Stage 2: Darker Red
+                shadowColor = '#b91c1c'; // Stage 2: Even Darker Red
+            } else if (stage === 3) {
+                innerColor = 'rgba(220, 38, 38, 0.6)'; // Stage 3: Dark Red
+                outerColor = 'rgba(185, 28, 28, 0.3)'; // Stage 3: Crimson
+                auraColor = '#b91c1c'; // Stage 3: Crimson
+                shadowColor = '#991b1b'; // Stage 3: Deep Crimson
+            }
 
             // 1. Molten Ground Zone (Similar to Ritual)
             const grad = ctx.createRadialGradient(e.x, e.y, 50, e.x, e.y, burnRadius * pulse);
-            grad.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); // Inner Orange
-            grad.addColorStop(0.7, 'rgba(239, 68, 68, 0.15)'); // Outer Red
+            grad.addColorStop(0, innerColor); // Inner color based on stage
+            grad.addColorStop(0.7, outerColor); // Outer color based on stage
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = grad;
@@ -343,10 +368,11 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             // Instead, maybe draw a jagged "aura" or just rely on the shape itself doing the work.
             // Let's add a jagged, sinister aura that matches the Bull/Demon theme.
             ctx.shadowBlur = 40;
-            ctx.shadowColor = '#dc2626';
-            ctx.strokeStyle = '#ef4444';
+            ctx.shadowColor = shadowColor;
+            ctx.strokeStyle = auraColor;
             ctx.lineWidth = 3;
-            ctx.globalAlpha = 0.6;
+            ctx.globalAlpha = 0.6 + (stage - 1) * 0.1; // Slightly more visible in higher stages
+
             ctx.beginPath();
 
             // Draw a rough, spiky aura instead of a circle

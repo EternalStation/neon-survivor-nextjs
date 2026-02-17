@@ -527,7 +527,12 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         if (e.isAnomaly && !e.dead) {
             const gen = e.anomalyGeneration || 0;
-            const burnRadius = 390 + (gen * 10); // +10px per subsequent summon
+            // Base radius: 390px
+            // + 10px per generation level
+            // + Stage 3 bonus radius (grows 10px per second)
+            const baseBurnRadius = 390 + (gen * 10);
+            const stage3Bonus = (e.bonusBurnRadius || 0);
+            const burnRadius = baseBurnRadius + stage3Bonus;
 
             // Apply burn to all players in range
             const players = state.players ? Object.values(state.players) : [state.player];
@@ -536,7 +541,8 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
 
                 if (distToPlayer < burnRadius) {
-                    // Deal burn damage (5% + 1% per gen) of Player Max HP per second
+                    // Deal burn damage
+                    // Base: 5% + 1% per generation level + Stage 3 ramping bonus
                     const burnTick = 10; // Every 10 frames
                     if (state.frameCount % burnTick === 0) {
                         const burnDmgPct = 0.05 + (gen * 0.01) + (e.bonusBurnPct || 0);
