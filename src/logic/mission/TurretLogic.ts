@@ -311,7 +311,7 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
     if (isBomb) {
         bullet.isBomb = true; // Needs handler in bullet logic
         bullet.explodeRadius = 200;
-        bullet.freezeDuration = 5.0; // Long freeze
+        bullet.freezeDuration = 3.0; // 3s freeze (same as regular ice)
     }
 
     state.bullets.push(bullet);
