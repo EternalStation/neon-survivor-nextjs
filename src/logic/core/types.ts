@@ -501,6 +501,10 @@ export interface Enemy {
     wormTrueDamage?: number; // True damage percentage (pierces armor/reduction)
     wormPromotionTimer?: number; // Timing for split promotion
     isAnomaly?: boolean;
+    anomalyGeneration?: number; // Which summon iteration explains stats scaling
+    bonusBurnPct?: number; // Stage 3 ramping burn damage
+    stage?: number; // Boss stage (1, 2, 3)
+    minionsSpawned?: boolean; // Track stage 2 spawn
     anomalyBurnTimer?: number;
     dieOnCollision?: boolean;
 }
@@ -642,6 +646,7 @@ export interface GameState {
     bossPresence: number; // 0 to 1 smooth transition for boss effects
     critShake: number; // Screenshake intensity from crits
     smokeBlindTime?: number; // Timestamp for full-screen white fog effect
+    anomalyBossCount?: number; // Number of times anomaly boss has been summoned
     spatialGrid: import('./SpatialGrid').SpatialGrid;
     areaEffects: AreaEffect[];
     activeEvent: GameEvent | null;

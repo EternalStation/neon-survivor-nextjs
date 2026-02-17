@@ -365,6 +365,7 @@ export function useGameLogic({
         // Common Updates (Particles, Timers - run on both for smoothness, or Host only? 
         // Particles should probably run on both for visuals, but we rely on Host for important state)
         // For MVP: Run on both
+        updateBlueprints(state, step);
         updateParticles(state);
         if (state.critShake > 0) state.critShake *= 0.85;
         if (state.timeInArena) {

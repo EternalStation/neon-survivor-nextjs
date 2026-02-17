@@ -255,7 +255,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Meteorite Drop Chance</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
-                                                const baseChance = 7.0; // Static 7% Base Chance
+                                                const baseChance = 4.0; // Static 4% Base Chance
 
                                                 const surge = isBuffActive(gameState, 'ARENA_SURGE') ? 2.0 : 1.0;
                                                 const arenaMult = gameState.xpSoulBuffMult || 1.0;

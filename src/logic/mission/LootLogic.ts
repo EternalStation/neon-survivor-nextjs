@@ -267,7 +267,7 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     const entry = DROP_TABLE.find(e => minutes >= e.min && minutes < e.max) || DROP_TABLE[DROP_TABLE.length - 1];
 
     // Base chance is the sum of the weights (e.g. 1.6 + 1.0 + 0.4 = 3.0 -> 3%)
-    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.07; // 7% Chance (Normalizing 100 weight sum to 0.07)
+    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.04; // 4% Chance (Normalizing 100 weight sum to 0.04)
 
     chance *= state.xpSoulBuffMult;
 

@@ -3,17 +3,80 @@ import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic
 import { playSfx } from '../../audio/AudioLogic';
 
 export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState) {
-    const effectiveSpd = currentSpd * 1.3; // Increased to 1.3x base speed
-    const angle = Math.atan2(dy, dx);
+    if (!e.stage) e.stage = 1;
 
-    // Charge Logic? User just asked for shape change. Simple aggressive chase for now.
-    // Maybe add a wobble for "bull" movement?
+    // --- STAGE TRANSITIONS ---
+    const hpPct = e.hp / e.maxHp;
+
+    // Stage 2: 60% HP
+    if (e.stage === 1 && hpPct < 0.6) {
+        e.stage = 2;
+        // Spawn 5 Minions
+        import('../EnemySpawnLogic').then(({ spawnEnemy }) => {
+            const count = 5;
+            const currentCount = state.enemies.length;
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const mx = e.x + Math.cos(angle) * 100;
+                const my = e.y + Math.sin(angle) * 100;
+                // Minion: 10% Boss HP, fast chase, small size
+                spawnEnemy(state, mx, my, 'abomination', false, 1, false);
+            }
+
+            // Apply stats to the newly spawned minions (manual hack since we don't get returns)
+            // We iterate backwards to find the 5 newest enemies
+            const newTotal = state.enemies.length;
+            const spawnedCount = newTotal - currentCount;
+            for (let i = 0; i < spawnedCount; i++) {
+                const minion = state.enemies[newTotal - 1 - i];
+                if (minion) {
+                    minion.maxHp = e.maxHp * 0.1;
+                    minion.hp = minion.maxHp;
+                    minion.size = 35; // Small version
+                    minion.spd = currentSpd * 1.4; // Faster than base
+                    minion.xpRewardMult = 0; // No XP farming
+                }
+            }
+        });
+        spawnFloatingNumber(state, e.x, e.y, "STAGE 2: MINION HORDE", '#ef4444', true);
+        playSfx('rare-spawn');
+    }
+
+    // Stage 3: 30% HP
+    if (e.stage === 2 && hpPct < 0.3) {
+        e.stage = 3;
+        spawnFloatingNumber(state, e.x, e.y, "STAGE 3: ETERNAL FLAME", '#b91c1c', true);
+        playSfx('rare-spawn');
+        // Add particles
+        for (let i = 0; i < 20; i++) {
+            const a = Math.random() * 6.28;
+            spawnParticles(state, e.x + Math.cos(a) * 50, e.y + Math.sin(a) * 50, '#ef4444', 3);
+        }
+    }
+
+    // --- STAGE 3 LOGIC (Regen + Aura) ---
+    if (e.stage === 3) {
+        if (state.frameCount % 60 === 0) {
+            // Regen 1% HP
+            const heal = e.maxHp * 0.01;
+            if (e.hp < e.maxHp) {
+                e.hp = Math.min(e.maxHp, e.hp + heal);
+                spawnFloatingNumber(state, e.x, e.y - 40, `+${Math.round(heal)}`, '#22c55e', false);
+            }
+            // Ramp Aura (1% per sec)
+            e.bonusBurnPct = (e.bonusBurnPct || 0) + 0.01;
+            // Visual feedback for ramp
+            spawnFloatingNumber(state, e.x, e.y + 40, "B U R N ++", '#ef4444', false);
+        }
+    }
+
+    // --- MOVEMENT ---
+    const effectiveSpd = currentSpd * 1.3;
+    const angle = Math.atan2(dy, dx);
     const wobble = Math.sin(state.gameTime * 5) * 0.2;
     const vx = Math.cos(angle + wobble) * effectiveSpd + pushX;
     const vy = Math.sin(angle + wobble) * effectiveSpd + pushY;
-
-    // Ensure rotation faces player (for bull head orientation)
-    e.rotationPhase = angle + Math.PI / 2; // +90 deg because head points up by default
+    e.rotationPhase = angle + Math.PI / 2;
 
     return { vx, vy };
 }

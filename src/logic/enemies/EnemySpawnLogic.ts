@@ -92,7 +92,10 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 
     const bossHpMult = 25 + Math.floor(minutes);
     let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
-    if (isAnomaly) hp *= 1.5;
+    if (isAnomaly) {
+        const gen = state.anomalyBossCount || 0;
+        hp *= (1.5 + (gen * 0.5)); // +50% base, +50% per summon
+    }
 
     // Boss Size Scaling
     const baseSize = isBoss ? (isLvl3 ? 80 : (isLvl2 ? 70 : 65)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
@@ -137,6 +140,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         isRare: false,
         isElite: false,
         isAnomaly: isAnomaly,
+        anomalyGeneration: isAnomaly ? (state.anomalyBossCount || 0) : undefined,
         spawnedAt: state.gameTime,
         isFlanker: !isBoss && ['circle', 'triangle', 'square'].includes(chosenShape) && Math.random() < 0.10,
         flankAngle: Math.random() * Math.PI * 2,

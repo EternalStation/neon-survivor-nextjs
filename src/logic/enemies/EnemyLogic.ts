@@ -182,6 +182,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                         boss.shape = 'abomination'; // Force override to ensure Bull Head shape
                         boss.isAnomaly = true;
                         boss.spawnGracePeriod = 0.5; // 0.5s no collision damage
+                        state.anomalyBossCount = (state.anomalyBossCount || 0) + 1;
                     }
                     // relocatePOI(poi); // DISABLED: Relocate on death now
                     poi.active = false; // Disable interaction
@@ -524,9 +525,9 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             e.eraPalette = undefined;
         }
 
-        // --- ANOMALY BOSS RADIANCE (Burn Damage & Lava Floor) ---
         if (e.isAnomaly && !e.dead) {
-            const burnRadius = 390; // Increased by 30% (was 300)
+            const gen = e.anomalyGeneration || 0;
+            const burnRadius = 390 + (gen * 10); // +10px per subsequent summon
 
             // Apply burn to all players in range
             const players = state.players ? Object.values(state.players) : [state.player];
@@ -535,11 +536,12 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
 
                 if (distToPlayer < burnRadius) {
-                    // Deal burn damage (5% Player Max HP per second as requested)
+                    // Deal burn damage (5% + 1% per gen) of Player Max HP per second
                     const burnTick = 10; // Every 10 frames
                     if (state.frameCount % burnTick === 0) {
-                        // 5% / (6 ticks per sec)
-                        const dmg = (calcStat(p.hp) * 0.05) / (60 / burnTick);
+                        const burnDmgPct = 0.05 + (gen * 0.01) + (e.bonusBurnPct || 0);
+                        // pct / (6 ticks per sec)
+                        const dmg = (calcStat(p.hp) * burnDmgPct) / (60 / burnTick);
                         p.curHp -= dmg;
                         p.damageTaken += dmg; // Track damage taken
                         p.lastHitDamage = dmg;

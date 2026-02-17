@@ -155,7 +155,10 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         // --- ANOMALY BOSS DEATH LOGIC ---
         if (e.isAnomaly) {
             // Find the POI associated with this boss (it should be inactive and near spawn, but we just check distance)
-            const anomalyPoi = state.pois.find(p => p.type === 'anomaly' && !p.active && Math.hypot(p.x - e.x, p.y - e.y) < 1500); // 1500px generous range
+            // Find the POI associated with this boss (it should be inactive).
+            // We removed the distance check because kiting to a distant turret (e.g. > 1500px) caused this to fail, breaking the loop.
+            // Since only the summoning POI is inactive during the boss fight, this is safe.
+            const anomalyPoi = state.pois.find(p => p.type === 'anomaly' && !p.active);
 
             if (anomalyPoi) {
                 // Trigger relocation now

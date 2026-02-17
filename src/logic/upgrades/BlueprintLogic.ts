@@ -214,27 +214,24 @@ export function activateBlueprint(state: GameState, slotIndex: number): boolean 
     if (blueprint.type === 'DIMENSIONAL_GATE') {
         state.portalsUnlocked = true;
         playSfx('rare-spawn'); // Placeholder sound
-        // state.player.dust -= blueprint.cost; // Already deducted
-        blueprint.status = 'active'; // Mark as used/active
-        // For permanent items, maybe we remove them or keep them as "Active" in the list?
-        // Keeping them "Active" helps track that we have them.
+        blueprint.status = 'broken'; // Mark as broken immediately (One-time use)
         return true;
     }
     if (blueprint.type === 'SECTOR_UPGRADE_ECO') {
         state.arenaLevels[0] = (state.arenaLevels[0] || 0) + 1;
-        blueprint.status = 'active';
+        blueprint.status = 'broken';
         playSfx('rare-spawn');
         return true;
     }
     if (blueprint.type === 'SECTOR_UPGRADE_COM') {
         state.arenaLevels[1] = (state.arenaLevels[1] || 0) + 1;
-        blueprint.status = 'active';
+        blueprint.status = 'broken';
         playSfx('rare-spawn');
         return true;
     }
     if (blueprint.type === 'SECTOR_UPGRADE_DEF') {
         state.arenaLevels[2] = (state.arenaLevels[2] || 0) + 1;
-        blueprint.status = 'active';
+        blueprint.status = 'broken';
         playSfx('rare-spawn');
         return true;
     }
@@ -291,6 +288,9 @@ export function updateBlueprints(state: GameState, step: number) {
     // Check for expired blueprints (Broken State Transition)
     state.blueprints.forEach(bp => {
         if (bp && bp.status === 'active') {
+            const data = BLUEPRINT_DATA[bp.type];
+            if (data.duration === -1) return;
+
             const isActive = isBuffActive(state, bp.type);
             if (!isActive) {
                 bp.status = 'broken';
