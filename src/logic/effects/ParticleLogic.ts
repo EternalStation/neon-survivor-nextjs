@@ -86,7 +86,7 @@ export function updateParticles(state: GameState) {
     }
 }
 
-export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false) {
+export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string) {
     if (!state.floatingNumbers) state.floatingNumbers = [];
 
     // Offset slightly to avoid overlap with model (randomized angle)
@@ -102,6 +102,7 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
         vy: -2 - Math.random() * 1.5, // Always float up
         value,
         color,
+        backgroundColor,
         life: 60, // 1 second
         maxLife: 60,
         isCrit

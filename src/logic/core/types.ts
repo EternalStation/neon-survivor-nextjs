@@ -21,6 +21,7 @@ export interface FloatingNumber {
     vy: number;
     value: string;
     color: string;
+    backgroundColor?: string;
     life: number;
     maxLife: number;
     isCrit: boolean;

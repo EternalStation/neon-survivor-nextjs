@@ -470,7 +470,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         if (d <= b.explodeRadius) {
                             // Freeze!
                             t.frozen = (t.frozen || 0) + (b.freezeDuration || 3.0) * 60; // 3s frame duration
-                            spawnFloatingNumber(state, t.x, t.y, "FROZEN", '#bae6fd', true);
+                            spawnFloatingNumber(state, t.x, t.y, "FREEZE", '#ffffff', true, '#000000');
                         }
                     }
 

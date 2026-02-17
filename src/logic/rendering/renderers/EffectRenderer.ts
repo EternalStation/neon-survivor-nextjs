@@ -479,6 +479,21 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         const scale = fn.isCrit ? 1.2 + Math.sin(age * Math.PI) * 0.3 : 1.0;
         ctx.scale(scale, scale);
         ctx.globalAlpha = Math.min(1, age * 3);
+
+        // Draw background if specified
+        if (fn.backgroundColor) {
+            ctx.font = fn.isCrit ? "italic 900 25px 'Outfit', sans-serif" : "900 20px 'Outfit', sans-serif";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const metrics = ctx.measureText(fn.value);
+            const padding = 8;
+            const bgWidth = metrics.width + padding * 2;
+            const bgHeight = (fn.isCrit ? 25 : 20) + padding;
+
+            ctx.fillStyle = fn.backgroundColor;
+            ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+        }
+
         if (fn.isCrit) ctx.font = "italic 900 25px 'Outfit', sans-serif";
         else ctx.font = "900 20px 'Outfit', sans-serif";
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

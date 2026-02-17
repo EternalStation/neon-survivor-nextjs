@@ -435,7 +435,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     kinCapacity = calcStat(player.arm) * 5;
                 }
 
-                const dynamicMaxShield = lifeCapacity + kinCapacity;
+                const dynamicMaxShield = Math.max(lifeCapacity + kinCapacity, totalShield); // Include overheal shields
                 const shieldPct = (totalShield / dynamicMaxShield) * 100;
                 return (
                     <div style={{
