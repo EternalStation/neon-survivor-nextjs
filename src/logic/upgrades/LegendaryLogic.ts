@@ -181,9 +181,9 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         ],
         EcoHP: [
             ["+0.1 Max HP per kill"],
-            ["+0.1 HP/sec per kill"],
+            ["+0.03 HP/sec per kill"],
             ["+0.1% Max HP per kill"],
-            ["+0.1% HP/sec per kill"],
+            ["+0.03% HP/sec per kill"],
             ["MAX LEVEL"]
         ],
         ComLife: [
@@ -446,7 +446,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
 
         const getSoulsSinceLevel = (lvl: number) => {
             if (hex.level < lvl) return 0;
-            const startKills = kl[lvl] ?? state.killCount;
+            // Bugfix: Fallback to killsAtAcquisition if lvl record missing (prevents 0 bonus)
+            const startKills = kl[lvl] ?? hex.killsAtAcquisition ?? state.killCount;
             // Use killCount directly as it accumulates souls
             const rawSouls = Math.max(0, state.killCount - startKills);
             return rawSouls * multiplier; // Apply dynamic multiplier
@@ -479,44 +480,14 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         if (hex.type === 'EcoHP') {
             // Lvl 1: +0.1 Max HP per kill
             if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.1;
-            // Lvl 2: +0.1 HP/sec per kill (Flat)
-            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.1;
+            // Lvl 2: +0.03 HP/sec per kill (Flat)
+            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.03;
             // Lvl 3: +0.1% Max HP per kill
             if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1;
-            // Lvl 4: +0.1% HP/sec per kill (Percent of Max HP)
+            // Lvl 4: +0.03% HP/sec per kill (Percent Multiplier)
             if (statKey === 'reg_pct_per_kill') {
-                // PlayerStats sums calculateLegendaryBonus(state, 'reg_pct_per_kill') 
-                // This means we return the percentage value itself?
-                // Wait, PlayerStats.ts:
-                // player.reg.hexMult2 = 0;
-                // ... (hexMult logic) ... 
-                // Actually, let's check PlayerStats.ts again.
-                // player.reg.hexFlat = calculateLegendaryBonus(state, 'reg_per_kill');
-                // player.reg.hexMult = calculateLegendaryBonus(state, 'reg_pct_per_kill'); 
-                // Ah, 'reg_pct_per_kill' (Lvl 4) description says: "+0.1% HP/sec per kill"
-                // This implies it adds to regen PERCENTAGE (Mult)?
-                // Or does it add Flat Regen equal to % of MaxHP?
-                // "reg_per_kill_pct" was key used in old code. 
-                // Old code: total += maxHp * (statBonuses['reg_per_kill_pct'] / 100);
-                // and assigned to 'reg_per_kill' (Flat).
-                // So it was: FlatRegen += MaxHP * (Souls*0.1*Mult)%
-
-                // To preserve this, we should add to 'reg_per_kill' key here if we want it to be Flat Regen.
-                // But 'reg_per_kill' logic above is: total += getSoulsSinceLevel(2) * 0.1;
-                // I can combine them.
+                total += getSoulsSinceLevel(4) * 0.03;
             }
-            if (statKey === 'reg_per_kill') {
-                // Combine Lvl 2 (Flat) and Lvl 4 (% of MaxHP converted to Flat)
-                // Lvl 4: 0.1% of MaxHP per soul
-                const lvl4Souls = getSoulsSinceLevel(4);
-                if (lvl4Souls > 0) {
-                    const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
-                    total += maxHp * (lvl4Souls * 0.001); // 0.1% = 0.001
-                }
-            }
-
-            // Wait, previous code checked 'reg_per_kill_pct' but added to 'reg_per_kill'.
-            // Now I just merged them into 'reg_per_kill' block above.
         }
 
         if (hex.type === 'CombShield') {

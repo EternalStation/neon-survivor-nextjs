@@ -138,6 +138,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         floatingNumbers: [],
         drones: [],
         particles: [],
+        allies: [],
         areaEffects: [],
         camera: {
             x: ARENA_CENTERS[startingArenaId]?.x || 0,

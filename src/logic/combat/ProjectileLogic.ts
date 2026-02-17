@@ -443,7 +443,69 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     damageAmount += e.maxHp * 0.02;
                 }
 
-                // --- SPECIAL: Nanite Swarm Infection (Hive-Mother) ---
+                // --- TURRET EFFECTS (Fire/Ice) ---
+                // 1. BURN LOGIC (Fire Turret Lvl 3+)
+                if (b.burnDamage && b.burnDamage > 0) {
+                    // Apply Burn DoT (Stacking)
+                    e.burnStack = (e.burnStack || 0) + b.burnDamage;
+                    e.burnTimer = 300; // 5 seconds duration, refreshes on hit
+
+                    // Visuals
+                    spawnParticles(state, e.x, e.y, '#ef4444', 3);
+                }
+
+                // 2. FREEZE/SLOW LOGIC (Ice Turret)
+                // "slow ill cap at 100% so nemeos wil lbascily freeze on same pleace"
+                // "Freeze Turret Lvl 3+: Big Bomb freezes everyone in 200px"
+
+                if (b.isBomb && b.explodeRadius) {
+                    // BOMB LOGIC: Explode and Freeze
+                    spawnParticles(state, b.x, b.y, '#3b82f6', 20); // Big explosion
+                    playSfx('shatter'); // Ice shatter sound
+
+                    const targets = state.spatialGrid.query(b.x, b.y, b.explodeRadius);
+                    for (const t of targets) {
+                        if (t.dead || t.isFriendly) continue;
+                        const d = Math.hypot(t.x - b.x, t.y - b.y);
+                        if (d <= b.explodeRadius) {
+                            // Freeze!
+                            t.frozen = (t.frozen || 0) + (b.freezeDuration || 3.0) * 60; // 3s frame duration
+                            spawnFloatingNumber(state, t.x, t.y, "FROZEN", '#bae6fd', true);
+                        }
+                    }
+
+                    b.life = 0; // Destroy bomb
+                    continue; // Stop processing this bullet
+                }
+
+                if (b.slowPercent) {
+                    const duration = b.freezeDuration || 2.0;
+                    e.slowUntil = now + duration;
+
+                    // Additive Slow or Max? User said "scaling slow... cap at 100%"
+                    // Implies we track a 'slowIntensity' on the enemy that grows?
+                    // Currently 'slowPercentVal' is usually a 0-1 replacement.
+                    // Let's accumulate it.
+
+                    const currentSlow = e.slowPercentVal || 0;
+                    let newSlow = currentSlow + b.slowPercent; // Additive stacking
+
+                    if (newSlow >= 1.0) {
+                        // FREEZE CONDITION
+                        newSlow = 0; // Reset slow? Or keep it maxed? 
+                        // If we freeze, 'frozen' status takes over movement logic.
+                        e.frozen = (e.frozen || 0) + 60; // Add 1s freeze per stack overflow
+                        e.slowPercentVal = 0; // Clear slow so they can be frozen again? 
+                        // Actually, if frozen, slow is irrelevant.
+                        // Let's just set frozen.
+                        spawnFloatingNumber(state, e.x, e.y, "FREEZE", '#bae6fd', false);
+                    } else {
+                        e.slowPercentVal = newSlow;
+                    }
+
+                    // Visual Frost Effect (Blue Particles)
+                    spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 3);
+                }
                 if (b.isNanite) {
                     // Nanites apply infection without impact damage
                     damageAmount = 0;

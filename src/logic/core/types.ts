@@ -240,6 +240,12 @@ export interface Bullet {
     freezeDuration?: number;
     isMist?: boolean;
     isVisualOnly?: boolean;
+    // Turret Logic Extensions
+    burnDamage?: number;
+    isTurretFire?: boolean;
+    turretLevel?: number;
+    isBomb?: boolean;
+    explodeRadius?: number;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination';
@@ -436,6 +442,9 @@ export interface Enemy {
     infectedUntil?: number;
     infectionDmg?: number;
     infectionAccumulator?: number;
+    // Turret Burn Status
+    burnStack?: number;
+    burnTimer?: number;
     isNecroticZombie?: boolean;
     isGhost?: boolean;
     legionId?: string;
@@ -601,6 +610,10 @@ export interface MapPOI {
     rotation?: number;
     anomalySpawnDelay?: number; // Timer before anomaly boss actually spawns
     anomalySpawnTier?: number; // Stored boss tier for delayed spawn
+    // Turret Extensions
+    droneSpawned?: boolean;
+    lastBomb?: number;
+    lastShotRear?: number;
 }
 
 export interface GameEvent {
@@ -612,6 +625,16 @@ export interface GameEvent {
     pendingZombieSpawns?: Array<{ x: number; y: number; shape: ShapeType; spd: number; maxHp: number; size: number; spawnAt: number }>;
 }
 
+export interface Ally {
+    id: number;
+    type: 'heal_drone' | string;
+    x: number;
+    y: number;
+    life: number;
+    ownerId: number;
+    healPower?: number;
+}
+
 
 export interface GameState {
     player: Player;
@@ -621,6 +644,7 @@ export interface GameState {
     floatingNumbers: FloatingNumber[];
     drones: { a: number; last: number; x: number; y: number }[];
     particles: Particle[];
+    allies?: Ally[]; // For drones/summons
     camera: Vector;
     score: number;
     killCount: number; // Dedicated kill counter

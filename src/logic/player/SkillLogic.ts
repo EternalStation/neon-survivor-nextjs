@@ -30,7 +30,7 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.cooldownMax = 25 * cdMod;
         skill.cooldown = skill.cooldownMax;
         skill.inUse = true; // Visuals?
-        // Auto-disable inUse after duration? Handled in loop.
+        skill.duration = 10; // Track active duration for UI/Logic
     }
 
     if (skill.type === 'DefEpi') {
@@ -60,6 +60,7 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.cooldownMax = 30 * cdMod;
         skill.cooldown = skill.cooldownMax; // Start cooldown
         skill.inUse = true;
+        skill.duration = 10;
     }
 
     if (skill.type === 'KineticBattery') {

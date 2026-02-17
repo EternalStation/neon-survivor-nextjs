@@ -37,6 +37,32 @@ export function updatePlayer(
         if (player.spawnTimer > 0.3) return; // Allow movement in last 0.3s
     }
 
+    // 0. Active Skill Cooldown Management
+    if (player.activeSkills) {
+        player.activeSkills.forEach((skill: import('../core/types').ActiveSkill) => {
+            // Kinetic Battery handles its own cooldown dynamically based on timestamps
+            if (skill.type === 'KineticBattery') return;
+
+            // Cooldown Logic
+            if (skill.cooldown > 0) {
+                skill.cooldown -= 1 / 60;
+                if (skill.cooldown < 0) skill.cooldown = 0;
+            }
+
+            // Active Duration Logic (for visuals/logic lock)
+            if (skill.duration && skill.duration > 0) {
+                skill.duration -= 1 / 60;
+                if (skill.duration <= 0) {
+                    skill.duration = 0;
+                    skill.inUse = false;
+                }
+            } else if (skill.cooldown <= 0) {
+                // Failsafe: If no duration or duration expired, and cooldown done, reset inUse
+                skill.inUse = false;
+            }
+        });
+    }
+
     // 1. Movement & Wall Collision
     handlePlayerMovement(state, keys, inputVector, onEvent, player);
 

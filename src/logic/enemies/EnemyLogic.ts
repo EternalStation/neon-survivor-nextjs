@@ -623,7 +623,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                                     dmgDealt -= shieldAbsorp;
 
                                     if (shieldAbsorp > 0) {
-                                        const themeColor = getPlayerThemeColor(state);
+                                        // const themeColor = getPlayerThemeColor(state);
                                         spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
                                         spawnParticles(state, e.x, e.y, '#60a5fa', 1);
                                     }
@@ -643,6 +643,56 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                     }
                 }
             }
+        }
+
+        // --- BURN DAMAGE (Fire Turret) ---
+        if ((e as any).burnTimer && (e as any).burnTimer > 0) {
+            (e as any).burnTimer--;
+
+            // Burn Tick (every 0.5s = 30 frames)
+            if (state.frameCount % 30 === 0) {
+                const stacks = (e as any).burnStack || 0;
+                if (stacks > 0) {
+                    // Damage: 5% MaxHP per stack? No, logic says "burn damage adds up".
+                    // Projectile logic added raw damage value to stack.
+                    // So specific burn damage is pre-calculated.
+
+                    // Resistance?
+                    let dmg = stacks;
+
+                    // LEGION SHIELD CHECK
+                    if (e.legionId) {
+                        const lead = state.legionLeads?.[e.legionId];
+                        if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                            const absorbed = Math.min(dmg, lead.legionShield || 0);
+                            lead.legionShield = (lead.legionShield || 0) - absorbed;
+                            dmg -= absorbed;
+                            if (absorbed > 0) {
+                                spawnFloatingNumber(state, e.x, e.y, Math.round(absorbed).toString(), '#60a5fa', false);
+                            }
+                        }
+                    }
+
+                    if (dmg > 0) {
+                        e.hp -= dmg;
+                        player.damageDealt += dmg;
+                        spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#ef4444', false);
+                        spawnParticles(state, e.x, e.y, '#ef4444', 1);
+                    }
+
+                    if (e.hp <= 0 && !e.dead) {
+                        // Burn Kill
+                        handleEnemyDeath(state, e, onEvent);
+                        return;
+                    }
+                }
+            }
+        } else {
+            // Decay stacks if timer runs out?
+            // "Infinite stacking" usually implies stacks stay until death or long duration.
+            // But if timer runs out, maybe we clear it?
+            // Let's clear it to be safe and prevent memory leaks on long-lived bosses.
+            (e as any).burnStack = 0;
         }
 
         // Wall collision - Bosses survive with 10% Max HP penalty

@@ -3,7 +3,7 @@ import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignet
 import { renderPOIs } from './renderers/PoiRenderer';
 import { renderPlayer } from './renderers/PlayerRenderer';
 import { renderEnemies } from './renderers/EnemyRenderer';
-import { renderDrones, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
+import { renderDrones, renderAllies, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
 import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
 
@@ -85,6 +85,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
         // 7. Entities (Enemies, Drones)
         renderDrones(ctx, state);
+        renderAllies(ctx, state);
 
         // 7.5. Void particles (behind enemies for layering)
         renderParticles(ctx, state, 'void');

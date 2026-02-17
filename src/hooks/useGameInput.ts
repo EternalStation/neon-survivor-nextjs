@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { GameState, MeteoriteRarity } from '../logic/core/types';
+import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/types';
 import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
@@ -327,6 +327,52 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     cheatBuffer = '';
                 }
             });
+
+            // --- TURRET CHEATS ---
+            // turf1-6 (Fire), turi1-6 (Ice), turh1-6 (Heal)
+            const turretVariants: Record<string, 'fire' | 'ice' | 'heal'> = { 'f': 'fire', 'i': 'ice', 'h': 'heal' };
+            let turretSpawned = false;
+            for (const [keyChar, variant] of Object.entries(turretVariants)) {
+                if (turretSpawned) break;
+                for (let level = 1; level <= 6; level++) {
+                    if (cheatBuffer.endsWith(`tur${keyChar}${level}`) || cheatBuffer.endsWith(`t${keyChar}${level}`)) {
+                        const p = gameState.current.player;
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 100;
+                        const tx = p.x + Math.cos(angle) * dist;
+                        const ty = p.y + Math.sin(angle) * dist;
+
+                        const newTurret: MapPOI = {
+                            id: Math.random(),
+                            type: 'turret',
+                            x: tx,
+                            y: ty,
+                            radius: 120 * (1 + (level - 1) * 0.1),
+                            arenaId: gameState.current.currentArena,
+                            active: true,
+                            progress: 0,
+                            activationProgress: 0,
+                            activeDuration: 0,
+                            cooldown: 0,
+                            respawnTimer: 0,
+                            lastUsed: 0,
+                            turretVariant: variant,
+                            turretUses: level
+                        };
+
+                        gameState.current.pois.push(newTurret);
+                        spawnFloatingNumber(gameState.current, tx, ty, `LVL ${level} ${variant.toUpperCase()} TURRET`, '#F59E0B', true);
+                        playSfx('power-up');
+                        console.log(`[CHEAT] Spawned Lvl ${level} ${variant} Turret at (${tx.toFixed(0)}, ${ty.toFixed(0)})`);
+                        console.log(`[CHEAT] Total POIs:`, gameState.current.pois.length);
+                        console.log(`[CHEAT] Turret details:`, newTurret);
+
+                        cheatBuffer = '';
+                        turretSpawned = true;
+                        break;
+                    }
+                }
+            }
         };
 
         const handleUp = (e: KeyboardEvent) => {

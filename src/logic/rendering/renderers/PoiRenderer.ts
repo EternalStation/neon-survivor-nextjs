@@ -303,11 +303,53 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
     }
 
     // 2. Turret Base (Hexagon)
+    const level = poi.turretUses || 1;
+    const sizeMult = 1 + (level - 1) * 0.1;
+    const baseSize = 25 * sizeMult;
+
+    // --- LVL 3+: AURA OVERLAY ---
+    if (level >= 3) {
+        ctx.save();
+        ctx.globalAlpha = 0.2 + Math.sin(time * 3) * 0.1;
+        ctx.fillStyle = baseColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, baseSize * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rotating outer ring
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = baseColor;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 10]);
+        ctx.rotate(time);
+        ctx.beginPath();
+        ctx.arc(0, 0, baseSize * 1.8, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // --- LVL 6+: ELITE TRIM & INTENSE PULSE ---
+    if (level >= 6) {
+        ctx.save();
+        const pulse = 1 + Math.sin(time * 10) * 0.05;
+        ctx.scale(pulse, pulse);
+        // Golden glow
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#fbbf24';
+        // Base plate elite trim
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, baseSize * 1.1, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
     ctx.save();
     ctx.fillStyle = '#1e293b'; // Dark slate base
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    const baseSize = 25;
+    ctx.strokeStyle = level >= 6 ? '#fbbf24' : color; // Golden if elite
+    ctx.lineWidth = level >= 6 ? 4 : 3;
+
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2;
@@ -322,6 +364,7 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
 
     // 3. Turret Head (Rotating)
     ctx.save();
+    ctx.scale(sizeMult, sizeMult); // Scale head too
 
     // Rotation Logic:
     // Heal: Always faces player
@@ -478,7 +521,6 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
     }
 
     // 5. Level Indicator (LVL X)
-    const level = (poi.turretUses || 0) + 1;
     ctx.font = 'bold 16px Orbitron';
     ctx.fillStyle = color;
     ctx.textAlign = 'center';

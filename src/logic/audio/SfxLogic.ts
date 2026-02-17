@@ -217,7 +217,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down' | 'ui-click' | 'upgrade' | 'upgrade-confirm' | 'reroll';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down' | 'ui-click' | 'upgrade' | 'upgrade-confirm' | 'reroll' | 'shatter' | 'turret-fire';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -259,6 +259,37 @@ export function playSfx(type: SfxType) {
             playOnce(0);
             playOnce(0.8); // 0.8s later
         }
+        return;
+    }
+
+    if (type === 'shatter') {
+        // Ice Shatter
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(2200, t);
+        osc.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+        g.gain.setValueAtTime(0.15 * sfxVolume, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.connect(g);
+        g.connect(masterSfxGain as AudioNode);
+        osc.start(t);
+        osc.stop(t + 0.1);
+
+        // Add noise burst
+        const noise = audioCtx.createOscillator();
+        const ng = audioCtx.createGain();
+        noise.type = 'square';
+        noise.frequency.setValueAtTime(3000 + Math.random() * 2000, t);
+        ng.gain.setValueAtTime(0.1, t);
+        ng.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        noise.connect(ng); ng.connect(masterSfxGain as AudioNode);
+        noise.start(t); noise.stop(t + 0.15);
+        return;
+    }
+
+    if (type === 'turret-fire') {
+        playShootDing(); // Reuse specific sound if needed, or customize
         return;
     }
 

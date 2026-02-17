@@ -9,6 +9,56 @@ export function renderDrones(ctx: CanvasRenderingContext2D, state: GameState) {
     });
 }
 
+export function renderAllies(ctx: CanvasRenderingContext2D, state: GameState) {
+    if (!state.allies) return;
+    state.allies.forEach(a => {
+        if (a.type === 'heal_drone') {
+            ctx.save();
+            ctx.translate(a.x, a.y);
+
+            // Outer pulse glow
+            const pulse = (Math.sin(state.gameTime * 5) + 1) * 2;
+            ctx.shadowBlur = 10 + pulse;
+            ctx.shadowColor = '#4ade80';
+
+            // Drone body
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+
+            // Diamond shape
+            ctx.beginPath();
+            ctx.moveTo(0, -10 - pulse / 2);
+            ctx.lineTo(8 + pulse / 2, 0);
+            ctx.lineTo(0, 10 + pulse / 2);
+            ctx.lineTo(-8 - pulse / 2, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Center core
+            ctx.fillStyle = '#4ade80';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rotors/Flanges
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 1;
+            const rot = state.gameTime * 10;
+            for (let i = 0; i < 4; i++) {
+                const angle = rot + (i / 4) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(angle) * 5, Math.sin(angle) * 5);
+                ctx.lineTo(Math.cos(angle) * 12, Math.sin(angle) * 12);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+    });
+}
+
 export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
     state.meteorites.forEach(m => {
         ctx.save();
