@@ -212,10 +212,10 @@ export function updateTurrets(state: GameState, step: number) {
                         turret.rotation = angle;
                         turret.lastShot = now;
 
-                        const dmgPct = 0.10 + (level - 1) * 0.05;
+                        const dmgPct = 0.10 + (level - 1) * 0.05; // 10% + 5% per level
                         const damage = Math.ceil(estBaseHP * dmgPct * delay); // Per shot
 
-                        const slowPct = Math.min(1.0, 1.00 + (level - 1) * 0.05); // 100% at Lvl 1 (instant freeze)
+                        const slowPct = 0.50 + (level - 1) * 0.05; // 50% + 5% per level (slow, not freeze)
 
                         // Cone check for Lvl 6
                         const coneAngle = level >= 6 ? (120 * Math.PI / 180) : (30 * Math.PI / 180);
@@ -296,7 +296,7 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
         isTrace: !isIce && !isFlame && !isBomb,
         isMist: isIce && !isBomb,
         slowPercent: isIce ? slowPercent : undefined,
-        freezeDuration: (isBomb || slowPercent >= 1.0) ? 3.0 : undefined,
+        freezeDuration: isBomb ? 3.0 : undefined, // Only bombs freeze, mist slows
         spawnTime: Date.now(),
         isVisualOnly,
         // Custom Properties for Logic

@@ -482,26 +482,11 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     const duration = b.freezeDuration || 2.0;
                     e.slowUntil = now + duration;
 
-                    // Additive Slow or Max? User said "scaling slow... cap at 100%"
-                    // Implies we track a 'slowIntensity' on the enemy that grows?
-                    // Currently 'slowPercentVal' is usually a 0-1 replacement.
-                    // Let's accumulate it.
-
+                    // Additive Slow (capped at 100%, but no freeze from mist)
                     const currentSlow = e.slowPercentVal || 0;
-                    let newSlow = currentSlow + b.slowPercent; // Additive stacking
+                    let newSlow = Math.min(1.0, currentSlow + b.slowPercent); // Cap at 100%
 
-                    if (newSlow >= 1.0) {
-                        // FREEZE CONDITION
-                        newSlow = 0; // Reset slow? Or keep it maxed? 
-                        // If we freeze, 'frozen' status takes over movement logic.
-                        e.frozen = (e.frozen || 0) + 60; // Add 1s freeze per stack overflow
-                        e.slowPercentVal = 0; // Clear slow so they can be frozen again? 
-                        // Actually, if frozen, slow is irrelevant.
-                        // Let's just set frozen.
-                        spawnFloatingNumber(state, e.x, e.y, "FREEZE", '#bae6fd', false);
-                    } else {
-                        e.slowPercentVal = newSlow;
-                    }
+                    e.slowPercentVal = newSlow;
 
                     // Visual Frost Effect (Blue Particles)
                     spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 3);
