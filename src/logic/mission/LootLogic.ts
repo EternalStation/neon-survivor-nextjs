@@ -122,21 +122,21 @@ export const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
     // Rarity Indices:
     // 0: Anomalous (Lvl 1)
     // 1: Radiant (Lvl 2)
-    // 2: Void (Lvl 3)
+    // 2: Abyss (Lvl 3)
     // 3: Eternal (Lvl 4)
     // 4: Divine (Lvl 5)
     // 5: Singularity (Lvl 6)
 
-    // 0-5 min: Start with Anomalous (0) and Radiant (1)
-    { min: 0, max: 5, weights: [75, 25, 0, 0, 0, 0] },
-    // 5-10 min: Introduce Void (2)
-    { min: 5, max: 10, weights: [40, 40, 20, 0, 0, 0] },
-    // 10-15 min: More Void (2), Intro Eternal (3)
-    { min: 10, max: 15, weights: [20, 40, 30, 10, 0, 0] },
-    // 15-20 min: Focus on Eternal (3), Intro Divine (4)
-    { min: 15, max: 20, weights: [10, 20, 40, 20, 10, 0] },
-    // 20+ min: Endgame - Singularity (5) appears
-    { min: 20, max: 9999, weights: [5, 10, 15, 25, 30, 15] }
+    // 0-5 min: 90% Anomalous, 10% Radiant, 1% Abyss
+    { min: 0, max: 5, weights: [90, 10, 1, 0, 0, 0] },
+    // 5-10 min: 70% Anomalous, 20% Radiant, 9% Abyss, 1% Eternal
+    { min: 5, max: 10, weights: [70, 20, 9, 1, 0, 0] },
+    // 10-15 min: 50% Anomalous, 30% Radiant, 15% Abyss, 5% Eternal, 1% Divine
+    { min: 10, max: 15, weights: [50, 30, 15, 5, 1, 0] },
+    // 15-20 min: 34% Anomalous, 30% Radiant, 20% Abyss, 10% Eternal, 5% Divine, 1% Singularity
+    { min: 15, max: 20, weights: [34, 30, 20, 10, 5, 1] },
+    // 20+ min: Endgame - Balanced distribution with 10% Singularity
+    { min: 20, max: 9999, weights: [15, 15, 20, 20, 20, 10] }
 ];
 
 const RARITY_LIST: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];

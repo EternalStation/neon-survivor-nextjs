@@ -152,7 +152,7 @@ export function updateTurrets(state: GameState, step: number) {
 
 function spawnTurretBullet(state: GameState, x: number, y: number, angle: number, dmg: number, variant: string, isVisualOnly: boolean = false) {
     const isIce = variant === 'ice';
-    const spd = isIce ? (10 + Math.random() * 5) : 25; // Ice mist is slower, Fire is fast trace
+    const spd = isIce ? (10 + Math.random() * 5) : 35; // Ice mist is slower, Fire is fast trace
 
     const bullet: Bullet = {
         id: Math.random(),
