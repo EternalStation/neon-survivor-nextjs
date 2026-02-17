@@ -168,8 +168,8 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         EcoDMG: [
             ["+0.1 DMG per kill"],
             ["+0.1 ATS per kill"],
-            ["+0.1% DMG per kill"],
-            ["+0.1% ATS per kill"],
+            ["+0.05% DMG per kill"],
+            ["+0.05% ATS per kill"],
             ["MAX LEVEL"]
         ],
         EcoXP: [
@@ -225,7 +225,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["+0.1 Armor per kill"],
             ["+0.1% DMG reduction from Collision per kill"],
             ["+0.1% DMG reduction from Projectile per kill"],
-            ["+0.1% Armor per kill"],
+            ["+0.05% Armor per kill"],
             ["MAX LEVEL"]
         ],
         KineticBattery: [
@@ -458,10 +458,10 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.1;
             // Lvl 2: +0.1 ATS per kill
             if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.1;
-            // Lvl 3: +0.1% DMG per kill
-            if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1;
-            // Lvl 4: +0.1% ATS per kill
-            if (statKey === 'ats_pct_per_kill') total += getSoulsSinceLevel(4) * 0.1;
+            // Lvl 3: +0.05% DMG per kill
+            if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05;
+            // Lvl 4: +0.05% ATS per kill
+            if (statKey === 'ats_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
         }
 
         if (hex.type === 'EcoXP') {
@@ -497,8 +497,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'col_red_per_kill') total += getSoulsSinceLevel(2) * 0.1;
             // Lvl 3: +0.1% Projectile DMG Red per kill
             if (statKey === 'proj_red_per_kill') total += getSoulsSinceLevel(3) * 0.1;
-            // Lvl 4: +0.1% Armor per kill
-            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.1;
+            // Lvl 4: +0.05% Armor per kill
+            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
         }
 
         // --- Non-Stacking / Special Logic ---
