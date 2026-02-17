@@ -259,10 +259,10 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
     }
 
     if (isFlame) {
-        spd = 15;
-        life = 20;
-        size = 10 + Math.random() * 10;
-        color = '#ef4444';
+        spd = 10 + Math.random() * 5; // Similar to ice mist
+        life = 40 + Math.random() * 20; // Shorter than ice
+        size = 20 + Math.random() * 15; // Larger particles
+        color = '#f97316'; // Orange
     }
 
     if (isBomb) {
@@ -276,7 +276,7 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
     if (level >= 3 && !isVisualOnly) {
         size *= 1.5;
         // Tint shift?
-        if (!isIce) color = '#f97316'; // Darker Orange
+        if (!isIce) color = '#fb923c'; // Brighter Orange for higher levels
     }
 
     const bullet: Bullet = {
@@ -294,7 +294,7 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
         size,
         color,
         isTrace: !isIce && !isFlame && !isBomb,
-        isMist: isIce && !isBomb,
+        isMist: (isIce && !isBomb) || isFlame, // Flame also uses mist rendering
         slowPercent: isIce ? slowPercent : undefined,
         freezeDuration: isBomb ? 3.0 : undefined, // Only bombs freeze, mist slows
         spawnTime: Date.now(),

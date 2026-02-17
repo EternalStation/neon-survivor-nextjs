@@ -497,7 +497,12 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         if (fn.isCrit) ctx.font = "italic 900 25px 'Outfit', sans-serif";
         else ctx.font = "900 20px 'Outfit', sans-serif";
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.lineWidth = fn.isCrit ? 4 : 2; ctx.strokeStyle = '#000000'; ctx.strokeText(fn.value, 0, 0);
+        // Only draw stroke if no background (background text is pure color)
+        if (!fn.backgroundColor) {
+            ctx.lineWidth = fn.isCrit ? 4 : 2;
+            ctx.strokeStyle = '#000000';
+            ctx.strokeText(fn.value, 0, 0);
+        }
         if (fn.isCrit) {
             const grad = ctx.createLinearGradient(0, -12, 0, 12);
             grad.addColorStop(0, '#ef4444'); // Bright Blood Red
