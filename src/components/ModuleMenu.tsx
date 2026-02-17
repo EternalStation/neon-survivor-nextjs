@@ -123,7 +123,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
     const getRemovalCost = (item: any) => {
         const baseCost = Math.floor(1 + (gameState.gameTime / 60)); // User Request: 1 + 1 per minute
-        return item?.quality === 'Corrupted' ? baseCost * 3 : baseCost;
+        return item?.isCorrupted ? baseCost * 3 : baseCost;
     };
 
     const handleAttemptRemove = (index: number, item: any, replaceWith?: { item: any, source: string, index: number }) => {
@@ -134,7 +134,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const confirmRemoval = () => {
         if (removalCandidate) {
             // Check if WE ARE ABOUT TO PLACE a corrupted item via replacement
-            if (removalCandidate.replaceWith?.item?.quality === 'Corrupted') {
+            if (removalCandidate.replaceWith?.item?.isCorrupted) {
                 setCorruptionCandidate({
                     index: removalCandidate.index,
                     item: removalCandidate.replaceWith.item,
@@ -161,6 +161,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         onInventoryUpdate(replaceWith.index, null);
                     } else if (replaceWith.source === 'diamond') {
                         onSocketUpdate('diamond', replaceWith.index, null);
+                    } else if (replaceWith.source === 'recalibrate') {
+                        setRecalibrateSlot(null);
                     }
                 }
 
@@ -222,6 +224,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 onInventoryUpdate(sourceIndex, null);
             } else if (source === 'diamond') {
                 onSocketUpdate('diamond', sourceIndex, null);
+            } else if (source === 'recalibrate') {
+                setRecalibrateSlot(null);
             }
             setCorruptionCandidate(null);
         }
@@ -568,8 +572,18 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     <HexGrid
                         gameState={gameState}
                         movedItem={movedItem}
-
-                        onInventoryUpdate={onInventoryUpdate}
+                        onInventoryUpdate={(index, item) => {
+                            if (movedItem && movedItem.source === 'recalibrate') {
+                                setRecalibrateSlot(null);
+                            }
+                            onInventoryUpdate(index, item);
+                        }}
+                        onSocketUpdate={(type, index, item) => {
+                            if (movedItem && movedItem.source === 'recalibrate') {
+                                setRecalibrateSlot(null);
+                            }
+                            onSocketUpdate(type, index, item);
+                        }}
                         setMovedItem={(item) => {
                             if (gameState.pendingLegendaryHex) {
                                 setPlacementAlert(true);
@@ -594,13 +608,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 return;
                             }
                             handleAttemptRemove(index, item, replaceWith);
-                        }}
-                        // Handle drops from RECALIBRATE slot back to HEX
-                        onSocketUpdate={(type, index, item) => {
-                            if (movedItem && movedItem.source === 'recalibrate') {
-                                setRecalibrateSlot(null);
-                            }
-                            onSocketUpdate(type, index, item);
                         }}
                         onAttemptPlace={(index, item, source, sourceIndex) => {
                             setCorruptionCandidate({ index, item, source, sourceIndex });
@@ -801,7 +808,12 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         <InventoryPanel
                             inventory={gameState.inventory}
                             movedItem={movedItem}
-                            onSocketUpdate={onSocketUpdate}
+                            onSocketUpdate={(type, index, item) => {
+                                if (movedItem && movedItem.source === 'recalibrate') {
+                                    setRecalibrateSlot(null);
+                                }
+                                onSocketUpdate(type, index, item);
+                            }}
                             setMovedItem={(item) => {
                                 if (gameState.pendingLegendaryHex) {
                                     setPlacementAlert(true);

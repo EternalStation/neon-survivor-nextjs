@@ -201,8 +201,15 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     const playerMaxHp = calcStat(player.hp);
                     rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
                 } else {
-                    rawDmg = Math.pow(e.maxHp, GAME_CONFIG.ENEMY.COLLISION_POWER_SCALING);
+                    // New requested formula: 5% of enemy max HP
+                    rawDmg = e.maxHp * 0.05;
                 }
+
+                // Bosses deal x2 that damage (10% max HP)
+                if (e.boss) rawDmg *= 2.0;
+
+                // Anomaly Bosses still get an extra kick (x1.5 of boss damage)
+                if (e.isAnomaly) rawDmg *= 1.5;
             }
 
 
@@ -273,6 +280,9 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     player.lastHitDamage = actualDmg;
                     player.killerHp = e.hp;
                     player.killerMaxHp = e.maxHp;
+
+                    // Set short I-frame (0.3s) to prevent frame-stacking damage from large hitboxes
+                    player.invincibleUntil = Math.max(player.invincibleUntil || 0, state.gameTime + 0.3);
                 }
                 spawnFloatingNumber(state, player.x, player.y, Math.round(damageToApply).toString(), '#ef4444', false);
             }
