@@ -94,7 +94,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.restore();
         } else if (effect.type === 'blackhole') {
             // --- VOID SINGULARITY VISUAL (Core + Reverted Organic Outline) ---
-            const pullRadius = 400; // Updated to match logic
+            const pullRadius = effect.radius || 400; // Updated to match logic
             const coreRadius = 40;
             if (isNaN(effect.x) || isNaN(effect.y)) return;
 
@@ -106,7 +106,8 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             const rotation = (t * 3) % (Math.PI * 2);
             for (let layer = 0; layer < 6; layer++) {
                 // Layer radius scales from core to pull edge
-                const layerRadius = coreRadius + (pullRadius - coreRadius) * (0.2 + layer * 0.15);
+                // Layer radius scales from core to pull edge - Adjusted to reach 100% at max layer
+                const layerRadius = coreRadius + (pullRadius - coreRadius) * (0.2 + (layer / 5) * 0.8);
                 if (layerRadius > pullRadius) continue;
 
                 const numSegments = 60;

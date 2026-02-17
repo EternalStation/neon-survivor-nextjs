@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GameState, Meteorite, MeteoriteRarity } from '../logic/core/types';
+import type { GameState, Meteorite, MeteoriteRarity, Blueprint } from '../logic/core/types';
 import './MeteoriteTooltip.css';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 import { getPerkName, getPerkIcon } from './modules/ModuleUtils';
@@ -16,23 +16,25 @@ interface MeteoriteTooltipProps {
     onMouseLeave?: () => void;
 }
 
-const RARITY_COLORS: Record<MeteoriteRarity, string> = {
+const RARITY_COLORS: Record<string, string> = {
     // Removed legacy rarities to match MeteoriteRarity type
     anomalous: '#60a5fa', // Blue (Anomalous)
     radiant: '#FFD700',
-    abyss: '#8B0000',
+    void: '#8B0000',
+    abyss: '#8B0000', // Legacy alias for void
     eternal: '#B8860B',
     divine: '#FFFFFF',
     singularity: '#E942FF'
 };
 
-const RARITY_INFO: Record<MeteoriteRarity, { name: string, symbol: string }> = {
-    anomalous: { name: 'ANOMALOUS METEORITE', symbol: '✦' },
-    radiant: { name: 'RADIANT STAR', symbol: '❂' },
-    abyss: { name: 'ABYSS CATALYST', symbol: '✵' },
-    eternal: { name: 'ETERNAL CORE', symbol: '✷' },
-    divine: { name: 'DIVINE ESSENCE', symbol: '✺' },
-    singularity: { name: 'SINGULARITY POINT', symbol: '🌌' }
+const RARITY_INFO: Record<string, { name: string }> = {
+    anomalous: { name: 'ANOMALOUS METEORITE' },
+    radiant: { name: 'RADIANT STAR' },
+    void: { name: 'VOID CATALYST' },
+    abyss: { name: 'VOID CATALYST' }, // Legacy alias
+    eternal: { name: 'ETERNAL CORE' },
+    divine: { name: 'DIVINE ESSENCE' },
+    singularity: { name: 'SINGULARITY POINT' }
 };
 
 const getMeteoriteImage = (m: Meteorite) => {
@@ -43,7 +45,7 @@ const formatDescription = (text: string, highlightColor: string) => {
     // Keywords to highlight - Order matters (longest first to avoid partial matches)
     const keywords = [
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
-        'Legendary', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
+        'HEX', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
         'Type', 'Rarity', 'Arena', 'Sector',
         '\\bECO\\b', '\\bCOM\\b', '\\bDEF\\b',
         '\\(Any\\)', 'same level'
@@ -169,76 +171,134 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                 }
             `}</style>
             {meteorite.isBlueprint ? (
-                <div style={{
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
-                    border: '2px solid #3b82f6',
-                    boxShadow: '0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 20px rgba(59, 130, 246, 0.2)',
-                    minHeight: '160px',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
-                    {/* SCANLINE EFFECT */}
-                    <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(59, 130, 246, 0.05) 1px, rgba(59, 130, 246, 0.05) 2px)',
-                        pointerEvents: 'none'
-                    }} />
+                (() => {
+                    const bp = meteorite as any as Blueprint;
+                    const isResearching = bp.status === 'researching';
+                    const timeLeft = isResearching && bp.researchFinishTime ? Math.max(0, bp.researchFinishTime - gameState.gameTime) : 0;
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', zIndex: 1 }}>
+                    return (
                         <div style={{
-                            width: '55px', height: '55px',
-                            background: 'rgba(59, 130, 246, 0.1)',
-                            border: '1px solid #3b82f6',
-                            borderRadius: '4px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)'
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
+                            border: `2px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
+                            boxShadow: `0 0 30px ${isResearching ? 'rgba(251, 191, 36, 0.4)' : 'rgba(59, 130, 246, 0.5)'}, inset 0 0 20px ${isResearching ? 'rgba(251, 191, 36, 0.1)' : 'rgba(59, 130, 246, 0.2)'}`,
+                            minHeight: '180px',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}>
-                            <img src="/assets/Icons/Blueprint.png" style={{
-                                width: '75%', height: '75%', objectFit: 'contain',
-                                filter: 'drop-shadow(0 0 5px #60a5fa)'
-                            }} alt="BP" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 5px #3b82f6' }} />
-                                <span style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>ARCHIVE ANOMALY</span>
+                            {/* SCANLINE EFFECT */}
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(59, 130, 246, 0.05) 1px, rgba(59, 130, 246, 0.05) 2px)',
+                                pointerEvents: 'none'
+                            }} />
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', zIndex: 1 }}>
+                                <div style={{
+                                    width: '65px', height: '65px',
+                                    background: isResearching ? 'rgba(251, 191, 36, 0.05)' : 'rgba(59, 130, 246, 0.1)',
+                                    border: `1px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
+                                    borderRadius: '8px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: `0 0 15px ${isResearching ? 'rgba(251, 191, 36, 0.2)' : 'rgba(59, 130, 246, 0.3)'}`,
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}>
+                                    <img src="/assets/Icons/Blueprint.png" style={{
+                                        width: '75%', height: '75%', objectFit: 'contain',
+                                        filter: isResearching ? 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(-10deg) saturate(3)' : 'drop-shadow(0 0 5px #60a5fa)',
+                                        opacity: isResearching ? 0.3 : 1
+                                    }} alt="BP" />
+
+                                    {isResearching && (
+                                        <div style={{
+                                            position: 'absolute', inset: 0,
+                                            background: 'linear-gradient(transparent, #fbbf24, transparent)',
+                                            height: '200%', width: '100%',
+                                            opacity: 0.3,
+                                            animation: 'scanning-bar 1.5s infinite linear'
+                                        }} />
+                                    )}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ width: '8px', height: '8px', background: isResearching ? '#fbbf24' : '#3b82f6', borderRadius: '50%', boxShadow: `0 0 5px ${isResearching ? '#fbbf24' : '#3b82f6'}` }} />
+                                        <span style={{ fontSize: '10px', color: isResearching ? '#fbbf24' : '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>
+                                            {isResearching ? 'DECRYPTION UNDERWAY' : 'ARCHIVE ANOMALY'}
+                                        </span>
+                                    </div>
+                                    <span style={{
+                                        fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '1px',
+                                        textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                                        fontFamily: 'Orbitron, sans-serif'
+                                    }}>
+                                        {isResearching ? 'ENCRYPTED CORE' : (bp.name || 'UNKNOWN DATASET')}
+                                    </span>
+                                </div>
                             </div>
-                            <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff', letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>ENCRYPTED DATASET</span>
-                        </div>
-                    </div>
 
-                    <p style={{
-                        fontSize: '11px', color: '#94a3b8', margin: '4px 0', lineHeight: '1.4', fontStyle: 'italic',
-                        borderLeft: '2px solid #3b82f6', paddingLeft: '10px', position: 'relative', zIndex: 1
-                    }}>
-                        Deep-space telemetry recovered from an abandoned orbital station. The data appears to contain advanced chassis augmentation protocols, but requires local research processing to initialize.
-                    </p>
+                            <p style={{
+                                fontSize: '11px', color: '#94a3b8', margin: '8px 0', lineHeight: '1.5',
+                                borderLeft: `3px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
+                                paddingLeft: '12px', position: 'relative', zIndex: 1
+                            }}>
+                                {isResearching
+                                    ? "System is currently parsing high-density encrypted packets. Structural analysis and functional overview are unavailable until bitstream synchronization is complete."
+                                    : (bp.desc || "Deep-space telemetry recovered from an abandoned orbital station. Requires local research processing to initialize.")}
+                            </p>
 
-                    <div style={{
-                        marginTop: '10px',
-                        padding: '10px',
-                        background: 'rgba(59, 130, 246, 0.05)',
-                        border: '1px dashed rgba(59, 130, 246, 0.4)',
-                        borderRadius: '4px',
-                        textAlign: 'center',
-                        position: 'relative', zIndex: 1
-                    }}>
-                        <div style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', marginBottom: '2px' }}>RESEARCH ANALYSIS</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '10px', color: '#94a3b8' }}>DECRYPTION COMPLEXITY:</span>
-                            <span style={{ fontSize: '10px', color: '#fff', fontWeight: 900 }}>UNKNOWN (PROCESSING...)</span>
+                            <div style={{
+                                marginTop: '10px',
+                                padding: '12px',
+                                background: isResearching ? 'rgba(251, 191, 36, 0.05)' : 'rgba(59, 130, 246, 0.05)',
+                                border: `1px dashed ${isResearching ? 'rgba(251, 191, 36, 0.4)' : 'rgba(59, 130, 246, 0.4)'}`,
+                                borderRadius: '6px',
+                                textAlign: 'center',
+                                position: 'relative', zIndex: 1
+                            }}>
+                                <div style={{ fontSize: '9px', fontWeight: 900, color: isResearching ? '#fbbf24' : '#60a5fa', marginBottom: '4px', letterSpacing: '1px' }}>
+                                    {isResearching ? 'DECRYPTION STATUS' : 'RESEARCH ANALYSIS'}
+                                </div>
+
+                                {isResearching ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '24px', color: '#fbbf24', fontWeight: 900, fontFamily: 'monospace', textShadow: '0 0 10px #fbbf24' }}>
+                                            {timeLeft.toFixed(1)}s
+                                        </div>
+                                        <div style={{ width: '100%', height: '4px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%', background: '#fbbf24',
+                                                width: `${Math.max(5, (1 - (timeLeft / 60)) * 100)}%`, // Assuming 60s max for visual
+                                                boxShadow: '0 0 10px #fbbf24'
+                                            }} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '10px', color: '#94a3b8' }}>DURABILITY STATUS:</span>
+                                            <span style={{ fontSize: '10px', color: '#fff', fontWeight: 900 }}>STABLE</span>
+                                        </div>
+                                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#fbbf24', letterSpacing: '0.5px' }}>
+                                            READY FOR INITIALIZATION
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+
+                            <style>{`
+                                @keyframes scanning-bar {
+                                    from { transform: translateY(-100%); }
+                                    to { transform: translateY(100%); }
+                                }
+                            `}</style>
                         </div>
-                        <div style={{ fontSize: '9px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '8px', textAlign: 'center', opacity: 0.7 }}>
-                            *Decryption duration varies based on encryption complexity
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#fbbf24', letterSpacing: '0.5px' }}>RIGHT-CLICK TO BEGIN DECRYPTION</span>
-                    </div>
-                </div>
+                    );
+                })()
             ) : (
                 <>
                     {/* Header: Name + Symbol + Total Power */}
@@ -251,7 +311,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                         background: `${rarityColor}11`
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{
                                     fontSize: '14px',
                                     fontWeight: 900,
@@ -263,6 +323,16 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                     background: `${rarityColor}33`, color: rarityColor,
                                     borderRadius: '2px', fontWeight: 900
                                 }}>V {meteorite.version?.toFixed(1) || '1.0'}</span>
+                                {meteorite.isCorrupted && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        background: 'rgba(239, 68, 68, 0.15)', padding: '1px 6px', borderRadius: '4px',
+                                        border: '1px solid #ef4444',
+                                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'
+                                    }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#ef4444', letterSpacing: '0.5px' }}>CORRUPTED [EJECT: 3X DUST]</span>
+                                    </div>
+                                )}
                             </div>
                             <div style={{
                                 marginTop: '2px',
@@ -292,17 +362,12 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                         border: '1px solid rgba(249, 115, 22, 0.4)',
                                         boxShadow: '0 0 10px rgba(249, 115, 22, 0.3)'
                                     }}>
-                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#fb923c', letterSpacing: '0.5px' }}>MATR-X +{formatPct(efficiency.blueprintBoost)}%</span>
+                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#fb923c', letterSpacing: '0.5px' }}>CORE-X +{formatPct(efficiency.blueprintBoost)}%</span>
                                     </div>
                                 )}
                                 {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>(UNPLACED)</span>}
                             </div>
                         </div>
-                        <span style={{
-                            fontSize: '19px',
-                            color: rarityColor,
-                            textShadow: `0 0 10px ${rarityColor}`
-                        }}>{info.symbol}</span>
                     </div>
 
 
@@ -424,13 +489,9 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                         <div style={{ color: '#fff' }}>
                             <span style={{ color: rarityColor, opacity: 0.8 }}>TYPE:</span> <span style={{
                                 fontSize: '12px',
+                                fontWeight: 900,
                                 textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}`
                             }}>{meteorite.quality === 'New' ? 'NEW' : meteorite.quality.toUpperCase()}
-                                {meteorite.isCorrupted && (
-                                    <span style={{ color: '#a855f7', marginLeft: '6px', textShadow: '0 0 10px #a855f7' }}>
-                                        CORRUPTED <span style={{ fontSize: '9px', opacity: 0.8, color: '#ef4444' }}>(COST X3 DUST)</span>
-                                    </span>
-                                )}
                             </span>
                         </div>
                         <div style={{ color: '#fff' }}>

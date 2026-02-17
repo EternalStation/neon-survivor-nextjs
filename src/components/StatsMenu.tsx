@@ -255,14 +255,10 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Meteorite Drop Chance</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
-                                                const minutes = gameState.gameTime / 60;
-                                                const entry = DROP_TABLE.find(e => minutes >= e.min && minutes < e.max) || DROP_TABLE[DROP_TABLE.length - 1];
-                                                const baseChance = entry.weights.reduce((a, b) => a + b, 0); // %
+                                                const baseChance = 7.0; // Static 7% Base Chance
 
                                                 const surge = isBuffActive(gameState, 'ARENA_SURGE') ? 2.0 : 1.0;
-                                                const arenaIdx = getArenaIndex(player.x, player.y);
-                                                let arenaMult = 1;
-                                                if (arenaIdx === 0) arenaMult = (1 + (0.15 * surge));
+                                                const arenaMult = gameState.xpSoulBuffMult || 1.0;
 
                                                 const hexFlat = calculateLegendaryBonus(gameState, 'met_drop_per_kill'); // flat boost (e.g. 0.01 for 1%)
 

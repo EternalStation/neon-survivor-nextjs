@@ -5,27 +5,29 @@ import { playSfx, switchBGM, fadeOutMusic } from '../audio/AudioLogic';
 import { playTypewriterClick } from '../audio/SfxLogic';
 
 
-export const EXTRACTION_MESSAGES = [
-    { speaker: 'you', text: "ORBITAL, THIS IS HEX-01-[PLAYER_NAME].", pause: 5.0 },
-    { speaker: 'you', text: "SENDING SOS. REQUESTING EXTRACTION.", pause: 5.0 },
-    { speaker: 'comm', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 5.0 },
-    { speaker: 'comm', text: "Biometric handshake... 0x4F 0x6E 0x65...", pause: 5.0 },
-    { speaker: 'you', text: "CONFIRMING.", pause: 5.0 },
-    { speaker: 'comm', text: "[ ENCRYPTED BUFFER ]", pause: 5.0, isPause: true },
-    { speaker: 'comm', text: "Signature locked. We're sending a ship.", pause: 5.0 },
-    { speaker: 'comm', text: "Transport is jumping the rift now.", pause: 5.0 },
-    { speaker: 'you', text: "UNDERSTOOD.", pause: 5.0 },
-    { speaker: 'comm', text: "PORTALS ARE OPEN NOW.", pause: 5.0, triggerPortals: true },
-    { speaker: 'comm', text: "But you have only ONE transition, be careful!", pause: 5.0 },
-    { speaker: 'comm', text: "Extraction point follows:", pause: 5.0 },
-    { speaker: 'comm', text: "TARGET SECTOR: [ARENA_NAME]", pause: 5.0 },
-    { speaker: 'comm', text: "Exact coordinates: pending...", pause: 5.0 },
-    { speaker: 'comm', text: "ETA 65 SECONDS.", pause: 5.0 },
-    { speaker: 'comm', text: "... ... ...", pause: 5.0, isAlert: true },
-    { speaker: 'comm', text: "DETECTED HIGH ENEMY ACTIVITY", pause: 5.0, isAlert: true },
-    { speaker: 'comm', text: "YOU HAVE NO MORE TIME LEFT", pause: 5.0, isAlert: true },
-    { speaker: 'comm', text: "EVACUATE NOW!", pause: 5.0, isAlert: true },
-    { speaker: 'comm', text: "GOOD LUCK, HEX-01-[PLAYER_NAME]! TRANSMISSION ENDS.", pause: 5, isAlert: true }
+export interface ExtractionMessage {
+    speaker: string;
+    text: string;
+    pause: number;
+    triggerPortals?: boolean;
+    isAlert?: boolean;
+    isPause?: boolean;
+}
+
+
+export const EXTRACTION_MESSAGES: ExtractionMessage[] = [
+    { speaker: 'you', text: "ORBIT, THIS IS HEX-01-[PLAYER_NAME], REQUESTING EXTRACTION", pause: 7.0 },
+    { speaker: 'orbit', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 6.0 },
+    { speaker: 'orbit', text: "We're sending a ship.", pause: 6.0 },
+    { speaker: 'orbit', text: "PORTALS ARE OPEN NOW.", pause: 6.0, triggerPortals: true },
+    { speaker: 'orbit', text: "But you have only ONE transition, be careful!", pause: 6.0 },
+    { speaker: 'you', text: "UNDERSTOOD.", pause: 6.0 },
+    { speaker: 'orbit', text: "Extraction point follows:SECTOR: [ARENA_NAME] ", pause: 5.0 },
+    { speaker: 'orbit', text: "ETA 65 SECONDS.", pause: 7.0 },
+    { speaker: 'orbit', text: "... ... ...", pause: 7.0 },
+    { speaker: 'orbit', text: "WE DETECTED HIGH ENEMY ACTIVITY", pause: 5.0, isAlert: true },
+    { speaker: 'orbit', text: "YOU HAVE NO MORE TIME LEFT", pause: 5.0, isAlert: true },
+    { speaker: 'orbit', text: "EVACUATE NOW! TRANSMISSION ENDS.", pause: 5.0, isAlert: true },
 ];
 
 export function updateExtraction(state: GameState, step: number) {
@@ -37,6 +39,11 @@ export function updateExtraction(state: GameState, step: number) {
     if (state.isPaused && !isDialogue) return;
 
     if (state.extractionStatus === 'requested') {
+        // First frame initialization of extraction dialog
+        if ((state.extractionDialogTime || 0) === 0) {
+            fadeOutMusic(0.5); // Fade out music to only hear typing
+        }
+
         state.extractionDialogTime = (state.extractionDialogTime || 0) + step;
         state.extractionTimer -= step;
         if (state.extractionTimer <= 0) {
@@ -60,7 +67,7 @@ export function updateExtraction(state: GameState, step: number) {
             // External trigger: Open Portals
             if (msg.triggerPortals) {
                 state.portalState = 'open';
-                state.portalTimer = 10.0;
+                state.portalTimer = 999999; // Endless duration
                 state.portalOneTimeUse = true; // Mark as one-time use for extraction
                 playSfx('warning');
             }
@@ -85,14 +92,21 @@ export function updateExtraction(state: GameState, step: number) {
         state.extractionTimer -= step;
         if (state.extractionTimer <= 0) {
             state.extractionStatus = 'active';
-            state.extractionTimer = 65; // 65 seconds arrival
+            state.extractionTimer = 65; // Initial UI value
+            state.extractionEndTime = Date.now() + 65000; // Real-time target (65s)
             state.extractionStartTime = state.gameTime;
             state.extractionPowerMult = 1.0;
 
             switchBGM('evacuation', 1.0);
         }
     } else if (state.extractionStatus === 'active') {
-        state.extractionTimer -= step;
+        // Real-time countdown (Menu safe)
+        if (state.extractionEndTime) {
+            state.extractionTimer = Math.max(0, (state.extractionEndTime - Date.now()) / 1000);
+        } else {
+            // Fallback if endTime missing
+            state.extractionTimer -= step;
+        }
 
         // Power Scaling: +100% every 30s (approx 3.33% per second)
         state.extractionPowerMult += (step / 30);

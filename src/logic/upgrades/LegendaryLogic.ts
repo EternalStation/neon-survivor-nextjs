@@ -174,7 +174,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         ],
         EcoXP: [
             ["+0.1 XP per kill"],
-            ["+0.01 Dust per kill"],
+            ["+0.05 Dust per kill"],
             ["+0.01% Meteorite Perk Effectiveness per kill"],
             ["+0.1% XP per kill"],
             ["MAX LEVEL"]
@@ -468,7 +468,7 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'xp_per_kill') total += getSoulsSinceLevel(1) * 0.1;
             // Lvl 2: Dust Extraction (Handled in DeathLogic)
             if (statKey === 'dust_extraction') {
-                total += getSoulsSinceLevel(2) * 0.01;
+                total += getSoulsSinceLevel(2) * 0.05;
             }
             // Lvl 3: +0.01% Meteorite Perk Effectiveness -> metric_resonance?
             if (statKey === 'metric_resonance') total += getSoulsSinceLevel(3) * 0.01;

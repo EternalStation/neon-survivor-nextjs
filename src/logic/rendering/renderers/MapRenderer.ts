@@ -28,7 +28,7 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
         ctx.lineWidth = 1;
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
-        ctx.strokeStyle = '#1e293b';
+        ctx.strokeStyle = 'rgba(30, 41, 59, 0.3)';
 
         for (let i = startX; i <= endX; i++) {
             for (let j = startY; j <= endY; j++) {

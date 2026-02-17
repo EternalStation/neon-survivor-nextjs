@@ -187,65 +187,83 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 VIEW BESTIARY ►
             </button>
             <svg width="100%" height="100%" viewBox="0 0 864 1080">
-                <text x={centerX} y={centerY - 480} textAnchor="middle" fill="#22d3ee" fontSize="32" fontWeight="900" style={{ letterSpacing: '8px', opacity: 0.8 }}>MODULE MATRIX</text>
-                <text x={centerX} y={centerY - 440} textAnchor="middle" fill="#94a3b8" fontSize="12" style={{ letterSpacing: '2px', opacity: 0.6 }}>CONSTRUCT SYNERGIES BY SLOTTING METEORITES AND RECOVERED MODULES</text>
-                <line x1={centerX - 250} y1={centerY - 425} x2={centerX + 250} y2={centerY - 425} stroke="#22d3ee" strokeWidth="1" opacity="0.2" />
+                <text x={centerX} y={centerY - 485} textAnchor="middle" fill="#22d3ee" fontSize="38" fontWeight="900" style={{ letterSpacing: '10px', opacity: 0.9 }}>MODULE MATRIX</text>
+                <text x={centerX} y={centerY - 455} textAnchor="middle" fill="#94a3b8" fontSize="11" style={{ letterSpacing: '1.5px', opacity: 0.6 }}>CONSTRUCT SYNERGIES BY SLOTTING METEORITES AND RECOVERED LEGENDARY HEXES</text>
+                <line x1={centerX - 300} y1={centerY - 445} x2={centerX + 300} y2={centerY - 445} stroke="#22d3ee" strokeWidth="1" opacity="0.2" />
 
-                {/* SECTORS BACKGROUND (Quad Area) */}
+                {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: 'COM SECTOR', color: '#f87171', indices: [0, 1] },
-                        { name: 'DEF SECTOR', color: '#60a5fa', indices: [2, 3] },
-                        { name: 'ECO SECTOR', color: '#fbbf24', indices: [4, 5] }
+                        { name: 'COMBAT SECTOR', code: 'SEC-01', color: '#f87171', indices: [0, 1] },
+                        { name: 'DEFENSE SECTOR', code: 'SEC-02', color: '#60a5fa', indices: [2, 3] },
+                        { name: 'ECONOMIC SECTOR', code: 'SEC-03', color: '#fbbf24', indices: [4, 5] }
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];
 
-                        // Positions
                         const i0 = innerDiamondPositions[idx0];
                         const i1 = innerDiamondPositions[idx1];
                         const o0 = edgeDiamondPositions[idx0];
                         const o1 = edgeDiamondPositions[idx1];
 
-                        // Text pos: Outside the long edge (o0-o1)
+                        // Sector area points
+                        const points = `${o0.x},${o0.y} ${o1.x},${o1.y} ${i1.x},${i1.y} ${i0.x},${i0.y}`;
+
+                        // Text positioning (Placed just on the outer edge)
                         const midOutX = (o0.x + o1.x) / 2;
                         const midOutY = (o0.y + o1.y) / 2;
                         const vOutX = midOutX - centerX;
                         const vOutY = midOutY - centerY;
                         const lenOut = Math.sqrt(vOutX * vOutX + vOutY * vOutY);
-                        const textR = sector.name === 'COM SECTOR' ? 395 : 390; // Moved closer to the ~400px outer boundary
+                        const textR = 400;
                         const textX = centerX + (vOutX / lenOut) * textR;
                         const textY = centerY + (vOutY / lenOut) * textR;
 
-                        // Points: Outer0 -> Outer1 -> Inner1 -> Inner0
-                        const points = `${o0.x},${o0.y} ${o1.x},${o1.y} ${i1.x},${i1.y} ${i0.x},${i0.y}`;
-
-                        // Text Render Logic
                         const edgeAngle = Math.atan2(o1.y - o0.y, o1.x - o0.x) * (180 / Math.PI);
-                        // Combat segment (0->1) needs +180 to be readable.
-                        // Economic (4->5) is fine as is.
-                        // Defense (2->3) is -90 (vertical).
-                        const rotation = sector.name === 'COM SECTOR' ? edgeAngle + 180 : edgeAngle;
-
-                        const textElement = (
-                            <text
-                                x={textX}
-                                y={textY}
-                                textAnchor="middle"
-                                fill={sector.color}
-                                fontSize="18"
-                                fontWeight="900"
-                                transform={`rotate(${rotation}, ${textX}, ${textY})`}
-                                style={{ opacity: 0.9, letterSpacing: '4px', textShadow: `0 0 10px ${sector.color}66` }}
-                            >
-                                {sector.name}
-                            </text>
-                        );
+                        const rotation = (sector.name.includes('COMBAT')) ? edgeAngle + 180 : edgeAngle;
 
                         return (
                             <g key={sIdx}>
-                                <polygon points={points} fill={sector.color} opacity="0.1" stroke={sector.color} strokeWidth="100" strokeLinejoin="round" />
-                                {textElement}
+                                {/* Encompassing Area Pod (Solid Low Opacity) */}
+                                <polygon
+                                    points={points}
+                                    fill={sector.color}
+                                    opacity="0.08"
+                                    stroke={sector.color}
+                                    strokeWidth="90"
+                                    strokeLinejoin="round"
+                                />
+
+                                {/* Premium Tactical Typography (Just Outside Edge) */}
+                                <g transform={`rotate(${rotation}, ${textX}, ${textY})`}>
+                                    {/* Small Code Label */}
+                                    <text x={textX - 70} y={textY - 14} fill={sector.color} fontSize="8" fontWeight="900" style={{ letterSpacing: '1px', opacity: 0.6 }}>
+                                        {sector.code}
+                                    </text>
+
+                                    <text
+                                        x={textX}
+                                        y={textY}
+                                        textAnchor="middle"
+                                        fill={sector.color}
+                                        fontSize="14"
+                                        fontWeight="900"
+                                        style={{
+                                            opacity: 0.9,
+                                            letterSpacing: '4px',
+                                            textShadow: `0 0 15px ${sector.color}`,
+                                            filter: 'brightness(1.2)'
+                                        }}
+                                    >
+                                        {sector.name}
+                                    </text>
+
+                                    {/* The "Line Underneath" */}
+                                    <line
+                                        x1={textX - 60} y1={textY + 12} x2={textX + 60} y2={textY + 12}
+                                        stroke={sector.color} strokeWidth="1.5" opacity="0.5"
+                                    />
+                                </g>
                             </g>
                         );
                     })}
@@ -616,6 +634,10 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                         // Move from socket to socket (both were empty or source index is reset)
                                         onSocketUpdate('diamond', i, movedItem.item);
                                         onSocketUpdate('diamond', movedItem.index, null);
+                                    } else if (movedItem.source === 'recalibrate') {
+                                        // Move from recalibrate slot to socket
+                                        onSocketUpdate('diamond', i, movedItem.item);
+                                        // The onSocketUpdate in ModuleMenu will clear recalibrateSlot
                                     }
                                     setMovedItem(null);
                                     setHoveredItem(null);

@@ -413,7 +413,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     position: 'absolute', width: '100%', textAlign: 'center', top: 0,
                     fontSize: 9, fontWeight: 900, lineHeight: '16px', color: '#fff'
                 }}>
-                    {Math.ceil(player.curHp)} / {Math.ceil(maxHp)}
+                    {Math.ceil(player.curHp).toLocaleString()} / {Math.ceil(maxHp).toLocaleString()}
                 </div>
             </div>
 
@@ -455,7 +455,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             fontSize: 7, fontWeight: 900, lineHeight: '10px', color: '#fff',
                             textShadow: '0 0 2px #000'
                         }}>
-                            {Math.ceil(totalShield)} / {Math.ceil(dynamicMaxShield)}
+                            {Math.ceil(totalShield).toLocaleString()} / {Math.ceil(dynamicMaxShield).toLocaleString()}
                         </div>
                     </div>
                 );

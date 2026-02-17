@@ -5,15 +5,15 @@ import { RARITY_ORDER } from '../../logic/core/types';
 export type PerkFilter = {
     active: boolean;
     val: number;
-    arena: string;
-    matchQuality: string;
+    thing1: string;
+    thing2: string;
 };
 
 
 export const RARITY_COLORS: Record<MeteoriteRarity, string> = {
     anomalous: '#60a5fa', // Blue (Anomalous)
     radiant: '#FFD700',   // Gold
-    abyss: '#8B0000',     // Dark Red
+    abyss: '#8B0000',      // Dark Red
     eternal: '#B8860B',   // Bronze/Orange
     divine: '#FFFFFF',    // White
     singularity: '#E942FF' // Magenta
@@ -101,9 +101,10 @@ export const getLegendaryInfo = (category: string, type: string) => {
 };
 
 export const getMeteoriteColor = (discoveredIn: string) => {
-    if (discoveredIn.includes('ECONOMIC')) return '#fbbf24'; // Yellow
-    if (discoveredIn.includes('COMBAT')) return '#f87171';   // Red
-    if (discoveredIn.includes('DEFENCE') || discoveredIn.includes('DEFENSE')) return '#60a5fa'; // Blue
+    const up = discoveredIn.toUpperCase();
+    if (up.includes('ECO')) return '#fbbf24'; // Yellow
+    if (up.includes('COM')) return '#f87171'; // Red
+    if (up.includes('DEF')) return '#60a5fa'; // Blue
     return '#94a3b8'; // Slate-400 (Default/Grey)
 };
 
@@ -182,30 +183,38 @@ export const matchesFilter = (
         const checkValue = (v: number) => v >= f.val;
 
         // Find the perk matching this level's tier (indices 0 to 5 map to tiers 1 to 6)
-        // Meteorites of level X have one perk from each tier 1 to X.
-        const p = perks[lvl - 1]; // Perk level 1 is at index 0, etc.
+        const p = perks[lvl - 1];
         if (p && p.id.startsWith(`lvl${lvl}`)) {
             const pts = p.id.split('_');
 
-            // Check contextual filters (Sector/Arena)
-            // pts[1] is usually sector (eco/com/def) or neighbor quality (bro/dam/new)
-            // pts[2] is target legendary type or neighbor quality
-
             let contextMatches = true;
 
-            const a = f.arena.toLowerCase(); // 'eco', 'com', 'def'
-            const qMap: Record<string, string> = { 'NEW': 'new', 'DAM': 'dam', 'BRO': 'bro', 'COR': 'cor' };
-            const q = qMap[f.matchQuality] || 'any';
+            const t1 = f.thing1.toLowerCase();
+            const t2 = f.thing2.toLowerCase();
 
-            // Filter logic per level based on ID structure in LootLogic.ts
-            if (f.arena !== 'All') {
-                const arenaMatch = p.id.includes(a);
-                if (!arenaMatch) contextMatches = false;
-            }
-
-            if (f.matchQuality !== 'All') {
-                const qualityMatch = p.id.includes(q);
-                if (!qualityMatch) contextMatches = false;
+            // Level-specific mapping
+            // pts[0] is always 'lvlX'
+            if (lvl === 1 || lvl === 2 || lvl === 5) {
+                // [lvl, Sector, Other...]
+                if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
+                if (contextMatches && f.thing2 !== 'All') {
+                    if (t2.includes('-')) {
+                        const combo = t2.replace('-', '_');
+                        if (!p.id.includes(combo)) contextMatches = false;
+                    } else if (pts[2] !== t2) contextMatches = false;
+                }
+            } else if (lvl === 3 || lvl === 4) {
+                // [lvl, Arena, NeighborQuality] 
+                // Swap in UI: thing1=Neighbor, thing2=Arena
+                if (f.thing1 !== 'All' && pts[2] !== t1) contextMatches = false;
+                if (contextMatches && f.thing2 !== 'All' && pts[1] !== t2) contextMatches = false;
+            } else if (lvl === 6) {
+                // [lvl, NeighborQual, Pair...]
+                if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
+                if (contextMatches && f.thing2 !== 'All') {
+                    const combo = t2.replace('-', '_');
+                    if (!p.id.includes(combo)) contextMatches = false;
+                }
             }
 
             if (contextMatches) {
@@ -217,4 +226,4 @@ export const matchesFilter = (
     }
 
     return true;
-};
+};;

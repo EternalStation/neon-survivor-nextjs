@@ -5,6 +5,7 @@ import { getArenaIndex } from '../../logic/mission/MapLogic';
 
 interface TopLeftPanelProps {
     gameState: GameState;
+    onSkipTime?: (min: number) => void;
 }
 
 const PulseLabel = ({ title, buff, color }: { title: string, buff: string, color: string }) => {
@@ -43,19 +44,20 @@ const PulseLabel = ({ title, buff, color }: { title: string, buff: string, color
     );
 };
 
-export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
+export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTime }) => {
     const { player, score, gameTime } = gameState;
 
     return (
-        <div style={{ position: 'absolute', top: 15, left: 15, pointerEvents: 'none', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: 15, left: 15, pointerEvents: 'auto', zIndex: 10 }}>
             <div className="kills" style={{ color: '#22d3ee', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', fontSize: 24, fontWeight: 800 }}>
                 {(gameState.rawKillCount || gameState.killCount || 0).toString().padStart(4, '0')}
             </div>
             <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 LVL {player.level}
             </div>
-            <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
-                {Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}
+            <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
+                <span>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
+                {/* Time Skip Buttons Removed as per user request */}
             </div>
 
             <style>{`
@@ -182,7 +184,9 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
             {/* RESEARCH PROGRESS INDICATORS */}
             {gameState.blueprints.map((bp, i) => {
                 if (bp && bp.status === 'researching' && bp.researchFinishTime) {
-                    const timeLeft = Math.max(0, (bp.researchFinishTime - gameState.gameTime)).toFixed(1);
+                    const timeLeftRaw = bp.researchFinishTime - gameState.gameTime;
+                    if (timeLeftRaw <= 0) return null;
+                    const timeLeft = Math.max(0, timeLeftRaw).toFixed(1);
                     return (
                         <div key={`research-${i}`} style={{
                             marginTop: 6, display: 'flex', alignItems: 'center', gap: 8,
@@ -206,9 +210,9 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState }) => {
                                 <span style={{
                                     color: '#fbbf24', fontSize: 10, fontWeight: 950, letterSpacing: 1,
                                     textTransform: 'uppercase', textShadow: '0 0 8px rgba(251, 191, 36, 0.5)'
-                                }}>DECRYPTION RUNNING:</span>
+                                }}>DECRYPTION:</span>
                                 <span style={{
-                                    color: '#fff', fontSize: 10, fontWeight: 800, fontFamily: 'monospace' // Monospace for timer stability
+                                    color: '#fff', fontSize: 10, fontWeight: 800, fontFamily: 'monospace'
                                 }}>{timeLeft}s</span>
                             </div>
                         </div>

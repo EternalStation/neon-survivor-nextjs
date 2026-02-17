@@ -31,7 +31,7 @@ export interface ArenaDetails {
 export const ARENA_DATA: Record<number, ArenaDetails> = {
     0: {
         id: 0,
-        name: "ECONOMIC HEX",
+        name: "ECO HEX",
         location: "Central Sector - Resource Hub",
         description: "Optimized for maximum efficiency. High-fidelity data extraction increases yield by 30%.",
         buffs: ["+30% XP & Soul Yield"],
@@ -40,7 +40,7 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
     },
     1: {
         id: 1,
-        name: "COMBAT HEX",
+        name: "COM HEX",
         location: "Northern Sector - Weapon Testing",
         description: "Restored offensive protocols enhance weapon output and cycling speed by 30%.",
         buffs: ["+30% DMG & Atk Speed"],
@@ -49,7 +49,7 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
     },
     2: {
         id: 2,
-        name: "DEFENCE HEX",
+        name: "DEF HEX",
         location: "Southern Sector - Fortress Perimeter",
         description: "Fortified structural integrity and nano-repair systems increase vitality metrics by 30%.",
         buffs: ["+30% Max HP & Regen"],
@@ -363,7 +363,7 @@ export function generateMapPOIs(): MapPOI[] {
                 respawnTimer: 0, // Permanent position? Or respawn if destroyed? "Overheat recharge" suggests permanent.
                 lastUsed: 0,
                 turretUses: 0,
-                turretCost: 5, // Initial cost (User Request)
+                turretCost: 2, // Initial cost (User Request)
                 lastShot: 0,
                 turretVariant: ['fire', 'ice', 'heal'][i] as any // Guaranteed: 0=Fire, 1=Ice, 2=Heal
             });

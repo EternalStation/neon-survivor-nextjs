@@ -83,24 +83,29 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
                 {/* LEFT: RECALIBRATION DROP SLOT (Small Square) */}
+                {/* LEFT: ENHANCEMENT MATRIX DROP SLOT */}
                 <div className="recalibrate-drop-section" style={{
-                    flex: '0 0 150px',
+                    flex: '0 0 160px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '6px',
+                    position: 'relative'
                 }}>
                     <div
                         style={{
-                            width: '134px', height: '134px',
+                            width: '140px', height: '140px',
                             position: 'relative',
-                            border: '1px dashed rgba(168, 85, 247, 0.5)',
-                            borderRadius: '6px',
-                            background: 'rgba(168, 85, 247, 0.05)',
+                            border: `1px solid ${movedItem ? '#3b82f6' : 'rgba(59, 130, 246, 0.25)'}`,
+                            borderRadius: '12px',
+                            background: movedItem ? 'rgba(59, 130, 246, 0.1)' : 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: recalibrateSlot ? '0 0 15px rgba(168, 85, 247, 0.2)' : 'none'
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            boxShadow: recalibrateSlot
+                                ? '0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)'
+                                : 'inset 0 0 20px rgba(0,0,0,0.5)',
+                            overflow: 'hidden'
                         }}
                         onMouseUp={(e) => {
                             if (movedItem && movedItem.source !== 'recalibrate') {
@@ -132,33 +137,87 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                 setMovedItem(null);
                             }
                         }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#60a5fa';
+                            e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = movedItem ? '#3b82f6' : 'rgba(59, 130, 246, 0.25)';
+                            e.currentTarget.style.boxShadow = recalibrateSlot
+                                ? '0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)'
+                                : 'inset 0 0 20px rgba(0,0,0,0.5)';
+                        }}
                     >
+                        {/* HOLOGRAPHIC SCANNING ARTIFACTS */}
+                        <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(59, 130, 246, 0.02) 2px, rgba(59, 130, 246, 0.02) 4px)',
+                            pointerEvents: 'none',
+                            zIndex: 1
+                        }} />
+
+                        {/* DECORATIVE CORNER BRACKETS */}
+                        {!recalibrateSlot && (
+                            <>
+                                <div style={{ position: 'absolute', top: '10px', left: '10px', width: '15px', height: '15px', borderTop: '2px solid #3b82f6', borderLeft: '2px solid #3b82f6', opacity: 0.6 }} />
+                                <div style={{ position: 'absolute', top: '10px', right: '10px', width: '15px', height: '15px', borderTop: '2px solid #3b82f6', borderRight: '2px solid #3b82f6', opacity: 0.6 }} />
+                                <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '15px', height: '15px', borderBottom: '2px solid #3b82f6', borderLeft: '2px solid #3b82f6', opacity: 0.6 }} />
+                                <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '15px', height: '15px', borderBottom: '2px solid #3b82f6', borderRight: '2px solid #3b82f6', opacity: 0.6 }} />
+
+                                {/* RADAR CIRCLES */}
+                                <div style={{ position: 'absolute', width: '100px', height: '100px', border: '1px solid rgba(59, 130, 246, 0.05)', borderRadius: '50%' }} />
+                                <div style={{ position: 'absolute', width: '60px', height: '60px', border: '1px solid rgba(59, 130, 246, 0.1)', borderRadius: '50%' }} />
+                            </>
+                        )}
+
                         {recalibrateSlot ? (
-                            <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <img src={getMeteoriteImage(recalibrateSlot)} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                            <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                                <div style={{
+                                    position: 'absolute', inset: '10%',
+                                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
+                                    animation: 'pulse-glow 2s infinite ease-in-out'
+                                }} />
+                                <img src={getMeteoriteImage(recalibrateSlot)} style={{ width: '70%', height: '70%', objectFit: 'contain', filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.6))', animation: 'float 3s infinite ease-in-out' }} />
 
                                 <div
                                     style={{
                                         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                                        cursor: 'grab', zIndex: 10
+                                        cursor: 'grab', zIndex: 20
                                     }}
                                     onMouseDown={(e) => {
                                         if (e.button === 0) {
                                             e.stopPropagation();
+                                            // Don't clear recalibrateSlot here - let the drop handler do it
                                             setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
-                                            setRecalibrateSlot(null);
                                         }
                                     }}
                                 />
                             </div>
                         ) : (
-                            <div style={{ textAlign: 'center', opacity: 0.4 }}>
-                                <div style={{ fontSize: '16px' }}>🔮</div>
-                                <div style={{ fontSize: '6px', fontWeight: 900 }}>DROP</div>
+                            <div style={{ textAlign: 'center', zIndex: 5, animation: movedItem ? 'pulse-blue 1s infinite' : 'none' }}>
+                                <div style={{
+                                    fontSize: '11px',
+                                    color: '#fff',
+                                    fontWeight: 900,
+                                    letterSpacing: '2px',
+                                    padding: '6px 12px',
+                                    background: 'rgba(59, 130, 246, 0.2)',
+                                    borderRadius: '4px',
+                                    border: '1px solid #3b82f6',
+                                    boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)',
+                                    textShadow: '0 0 8px rgba(255,255,255,0.5)'
+                                }}>
+                                    LOAD CORE
+                                </div>
                             </div>
                         )}
                     </div>
-                    <span style={{ fontSize: '7px', color: '#a855f7', fontWeight: 900, letterSpacing: '0.5px' }}>RECALIBRATE</span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 900, letterSpacing: '2px', textShadow: '0 0 5px rgba(59, 130, 246, 0.5)' }}>HYPER-FLUX CORE</span>
+                        <div style={{ width: '100px', height: '1px', background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)' }} />
+                        <span style={{ fontSize: '6px', color: '#60a5fa', fontWeight: 800, letterSpacing: '1px', opacity: 0.6 }}>UNIT_LEVEL: ENHANCED</span>
+                    </div>
                 </div>
 
                 {/* RIGHT: BLUEPRINT ARCHIVE (Small Grid - 8 Slots) */}
@@ -228,13 +287,36 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                                     textTransform: 'uppercase',
                                                     display: 'block',
                                                     textAlign: 'center'
-                                                }}>{bp.status === 'researching' ? '???' : (bp.serial || bp.name.substring(0, 3))}</span>
+                                                }}>{bp.status === 'researching' ? 'LOCKED' : (bp.serial || bp.name.substring(0, 3))}</span>
                                             </div>
+
+                                            {bp.status === 'researching' && bp.researchFinishTime && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    inset: 0,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    background: 'rgba(0,0,0,0.4)',
+                                                    zIndex: 5
+                                                }}>
+                                                    <div style={{
+                                                        color: '#facc15', // Yellow
+                                                        fontSize: '10px',
+                                                        fontWeight: 900,
+                                                        fontFamily: 'monospace',
+                                                        textShadow: '0 0 5px #facc15'
+                                                    }}>
+                                                        {Math.max(0, bp.researchFinishTime - gameState.gameTime).toFixed(1)}s
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {isActive && (
                                                 <div style={{
                                                     fontSize: '0.35rem', color: '#60a5fa', fontWeight: 900,
-                                                    background: 'rgba(0,0,0,0.5)', width: '100%', padding: '1px 0'
+                                                    background: 'rgba(0,0,0,0.5)', width: '100%', padding: '1px 0',
+                                                    position: 'relative', zIndex: 6
                                                 }}>
                                                     ON
                                                 </div>
@@ -464,6 +546,21 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     align-items: center;
                     gap: 2px;
                     color: rgba(255, 255, 255, 0.05);
+                }
+
+                @keyframes pulse-glow {
+                    0%, 100% { opacity: 0.4; }
+                    50% { opacity: 1; }
+                }
+
+                @keyframes pulse-blue {
+                    0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+                    50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); }
+                }
+
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-5px); }
                 }
 
                 .blueprint-item {

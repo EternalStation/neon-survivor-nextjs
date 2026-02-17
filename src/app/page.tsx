@@ -201,6 +201,7 @@ export default function Home() {
                     setShowSkillDetail={hook.setShowBossSkillDetail}
                     showStats={hook.showStats}
                     showUpgradeMenu={!!hook.upgradeChoices}
+                    onSkipTime={hook.skipTime}
                   />
 
                   {isMobile && !hook.gameOver && (
@@ -277,6 +278,7 @@ export default function Home() {
                 isTutorialLayerOnly={true}
                 showStats={hook.showStats}
                 showUpgradeMenu={!!hook.upgradeChoices}
+                onSkipTime={hook.skipTime}
               />
             </div>
           </div>

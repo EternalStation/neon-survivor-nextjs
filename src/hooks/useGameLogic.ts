@@ -265,11 +265,15 @@ export function useGameLogic({
                     // Damage per second factors
                     const eliteDps = 0.25; // 25% MaxHP/sec
                     const bossDps = 0.10;  // 10% MaxHP/sec
-                    const minionCoreRadius = 100; // Center kill zone
+                    const minionCoreRadius = 80; // Center kill zone
 
                     state.enemies.forEach(e => {
                         if (e.dead) return;
-                        const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
+                        // Elliptical collision to match visual perspective (0.6 squashed Y)
+                        // User Request: "consume radius exact same as void radius"
+                        const dx = e.x - effect.x;
+                        const dy = (e.y - effect.y) / 0.6;
+                        const dist = Math.hypot(dx, dy);
 
                         if (dist < range) {
                             // Pull Effect (Reverse Knockback)
@@ -381,12 +385,17 @@ export function useGameLogic({
                         playSfx('spawn');
                     }
                 } else if (state.portalState === 'open') {
-                    state.portalTimer -= step;
-                    if (state.portalTimer <= 0) {
-                        state.portalState = 'closed';
-                        state.portalTimer = 0;
-                        stopPortalAmbience();
-                    } else {
+                    // Only close automatically if NOT a one-time use portal (e.g. Evacuation)
+                    if (!state.portalOneTimeUse) {
+                        state.portalTimer -= step;
+                        if (state.portalTimer <= 0) {
+                            state.portalState = 'closed';
+                            state.portalTimer = 0;
+                            stopPortalAmbience();
+                        }
+                    }
+
+                    if (state.portalState === 'open') {
                         const activePortals = PORTALS.filter(p => p.from === state.currentArena);
                         const currentArenaCenter = ARENA_CENTERS.find(c => c.id === state.currentArena) || ARENA_CENTERS[0];
                         for (const p of activePortals) {

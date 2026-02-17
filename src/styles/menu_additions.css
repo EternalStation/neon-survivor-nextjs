@@ -882,8 +882,18 @@ body {
     text-transform: uppercase;
 }
 
+
 .btn-settings-muted:hover {
     background: rgba(255, 255, 255, 0.05);
     color: #fff;
     border-color: #fff;
+}
+
+@keyframes pulse-energy-husk {
+    0%, 100% { opacity: 0.1; stroke-width: 1; }
+    50% { opacity: 0.3; stroke-width: 2.5; }
+}
+
+.pulse-energy-husk {
+    animation: pulse-energy-husk 4s ease-in-out infinite;
 }

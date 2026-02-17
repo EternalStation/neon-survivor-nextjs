@@ -6,7 +6,7 @@ import { getArenaIndex } from '../logic/mission/MapLogic';
 import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 
 // Current game version - update this when you release new patches
-export const CURRENT_PATCH_VERSION = '1.0.1';
+export const CURRENT_PATCH_VERSION = '1.0.2';
 
 export interface RunSubmissionData {
     score: number;

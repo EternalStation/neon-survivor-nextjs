@@ -15,7 +15,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette } from './EnemySpawnLogic';
 import { scanForMerges, manageMerges } from './EnemyMergeLogic';
 import { updateZombie, updateSnitch, updateMinion, updatePrismGlitcher } from './UniqueEnemyLogic';
-import { updateVoidBurrower } from './WormLogic';
+import { updateVoidBurrower, spawnVoidBurrower } from './WormLogic';
 import { getFlankingVelocity } from './EnemyAILogic';
 
 // Helper to determine current game era params
@@ -280,11 +280,11 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         if (!wormAlive) {
             const p = state.player;
             const angle = Math.random() * Math.PI * 2;
-            const distance = 800 + Math.random() * 300; // Spawn further away to orbit
+            const distance = 2000 + Math.random() * 200; // Spawn further away (User Request: ~2000px)
             const spawnX = p.x + Math.cos(angle) * distance;
             const spawnY = p.y + Math.sin(angle) * distance;
 
-            spawnEnemy(state, spawnX, spawnY, 'worm');
+            spawnVoidBurrower(state, spawnX, spawnY);
             playSfx('warning'); // Sound cue for boss-like unique
             spawnFloatingNumber(state, p.x, p.y, 'VOID BURROWER DETECTED', '#ff0000', true);
         }
@@ -302,7 +302,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         spawnEnemy(state, undefined, undefined, undefined, true, tier);
 
         // Calculate next spawn time in the schedule: [2, 4, 6, 8, 10] (5 bosses per tier, every 2 minutes)
-        const schedule = [2, 4, 6, 8, 10];
+        const schedule = [1.75, 3.75, 5.75, 7.75, 9.75]; // Bosses at X:45
         const currentMinuteInCycle = minutesRaw % 10;
 
         let nextMinuteInCycle = -1;

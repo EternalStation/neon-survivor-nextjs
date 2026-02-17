@@ -44,10 +44,20 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     // --- Void Flux Currency Drops ---
     let fluxDrop = 0;
+    const minutes = state.gameTime / 60;
+
     if (e.boss) {
-        fluxDrop = 50;
+        // Optimized: Scale with time to match increasing reroll costs
+        // Base: 100 | Time: +10 per min | Random: +/- 15
+        const timeScaling = Math.floor(minutes * 10);
+        const variance = Math.floor(Math.random() * 31) - 15; // -15 to +15
+        fluxDrop = Math.max(50, 100 + timeScaling + variance);
     } else if (e.isElite) {
-        fluxDrop = 5 + Math.floor(Math.random() * 6); // 5-10
+        // Optimized: Scale with time
+        // Base: 20 | Time: +3.0 per min | Random: +/- 4
+        const timeScaling = Math.floor(minutes * 3.0);
+        const variance = Math.floor(Math.random() * 9) - 4; // -4 to +4
+        fluxDrop = Math.max(10, 20 + timeScaling + variance);
     }
 
     if (fluxDrop > 0) {

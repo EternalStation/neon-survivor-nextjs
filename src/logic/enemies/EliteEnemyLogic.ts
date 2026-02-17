@@ -197,11 +197,34 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
                 p.damageBlocked += (rawDmg - finalActualDmg);
 
                 if (finalActualDmg > 0) {
-                    p.curHp -= finalActualDmg;
-                    p.damageTaken += finalActualDmg;
-                    p.lastHitDamage = finalActualDmg;
-                    p.killerHp = e.hp;
-                    p.killerMaxHp = e.maxHp;
+                    let absorbed = 0;
+                    let damageToApply = finalActualDmg;
+
+                    if (p.shieldChunks && p.shieldChunks.length > 0) {
+                        p.shieldChunks.sort((a: any, b: any) => a.expiry - b.expiry);
+                        let rem = damageToApply;
+                        for (const chunk of p.shieldChunks) {
+                            if (chunk.amount >= rem) {
+                                chunk.amount -= rem; absorbed += rem; rem = 0; break;
+                            } else {
+                                absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0;
+                            }
+                        }
+                        p.shieldChunks = p.shieldChunks.filter((c: any) => c.amount > 0);
+                        p.damageBlockedByShield += absorbed;
+                        p.damageBlocked += absorbed;
+                    }
+
+                    const actualDmg = damageToApply - absorbed;
+
+                    if (actualDmg > 0) {
+                        p.curHp -= actualDmg;
+                        p.damageTaken += actualDmg;
+                        p.lastHitDamage = actualDmg;
+                        p.killerHp = e.hp;
+                        p.killerMaxHp = e.maxHp;
+                    }
+
                     const beamColor = e.palette ? e.palette[0] : '#f87171';
                     spawnFloatingNumber(state, p.x, p.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
 
@@ -378,25 +401,29 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     }
 
     // Normal State / Spawning Logic (Only if age <= 60 and not in aggro)
-    if (!isAngry && !isWarning) {
-        // Normal State / Spawning Logic
-        if (e.summonState === 1) {
-            if (state.gameTime > (e.timer || 0)) {
-                spawnMinion(state, e, true, 3);
-                e.lastAttack = state.gameTime;
-                e.summonState = 0;
-                if (e.originalPalette) e.palette = e.originalPalette;
-            }
-        } else {
+    // --- SPAWNING LOGIC (Elite - Independent of movement state) ---
+    if (!e.lastAttack) e.lastAttack = state.gameTime;
+
+    if (e.summonState === 1) {
+        if (state.gameTime > (e.timer || 0)) {
+            // Elite spawns Elite minions (true)
+            spawnMinion(state, e, true, 3);
+            e.lastAttack = state.gameTime;
+            e.summonState = 0;
             if (e.originalPalette) e.palette = e.originalPalette;
-            const spawnInterval = 20.0;
-            if (!e.lastAttack) e.lastAttack = state.gameTime;
-            if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
-                e.summonState = 1;
-                e.timer = state.gameTime + 3.0;
-                playSfx('warning');
-            }
         }
+    } else {
+        const spawnInterval = 20.0;
+        if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
+            e.summonState = 1;
+            e.timer = state.gameTime + 3.0;
+            playSfx('warning');
+        }
+    }
+
+    // Palette Restoration (if not busy/angry/warning)
+    if (!isAngry && !isWarning && e.summonState !== 1) {
+        if (e.originalPalette) e.palette = e.originalPalette;
     }
 
     return { vx, vy };

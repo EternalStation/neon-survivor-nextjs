@@ -221,27 +221,36 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
         return { vx, vy };
     }
 
-    // Normal State / Spawning Logic (Only if age <= 60 and not in aggro)
-    if (!isAngry && !isWarning) {
-        if (e.summonState === 1) {
-            if (state.gameTime > (e.timer || 0)) {
-                spawnMinion(state, e, false, 3);
-                e.lastAttack = state.gameTime;
-                e.summonState = 0;
-                if (e.originalPalette) e.palette = e.originalPalette;
-            }
-        } else {
-            if (e.originalPalette) {
-                e.palette = e.originalPalette;
-            }
-            const spawnInterval = 20.0;
-            if (!e.lastAttack) e.lastAttack = state.gameTime;
-            if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
-                e.summonState = 1;
-                e.timer = state.gameTime + 3.0;
-                playSfx('warning');
-            }
+    // --- SPAWNING LOGIC (Independent of movement state) ---
+    // Ensure lastAttack is initialized if not already (safeguard)
+    if (!e.lastAttack) e.lastAttack = state.gameTime;
+
+    if (e.summonState === 1) {
+        if (state.gameTime > (e.timer || 0)) {
+            spawnMinion(state, e, false, 3);
+            e.lastAttack = state.gameTime;
+            e.summonState = 0;
+            if (e.originalPalette) e.palette = e.originalPalette;
         }
+    } else {
+        const spawnInterval = 20.0;
+        // Check spawn interval and cap
+        if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
+            e.summonState = 1;
+            e.timer = state.gameTime + 3.0;
+            playSfx('warning');
+        }
+    }
+
+    // Normal Movement (Only if not spawning/frozen, but here we just process standard movement)
+    // Actually, we want movement to stop during SUMMONING (Pre-spawn wait)? 
+    // The previous code didn't stop movement explicitly, it just handled it inside the block.
+    // Let's keep movement active unless we want to freeze them. 
+    // For now, allow regular movement logic to apply via the existing visual state blocks or standard kiting.
+
+    // Restore Palette if not angry/warning and not summoning? 
+    if (!isAngry && !isWarning && e.summonState !== 1) {
+        if (e.originalPalette) e.palette = e.originalPalette;
     }
 
     return { vx, vy };

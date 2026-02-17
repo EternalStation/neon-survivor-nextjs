@@ -4,6 +4,7 @@ import { createInitialGameState } from '../logic/core/GameState';
 import { applyUpgrade } from '../logic/upgrades/UpgradeLogic';
 import { syncLegendaryHex, applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
+import { calcStat } from '../logic/utils/MathUtils';
 
 interface UseGameUIHandlersProps {
     gameState: React.MutableRefObject<GameState>;
@@ -192,6 +193,40 @@ export function useGameUIHandlers({
         setUiState(p => p + 1);
     }, [gameState, setUiState]);
 
+    const skipTime = useCallback((min: number) => {
+        const state = gameState.current;
+        state.gameTime = min * 60;
+
+        // Aligned Boss Schedule Logic
+        const schedule = [2, 4, 6, 8, 10]; // 5 bosses per tier, every 2 minutes
+        const current10MinCycle = Math.floor(min / 10);
+        const currentMinuteInCycle = min % 10;
+
+        let nextMinuteInCycle = -1;
+        for (const m of schedule) {
+            if (m > currentMinuteInCycle + 0.01) {
+                nextMinuteInCycle = m;
+                break;
+            }
+        }
+
+        if (nextMinuteInCycle !== -1) {
+            state.nextBossSpawnTime = (current10MinCycle * 10 + nextMinuteInCycle) * 60;
+        } else {
+            state.nextBossSpawnTime = ((current10MinCycle + 1) * 10 + schedule[0]) * 60;
+        }
+
+        const p = state.player;
+        p.hp.base *= 30;
+        p.dmg.base *= 30;
+        p.atk.base *= 30;
+        p.curHp = calcStat(p.hp);
+        p.level = Math.max(p.level, min * 3);
+
+        setUiState(p => p + 1);
+        playSfx('power-up');
+    }, [gameState, setUiState]);
+
     return {
         restartGame,
         handleUpgradeSelect,
@@ -202,6 +237,7 @@ export function useGameUIHandlers({
         recycleMeteorite,
         spendDust,
         onViewChassisDetail,
-        triggerPortal
+        triggerPortal,
+        skipTime
     };
 }

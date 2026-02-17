@@ -712,6 +712,7 @@ export interface GameState {
     extractionTargetArena: number;
     extractionShipPos?: { x: number, y: number };
     extractionStartTime?: number;
+    extractionEndTime?: number; // Target timestamp for countdown
     extractionPowerMult: number;
     extractionSectorLabel?: string;
 

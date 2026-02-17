@@ -33,12 +33,13 @@ interface HUDProps {
     isTutorialLayerOnly?: boolean;
     showStats: boolean;
     showUpgradeMenu: boolean;
+    onSkipTime?: (min: number) => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
     gameState, upgradeChoices, onUpgradeSelect, gameOver, onRestart, bossWarning,
     fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail,
-    isTutorialLayerOnly, showStats, showUpgradeMenu
+    isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime
 }) => {
     const { player, activeEvent } = gameState;
 
@@ -104,7 +105,7 @@ export const HUD: React.FC<HUDProps> = ({
                 </div>
             )}
 
-            <TopLeftPanel gameState={gameState} />
+            <TopLeftPanel gameState={gameState} onSkipTime={onSkipTime} />
             <BottomRightPanel
                 onInventoryToggle={onInventoryToggle}
                 unseenMeteorites={gameState.inventory.filter(i => i?.isNew).length}

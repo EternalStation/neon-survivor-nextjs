@@ -6,22 +6,30 @@ import { isBuffActive } from './BlueprintLogic';
 
 export function getUpgradeQualityCost(item: Meteorite): number {
     const rarityIdx = RARITY_ORDER.indexOf(item.rarity);
-    const versionBonus = Math.floor(Math.max(0, (item.version || 1.0) - 1.0) * 10);
-    return 50 + (rarityIdx * 30) + versionBonus;
+    // Static base costs based on quality: Broken -> 50, Damaged -> 100
+    const base = item.quality === 'Broken' ? 50 : 100;
+    // Add rarity factor but keep it clean (e.g. +50 for next rarity tier)
+    let cost = base + (rarityIdx * 50);
+    if (item.isCorrupted) cost *= 1.5;
+    return Math.ceil(cost);
 }
 
 export function getRerollTypeCost(item: Meteorite, lockedCount: number): number {
     const rarityIdx = RARITY_ORDER.indexOf(item.rarity);
     const versionBonus = Math.floor(Math.max(0, (item.version || 1.0) - 1.0) * 10);
     const base = 5 + (rarityIdx * 3) + versionBonus;
-    return base * Math.pow(2, lockedCount);
+    let cost = base * Math.pow(1.5, lockedCount);
+    if (item.isCorrupted) cost *= 1.5;
+    return Math.ceil(cost);
 }
 
 export function getRerollValueCost(item: Meteorite, lockedCount: number): number {
     const rarityIdx = RARITY_ORDER.indexOf(item.rarity);
     const versionBonus = Math.floor(Math.max(0, (item.version || 1.0) - 1.0) * 10);
     const base = 5 + (rarityIdx * 3) + versionBonus;
-    return base * Math.pow(2, lockedCount);
+    let cost = base * Math.pow(1.5, lockedCount);
+    if (item.isCorrupted) cost *= 1.5;
+    return Math.ceil(cost);
 }
 
 export function upgradeMeteoriteQuality(state: GameState, item: Meteorite): boolean {
@@ -59,6 +67,12 @@ export function upgradeMeteoriteQuality(state: GameState, item: Meteorite): bool
 }
 
 export function rerollPerkType(state: GameState, item: Meteorite, lockedIndices: number[]): boolean {
+    // Check if all perks are locked
+    if (lockedIndices.length >= item.perks.length) {
+        spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "ALL PERKS LOCKED", '#ef4444', true);
+        return false;
+    }
+
     const cost = getRerollTypeCost(item, lockedIndices.length);
     if (state.player.isotopes < cost) return false;
 
@@ -99,6 +113,12 @@ export function rerollPerkType(state: GameState, item: Meteorite, lockedIndices:
 }
 
 export function rerollPerkValue(state: GameState, item: Meteorite, lockedIndices: number[]): boolean {
+    // Check if all perks are locked
+    if (lockedIndices.length >= item.perks.length) {
+        spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "ALL PERKS LOCKED", '#ef4444', true);
+        return false;
+    }
+
     const cost = getRerollValueCost(item, lockedIndices.length);
     if (state.player.isotopes < cost) return false;
 

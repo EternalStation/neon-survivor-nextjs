@@ -20,9 +20,10 @@ interface GameInputProps {
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
     triggerPortal: () => boolean;
     refreshUI: () => void;
+    skipTime: (min: number) => void;
 }
 
-export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setGameOver, triggerPortal, refreshUI }: GameInputProps) {
+export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
     const keys = useRef<Record<string, boolean>>({});
     const inputVector = useRef({ x: 0, y: 0 });
     const mousePos = useRef({
@@ -313,7 +314,8 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             }
             if (cheatBuffer.endsWith('z3')) {
                 const p = gameState.current.player;
-                spawnVoidBurrower(gameState.current, p.x + 500, p.y + 500);
+                const angle = Math.random() * Math.PI * 2;
+                spawnVoidBurrower(gameState.current, p.x + Math.cos(angle) * 2000, p.y + Math.sin(angle) * 2000);
                 spawnFloatingNumber(gameState.current, p.x, p.y, 'VOID BURROWER SPAWNED!', '#E942FF', true);
                 cheatBuffer = '';
             }
@@ -321,33 +323,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
             // T5-T60 - Time Warp
             [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].forEach(min => {
                 if (cheatBuffer.endsWith(`t${min}`)) {
-                    const gameTime = min * 60;
-                    gameState.current.gameTime = gameTime;
-
-                    // Aligned Boss Schedule Logic
-                    const schedule = [2, 4, 6, 8, 10]; // 5 bosses per tier, every 2 minutes
-                    const current10MinCycle = Math.floor(min / 10);
-                    const currentMinuteInCycle = min % 10;
-
-                    let nextMinuteInCycle = -1;
-                    for (const m of schedule) {
-                        if (m > currentMinuteInCycle + 0.01) {
-                            nextMinuteInCycle = m;
-                            break;
-                        }
-                    }
-
-                    if (nextMinuteInCycle !== -1) {
-                        gameState.current.nextBossSpawnTime = (current10MinCycle * 10 + nextMinuteInCycle) * 60;
-                    } else {
-                        gameState.current.nextBossSpawnTime = ((current10MinCycle + 1) * 10 + schedule[0]) * 60;
-                    }
-                    const p = gameState.current.player;
-                    p.hp.base *= min;
-                    p.dmg.base *= min;
-                    p.atk.base *= (min * 30);
-                    p.curHp = calcStat(p.hp);
-                    p.level = min * 3;
+                    skipTime(min);
                     cheatBuffer = '';
                 }
             });

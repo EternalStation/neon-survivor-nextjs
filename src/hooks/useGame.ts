@@ -77,7 +77,8 @@ export function useGameLoop(gameStarted: boolean) {
         recycleMeteorite,
         spendDust,
         onViewChassisDetail,
-        triggerPortal
+        triggerPortal,
+        skipTime
     } = useGameUIHandlers({
         gameState,
         setGameOver,
@@ -99,7 +100,8 @@ export function useGameLoop(gameStarted: boolean) {
         setShowModuleMenu,
         setGameOver,
         triggerPortal,
-        refreshUI: () => setUiState(p => p + 1)
+        refreshUI: () => setUiState(p => p + 1),
+        skipTime
     });
 
     // Logic Hook
@@ -427,6 +429,7 @@ export function useGameLoop(gameStarted: boolean) {
         portalCost: Math.floor(1 + gameState.current.gameTime / 60),
         onViewChassisDetail,
         showBossSkillDetail,
-        setShowBossSkillDetail
+        setShowBossSkillDetail,
+        skipTime
     };
 }

@@ -237,26 +237,49 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             pointerEvents: 'auto'
         }}>
             {/* Action Buttons */}
-            <div style={{ position: 'fixed', top: 20, right: 30, display: 'flex', alignItems: 'center', gap: 15, zIndex: 12000 }}>
-                {isSubmitting ? (
-                    <div style={{ color: '#22d3ee', fontSize: 10, letterSpacing: 1, fontWeight: 800 }}>UPLOADING RECORD...</div>
-                ) : rank ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <div style={{ color: '#94a3b8', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>GLOBAL RANK</div>
-                        <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#22d3ee', fontSize: 20, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
-                    </div>
-                ) : null}
+            <div style={{ position: 'fixed', top: 20, right: 30, display: 'flex', alignItems: 'flex-start', gap: 15, zIndex: 12000 }}>
 
-                <button className="btn-restart" onClick={onShowLeaderboard} style={{
-                    minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
-                    fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
-                    background: 'rgba(34, 211, 238, 0.1)', border: '1px solid #22d3ee', color: '#22d3ee'
-                }}>RANKINGS</button>
+                {/* Rankings Group */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <button className="btn-restart" onClick={onShowLeaderboard} style={{
+                        minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
+                        fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
+                        background: 'rgba(34, 211, 238, 0.1)', border: '1px solid #22d3ee', color: '#22d3ee',
+                        marginBottom: 8
+                    }}>RANKINGS</button>
 
-                <button className="btn-restart" onClick={onRestart} style={{
-                    minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
-                    fontWeight: 800, textTransform: 'uppercase', padding: '0 10px'
-                }}>RETRIAL</button>
+                    {isSubmitting ? (
+                        <div style={{ color: '#22d3ee', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>UPLOADING...</div>
+                    ) : rank ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ color: '#94a3b8', fontSize: 8, letterSpacing: 1, fontWeight: 800 }}>GLOBAL RANK</div>
+                            <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#22d3ee', fontSize: 18, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
+                        </div>
+                    ) : null}
+                </div>
+
+                <button
+                    className="btn-restart"
+                    onClick={onRestart}
+                    style={{
+                        minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
+                        fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid #10b981',
+                        color: '#10b981',
+                        transition: 'all 0.2s',
+                        cursor: 'pointer'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
+                        e.currentTarget.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
+                >RETRIAL</button>
+
                 <button className="btn-restart" onClick={onQuit} style={{
                     minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
                     fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',

@@ -21,7 +21,7 @@ export function handlePlayerMovement(
     let vx = 0, vy = 0;
 
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
-    const isStunned = (player.stunnedUntil && state.gameTime < player.stunnedUntil) && !(chronoLvl >= 1); // Chrono Lvl 1: Cannot be Stunned
+    const isStunned = (player.stunnedUntil && state.gameTime < player.stunnedUntil);
 
     // Movement Cancel Logic for Channeling (Epicenter)
     if (player.immobilized && !isStunned) {
@@ -135,7 +135,7 @@ export function handlePlayerMovement(
             const maxHp = calcStat(player.hp);
             const rawWallDmg = maxHp * GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
             const armor = calcStat(player.arm);
-            const drCap = chronoLvl >= 1 ? 0.97 : 0.95; // Chrono Lvl 1: 97% DR Cap
+            const drCap = 0.95;
             const armRedMult = 1 - getDefenseReduction(armor, drCap);
             let wallDmgAfterArmor = rawWallDmg * armRedMult;
 

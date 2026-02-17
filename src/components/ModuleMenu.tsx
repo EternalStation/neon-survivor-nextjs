@@ -55,15 +55,15 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     });
 
     const [perkFilters, setPerkFilters] = useState<Record<number, PerkFilter>>({
-        1: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        2: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        3: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        4: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        5: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        6: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        7: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        8: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
-        9: { active: false, val: 0, arena: 'All', matchQuality: 'All' },
+        1: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        2: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        3: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        4: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        5: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        6: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        7: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        8: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        9: { active: false, val: 0, thing1: 'All', thing2: 'All' },
     });
 
     // Removal Confirmation State
@@ -88,7 +88,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             setHoveredBlueprint(null);
             setMovedItem(null);
             setSelectedBestiaryEnemy(null);
-            setRecalibrateSlot(null);
+            // Keep recalibrateSlot persistent - don't clear it when menu closes
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -553,9 +553,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 display: 'flex', pointerEvents: 'none' // Allow clicks only on interactive elements
             }}>
 
-                {/* LEFT: MATRIX (40%) - Shrunk slightly to give more room to right */}
+                {/* LEFT: MATRIX (37%) - Adjusted as per user request */}
                 <div className="hex-grid-container" style={{
-                    width: '40%',
+                    width: '37%',
+                    flexShrink: 0,
                     height: '100%',
                     position: 'relative',
                     borderRightWidth: '2px',
@@ -628,12 +629,21 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 }}>
 
                     <div style={{
-                        flex: '0 0 420px', // STATIC SIZE: 420px (Perfect balance)
+                        flex: '0 0 475px',
+                        width: '475px',
+                        minWidth: '475px',
+                        maxWidth: '475px',
+                        overflow: 'hidden',
+                        padding: '4px',
+                        boxSizing: 'border-box',
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        paddingRight: '0',
-                        borderRight: 'none'
+                        zIndex: 10,
+                        paddingTop: '4px',
+                        paddingBottom: '4px',
+                        paddingLeft: '4px',
+                        paddingRight: '4px'
                     }}>
                         {/* DATA PANEL (Top - 9:16 tactical area) */}
                         <div className="module-detail-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -777,12 +787,16 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
                     {/* COL 2: INVENTORY - Remaining Width (55%) */}
                     <div className="inventory-grid" style={{
-                        flex: 1, // Takes remaining width (approx 55% of 55%)
+                        flex: 1,
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         background: 'rgba(5, 5, 15, 0.98)',
-                        padding: '5px' // Reduced padding from 10px
+                        padding: '2px',
+                        marginLeft: '3px',
+                        borderLeftWidth: '2px',
+                        borderLeftStyle: 'solid',
+                        borderLeftColor: 'rgba(59, 130, 246, 0.3)'
                     }}>
                         <InventoryPanel
                             inventory={gameState.inventory}
@@ -854,7 +868,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             position: 'absolute',
                             top: 0,
                             right: 0,
-                            width: 'calc(100% - (40% + 50px))',
+                            width: 'calc(100% - (40% + 100px))',
                             height: '100%',
                             background: 'rgba(0, 0, 0, 0.75)',
                             zIndex: 2500,
@@ -923,7 +937,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             {/* EXTRACTION FOCUS DIMMER (Left: Matrix Only) */}
             {extractionFocusActive && (
                 <div style={{
-                    position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
+                    position: 'absolute', top: 0, left: 0, width: '37%', height: '100%',
                     background: 'rgba(0, 0, 0, 0.75)',
                     zIndex: 2500,
                     pointerEvents: 'none'

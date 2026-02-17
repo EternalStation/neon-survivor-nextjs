@@ -156,7 +156,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         frameCount: 0,
         isPaused: false,
         gameOver: false,
-        nextBossSpawnTime: 120, // 2 minutes
+        nextBossSpawnTime: 105, // 1 minute 45 seconds
         nextBossId: 0,
         rareSpawnCycle: 0,
         rareSpawnActive: false,
