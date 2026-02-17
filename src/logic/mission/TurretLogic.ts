@@ -6,7 +6,7 @@ import { calcStat } from '../utils/MathUtils';
 const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 2;
 const TURRET_DURATION = 30;
-const TURRET_COOLDOWN = 10; // Testing: 10s cooldown
+const TURRET_COOLDOWN = 60;
 const REPAIR_SPEED = 50; // 2 seconds (50%/sec)
 
 export function updateTurrets(state: GameState, step: number) {
