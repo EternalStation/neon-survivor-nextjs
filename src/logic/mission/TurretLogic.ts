@@ -106,6 +106,7 @@ export function updateTurrets(state: GameState, step: number) {
                     // For now, let's say it spawns once per activation at the start
                     if (turret.activeDuration < step * 2 && !turret.droneSpawned) {
                         turret.droneSpawned = true; // Flag to prevent multi-spawn
+                        if (!state.allies) state.allies = [];
                         state.allies.push({
                             id: Math.random(),
                             type: 'heal_drone',
@@ -214,7 +215,7 @@ export function updateTurrets(state: GameState, step: number) {
                         const dmgPct = 0.10 + (level - 1) * 0.05;
                         const damage = Math.ceil(estBaseHP * dmgPct * delay); // Per shot
 
-                        const slowPct = Math.min(1.0, 0.50 + (level - 1) * 0.05);
+                        const slowPct = Math.min(1.0, 1.00 + (level - 1) * 0.05); // 100% at Lvl 1 (instant freeze)
 
                         // Cone check for Lvl 6
                         const coneAngle = level >= 6 ? (120 * Math.PI / 180) : (30 * Math.PI / 180);
