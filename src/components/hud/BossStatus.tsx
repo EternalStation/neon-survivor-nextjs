@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { GameState } from '../../logic/core/types';
+import { formatLargeNumber } from '../../utils/format';
 
 
 interface BossStatusProps {
@@ -93,7 +94,10 @@ const BOSS_SKILLS_L3: Record<string, { name: string; desc: string; color: string
 };
 
 export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDetail, setShowSkillDetail }) => {
-    const boss = gameState.enemies.find(e => e.boss && !e.dead);
+    // Prioritize the boss that was most recently hit
+    const bosses = gameState.enemies.filter(e => e.boss && !e.dead);
+    bosses.sort((a, b) => (b.lastHitTime || 0) - (a.lastHitTime || 0));
+    const boss = bosses[0];
     // Remove local state, use props
     const [localSkillData, setLocalSkillData] = useState<{ name: string; desc: string; color: string } | null>(null);
 
@@ -142,12 +146,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                     }}>
                         <span>{boss ? (BOSS_NAMES[boss.shape] || 'ANOMALY') : ''}</span>
                         <span style={{
-                            color: (() => {
-                                const minutes = gameState.gameTime / 60;
-                                const eraIndex = Math.floor(minutes / 15) % 5;
-                                const eraColors = ['#4ade80', '#3b82f6', '#a855f7', '#f97316', '#ef4444'];
-                                return eraColors[eraIndex];
-                            })()
+                            color: '#ef4444'
                         }}>LVL {isLevel3 ? '3' : (isLevel2 ? '2' : '1')}</span>
                     </div>
 
@@ -167,7 +166,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                             color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
                             letterSpacing: 2, lineHeight: '16px', textShadow: '0 0 4px #000'
                         }}>
-                            {Math.round(boss.hp).toLocaleString()} / {Math.round(boss.maxHp).toLocaleString()} HP
+                            {formatLargeNumber(Math.round(boss.hp))} / {formatLargeNumber(Math.round(boss.maxHp))} HP
                         </div>
                         {/* STAGE INDICATOR FOR ABOMINATION BOSS */}
                         {boss.shape === 'abomination' && boss.stage && (

@@ -18,6 +18,7 @@ import { RemovalConfirmationModal } from './modules/RemovalConfirmationModal';
 import { CorruptionWarningModal } from './modules/CorruptionWarningModal';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
 import { EXTRACTION_MESSAGES } from '../logic/mission/ExtractionLogic';
+import { playSfx } from '../logic/audio/AudioLogic';
 import './modules/ModuleMenu.css';
 
 
@@ -46,6 +47,29 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
     const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
     const [recalibrateSlot, setRecalibrateSlot] = useState<Meteorite | null>(null);
+    const [lockedRecalibrateIndices, setLockedRecalibrateIndices] = useState<number[]>([]);
+
+    // Reset locks when a new item is placed in recalibration
+    React.useEffect(() => {
+        setLockedRecalibrateIndices([]);
+    }, [recalibrateSlot]);
+
+    const toggleRecalibrateLock = (idx: number) => {
+        setLockedRecalibrateIndices(prev =>
+            prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+        );
+        playSfx('ui-click');
+    };
+
+    // Recalibration Filters
+    const [recalibrateFilters, setRecalibrateFilters] = useState<Record<number, PerkFilter>>({
+        1: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        2: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        3: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        4: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        5: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        6: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+    });
 
     // Persistent Filter State (Lifted from InventoryPanel)
     const [coreFilter, setCoreFilter] = useState<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>({
@@ -674,6 +698,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 recalibrateSlot={recalibrateSlot}
                                 setRecalibrateSlot={setRecalibrateSlot}
                                 setMovedItem={setMovedItem}
+                                lockedRecalibrateIndices={lockedRecalibrateIndices}
+                                onToggleRecalibrateLock={toggleRecalibrateLock}
+                                recalibrateFilters={recalibrateFilters}
+                                setRecalibrateFilters={setRecalibrateFilters}
+                                setLockedRecalibrateIndices={setLockedRecalibrateIndices}
                             />
                         </div>
 

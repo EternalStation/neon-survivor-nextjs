@@ -83,6 +83,24 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
+    // --- EcoXP Lvl 3: Flux Extraction ---
+    if (ecoXp && ecoXp.level >= 3) {
+        const kl = ecoXp.killsAtLevel?.[3] ?? ecoXp.killsAtAcquisition;
+        const killsSinceLvl3 = state.killCount - kl;
+        const prevKillsSinceLvl3 = killsSinceLvl3 - soulCount;
+
+        const currentThresholds = Math.floor(killsSinceLvl3 / 10);
+        const prevThresholds = Math.floor(prevKillsSinceLvl3 / 10);
+
+        if (currentThresholds > prevThresholds && killsSinceLvl3 > 0) {
+            const multiplier = getHexMultiplier(state, 'EcoXP');
+            const fluxAmount = (currentThresholds - prevThresholds) * 5 * multiplier; // 10 kills * 0.5 = 5 Flux
+            state.player.isotopes += fluxAmount;
+            playSfx('socket-place');
+            spawnFloatingNumber(state, e.x, e.y, `+${fluxAmount.toFixed(0)} FLUX`, '#a855f7', false);
+        }
+    }
+
     // --- CLASS MODIFIER: Hive-Mother Nanite Spread ---
     if (e.isInfected) {
         const resonance = getChassisResonance(state);

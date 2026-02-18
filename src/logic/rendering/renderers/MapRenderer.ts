@@ -134,12 +134,11 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
     if (state.portalState === 'closed') return;
 
     PORTALS.forEach(p => {
-        const isFrom = p.from === state.currentArena;
-        const isTo = p.to === state.currentArena;
+        // Only render outgoing portals from the current arena.
+        // Incoming portals are covered by their own definitions (e.g., 1->0 is separate from 0->1).
+        if (p.from !== state.currentArena) return;
 
-        if (!isFrom && !isTo) return;
-
-        const center = ARENA_CENTERS.find(c => c.id === (isFrom ? p.from : p.to));
+        const center = ARENA_CENTERS.find(c => c.id === p.from);
         if (!center) return;
 
         const wall = getHexWallLine(center.x, center.y, ARENA_RADIUS, p.wall);

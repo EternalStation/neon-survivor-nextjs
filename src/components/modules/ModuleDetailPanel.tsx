@@ -11,7 +11,7 @@ import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
-import { getMeteoriteImage } from './ModuleUtils';
+import { getMeteoriteImage, matchesPerk, PerkFilter } from './ModuleUtils';
 import { PLAYER_CLASSES } from '../../logic/core/classes';
 
 interface ModuleDetailPanelProps {
@@ -29,6 +29,11 @@ interface ModuleDetailPanelProps {
     recalibrateSlot: Meteorite | null;
     setRecalibrateSlot: (item: Meteorite | null) => void;
     setMovedItem?: (item: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
+    lockedRecalibrateIndices: number[];
+    onToggleRecalibrateLock: (idx: number) => void;
+    recalibrateFilters: Record<number, PerkFilter>;
+    setRecalibrateFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
+    setLockedRecalibrateIndices: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
@@ -45,7 +50,12 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     onUpdate,
     recalibrateSlot,
     setRecalibrateSlot,
-    setMovedItem
+    setMovedItem,
+    lockedRecalibrateIndices,
+    onToggleRecalibrateLock,
+    recalibrateFilters,
+    setRecalibrateFilters,
+    setLockedRecalibrateIndices
 }) => {
     const terminalRef = React.useRef<HTMLDivElement>(null);
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -195,8 +205,36 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             gameState={gameState}
                             onClose={handleExitRecalibrate}
                             onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
-                            onRerollType={(indices: number[]) => { if (rerollPerkType(gameState, recalibrateSlot, indices)) onUpdate?.(); }}
+                            onRerollType={(indices: number[]) => {
+                                if (rerollPerkType(gameState, recalibrateSlot, indices)) {
+                                    // Auto-Lock Logic
+                                    const newLocked = [...indices];
+                                    let changed = false;
+
+                                    recalibrateSlot.perks.forEach((p, idx) => {
+                                        // If not currently locked by user (or preserved in reroll), check if we should lock it
+                                        if (!newLocked.includes(idx)) {
+                                            const lvl = idx + 1;
+                                            const filter = recalibrateFilters[lvl];
+                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
+                                                newLocked.push(idx);
+                                                changed = true;
+                                            }
+                                        }
+                                    });
+
+                                    if (changed) {
+                                        setLockedRecalibrateIndices(newLocked);
+                                    }
+
+                                    onUpdate?.();
+                                }
+                            }}
                             onRerollValue={(indices: number[]) => { if (rerollPerkValue(gameState, recalibrateSlot, indices)) onUpdate?.(); }}
+                            lockedIndices={lockedRecalibrateIndices}
+                            onToggleLock={onToggleRecalibrateLock}
+                            recalibrateFilters={recalibrateFilters}
+                            setRecalibrateFilters={setRecalibrateFilters}
                         />
                         {/* DRAG HANDLE TO EJECT */}
                         <div

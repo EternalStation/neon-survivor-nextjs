@@ -9,7 +9,7 @@ import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 export const CURRENT_PATCH_VERSION = '1.0.2';
 
 export interface RunSubmissionData {
-    score: number;
+    score: string;
     survivalTime: number;
     kills: number;
     bossKills: number;
@@ -109,7 +109,7 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
     });
 
     return {
-        score,
+        score: safeIntString(score),
         survivalTime: Math.floor(gameState.gameTime),
         kills: gameState.killCount,
         bossKills: gameState.bossKills,
@@ -184,14 +184,28 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
  * Calculate final score based on game performance
  * You can adjust this formula to weight different factors
  */
+const BIGINT_MAX = 9_007_199_254_740_991; // Number.MAX_SAFE_INTEGER (fits BIGINT column)
+
 function calculateScore(gameState: GameState): number {
     const baseScore = gameState.killCount * 100;
     const bossBonus = gameState.bossKills * 5000;
     const timeBonus = Math.floor(gameState.gameTime) * 10;
     const levelBonus = gameState.player.level * 500;
-    const damageBonus = Math.floor(gameState.player.damageDealt / 1000);
+    // Cap damageBonus to avoid absurdly large scores from damage inflation
+    const damageBonus = Math.min(Math.floor(gameState.player.damageDealt / 1000), 1_000_000_000);
 
-    return baseScore + bossBonus + timeBonus + levelBonus + damageBonus;
+    const total = baseScore + bossBonus + timeBonus + levelBonus + damageBonus;
+    // Clamp to MAX_SAFE_INTEGER so the DB BIGINT column can always store it
+    return Math.min(Math.floor(total), BIGINT_MAX);
+}
+
+/**
+ * Convert a number to a clean integer string without scientific notation.
+ * Clamps to BIGINT-safe range to prevent DB overflow.
+ */
+function safeIntString(num: number): string {
+    const clamped = Math.min(Math.max(Math.floor(num), 0), BIGINT_MAX);
+    return String(clamped);
 }
 
 /**

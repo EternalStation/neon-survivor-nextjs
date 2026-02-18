@@ -23,72 +23,72 @@ interface PerkDef {
 export const PERK_POOLS: Record<number, PerkDef[]> = {
     1: [
         // LVL1: Sector + Connected Leg
-        { id: 'lvl1_eco_eco', description: 'Located in Eco Sector & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_eco_com', description: 'Located in Eco Sector & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_eco_def', description: 'Located in Eco Sector & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_eco', description: 'Located in Com Sector & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_com', description: 'Located in Com Sector & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_def', description: 'Located in Com Sector & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_eco', description: 'Located in Def Sector & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_com', description: 'Located in Def Sector & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_def', description: 'Located in Def Sector & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_eco', description: 'Located in Sector-01 & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_com', description: 'Located in Sector-01 & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_def', description: 'Located in Sector-01 & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_eco', description: 'Located in Sector-02 & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_com', description: 'Located in Sector-02 & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_def', description: 'Located in Sector-02 & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_eco', description: 'Located in Sector-03 & connected to Eco Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_com', description: 'Located in Sector-03 & connected to Com Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_def', description: 'Located in Sector-03 & connected to Def Hexes', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
     ],
     2: [
         // LVL2: Sector + Neighbors Quality
-        { id: 'lvl2_eco_bro', description: 'Located in Eco Sector and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_eco_dam', description: 'Located in Eco Sector and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_eco_new', description: 'Located in Eco Sector and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_com_bro', description: 'Located in Com Sector and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_com_dam', description: 'Located in Com Sector and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_com_new', description: 'Located in Com Sector and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_def_bro', description: 'Located in Def Sector and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_def_dam', description: 'Located in Def Sector and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
-        { id: 'lvl2_def_new', description: 'Located in Def Sector and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_eco_bro', description: 'Located in Sector-01 and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_eco_dam', description: 'Located in Sector-01 and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_eco_new', description: 'Located in Sector-01 and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_com_bro', description: 'Located in Sector-02 and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_com_dam', description: 'Located in Sector-02 and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_com_new', description: 'Located in Sector-02 and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_def_bro', description: 'Located in Sector-03 and neighboring a Broken Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_def_dam', description: 'Located in Sector-03 and neighboring a Damaged Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
+        { id: 'lvl2_def_new', description: 'Located in Sector-03 and neighboring a New Meteorite', ranges: { Broken: { min: 2, max: 5 }, Damaged: { min: 5, max: 8 }, New: { min: 8, max: 12 } } },
     ],
     3: [
         // LVL3: Neighbor Quality from Arena
-        { id: 'lvl3_eco_bro', description: 'Neighboring a Broken Meteorite found in Eco Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_eco_dam', description: 'Neighboring a Damaged Meteorite found in Eco Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_eco_new', description: 'Neighboring a New Meteorite found in Eco Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_com_bro', description: 'Neighboring a Broken Meteorite found in Com Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_com_dam', description: 'Neighboring a Damaged Meteorite found in Com Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_com_new', description: 'Neighboring a New Meteorite found in Com Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_def_bro', description: 'Neighboring a Broken Meteorite found in Def Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_def_dam', description: 'Neighboring a Damaged Meteorite found in Def Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
-        { id: 'lvl3_def_new', description: 'Neighboring a New Meteorite found in Def Arena', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_eco_bro', description: 'Neighboring a Broken Meteorite found in Sector-01', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_eco_dam', description: 'Neighboring a Damaged Meteorite found in Sector-01', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_eco_new', description: 'Neighboring a New Meteorite found in Sector-01', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_com_bro', description: 'Neighboring a Broken Meteorite found in Sector-02', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_com_dam', description: 'Neighboring a Damaged Meteorite found in Sector-02', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_com_new', description: 'Neighboring a New Meteorite found in Sector-02', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_def_bro', description: 'Neighboring a Broken Meteorite found in Sector-03', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_def_dam', description: 'Neighboring a Damaged Meteorite found in Sector-03', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
+        { id: 'lvl3_def_new', description: 'Neighboring a New Meteorite found in Sector-03', ranges: { Broken: { min: 4, max: 8 }, Damaged: { min: 7, max: 11 }, New: { min: 10, max: 15 } } },
     ],
     4: [
         // LVL4: Secondary Neighbor Quality from Arena
-        { id: 'lvl4_eco_bro', description: 'Secondary neighboring a Broken Meteorite found in Eco Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_eco_dam', description: 'Secondary neighboring a Damaged Meteorite found in Eco Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_eco_new', description: 'Secondary neighboring a New Meteorite found in Eco Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_com_bro', description: 'Secondary neighboring a Broken Meteorite found in Com Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_com_dam', description: 'Secondary neighboring a Damaged Meteorite found in Com Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_com_new', description: 'Secondary neighboring a New Meteorite found in Com Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_def_bro', description: 'Secondary neighboring a Broken Meteorite found in Def Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_def_dam', description: 'Secondary neighboring a Damaged Meteorite found in Def Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
-        { id: 'lvl4_def_new', description: 'Secondary neighboring a New Meteorite found in Def Arena', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_eco_bro', description: 'Secondary neighboring a Broken Meteorite found in Sector-01', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_eco_dam', description: 'Secondary neighboring a Damaged Meteorite found in Sector-01', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_eco_new', description: 'Secondary neighboring a New Meteorite found in Sector-01', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_com_bro', description: 'Secondary neighboring a Broken Meteorite found in Sector-02', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_com_dam', description: 'Secondary neighboring a Damaged Meteorite found in Sector-02', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_com_new', description: 'Secondary neighboring a New Meteorite found in Sector-02', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_def_bro', description: 'Secondary neighboring a Broken Meteorite found in Sector-03', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_def_dam', description: 'Secondary neighboring a Damaged Meteorite found in Sector-03', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
+        { id: 'lvl4_def_new', description: 'Secondary neighboring a New Meteorite found in Sector-03', ranges: { Broken: { min: 7, max: 12 }, Damaged: { min: 10, max: 14 }, New: { min: 13, max: 19 } } },
     ],
     5: [
         // LVL5: Sector + Connecting Pairs
-        { id: 'lvl5_eco_eco_eco', description: 'Located in Eco Sector. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_eco_com', description: 'Located in Eco Sector. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_eco_def', description: 'Located in Eco Sector. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_com_com', description: 'Located in Eco Sector. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_com_def', description: 'Located in Eco Sector. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_def_def', description: 'Located in Eco Sector. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_eco', description: 'Located in Com Sector. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_com', description: 'Located in Com Sector. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_def', description: 'Located in Com Sector. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_com_com', description: 'Located in Com Sector. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_com_def', description: 'Located in Com Sector. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_def_def', description: 'Located in Com Sector. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_eco', description: 'Located in Def Sector. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_com', description: 'Located in Def Sector. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_def', description: 'Located in Def Sector. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_com_com', description: 'Located in Def Sector. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_com_def', description: 'Located in Def Sector. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_def_def', description: 'Located in Def Sector. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_eco', description: 'Located in Sector-01. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_com', description: 'Located in Sector-01. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_def', description: 'Located in Sector-01. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_com_com', description: 'Located in Sector-01. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_com_def', description: 'Located in Sector-01. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_def_def', description: 'Located in Sector-01. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_eco', description: 'Located in Sector-02. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_com', description: 'Located in Sector-02. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_def', description: 'Located in Sector-02. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_com_com', description: 'Located in Sector-02. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_com_def', description: 'Located in Sector-02. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_def_def', description: 'Located in Sector-02. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_eco', description: 'Located in Sector-03. Connects Eco & Eco Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_com', description: 'Located in Sector-03. Connects Eco & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_def', description: 'Located in Sector-03. Connects Eco & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_com_com', description: 'Located in Sector-03. Connects Com & Com Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_com_def', description: 'Located in Sector-03. Connects Com & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_def_def', description: 'Located in Sector-03. Connects Def & Def Hexes', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
     ],
     6: [
         // LVL6: Neighbor Quality + Bridge
@@ -133,10 +133,14 @@ export const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
     { min: 5, max: 10, weights: [70, 20, 9, 1, 0, 0] },
     // 10-15 min: 50% Anomalous, 30% Radiant, 15% Abyss, 5% Eternal, 1% Divine
     { min: 10, max: 15, weights: [50, 30, 15, 5, 1, 0] },
-    // 15-20 min: 34% Anomalous, 30% Radiant, 20% Abyss, 10% Eternal, 5% Divine, 1% Singularity
-    { min: 15, max: 20, weights: [34, 30, 20, 10, 5, 1] },
-    // 20+ min: Endgame - Balanced distribution with 10% Singularity
-    { min: 20, max: 9999, weights: [15, 15, 20, 20, 20, 10] }
+    // 15-20 min: 10% Anomalous, 30% Radiant, 40% Abyss, 14% Eternal, 5% Divine, 1% Singularity
+    { min: 15, max: 20, weights: [10, 30, 40, 14, 5, 1] },
+    // 20-25 min: 0% Anomalous, 0% Radiant, 20% Abyss, 40% Eternal, 30% Divine, 10% Singularity
+    { min: 20, max: 25, weights: [0, 0, 20, 40, 30, 10] },
+    // 25-30 min: 0% Anomalous, 0% Radiant, 0% Abyss, 0% Eternal, 50% Divine, 40% Singularity
+    { min: 25, max: 30, weights: [0, 0, 0, 0, 50, 40] },
+    // 30+ min: 20% Divine, 80% Singularity
+    { min: 30, max: 9999, weights: [0, 0, 0, 0, 20, 80] }
 ];
 
 const RARITY_LIST: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
@@ -267,7 +271,7 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     const entry = DROP_TABLE.find(e => minutes >= e.min && minutes < e.max) || DROP_TABLE[DROP_TABLE.length - 1];
 
     // Base chance is the sum of the weights (e.g. 1.6 + 1.0 + 0.4 = 3.0 -> 3%)
-    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.04; // 4% Chance (Normalizing 100 weight sum to 0.04)
+    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.05; // 5% Chance (Normalizing 100 weight sum to 0.05)
 
     chance *= state.xpSoulBuffMult;
 

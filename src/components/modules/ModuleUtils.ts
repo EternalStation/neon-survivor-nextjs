@@ -102,9 +102,9 @@ export const getLegendaryInfo = (category: string, type: string) => {
 
 export const getMeteoriteColor = (discoveredIn: string) => {
     const up = discoveredIn.toUpperCase();
-    if (up.includes('ECO')) return '#fbbf24'; // Yellow
-    if (up.includes('COM')) return '#f87171'; // Red
-    if (up.includes('DEF')) return '#60a5fa'; // Blue
+    if (up.includes('SECTOR-01') || up.includes('ECO')) return '#fbbf24'; // Yellow
+    if (up.includes('SECTOR-02') || up.includes('COM')) return '#f87171'; // Red
+    if (up.includes('SECTOR-03') || up.includes('DEF')) return '#60a5fa'; // Blue
     return '#94a3b8'; // Slate-400 (Default/Grey)
 };
 
@@ -178,52 +178,73 @@ export const matchesFilter = (
         if (!f || !f.active) continue;
 
         const perks = item.perks;
-        let levelMatch = false;
-
-        const checkValue = (v: number) => v >= f.val;
-
         // Find the perk matching this level's tier (indices 0 to 5 map to tiers 1 to 6)
         const p = perks[lvl - 1];
-        if (p && p.id.startsWith(`lvl${lvl}`)) {
-            const pts = p.id.split('_');
+        if (!p) return false;
 
-            let contextMatches = true;
-
-            const t1 = f.thing1.toLowerCase();
-            const t2 = f.thing2.toLowerCase();
-
-            // Level-specific mapping
-            // pts[0] is always 'lvlX'
-            if (lvl === 1 || lvl === 2 || lvl === 5) {
-                // [lvl, Sector, Other...]
-                if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
-                if (contextMatches && f.thing2 !== 'All') {
-                    if (t2.includes('-')) {
-                        const combo = t2.replace('-', '_');
-                        if (!p.id.includes(combo)) contextMatches = false;
-                    } else if (pts[2] !== t2) contextMatches = false;
-                }
-            } else if (lvl === 3 || lvl === 4) {
-                // [lvl, Arena, NeighborQuality] 
-                // Swap in UI: thing1=Neighbor, thing2=Arena
-                if (f.thing1 !== 'All' && pts[2] !== t1) contextMatches = false;
-                if (contextMatches && f.thing2 !== 'All' && pts[1] !== t2) contextMatches = false;
-            } else if (lvl === 6) {
-                // [lvl, NeighborQual, Pair...]
-                if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
-                if (contextMatches && f.thing2 !== 'All') {
-                    const combo = t2.replace('-', '_');
-                    if (!p.id.includes(combo)) contextMatches = false;
-                }
-            }
-
-            if (contextMatches) {
-                levelMatch = checkValue(p.value);
-            }
-        }
-
-        if (!levelMatch) return false;
+        if (!matchesPerk(p, lvl, f)) return false;
     }
 
     return true;
+};
+
+export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: PerkFilter): boolean => {
+    if (!f.active) return true;
+
+    const checkValue = (v: number) => v >= f.val;
+
+    const normalize = (s: string) => {
+        const lower = s.toLowerCase();
+        if (lower === 'sector-01' || lower === 's1') return 'eco';
+        if (lower === 'sector-02' || lower === 's2') return 'com';
+        if (lower === 'sector-03' || lower === 's3') return 'def';
+        return lower;
+    };
+
+    const normalizePair = (s: string) => {
+        return s.toLowerCase()
+            .replace(/s1/g, 'eco')
+            .replace(/s2/g, 'com')
+            .replace(/s3/g, 'def')
+            .replace(/-/g, '_');
+    };
+
+    if (p.id.startsWith(`lvl${lvl}`)) {
+        const pts = p.id.split('_');
+        let contextMatches = true;
+
+        const t1 = normalize(f.thing1);
+        const t2 = f.thing2.includes('-') ? normalizePair(f.thing2) : normalize(f.thing2);
+        const rawT2 = f.thing2.toLowerCase(); // For non-mapped checks if any
+
+        // Level-specific mapping
+        // pts[0] is always 'lvlX'
+        if (lvl === 1 || lvl === 2 || lvl === 5) {
+            // [lvl, Sector, Other...]
+            if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
+            if (contextMatches && f.thing2 !== 'All') {
+                if (f.thing2.includes('-')) {
+                    // Pair check (e.g. S1-S1 -> eco_eco)
+                    if (!p.id.includes(t2)) contextMatches = false;
+                } else if (pts[2] !== t2) contextMatches = false;
+            }
+        } else if (lvl === 3 || lvl === 4) {
+            // [lvl, Arena, NeighborQuality] 
+            // Swap in UI: thing1=Neighbor, thing2=Arena
+            if (f.thing1 !== 'All' && pts[2] !== t1) contextMatches = false;
+            if (contextMatches && f.thing2 !== 'All' && pts[1] !== t2) contextMatches = false;
+        } else if (lvl === 6) {
+            // [lvl, NeighborQual, Pair...]
+            if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
+            if (contextMatches && f.thing2 !== 'All') {
+                if (!p.id.includes(t2)) contextMatches = false;
+            }
+        }
+
+        if (contextMatches) {
+            return checkValue(p.value);
+        }
+    }
+
+    return false;
 };;

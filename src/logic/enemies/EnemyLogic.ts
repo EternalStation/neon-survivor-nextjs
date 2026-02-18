@@ -567,7 +567,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
             const chance = isLate ? 8 : 24; // More frequent later
             if (state.frameCount % chance === 0) {
                 const count = isLate ? 3 : 1;
-                const size = isLate ? 20 : 15;
+                const size = isLate ? 10 : 8;
                 const life = isLate ? 26 : 18;
                 spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], count, size, life, 'void');
             }
@@ -632,6 +632,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
                             if (dmgDealt > 0) {
                                 e.hp -= dmgDealt;
+                                e.lastHitTime = state.gameTime;
                                 player.damageDealt += dmgDealt;
                                 const themeColor = getPlayerThemeColor(state);
                                 spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
@@ -675,6 +676,7 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
                     if (dmg > 0) {
                         e.hp -= dmg;
+                        e.lastHitTime = state.gameTime;
                         player.damageDealt += dmg;
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#ef4444', false);
                         spawnParticles(state, e.x, e.y, '#ef4444', 1);

@@ -114,7 +114,7 @@ class ApiClient {
 
     // Run endpoints
     async submitRun(runData: {
-        score: number;
+        score: string | number;
         survivalTime: number;
         kills: number;
         bossKills: number;
@@ -122,12 +122,22 @@ class ApiClient {
         patchVersion: string;
         damageDealt: number;
         damageTaken: number;
+        damageBlocked: number;
+        damageBlockedArmor: number;
+        damageBlockedCollision: number;
+        damageBlockedProjectile: number;
+        damageBlockedShield: number;
         meteoritesCollected: number;
         portalsUsed: number;
         arenaTimes: Record<number, number>;
         legendaryHexes: any[];
         hexLevelupOrder: any[];
         blueprints: any[];
+        snitchesCaught?: number;
+        deathCause?: string;
+        finalStats?: any;
+        radarCounts?: any;
+        timezoneOffset?: number;
     }) {
         return this.request('/runs', {
             method: 'POST',

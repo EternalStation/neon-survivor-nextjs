@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/client';
 import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/classes';
+import { formatLargeNumber } from '../utils/format';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {
     id: number;
     username: string;
-    score: number;
+    score: string | number;
     survival_time: number;
     kills: number;
     boss_kills: number;
@@ -53,17 +54,6 @@ const FinalStatItem = ({ label, value, color = '#fff' }: { label: string, value:
     </div>
 );
 
-const formatLargeNum = (num: number | string) => {
-    const value = typeof num === 'string' ? parseFloat(num) : num;
-    if (isNaN(value)) return '0';
-
-    if (value >= 1000000000000000) return (value / 1000000000000000).toFixed(1) + 'Q';
-    if (value >= 1000000000000) return (value / 1000000000000).toFixed(1) + 'T';
-    if (value >= 1000000000) return (value / 1000000000).toFixed(1) + 'B';
-    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-    if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
-    return value.toLocaleString();
-};
 
 const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -351,13 +341,13 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                             <div className="details-card stats-card">
                                                                 <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>MISSION DATA</div>
                                                                 <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    <div className="stat-row"><span>DMG DEALT</span><span className="val-amber">{formatLargeNum(entry.damage_dealt || 0)}</span></div>
-                                                                    <div className="stat-row"><span>DMG TAKEN</span><span className="val-red">{formatLargeNum(entry.damage_taken || 0)}</span></div>
-                                                                    <div className="stat-row"><span>DMG BLOCKED</span><span className="val-blue">{formatLargeNum(entry.damage_blocked || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>ARMOR</span><span>{formatLargeNum(entry.damage_blocked_armor || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>SHIELD</span><span>{formatLargeNum(entry.damage_blocked_shield || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>COLLISION</span><span>{formatLargeNum(entry.damage_blocked_collision || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>PROJECTILE</span><span>{formatLargeNum(entry.damage_blocked_projectile || 0)}</span></div>
+                                                                    <div className="stat-row"><span>DMG DEALT</span><span className="val-amber">{formatLargeNumber(entry.damage_dealt || 0)}</span></div>
+                                                                    <div className="stat-row"><span>DMG TAKEN</span><span className="val-red">{formatLargeNumber(entry.damage_taken || 0)}</span></div>
+                                                                    <div className="stat-row"><span>DMG BLOCKED</span><span className="val-blue">{formatLargeNumber(entry.damage_blocked || 0)}</span></div>
+                                                                    <div className="stat-sub-row"><span>ARMOR</span><span>{formatLargeNumber(entry.damage_blocked_armor || 0)}</span></div>
+                                                                    <div className="stat-sub-row"><span>SHIELD</span><span>{formatLargeNumber(entry.damage_blocked_shield || 0)}</span></div>
+                                                                    <div className="stat-sub-row"><span>COLLISION</span><span>{formatLargeNumber(entry.damage_blocked_collision || 0)}</span></div>
+                                                                    <div className="stat-sub-row"><span>PROJECTILE</span><span>{formatLargeNumber(entry.damage_blocked_projectile || 0)}</span></div>
                                                                     <div className="stat-row" style={{ marginTop: 10 }}><span>KILLS</span><span className="val-amber">{entry.kills.toLocaleString()}</span></div>
                                                                     <div className="stat-row"><span>SNITCHES</span><span className="val-cyan">{entry.snitches_caught || 0}</span></div>
                                                                     <div className="stat-row"><span>PORTALS</span><span className="val-purple">{entry.portals_used || 0}</span></div>
@@ -394,12 +384,12 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                 </div>
                                                                 {entry.final_stats && (
                                                                     <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
-                                                                        <FinalStatItem label="DMG/HIT" value={formatLargeNum(entry.final_stats.dmg)} color="#f59e0b" />
-                                                                        <FinalStatItem label="MAX HP" value={formatLargeNum(entry.final_stats.hp)} color="#4ade80" />
-                                                                        <FinalStatItem label="XP/KILL" value={formatLargeNum(entry.final_stats.xp || 0)} color="#22d3ee" />
+                                                                        <FinalStatItem label="DMG/HIT" value={formatLargeNumber(entry.final_stats.dmg)} color="#f59e0b" />
+                                                                        <FinalStatItem label="MAX HP" value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
+                                                                        <FinalStatItem label="XP/KILL" value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
                                                                         <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
                                                                         <FinalStatItem label="REGEN" value={entry.final_stats.regen.toFixed(1) + '/s'} color="#4ade80" />
-                                                                        <FinalStatItem label="ARMOR" value={formatLargeNum(entry.final_stats.armor)} color="#3b82f6" />
+                                                                        <FinalStatItem label="ARMOR" value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
                                                                         <FinalStatItem label="SPEED" value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
                                                                     </div>
                                                                 )}

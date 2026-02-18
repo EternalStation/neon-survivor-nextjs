@@ -289,6 +289,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                     // Apply Damage to Enemy
                     e.hp -= avgDmg;
+                    e.lastHitTime = state.gameTime;
                     owner.damageDealt += avgDmg;
 
                     // Visuals
@@ -584,6 +585,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                         linkedTargets.forEach(target => {
                             target.hp -= splitDmg;
+                            target.lastHitTime = state.gameTime;
                             owner.damageDealt += splitDmg; // Total damage dealt remains same, just split
                             spawnFloatingNumber(state, target.x, target.y, Math.round(splitDmg).toString(), linkColor, false);
                             spawnParticles(state, target.x, target.y, linkColor, 2);
@@ -598,6 +600,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     } else {
                         // Standard Single Target
                         e.hp -= damageAmount;
+                        e.lastHitTime = state.gameTime;
                         owner.damageDealt += damageAmount;
                         b.hits.add(e.id);
                     }

@@ -194,9 +194,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: 'COMBAT SECTOR', code: 'SEC-01', color: '#f87171', indices: [0, 1] },
-                        { name: 'DEFENSE SECTOR', code: 'SEC-02', color: '#60a5fa', indices: [2, 3] },
-                        { name: 'ECONOMIC SECTOR', code: 'SEC-03', color: '#fbbf24', indices: [4, 5] }
+                        { name: 'SECTOR-02', code: 'SEC-02', color: '#f87171', indices: [0, 1] }, // Was Combat
+                        { name: 'SECTOR-03', code: 'SEC-03', color: '#60a5fa', indices: [2, 3] }, // Was Defense
+                        { name: 'SECTOR-01', code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Was Economic
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];
@@ -220,7 +220,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         const textY = centerY + (vOutY / lenOut) * textR;
 
                         const edgeAngle = Math.atan2(o1.y - o0.y, o1.x - o0.x) * (180 / Math.PI);
-                        const rotation = (sector.name.includes('COMBAT')) ? edgeAngle + 180 : edgeAngle;
+                        const rotation = (sector.name === 'SECTOR-02') ? edgeAngle + 180 : edgeAngle;
 
                         return (
                             <g key={sIdx}>

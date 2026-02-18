@@ -1,9 +1,13 @@
 
 import React, { useState } from 'react';
 import type { GameState, Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, getPerkName, getPerkIcon } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
+
+const PAIR_COMBOS = ['All', 'S1-S1', 'S1-S2', 'S1-S3', 'S2-S2', 'S2-S3', 'S3-S3'];
+const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR'];
+const ARENAS = ['All', 'SECTOR-01', 'SECTOR-02', 'SECTOR-03'];
 
 interface RecalibrateInterfaceProps {
     item: Meteorite;
@@ -12,19 +16,18 @@ interface RecalibrateInterfaceProps {
     onUpgradeQuality: () => void;
     onRerollType: (lockedPerkIndices: number[]) => void;
     onRerollValue: (lockedPerkIndices: number[]) => void;
+    lockedIndices: number[];
+    onToggleLock: (idx: number) => void;
+    recalibrateFilters: Record<number, PerkFilter>;
+    setRecalibrateFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
 }
 
 export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
-    item, gameState, onClose, onUpgradeQuality, onRerollType, onRerollValue
+    item, gameState, onClose, onUpgradeQuality, onRerollType, onRerollValue,
+    lockedIndices, onToggleLock, recalibrateFilters, setRecalibrateFilters
 }) => {
-    const [lockedIndices, setLockedIndices] = useState<number[]>([]);
+    // Local state removed - lifted to parent
 
-    const toggleLock = (idx: number) => {
-        setLockedIndices(prev =>
-            prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
-        );
-        playSfx('ui-click');
-    };
 
     const rarityColor = RARITY_COLORS[item.rarity];
     const quality = item.quality || 'Broken';
@@ -38,6 +41,16 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
     const canAffordRerollType = gameState.player.isotopes >= rerollTypeCost;
     const canAffordRerollValue = gameState.player.isotopes >= rerollValueCost;
+
+    // Local state for Accordion Behavior
+    const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
+
+    const updateFilter = (lvl: number, updates: Partial<PerkFilter>) => {
+        setRecalibrateFilters(prev => ({
+            ...prev,
+            [lvl]: { ...prev[lvl], ...updates }
+        }));
+    };
 
     return (
         <div style={{
@@ -269,9 +282,43 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             const pos = rangeSpan > 0 ? (p.value - p.range.min) / rangeSpan : 1;
                             const effColor = pos < 0.3 ? '#f87171' : pos < 0.7 ? '#fbbf24' : '#34d399';
 
+                            const lvl = idx + 1;
+                            const filter = recalibrateFilters[lvl] || { active: false };
+                            const isFilterActive = filter.active;
+                            const isExpanded = expandedLevel === lvl;
+
+                            const config = {
+                                1: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'CONNECTED', t2Opts: ARENAS },
+                                2: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
+                                3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
+                                4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
+                                5: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
+                                6: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'PAIR', t2Opts: PAIR_COMBOS }
+                            }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
+
+                            const handleToggleFilter = (e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                playSfx('ui-click');
+
+                                if (!isFilterActive) {
+                                    // Activate & Expand
+                                    updateFilter(lvl, { active: true });
+                                    setExpandedLevel(lvl);
+                                } else {
+                                    // Already Active
+                                    if (isExpanded) {
+                                        // Close (Keep Active)
+                                        setExpandedLevel(null);
+                                    } else {
+                                        // Open (Keep Active)
+                                        setExpandedLevel(lvl);
+                                    }
+                                }
+                            };
+
                             return (
                                 <div key={idx}
-                                    onClick={() => toggleLock(idx)}
+                                    onClick={() => onToggleLock(idx)}
                                     style={{
                                         display: 'flex', flexDirection: 'column',
                                         padding: '8px 12px',
@@ -318,10 +365,31 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                                         <div style={{ flex: 1 }} />
 
-                                        <div style={{ textAlign: 'right' }}>
+                                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <div style={{ fontSize: '15px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
                                                 {p.value}%
                                             </div>
+
+                                            {/* FILTER TOGGLE BUTTON */}
+                                            {config && (
+                                                <button
+                                                    onClick={handleToggleFilter}
+                                                    style={{
+                                                        background: isFilterActive ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                        border: `1px solid ${isFilterActive ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`,
+                                                        color: isFilterActive ? '#60a5fa' : 'rgba(255,255,255,0.3)',
+                                                        borderRadius: '4px',
+                                                        width: '20px', height: '20px',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        fontSize: '10px'
+                                                    }}
+                                                >
+                                                    <span style={{ transform: isFilterActive ? 'scale(1)' : 'scale(0.8)' }}>
+                                                        {isFilterActive ? '★' : '☆'}
+                                                    </span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -334,6 +402,81 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     }}>
                                         {p.description}
                                     </div>
+
+                                    {/* FILTER CONFIG PANEL - Show if EXPANDED */}
+                                    {isExpanded && config && (
+                                        <div
+                                            onClick={e => e.stopPropagation()}
+                                            style={{
+                                                marginTop: '8px',
+                                                padding: '8px',
+                                                background: 'rgba(0,0,0,0.3)',
+                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '6px',
+                                                animation: 'fadeIn 0.2s ease-out'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase' }}>AUTO-LOCK CRITERIA</span>
+                                                <button
+                                                    onClick={() => {
+                                                        playSfx('ui-click');
+                                                        updateFilter(lvl, { active: false });
+                                                        setExpandedLevel(null);
+                                                    }}
+                                                    style={{
+                                                        background: 'transparent', border: 'none', color: '#ef4444', fontSize: '8px', fontWeight: 900, cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', gap: '4px'
+                                                    }}
+                                                >
+                                                    DISABLE ✕
+                                                </button>
+                                            </div>
+
+                                            {/* DROPDOWNS */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t1Label}</span>
+                                                    <select
+                                                        value={filter.thing1}
+                                                        onChange={e => updateFilter(lvl, { thing1: e.target.value })}
+                                                        style={{
+                                                            background: 'rgba(15, 23, 42, 0.8)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                            color: '#fff',
+                                                            fontSize: '7px',
+                                                            borderRadius: '2px',
+                                                            padding: '2px',
+                                                            outline: 'none'
+                                                        }}
+                                                    >
+                                                        {config.t1Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t2Label}</span>
+                                                    <select
+                                                        value={filter.thing2}
+                                                        onChange={e => updateFilter(lvl, { thing2: e.target.value })}
+                                                        style={{
+                                                            background: 'rgba(15, 23, 42, 0.8)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                            color: '#fff',
+                                                            fontSize: '7px',
+                                                            borderRadius: '2px',
+                                                            padding: '2px',
+                                                            outline: 'none'
+                                                        }}
+                                                    >
+                                                        {config.t2Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}

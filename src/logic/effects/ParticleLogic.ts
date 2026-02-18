@@ -1,4 +1,5 @@
 import type { GameState } from '../core/types';
+import { formatLargeNumber } from '../../utils/format';
 
 export interface Particle {
     x: number;
@@ -15,8 +16,13 @@ export interface Particle {
 export function spawnParticles(state: GameState, x: number, y: number, color: string | string[], count: number = 8, sizeOverride?: number, lifeOverride?: number, type: 'shard' | 'spark' | 'bubble' | 'vapor' | 'void' | 'shockwave' = 'spark') {
     if (!state.particles) state.particles = [];
 
-    // Performance: Cap total particles to 300 active
-    if (state.particles.length > 300) return;
+    // Performance: Cap particles — void particles get a higher cap to ensure visibility
+    const totalParticles = state.particles.length;
+    if (type === 'void') {
+        if (totalParticles > 700) return; // Void has extra budget
+    } else {
+        if (totalParticles > 500) return; // Non-void capped at 500
+    }
 
     for (let i = 0; i < count; i++) {
         const angle = Math.random() * 6.28;
@@ -67,7 +73,7 @@ export function updateParticles(state: GameState) {
         } else if (p.type === 'void') {
             p.vx *= 0.9;
             p.vy *= 0.9;
-            p.size *= 0.95; // Shrink
+            p.size *= 0.98; // Shrink slower so they remain visible
         } else {
             p.vx *= 0.95;
             p.vy *= 0.95;
@@ -89,6 +95,20 @@ export function updateParticles(state: GameState) {
 export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string) {
     if (!state.floatingNumbers) state.floatingNumbers = [];
 
+    // 1. Distance Check (Optimization)
+    // Don't spawn floating numbers if too far away (e.g. > 1300px from player)
+    const distSq = (x - state.player.x) ** 2 + (y - state.player.y) ** 2;
+    if (distSq > 1300 * 1300) return;
+
+    // 2. Format Value
+    // If it's a pure number (no text like "FLUX"), format it
+    let displayValue = value;
+    // Check if string is a valid number (allowing negatives, decimals, and scientific notation)
+    // Matches: 123, -123.45, 1.23e+21, 5E-10
+    if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(value)) {
+        displayValue = formatLargeNumber(value);
+    }
+
     // Offset slightly to avoid overlap with model (randomized angle)
     const angle = Math.random() * Math.PI * 2;
     const offsetDist = 15; // 15px offset
@@ -100,7 +120,7 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
         y: oy,
         vx: (Math.random() - 0.5) * 1.5,
         vy: -2 - Math.random() * 1.5, // Always float up
-        value,
+        value: displayValue,
         color,
         backgroundColor,
         life: 60, // 1 second

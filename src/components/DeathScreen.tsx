@@ -5,6 +5,7 @@ import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { submitRunToLeaderboard } from '../utils/leaderboard';
+import { formatLargeNumber } from '../utils/format';
 
 interface DeathScreenProps {
     stats: {
@@ -95,14 +96,6 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
-    const formatDmg = (val: number) => {
-        if (val >= 1000000000000000) return (val / 1000000000000000).toFixed(1) + 'Q';
-        if (val >= 1000000000000) return (val / 1000000000000).toFixed(1) + 'T';
-        if (val >= 1000000000) return (val / 1000000000).toFixed(1) + 'B';
-        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
-        if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
-        return Math.floor(val).toString();
-    };
 
     const armor = calcStat(gameState.player.arm);
     const armRed = (getDefenseReduction(armor) * 100).toFixed(1);
@@ -321,10 +314,10 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
                             <StatItem label="Fatal Event" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
                             {gameState.player.lastHitDamage !== undefined && (
-                                <StatItem label="Killing Blow" value={formatDmg(gameState.player.lastHitDamage)} color="#f87171" />
+                                <StatItem label="Killing Blow" value={formatLargeNumber(gameState.player.lastHitDamage)} color="#f87171" />
                             )}
                             {gameState.player.killerMaxHp !== undefined && (
-                                <StatItem label="Killer HP" value={formatDmg(gameState.player.killerMaxHp)} color="#f59e0b" />
+                                <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="#f59e0b" />
                             )}
 
                             <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
@@ -343,8 +336,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                 FINAL SYSTEM PERFORMANCE
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', background: 'rgba(10, 15, 30, 0.4)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0, 255, 255, 0.1)' }}>
-                                <FinalStatItem label="DMG/HIT" value={formatDmg(calcStat(gameState.player.dmg))} color="#f59e0b" />
-                                <FinalStatItem label="MAX HP" value={formatDmg(maxHp)} color="#4ade80" />
+                                <FinalStatItem label="DMG/HIT" value={formatLargeNumber(calcStat(gameState.player.dmg))} color="#f59e0b" />
+                                <FinalStatItem label="MAX HP" value={formatLargeNumber(maxHp)} color="#4ade80" />
                                 <FinalStatItem label="XP/KILL" value={finalXpPerKill} color="#22d3ee" />
                                 <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
                                 <FinalStatItem label="REGEN" value={regen + '/s'} color="#4ade80" />
@@ -364,14 +357,14 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                         <div style={{ width: 4, height: 16, background: '#3b82f6' }} /> COMBAT ANALYTICS
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
-                                        <StatItem label="DMG Dealt" value={formatDmg(gameState.player.damageDealt)} color="#f59e0b" />
-                                        <StatItem label="DMG Blocked" value={formatDmg(gameState.player.damageBlocked)} color="#3b82f6" />
-                                        <StatItem label="DMG Received" value={formatDmg(gameState.player.damageTaken)} color="#ef4444" />
+                                        <StatItem label="DMG Dealt" value={formatLargeNumber(gameState.player.damageDealt)} color="#f59e0b" />
+                                        <StatItem label="DMG Blocked" value={formatLargeNumber(gameState.player.damageBlocked)} color="#3b82f6" />
+                                        <StatItem label="DMG Received" value={formatLargeNumber(gameState.player.damageTaken)} color="#ef4444" />
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>ARMOR</span><span style={{ color: '#94a3b8' }}>{formatDmg(gameState.player.damageBlockedByArmor || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>SHIELD</span><span style={{ color: '#94a3b8' }}>{formatDmg(gameState.player.damageBlockedByShield || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>COLLISION</span><span style={{ color: '#94a3b8' }}>{formatDmg(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>PROJECTILE</span><span style={{ color: '#94a3b8' }}>{formatDmg(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>ARMOR</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByArmor || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>SHIELD</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByShield || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>COLLISION</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>PROJECTILE</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
                                         </div>
                                     </div>
                                 </div>

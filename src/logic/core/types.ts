@@ -280,6 +280,7 @@ export interface Enemy {
     bossType: number; // Shape index for legendary upgrades
     bossAttackPattern: number; // 0 = Spread Shot, 1 = Tracking Snipe
     lastAttack: number;
+    lastHitTime?: number; // Timestamp of last damage taken from player
     dead: boolean;
 
     // New Progression Props

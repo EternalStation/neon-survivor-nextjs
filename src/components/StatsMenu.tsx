@@ -12,14 +12,7 @@ import { DROP_TABLE } from '../logic/mission/LootLogic';
 
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 
-const formatStatValue = (val: number) => {
-    if (val >= 1000000000000000) return (val / 1000000000000000).toFixed(1) + 'Q';
-    if (val >= 1000000000000) return (val / 1000000000000).toFixed(1) + 'T';
-    if (val >= 1000000000) return (val / 1000000000).toFixed(1) + 'B';
-    if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
-    if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
-    return (Math.round(val * 10) / 10).toLocaleString();
-};
+import { formatLargeNumber } from '../utils/format';
 
 interface StatsMenuProps {
     gameState: GameState;
@@ -35,7 +28,7 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
 
     const formatNum = (val: number) => {
         if (isPercent) return Math.round(val).toLocaleString();
-        return formatStatValue(val);
+        return formatLargeNumber(val);
     };
 
     const displayTotal = isPercent ? `${formatNum(total)}%` : formatNum(total);
@@ -56,11 +49,11 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                 {/* 1. Base (Sum of Base + Flat + HexFlat) */}
                 {legendaryBonusFlat > 0 ? (
                     <span style={{ color: '#64748b', fontSize: 12 }}>
-                        ({(Math.round((stat.base + stat.flat) * 10) / 10).toLocaleString()} <span style={{ color: '#fbbf24' }}>+{(Math.round(legendaryBonusFlat * 10) / 10).toLocaleString()}</span>)
+                        ({formatLargeNumber(Math.round((stat.base + stat.flat) * 10) / 10)} <span style={{ color: '#fbbf24' }}>+{formatLargeNumber(Math.round(legendaryBonusFlat * 10) / 10)}</span>)
                     </span>
                 ) : (
                     <span style={{ color: '#64748b', fontSize: 12 }}>
-                        {(Math.round(baseSum * 10) / 10).toLocaleString()}
+                        {formatLargeNumber(Math.round(baseSum * 10) / 10)}
                     </span>
                 )}
 
@@ -243,7 +236,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                         )}
                                                         <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
                                                         <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
-                                                            {formatStatValue(Math.round(total))}
+                                                            {formatLargeNumber(Math.round(total))}
                                                         </span>
                                                     </>
                                                 );

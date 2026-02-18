@@ -6,6 +6,8 @@ import { getHexMultiplier, getHexLevel } from '../../logic/upgrades/LegendaryLog
 import { PLAYER_CLASSES } from '../../logic/core/classes';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { calcStat } from '../../logic/utils/MathUtils';
+import { formatLargeNumber } from '../../utils/format';
+
 
 interface PlayerStatusProps {
     gameState: GameState;
@@ -413,7 +415,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     position: 'absolute', width: '100%', textAlign: 'center', top: 0,
                     fontSize: 9, fontWeight: 900, lineHeight: '16px', color: '#fff'
                 }}>
-                    {Math.ceil(player.curHp).toLocaleString()} / {Math.ceil(maxHp).toLocaleString()}
+                    {formatLargeNumber(Math.ceil(player.curHp))} / {formatLargeNumber(Math.ceil(maxHp))}
                 </div>
             </div>
 
@@ -455,7 +457,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             fontSize: 7, fontWeight: 900, lineHeight: '10px', color: '#fff',
                             textShadow: '0 0 2px #000'
                         }}>
-                            {Math.ceil(totalShield).toLocaleString()} / {Math.ceil(dynamicMaxShield).toLocaleString()}
+                            {formatLargeNumber(Math.ceil(totalShield))} / {formatLargeNumber(Math.ceil(dynamicMaxShield))}
                         </div>
                     </div>
                 );

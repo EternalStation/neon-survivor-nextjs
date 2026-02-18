@@ -28,9 +28,9 @@ interface InventoryPanelProps {
 
 }
 
-const PAIR_COMBOS = ['All', 'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF'];
+const PAIR_COMBOS = ['All', 'S1-S1', 'S1-S2', 'S1-S3', 'S2-S2', 'S2-S3', 'S3-S3'];
 const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
-const ARENAS = ['All', 'ECO', 'COM', 'DEF'];
+const ARENAS = ['All', 'Sector-01', 'Sector-02', 'Sector-03'];
 
 
 export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
@@ -406,7 +406,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         {/* FOUND IN */}
                         <div style={{ gridColumn: 'span 3' }}>
                             {renderMultiSelect('arena', ARENAS, 'FOUND IN', {
-                                'ECO': '#eab308', 'DEF': '#3b82f6', 'COM': '#ef4444'
+                                'Sector-01': '#fbbf24', 'Sector-03': '#60a5fa', 'Sector-02': '#f87171'
                             })}
                         </div>
                         {/* ACTION CONTROLS GROUP (RESET, SORT) */}

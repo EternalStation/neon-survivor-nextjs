@@ -1,4 +1,5 @@
 import type { GameState } from '../core/types';
+import { getPulseIntensity } from '../effects/PulseSystem';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';
 import { renderPOIs } from './renderers/PoiRenderer';
 import { renderPlayer } from './renderers/PlayerRenderer';
@@ -140,6 +141,33 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
         // Atmospheric Vignette (Tunnel Vision)
         renderVignette(ctx, width, height);
+
+        // --- NEMESIS PULSE ANIMATION (Restored) ---
+        // Triggers at 30m, 45m, 60m via PulseSystem intervals
+        if (state.gameTime > 1800) { // Starts at 30 minutes
+            const intensity = getPulseIntensity(state.gameTime); // Oscillates 0.4 to 1.2 based on time
+            // Map intensity to opacity: 0.4 -> 0.0, 1.2 -> 0.15 (Max opacity)
+            // We want it to be subtle but noticeable
+            const alpha = Math.max(0, (intensity - 0.4) * 0.2);
+
+            if (alpha > 0) {
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                // Red Pulse Vignette
+                const cx = width / 2;
+                const cy = height / 2;
+                const radius = Math.max(width, height) * 0.7;
+
+                const pulseGrad = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius);
+                pulseGrad.addColorStop(0, 'rgba(220, 38, 38, 0)');
+                pulseGrad.addColorStop(1, `rgba(220, 38, 38, ${alpha})`); // Red-600
+
+                ctx.fillStyle = pulseGrad;
+                ctx.fillRect(0, 0, width, height);
+                ctx.restore();
+            }
+        }
 
     } catch (e) {
         // Prevent console spam causing freeze
