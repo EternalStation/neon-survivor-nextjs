@@ -7,7 +7,7 @@ import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '..
 
 const PAIR_COMBOS = ['All', 'S1-S1', 'S1-S2', 'S1-S3', 'S2-S2', 'S2-S3', 'S3-S3'];
 const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR'];
-const ARENAS = ['All', 'SECTOR-01', 'SECTOR-02', 'SECTOR-03'];
+const ARENAS = ['All', 'ECO HEX', 'COM HEX', 'DEF HEX'];
 
 interface RecalibrateInterfaceProps {
     item: Meteorite;

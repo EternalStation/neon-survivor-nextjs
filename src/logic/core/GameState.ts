@@ -2,6 +2,8 @@ import type { GameState, Player, PlayerClass } from './types';
 import { ARENA_CENTERS, generateMapPOIs } from '../mission/MapLogic';
 import { GAME_CONFIG } from './GameConfig';
 import { PLAYER_CLASSES } from './classes';
+import { relocateTurretsToArena } from '../mission/TurretLogic';
+
 
 export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, startingArenaId: number = 0): Player => {
     const p: Player = {
@@ -119,7 +121,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     // We really should look up peer classes.
     // Let's trust that the visual syncing happens or we add a TODO to fix peer stats.
 
-    return {
+    const state: GameState = {
         gameMode,
         player: players[myId], // Reference to player in the players map, not a separate copy
         players,
@@ -246,4 +248,9 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         },
         firstMeteoriteSpawned: false
     };
+
+    // User Request: Ensure turrets are in the arena the player entered (even at start)
+    relocateTurretsToArena(state, startingArenaId);
+
+    return state;
 };

@@ -103,7 +103,7 @@ export const getLegendaryInfo = (category: string, type: string) => {
 export const getMeteoriteColor = (discoveredIn: string) => {
     const up = discoveredIn.toUpperCase();
     if (up.includes('SECTOR-01') || up.includes('ECO')) return '#fbbf24'; // Yellow
-    if (up.includes('SECTOR-02') || up.includes('COM')) return '#f87171'; // Red
+    if (up.includes('SECTOR-02') || up.includes('COM') || up.includes('COMBAT')) return '#f87171'; // Red
     if (up.includes('SECTOR-03') || up.includes('DEF')) return '#60a5fa'; // Blue
     return '#94a3b8'; // Slate-400 (Default/Grey)
 };
@@ -195,17 +195,14 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
 
     const normalize = (s: string) => {
         const lower = s.toLowerCase();
-        if (lower === 'sector-01' || lower === 's1') return 'eco';
-        if (lower === 'sector-02' || lower === 's2') return 'com';
-        if (lower === 'sector-03' || lower === 's3') return 'def';
+        if (lower === 'sector-01' || lower === 'sector 01' || lower === 's1' || lower.includes('eco')) return 'eco';
+        if (lower === 'sector-02' || lower === 'sector 02' || lower === 's2' || lower.includes('com')) return 'com';
+        if (lower === 'sector-03' || lower === 'sector 03' || lower === 's3' || lower.includes('def')) return 'def';
         return lower;
     };
 
     const normalizePair = (s: string) => {
         return s.toLowerCase()
-            .replace(/s1/g, 'eco')
-            .replace(/s2/g, 'com')
-            .replace(/s3/g, 'def')
             .replace(/-/g, '_');
     };
 

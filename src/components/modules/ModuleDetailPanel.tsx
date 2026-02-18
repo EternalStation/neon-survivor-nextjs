@@ -353,10 +353,84 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                             <div style={{
                                                 fontSize: '14px', lineHeight: '1.6', color: '#e2e8f0',
                                                 borderLeft: '2px solid #3b82f6', paddingLeft: '15px',
-                                                marginBottom: '30px'
+                                                marginBottom: '16px'
                                             }}>
                                                 {hoveredBlueprint.desc}
                                             </div>
+
+                                            {/* ACTIVE STATUS BLOCK */}
+                                            {(() => {
+                                                const charges = gameState.activeBlueprintCharges[hoveredBlueprint.type];
+                                                const endTime = gameState.activeBlueprintBuffs[hoveredBlueprint.type];
+                                                const isActive = hoveredBlueprint.status === 'active';
+                                                const isBroken = hoveredBlueprint.status === 'broken';
+
+                                                if (isActive && charges !== undefined) {
+                                                    return (
+                                                        <div style={{
+                                                            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                                                            borderLeft: '3px solid #3b82f6',
+                                                            borderRadius: '6px',
+                                                            padding: '10px 16px',
+                                                            marginBottom: '14px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '12px'
+                                                        }}>
+                                                            <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', flexShrink: 0 }}>USES REMAINING</div>
+                                                            <div style={{ fontSize: '26px', fontWeight: 900, color: '#fff', textShadow: '0 0 10px rgba(59, 130, 246, 0.6)', fontFamily: 'monospace' }}>
+                                                                {charges}
+                                                                <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '5px' }}>/ 50</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                if (isActive && endTime !== undefined) {
+                                                    const left = Math.max(0, endTime - gameState.gameTime);
+                                                    const total = hoveredBlueprint.duration;
+                                                    const pct = total > 0 ? Math.min(100, (left / total) * 100) : 100;
+                                                    return (
+                                                        <div style={{
+                                                            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                                                            borderLeft: '3px solid #3b82f6',
+                                                            borderRadius: '6px',
+                                                            padding: '10px 16px',
+                                                            marginBottom: '14px',
+                                                        }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                                                                <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>TIME REMAINING</div>
+                                                                <div style={{ fontSize: '22px', fontWeight: 900, color: '#fff', textShadow: '0 0 10px rgba(59, 130, 246, 0.6)', fontFamily: 'monospace' }}>
+                                                                    {left.toFixed(0)}s
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ width: '100%', height: '3px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                <div style={{ height: '100%', width: `${pct}%`, background: '#3b82f6', boxShadow: '0 0 6px #3b82f6', transition: 'width 0.5s linear' }} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                if (isBroken) {
+                                                    return (
+                                                        <div style={{
+                                                            background: 'rgba(100, 116, 139, 0.1)',
+                                                            border: '1px solid rgba(100, 116, 139, 0.3)',
+                                                            borderLeft: '3px solid #64748b',
+                                                            borderRadius: '6px',
+                                                            padding: '8px 16px',
+                                                            marginBottom: '14px',
+                                                            fontSize: '10px', color: '#64748b', fontWeight: 900, letterSpacing: '2px'
+                                                        }}>
+                                                            PROTOCOL EXHAUSTED — RECYCLE FOR DUST
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return null;
+                                            })()}
 
                                             <div style={{
                                                 background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent)',

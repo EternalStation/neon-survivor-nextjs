@@ -19,7 +19,7 @@ import { calcStat } from '../logic/utils/MathUtils';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { spawnBullet } from '../logic/combat/ProjectileSpawning';
 import { updateTutorial } from '../logic/core/TutorialLogic';
-import { updateTurrets, updateAllies } from '../logic/mission/TurretLogic';
+import { updateTurrets, updateAllies, relocateTurretsToArena } from '../logic/mission/TurretLogic';
 
 interface UseGameLogicProps {
     gameState: React.MutableRefObject<GameState>;
@@ -452,6 +452,9 @@ export function useGameLogic({
                     state.drones.forEach(d => { d.x = state.player.x; d.y = state.player.y; });
                     state.portalState = 'closed';
                     state.portalTimer = 0;
+
+                    // Relocate and Spawn Turrets for the new arena (User Request: "Spawn in arena player joined")
+                    relocateTurretsToArena(state, newArena);
 
                     if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
                         switchBGM('evacuation', 1.0);

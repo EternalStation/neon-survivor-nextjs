@@ -67,9 +67,9 @@ export function getArenaDetails(id: number, level: number = 1): ArenaDetails {
 }
 
 export const SECTOR_NAMES: Record<number, string> = {
-    0: "Sector-01",
-    1: "Sector-02",
-    2: "Sector-03"
+    0: "ECO HEX",
+    1: "COM HEX",
+    2: "DEF HEX"
 };
 
 // Portal Definitions
@@ -329,46 +329,45 @@ export function generateMapPOIs(): MapPOI[] {
         });
 
 
-        // 3. Three Turret Nodes per arena (Repairable Fire Support)
-        for (let i = 0; i < 3; i++) {
-            let tPos: { x: number, y: number } = { x: 0, y: 0 };
-            let tries = 0;
-            // Ensure spread and distance from walls
-            while (tries < 20) {
-                tPos = getRandomPositionInArena(arena.id);
-
-                // 1. Distance from other POIs
-                const tooCloseToPoi = pois.some(p => Math.hypot(p.x - tPos.x, p.y - tPos.y) < 600);
-
-                // 2. Distance from Walls (User Request: Now 400px for consistency)
-                const { dist: wallDist } = getHexDistToWall(tPos.x, tPos.y);
-                const tooCloseToWall = wallDist < 400;
-
-                if (!tooCloseToPoi && !tooCloseToWall) break;
-                tries++;
-            }
-
-            pois.push({
-                id: idCounter++,
-                type: 'turret',
-                x: tPos!.x,
-                y: tPos!.y,
-                radius: 170, // Activation zone (Increased by ~40% from 120)
-                arenaId: arena.id,
-                active: false,
-                progress: 0,
-                activationProgress: 0, // Repair progress
-                activeDuration: 0, // 30s when active
-                cooldown: 0, // 60s overheat
-                respawnTimer: 0, // Permanent position? Or respawn if destroyed? "Overheat recharge" suggests permanent.
-                lastUsed: 0,
-                turretUses: 0,
-                turretCost: 2, // Initial cost (User Request)
-                lastShot: 0,
-                turretVariant: ['fire', 'ice', 'heal'][i] as any // Guaranteed: 0=Fire, 1=Ice, 2=Heal
-            });
-        }
     });
+
+    // 3. Three Turret Nodes TOTAL (Fire, Ice, Heal)
+    // These start in arena 0 but migrate with the player to any new arena.
+    for (let i = 0; i < 3; i++) {
+        let tPos: { x: number, y: number } = { x: 0, y: 0 };
+        let tries = 0;
+        // Ensure spread and distance from walls in the initial arena (0)
+        while (tries < 20) {
+            tPos = getRandomPositionInArena(0, 400);
+
+            // 1. Distance from other global POIs in arena 0
+            const tooCloseToPoi = pois.some(p => p.arenaId === 0 && Math.hypot(p.x - tPos.x, p.y - tPos.y) < 600);
+
+            if (!tooCloseToPoi) break;
+            tries++;
+        }
+
+        pois.push({
+            id: idCounter++,
+            type: 'turret',
+            x: tPos!.x,
+            y: tPos!.y,
+            radius: 170,
+            arenaId: 0,
+            active: false,
+            progress: 0,
+            activationProgress: 0,
+            activeDuration: 0,
+            cooldown: 0,
+            respawnTimer: 0,
+            lastUsed: 0,
+            turretUses: 0,
+            turretCost: 2,
+            lastShot: 0,
+            turretVariant: ['fire', 'ice', 'heal'][i] as any
+        });
+    }
+
 
     return pois;
 }

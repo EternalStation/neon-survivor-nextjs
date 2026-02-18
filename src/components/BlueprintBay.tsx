@@ -318,7 +318,19 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                                     background: 'rgba(0,0,0,0.5)', width: '100%', padding: '1px 0',
                                                     position: 'relative', zIndex: 6
                                                 }}>
-                                                    ON
+                                                    {(() => {
+                                                        const charges = gameState.activeBlueprintCharges[bp.type];
+                                                        const endTime = gameState.activeBlueprintBuffs[bp.type];
+
+                                                        if (charges !== undefined) {
+                                                            return `${charges} USES`;
+                                                        }
+                                                        if (endTime !== undefined) {
+                                                            const left = Math.max(0, endTime - gameState.gameTime);
+                                                            return `${left.toFixed(0)}s`;
+                                                        }
+                                                        return 'ACTIVE';
+                                                    })()}
                                                 </div>
                                             )}
                                         </div>

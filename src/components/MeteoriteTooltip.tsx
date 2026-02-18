@@ -42,12 +42,43 @@ const getMeteoriteImage = (m: Meteorite) => {
 };
 
 const formatDescription = (text: string, highlightColor: string) => {
+    // Dynamic replacement for correct terminology
+    // 1. "Found in" context -> Arena Name
+    text = text.replace(/found in ECO HEX/gi, 'found in Eco Arena')
+        .replace(/found in COM HEX/gi, 'found in Combat Arena')
+        .replace(/found in DEF HEX/gi, 'found in Defence Arena')
+
+        // 2. "Located in" context -> Sector Code
+        .replace(/Located in ECO HEX/gi, 'Located in Sector-01')
+        .replace(/Located in COM HEX/gi, 'Located in Sector-02')
+        .replace(/Located in DEF HEX/gi, 'Located in Sector-03')
+
+        // 3. "Connected to" context -> Legendary Upgrade (Singular)
+        .replace(/connected to Eco Hexes/gi, 'connected to Eco Legendary Upgrade')
+        .replace(/connected to Com Hexes/gi, 'connected to Com Legendary Upgrade')
+        .replace(/connected to Def Hexes/gi, 'connected to Def Legendary Upgrade')
+
+        // 4. Handle "Connects Eco & Eco Hexes" style phrases manually or generically
+        // Since we already handled "connected to ... Hexes", the remaining "Hexes" likely refer to the connection targets
+        .replace(/Hexes/gi, 'Legendary Upgrades')
+
+        // 5. Fallback for any remaining legacy caps that were effectively "Located in" but missed?
+        // Actually, "ECO HEX" by itself usually means the socket.
+        .replace(/ECO HEX/gi, 'Sector-01')
+        .replace(/COM HEX/gi, 'Sector-02')
+        .replace(/DEF HEX/gi, 'Sector-03');
+
+    // Remove old Sector-0X -> HEX replacement to ensure we keep Sector-0X
+
     // Keywords to highlight - Order matters (longest first to avoid partial matches)
     const keywords = [
+        'Sector-01', 'Sector-02', 'Sector-03',
+        'Eco Arena', 'Combat Arena', 'Defence Arena',
+        'Legendary Upgrade', 'Legendary Upgrades',
+        '\\bEco\\b', 'Com', 'Def',
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
         'HEX', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
         'Type', 'Rarity', 'Arena', 'Sector',
-        '\\bECO\\b', '\\bCOM\\b', '\\bDEF\\b',
         '\\(Any\\)', 'same level'
     ];
 
@@ -495,7 +526,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             </span>
                         </div>
                         <div style={{ color: '#fff' }}>
-                            <span style={{ color: rarityColor, opacity: 0.8 }}>DISCOVERED IN:</span> {meteorite.discoveredIn}
+                            <span style={{ color: rarityColor, opacity: 0.8 }}>FOUND IN:</span> {meteorite.discoveredIn.replace(/Sector-01/gi, 'Eco Arena').replace(/Sector-02/gi, 'Combat Arena').replace(/Sector-03/gi, 'Defence Arena').replace(/ECO HEX/gi, 'Eco Arena').replace(/COM HEX/gi, 'Combat Arena').replace(/DEF HEX/gi, 'Defence Arena')}
                         </div>
                     </div>
 

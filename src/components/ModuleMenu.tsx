@@ -541,7 +541,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         <div
             className="module-menu-container" // Hook for potential global styles
             onMouseMove={(e) => {
-                if (!movedItem || ['requested', 'waiting'].includes(gameState.extractionStatus)) return;
+                if (['requested', 'waiting'].includes(gameState.extractionStatus)) return;
                 const rect = e.currentTarget.getBoundingClientRect();
 
                 const scaleX = e.currentTarget.offsetWidth / rect.width;

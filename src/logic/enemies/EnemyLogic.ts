@@ -562,13 +562,15 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         // Particle Leakage (Starts at 30m, stronger at 60m+)
         const minutes = gameTime / 60;
-        if (minutes > 30 && !e.isNeutral) {
-            const isLate = minutes > 60;
-            const chance = isLate ? 8 : 24; // More frequent later
+        // Optimization: "not appearing under all enemies" (50% chance based on ID)
+        // Optimization: "1,2,3 circles" (Reduced count & frequency)
+        if (minutes > 30 && !e.isNeutral && (Math.floor(e.id * 1000) % 2 === 0)) {
+            const isLate = minutes >= 60;
+            const chance = isLate ? 20 : 40; // Approx 3 particles (Late) or 1-2 particles (Mid) active at once
             if (state.frameCount % chance === 0) {
-                const count = isLate ? 3 : 1;
-                const size = isLate ? 10 : 8;
-                const life = isLate ? 26 : 18;
+                const count = 1;
+                const size = Math.random() > 0.5 ? 10 : 8; // Mixed 8px and 10px
+                const life = isLate ? 45 : 30;
                 spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], count, size, life, 'void');
             }
         }

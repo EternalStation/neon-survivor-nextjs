@@ -28,9 +28,9 @@ interface InventoryPanelProps {
 
 }
 
-const PAIR_COMBOS = ['All', 'S1-S1', 'S1-S2', 'S1-S3', 'S2-S2', 'S2-S3', 'S3-S3'];
+const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
 const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
-const ARENAS = ['All', 'Sector-01', 'Sector-02', 'Sector-03'];
+const ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
 
 
 export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
@@ -406,7 +406,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         {/* FOUND IN */}
                         <div style={{ gridColumn: 'span 3' }}>
                             {renderMultiSelect('arena', ARENAS, 'FOUND IN', {
-                                'Sector-01': '#fbbf24', 'Sector-03': '#60a5fa', 'Sector-02': '#f87171'
+                                'Eco Arena': '#fbbf24', 'Defence Arena': '#60a5fa', 'Combat Arena': '#f87171'
                             })}
                         </div>
                         {/* ACTION CONTROLS GROUP (RESET, SORT) */}
@@ -487,12 +487,16 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             const label = `${lvl}${suffix} PERK`;
 
                             const isActive = perkFilters[lvl].active;
+
+                            const SECTOR_OPTS = ['All', 'Sector 01', 'Sector 02', 'Sector 03'];
+                            const LEGENDARY_OPTS = ['All', 'Eco Legendary Hex', 'Com Legendary Hex', 'Def Legendary Hex'];
+
                             const config = {
-                                1: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'CONNECTED', t2Opts: ARENAS },
-                                2: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
+                                1: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'CONNECTED', t2Opts: LEGENDARY_OPTS },
+                                2: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
                                 3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
                                 4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
-                                5: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
+                                5: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
                                 6: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'PAIR', t2Opts: PAIR_COMBOS }
                             }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
 

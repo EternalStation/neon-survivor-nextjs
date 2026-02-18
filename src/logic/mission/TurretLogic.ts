@@ -2,12 +2,43 @@ import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
+import { getRandomPositionInArena } from './MapLogic';
 
 const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 2;
 const TURRET_DURATION = 30;
 const TURRET_COOLDOWN = 60;
 const REPAIR_SPEED = 50; // 2 seconds (50%/sec)
+
+export function relocateTurretsToArena(state: GameState, arenaId: number) {
+    // User Request: Turrets should always be in the arena the player entered. 
+    // We relocate ALL turrets from all arenas to the current one.
+    const turrets = state.pois.filter(p => p.type === 'turret');
+    turrets.forEach(turret => {
+        turret.arenaId = arenaId; // Move to the new arena
+
+        // Find a new random position in the arena, away from walls (400px Buffer)
+        const newPos = getRandomPositionInArena(arenaId, 400);
+        turret.x = newPos.x;
+        turret.y = newPos.y;
+
+        // Reset State to 'Dormant but Visible' for the new arena deployment
+        // But keep the level (uses) and derived cost as requested.
+        turret.active = false;
+        turret.cooldown = 0;
+        turret.activeDuration = 0;
+        turret.activationProgress = 0;
+        turret.respawnTimer = 0;
+        turret.lastShot = 0;
+
+        // Visual effect for arrival
+        // We can't spawn particles here easily if the player isn't there yet/rendered yet?
+        // But since this happens ON portal transition, the player arrives at the same time.
+        // So spawning particles at new turrets is good feedback.
+        // We need to defer this slightly? No, state.particles is persistent.
+        // spawnParticles(state, turret.x, turret.y, '#F59E0B', 20, 2, 50, 'spark');
+    });
+}
 
 export function updateTurrets(state: GameState, step: number) {
     const turrets = state.pois.filter(p => p.type === 'turret' && p.arenaId === state.currentArena);
