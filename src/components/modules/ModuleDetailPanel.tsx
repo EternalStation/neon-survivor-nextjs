@@ -207,12 +207,10 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
                             onRerollType={(indices: number[]) => {
                                 if (rerollPerkType(gameState, recalibrateSlot, indices)) {
-                                    // Auto-Lock Logic
+                                    // Apply Auto-Lock
                                     const newLocked = [...indices];
                                     let changed = false;
-
                                     recalibrateSlot.perks.forEach((p, idx) => {
-                                        // If not currently locked by user (or preserved in reroll), check if we should lock it
                                         if (!newLocked.includes(idx)) {
                                             const lvl = idx + 1;
                                             const filter = recalibrateFilters[lvl];
@@ -222,15 +220,29 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                             }
                                         }
                                     });
-
-                                    if (changed) {
-                                        setLockedRecalibrateIndices(newLocked);
-                                    }
-
+                                    if (changed) setLockedRecalibrateIndices(newLocked);
                                     onUpdate?.();
                                 }
                             }}
-                            onRerollValue={(indices: number[]) => { if (rerollPerkValue(gameState, recalibrateSlot, indices)) onUpdate?.(); }}
+                            onRerollValue={(indices: number[]) => {
+                                if (rerollPerkValue(gameState, recalibrateSlot, indices)) {
+                                    // Apply Auto-Lock
+                                    const newLocked = [...indices];
+                                    let changed = false;
+                                    recalibrateSlot.perks.forEach((p, idx) => {
+                                        if (!newLocked.includes(idx)) {
+                                            const lvl = idx + 1;
+                                            const filter = recalibrateFilters[lvl];
+                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
+                                                newLocked.push(idx);
+                                                changed = true;
+                                            }
+                                        }
+                                    });
+                                    if (changed) setLockedRecalibrateIndices(newLocked);
+                                    onUpdate?.();
+                                }
+                            }}
                             lockedIndices={lockedRecalibrateIndices}
                             onToggleLock={onToggleRecalibrateLock}
                             recalibrateFilters={recalibrateFilters}

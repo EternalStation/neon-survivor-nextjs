@@ -49,9 +49,17 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [recalibrateSlot, setRecalibrateSlot] = useState<Meteorite | null>(null);
     const [lockedRecalibrateIndices, setLockedRecalibrateIndices] = useState<number[]>([]);
 
-    // Reset locks when a new item is placed in recalibration
+    // Reset locks and filters when a new item is placed in recalibration
     React.useEffect(() => {
         setLockedRecalibrateIndices([]);
+        setRecalibrateFilters({
+            1: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+            2: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+            3: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+            4: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+            5: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+            6: { active: false, val: 0, thing1: 'All', thing2: 'All' },
+        });
     }, [recalibrateSlot]);
 
     const toggleRecalibrateLock = (idx: number) => {

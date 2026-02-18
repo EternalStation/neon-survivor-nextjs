@@ -5,9 +5,11 @@ import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter } from './Mod
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
 
-const PAIR_COMBOS = ['All', 'S1-S1', 'S1-S2', 'S1-S3', 'S2-S2', 'S2-S3', 'S3-S3'];
+const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
 const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR'];
-const ARENAS = ['All', 'ECO HEX', 'COM HEX', 'DEF HEX'];
+const ARENAS = ['All', 'Sector-01', 'Sector-02', 'Sector-03'];
+const FOUND_IN_ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
+const LEGENDARY_TYPES = ['All', 'Eco Legendary', 'Com Legendary', 'Def Legendary'];
 
 interface RecalibrateInterfaceProps {
     item: Meteorite;
@@ -46,11 +48,34 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
 
     const updateFilter = (lvl: number, updates: Partial<PerkFilter>) => {
-        setRecalibrateFilters(prev => ({
-            ...prev,
-            [lvl]: { ...prev[lvl], ...updates }
-        }));
+        setRecalibrateFilters(prev => {
+            const current = prev[lvl] || { active: false, val: 0, thing1: 'All', thing2: 'All' };
+            return {
+                ...prev,
+                [lvl]: { ...current, ...updates }
+            };
+        });
     };
+
+    // Close expansion on click outside
+    React.useEffect(() => {
+        if (expandedLevel === null) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // If click is not strictly inside an expanded panel or a toggle
+            if (!target.closest('.auto-lock-panel') && !target.closest('.auto-lock-toggle')) {
+                setExpandedLevel(null);
+            }
+        };
+        // Stagger listener to avoid immediate close from the opening click
+        const timer = setTimeout(() => {
+            window.addEventListener('mousedown', handleClickOutside);
+        }, 50);
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [expandedLevel]);
 
     return (
         <div style={{
@@ -288,10 +313,10 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             const isExpanded = expandedLevel === lvl;
 
                             const config = {
-                                1: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'CONNECTED', t2Opts: ARENAS },
+                                1: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'CONNECTED', t2Opts: LEGENDARY_TYPES },
                                 2: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
-                                3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
-                                4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
+                                3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'FOUND IN', t2Opts: FOUND_IN_ARENAS },
+                                4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'FOUND IN', t2Opts: FOUND_IN_ARENAS },
                                 5: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
                                 6: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'PAIR', t2Opts: PAIR_COMBOS }
                             }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
@@ -301,16 +326,17 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 playSfx('ui-click');
 
                                 if (!isFilterActive) {
-                                    // Activate & Expand
+                                    // OFF -> ON: Activate & Expand
                                     updateFilter(lvl, { active: true });
                                     setExpandedLevel(lvl);
                                 } else {
                                     // Already Active
                                     if (isExpanded) {
-                                        // Close (Keep Active)
+                                        // Open -> Close + Disable
+                                        updateFilter(lvl, { active: false });
                                         setExpandedLevel(null);
                                     } else {
-                                        // Open (Keep Active)
+                                        // Closed -> Re-open (STAY ACTIVE)
                                         setExpandedLevel(lvl);
                                     }
                                 }
@@ -318,40 +344,43 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                             return (
                                 <div key={idx}
-                                    onClick={() => onToggleLock(idx)}
                                     style={{
                                         display: 'flex', flexDirection: 'column',
                                         padding: '8px 12px',
-                                        background: isLocked ? 'rgba(251, 191, 36, 0.08)' : 'rgba(15, 23, 42, 0.5)',
-                                        border: `1px solid ${isLocked ? '#fbbf24' : 'rgba(255,255,255,0.06)'}`,
+                                        background: isLocked ? 'rgba(251, 191, 36, 0.05)' : 'rgba(15, 23, 42, 0.5)',
+                                        border: `1px solid ${isLocked ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255,255,255,0.06)'}`,
                                         borderRadius: '6px',
-                                        cursor: 'pointer',
                                         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                         position: 'relative',
                                         overflow: 'hidden'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!isLocked) {
-                                            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isLocked) {
-                                            e.currentTarget.style.background = 'rgba(15, 23, 42, 0.5)';
-                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                                        }
                                     }}
                                 >
                                     {isLocked && <div style={{ position: 'absolute', left: 0, top: 0, width: '2px', height: '100%', background: '#fbbf24' }} />}
 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                        <div style={{
-                                            width: '14px', height: '14px',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: isLocked ? '#fbbf24' : 'rgba(255,255,255,0.2)',
-                                            fontSize: '10px'
-                                        }}>
+                                        {/* MANUAL LOCK BUTTON */}
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); onToggleLock(idx); }}
+                                            style={{
+                                                width: '24px', height: '24px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                border: `1px solid ${isLocked ? '#fbbf24' : 'rgba(255,255,255,0.1)'}`,
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                color: isLocked ? '#fbbf24' : 'rgba(255,255,255,0.3)',
+                                                fontSize: '12px',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = isLocked ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255,255,255,0.15)';
+                                                e.currentTarget.style.borderColor = isLocked ? '#fbbf24' : 'rgba(255,255,255,0.3)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)';
+                                                e.currentTarget.style.borderColor = isLocked ? '#fbbf24' : 'rgba(255,255,255,0.1)';
+                                            }}
+                                        >
                                             {isLocked ? '🔒' : '🔓'}
                                         </div>
 
@@ -370,25 +399,35 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                                 {p.value}%
                                             </div>
 
-                                            {/* FILTER TOGGLE BUTTON */}
+                                            {/* AUTO-LOCK TOGGLE SWITCH */}
                                             {config && (
-                                                <button
+                                                <div
+                                                    className="auto-lock-toggle"
                                                     onClick={handleToggleFilter}
                                                     style={{
+                                                        width: '26px', height: '14px',
                                                         background: isFilterActive ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255,255,255,0.05)',
                                                         border: `1px solid ${isFilterActive ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`,
-                                                        color: isFilterActive ? '#60a5fa' : 'rgba(255,255,255,0.3)',
-                                                        borderRadius: '4px',
-                                                        width: '20px', height: '20px',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        borderRadius: '10px',
+                                                        position: 'relative',
                                                         cursor: 'pointer',
-                                                        fontSize: '10px'
+                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        boxShadow: isFilterActive ? '0 0 12px rgba(59, 130, 246, 0.3)' : 'none'
                                                     }}
                                                 >
-                                                    <span style={{ transform: isFilterActive ? 'scale(1)' : 'scale(0.8)' }}>
-                                                        {isFilterActive ? '★' : '☆'}
-                                                    </span>
-                                                </button>
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        left: isFilterActive ? '16px' : '2px',
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)',
+                                                        width: '8px', height: '8px',
+                                                        background: isFilterActive ? '#fff' : 'rgba(255,255,255,0.3)',
+                                                        borderRadius: '50%',
+                                                        transition: 'all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
+                                                        boxShadow: isFilterActive ? '0 0 5px #fff' : 'none'
+                                                    }}
+                                                    />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -406,6 +445,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     {/* FILTER CONFIG PANEL - Show if EXPANDED */}
                                     {isExpanded && config && (
                                         <div
+                                            className="auto-lock-panel"
                                             onClick={e => e.stopPropagation()}
                                             style={{
                                                 marginTop: '8px',
@@ -419,21 +459,15 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                                 animation: 'fadeIn 0.2s ease-out'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase' }}>AUTO-LOCK CRITERIA</span>
-                                                <button
-                                                    onClick={() => {
-                                                        playSfx('ui-click');
-                                                        updateFilter(lvl, { active: false });
-                                                        setExpandedLevel(null);
-                                                    }}
-                                                    style={{
-                                                        background: 'transparent', border: 'none', color: '#ef4444', fontSize: '8px', fontWeight: 900, cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: '4px'
-                                                    }}
-                                                >
-                                                    DISABLE ✕
-                                                </button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                {/* Status Indicator */}
+                                                <div style={{
+                                                    width: '6px', height: '6px',
+                                                    background: '#3b82f6',
+                                                    borderRadius: '50%',
+                                                    boxShadow: '0 0 10px #3b82f6'
+                                                }} />
+                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>AUTO-LOCK ACTIVE</span>
                                             </div>
 
                                             {/* DROPDOWNS */}
@@ -468,7 +502,8 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                                             fontSize: '7px',
                                                             borderRadius: '2px',
                                                             padding: '2px',
-                                                            outline: 'none'
+                                                            outline: 'none',
+                                                            cursor: 'pointer'
                                                         }}
                                                     >
                                                         {config.t2Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}

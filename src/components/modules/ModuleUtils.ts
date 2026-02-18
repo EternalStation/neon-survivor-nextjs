@@ -202,8 +202,11 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
     };
 
     const normalizePair = (s: string) => {
-        return s.toLowerCase()
-            .replace(/-/g, '_');
+        const parts = s.split('-');
+        if (parts.length === 2) {
+            return `${normalize(parts[0])}_${normalize(parts[1])}`;
+        }
+        return s.toLowerCase().replace(/-/g, '_');
     };
 
     if (p.id.startsWith(`lvl${lvl}`)) {
