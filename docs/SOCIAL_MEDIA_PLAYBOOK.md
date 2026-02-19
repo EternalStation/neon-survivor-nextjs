@@ -288,11 +288,37 @@ How should we name these? Should we go with scientific-sounding space names, or 
 
 ---
 
+## 🛠️ Media Creation Toolkit
+To keep the "Raw & Real" vibe, use these tools for quick, high-quality captures:
+
+### 1. The "Dev-Log" Special
+- **Tool:** [ScreenToGif](https://www.screentogif.com/)
+- **Use for:** Quick 5-10 second loops of UI interactions (like the Hex Grid) or bug reports. Great for showing "Before/After" comparisons.
+
+### 2. High-Fidelity Gameplay
+- **Tool:** [OBS Studio](https://obsproject.com/)
+- **Use for:** Recording 30-60 seconds of high-intensity combat (Radiation Core, Terror Pulse). Lower the bitrate for small file sizes that play instantly on Twitter.
+
+### 3. Social Media Editing (Captions & Zooms)
+- **Tool:** [CapCut](https://www.capcut.com/)
+- **Use for:** Adding the "human" touch. Zoom in on a specific logic block or a UI element. Add auto-captions for your "Genuinely Human" voiceovers.
+
+### 4. Direct Screenshots
+- **Tool:** Windows + Shift + S (Snipping Tool)
+- **Use for:** Static shots of the "Blueprint Archive" or "Leaderboards."
+
+---
+
+---
+
 ### Idea 13: The High-Stakes Choice (Extraction Logic)
 **Goal:** Show the tension and unique ending mechanic of the game.
 **Visual:** A screenshot of the **Extraction Ship** hovering in the arena, with your player running towards it while the screen is filled with enemies and red "Alert" text.
 
-**Hook:** I didn't expect the extraction to be this stressful. 🛸💨
+**Hook Options:**
+- **Provocative:** "Most survival games get boring once you're powerful. I decided to fix that. 🛸💨"
+- **Broad:** "Surviving the timer isn't a win. It's just a delay. In Void Nexus, you have to earn the exit."
+- **Direct:** "If your heart rate doesn't double during extraction, I haven't done my job right."
 
 **Post:**
 Honestly, my favorite part of the game right now is the ending—if you can call it that. 

@@ -2,7 +2,7 @@ import type { Enemy, GameState } from '../../core/types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 
-export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState) {
+export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel4: boolean) {
     if (!e.stage) e.stage = 1;
 
     // --- STAGE TRANSITIONS ---
@@ -70,11 +70,16 @@ export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, 
     return { vx, vy };
 }
 
-export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean) {
+export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let effectiveSpd = currentSpd;
     if (isLevel2) {
         e.thorns = 0.03; // 3% Dmg Return
         effectiveSpd = currentSpd * 0.85; // Slower
+    }
+
+    if (isLevel4) {
+        e.thorns = 0.05; // 5% Dmg Return
+        e.thornsIgnoresArmor = true;
     }
 
     // LVL 3: Orbital Plating (Shields)
@@ -140,8 +145,50 @@ export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: n
     return { vx, vy };
 }
 
-export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean) {
+export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     const distToPlayer = Math.hypot(dx, dy);
+
+    // LVL 4: Soul Devourer (Black Pallet Transformation)
+    if (isLevel4) {
+        // First Activation (1 charge)
+        if (!e.soulSuckUsed && distToPlayer < 700) {
+            e.soulSuckUsed = true;
+            e.soulSuckActive = true;
+            e.soulSuckTimer = 300; // 5 seconds (5 * 60 frames)
+            playSfx('warning'); // Sound cue for transformation
+        }
+
+        if (e.soulSuckActive) {
+            const totalTime = 300;
+            e.soulSuckTimer = (e.soulSuckTimer || 0) - 1;
+            const progress = Math.min(1.0, (totalTime - e.soulSuckTimer) / totalTime);
+
+            if (e.soulSuckTimer <= 0) {
+                e.soulSuckActive = false;
+            }
+            // Immune during active stage (bullets will fly through thanks to other logic)
+            e.takenDamageMultiplier = 0;
+            // Visual for "Soul Sucking" - handled in Renderer and some particles here
+            if (state.frameCount % 3 === 0) {
+                const angleToBoss = Math.atan2(e.y - state.player.y, e.x - state.player.x);
+                const spd = 15;
+                const px = state.player.x + (Math.random() - 0.5) * 40;
+                const py = state.player.y + (Math.random() - 0.5) * 40;
+                spawnParticles(state, px, py, '#eab308', 4, spd, angleToBoss, 'void');
+            }
+            // Gradually drain souls from 1.0 to 0.5
+            state.player.soulDrainMult = 1.0 - (0.5 * progress);
+
+            // Core Growth: very small (5px) to medium (30px)
+            e.soulSuckCoreSize = 5 + (25 * progress);
+
+            return { vx: 0, vy: 0 }; // STOP AND SUCK
+        } else if (e.soulSuckUsed) {
+            // Once activated, soul drain persists until death
+            state.player.soulDrainMult = 0.5;
+            e.takenDamageMultiplier = 1.0; // Back to normal vulnerability after 5s
+        }
+    }
     // LVL 3: Cyclone Pull
     if (isLevel3) {
         if (!e.cycloneTimer) e.cycloneTimer = 0;

@@ -562,7 +562,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         playSfx('smoke-puff');
         e.dead = true;
         e.hp = 0;
-        console.log('[GLITCHER] Disappeared after 15 seconds');
+        console.log('[GLITCHER] Disappeared after 20 seconds');
         return { vx: 0, vy: 0 };
     }
 

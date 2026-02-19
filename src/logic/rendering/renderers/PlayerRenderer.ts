@@ -308,4 +308,77 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         }
         ctx.restore();
     }
+
+    // Mortality Curse Visual (Triangle Boss L4)
+    if (player.healingDisabled) {
+        ctx.save();
+        ctx.translate(player.x, player.y - 80); // Higher above the player
+        const time = state.gameTime;
+        const pulse = 0.8 + Math.sin(time * 10) * 0.2;
+        ctx.globalAlpha = pulse;
+
+        // Draw Heart Shape (Green)
+        const size = 20;
+        ctx.fillStyle = '#22c55e'; // Green Heart
+        ctx.beginPath();
+        ctx.moveTo(0, size * 0.7);
+        // Left curve
+        ctx.bezierCurveTo(-size, 0, -size, -size, 0, -size * 0.3);
+        // Right curve
+        ctx.bezierCurveTo(size, -size, size, 0, 0, size * 0.7);
+        ctx.fill();
+
+        // Cross-out (X) indicating "Disabled"
+        ctx.strokeStyle = '#ef4444'; // Red for the X
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        const xSize = 10;
+        ctx.moveTo(-xSize, -xSize);
+        ctx.lineTo(xSize, xSize);
+        ctx.moveTo(xSize, -xSize);
+        ctx.lineTo(-xSize, xSize);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // Glitched Visual (Inverted Controls)
+    if (player.invertedControlsUntil && now < player.invertedControlsUntil) {
+        ctx.save();
+        ctx.translate(0, 0); // We are already translated to player.x, y or we should be...
+        // Wait, line 21 already translated to player.x, player.y.
+        // But some effects use ctx.translate(player.x, player.y) if they were called after a restore.
+        // The current function structure is:
+        // ctx.save()
+        // ctx.translate(player.x, player.y)
+        // ... draw stuff ...
+        // ctx.restore() (at the very end)
+
+        const t = state.gameTime;
+
+        // Glitch noise around the player
+        for (let i = 0; i < 8; i++) {
+            const offX = Math.sin(i * 123 + t * 40) * 40;
+            const offY = Math.cos(i * 456 + t * 40) * 40;
+            const sz = 4 + Math.random() * 8;
+            ctx.fillStyle = i % 2 === 0 ? '#ff00ff' : '#00ffff';
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(offX, offY, sz, sz);
+        }
+
+        // Draw "SYSTEM GLITCH" text pulsing
+        if (Math.sin(t * 15) > 0) {
+            ctx.font = "900 12px 'Outfit', sans-serif";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#ff00ff";
+            ctx.fillText("SYSTEM GLITCH", 0, -45);
+        }
+
+        ctx.restore();
+    }
+
+    ctx.restore(); // Final restore for line 10
 }

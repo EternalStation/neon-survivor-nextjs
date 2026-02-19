@@ -42,13 +42,22 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
     // ARENA BUFFS
     const currentArenaLevel = state.arenaLevels[state.currentArena] || 0;
-    const surgeMult = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
-    const baseBuff = 0.3; // 30% Base Buff
-    const activeBuff = 1 + (baseBuff * surgeMult);
+    const isSurging = isBuffActive(state, 'ARENA_SURGE');
 
-    state.hpRegenBuffMult = (state.currentArena === 2 && currentArenaLevel >= 1) ? activeBuff : 1.0;
-    state.dmgAtkBuffMult = (state.currentArena === 1 && currentArenaLevel >= 1) ? activeBuff : 1.0;
-    state.xpSoulBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? activeBuff : 1.0;
+    const baseBuffAmount = 0.3; // 30% Base Buff
+    const baseMult = 1 + baseBuffAmount; // 1.3x
+    const surgedMult = 1 + (baseBuffAmount * 2.0); // 1.6x (Surge doubles the 30% bonus to 60%)
+
+    const activeArenaMult = isSurging ? surgedMult : baseMult;
+
+    state.hpRegenBuffMult = (state.currentArena === 2 && currentArenaLevel >= 1) ? activeArenaMult : 1.0;
+    state.dmgAtkBuffMult = (state.currentArena === 1 && currentArenaLevel >= 1) ? activeArenaMult : 1.0;
+
+    // XP & Soul Yield is an Arena Buff -> Boosted by Surge
+    state.xpSoulBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? activeArenaMult : 1.0;
+
+    // Meteorite Drop Rate is NOT an Arena Buff (it's a Player Stat) -> Never boosted by Surge
+    state.meteoriteRateBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? baseMult : 1.0;
 
     // Movement stat
     const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
@@ -130,5 +139,8 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
     // Apply Regen
+    if (player.healingDisabled) {
+        regenAmount = 0;
+    }
     player.curHp = Math.min(maxHp, player.curHp + regenAmount);
 }

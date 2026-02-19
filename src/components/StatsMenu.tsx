@@ -18,13 +18,14 @@ interface StatsMenuProps {
     gameState: GameState;
 }
 
-export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number }> = ({ label, stat, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1 }) => {
+export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number; isDisabled?: boolean }> = ({ label, stat, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1, isDisabled = false }) => {
     // Formula: (Base + Flat + HexFlat) * (1 + NormalMult%) * (1 + HexMult%)
     const baseSum = stat.base + stat.flat + legendaryBonusFlat;
     const upgradeMult = 1 + (stat.mult || 0) / 100;
     const hexScaling = 1 + legendaryBonusPct / 100;
 
-    const total = baseSum * upgradeMult * hexScaling * arenaMult;
+    let total = baseSum * upgradeMult * hexScaling * arenaMult;
+    if (isDisabled) total = 0;
 
     const formatNum = (val: number) => {
         if (isPercent) return Math.round(val).toLocaleString();
@@ -35,8 +36,8 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
 
     // Color logic
     const isBuffed = arenaMult > 1;
-    // User requested Green for all non-buffed stats (avoiding Red for base stats)
-    const totalColor = isBuffed ? '#3b82f6' : '#4ade80';
+    // Use Red if disabled, else normal color logic
+    const totalColor = isDisabled ? '#ef4444' : (isBuffed ? '#3b82f6' : '#4ade80');
 
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
@@ -136,7 +137,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             return (
                                 <>
                                     <StatRow label="Health" stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
-                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
                                     <StatRow label="Damage" stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
                                     <StatRow
                                         label="Attack Speed"
@@ -198,8 +199,8 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         return (
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                                 <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Lifesteal</span>
-                                                <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {lifesteal.toFixed(1)}%
+                                                <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
+                                                    {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
                                                 </span>
                                             </div>
                                         );
@@ -248,7 +249,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Meteorite Drop Chance</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
-                                                const baseChance = 4.0; // Static 4% Base Chance
+                                                const baseChance = 5.0; // Static 5% Base Chance
 
                                                 const surge = isBuffActive(gameState, 'ARENA_SURGE') ? 2.0 : 1.0;
                                                 const arenaMult = gameState.xpSoulBuffMult || 1.0;

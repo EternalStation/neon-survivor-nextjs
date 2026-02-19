@@ -2,9 +2,10 @@ import React, { useRef, useState } from 'react';
 
 interface MobileControlsProps {
     onInput: (x: number, y: number) => void;
+    isInverted?: boolean;
 }
 
-export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
+export const MobileControls: React.FC<MobileControlsProps> = ({ onInput, isInverted }) => {
     const joyRef = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 }); // Relative to center
@@ -14,33 +15,21 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
     const RADIUS = 50; // Max stick distance
 
     const handleStart = (e: React.TouchEvent) => {
-        // Prevent default only if needed, but here we want to stop scroll
-        // e.preventDefault(); 
-
-        // Find the first touch in the joystick zone
         const touch = e.changedTouches[0];
         setTouchId(touch.identifier);
 
         const rect = joyRef.current?.getBoundingClientRect();
         if (rect) {
-            // Center of the joystick container
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-
-            // If we want "Floating Joystick" logic (stick appears where you touch), 
-            // we would set origin to touch.clientX/Y. 
-            // BUT here we have a fixed visual anchor.
-            // Let's use Fixed Anchor logic for simplicity first.
             setOrigin({ x: centerX, y: centerY });
             setActive(true);
-
             updateJoystick(touch.clientX, touch.clientY, centerX, centerY);
         }
     };
 
     const handleMove = (e: React.TouchEvent) => {
         if (!active) return;
-
         const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
         if (touch) {
             updateJoystick(touch.clientX, touch.clientY, origin.x, origin.y);
@@ -63,17 +52,17 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
 
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Normalize
         if (dist > RADIUS) {
             dx = (dx / dist) * RADIUS;
             dy = (dy / dist) * RADIUS;
         }
 
         setPosition({ x: dx, y: dy });
-
-        // Send normalized input (-1 to 1)
         onInput(dx / RADIUS, dy / RADIUS);
     };
+
+    const baseColor = isInverted ? 'rgba(168, 85, 247, 0.4)' : 'rgba(59, 130, 246, 0.3)';
+    const stickColor = isInverted ? 'rgba(168, 85, 247, 0.8)' : 'rgba(59, 130, 246, 0.8)';
 
     return (
         <div
@@ -84,12 +73,10 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
                 width: 160,
                 height: 160,
                 zIndex: 1000,
-                // debug
-                // border: '1px solid rgba(255,255,255,0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                touchAction: 'none' // Critical for preventing scroll
+                touchAction: 'none'
             }}
             onTouchStart={handleStart}
             onTouchMove={handleMove}
@@ -102,9 +89,10 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
                 width: 100,
                 height: 100,
                 borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '2px solid rgba(59, 130, 246, 0.3)',
-                boxShadow: '0 0 15px rgba(59, 130, 246, 0.1)'
+                background: isInverted ? 'rgba(168, 85, 247, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                border: `2px solid ${baseColor}`,
+                boxShadow: `0 0 15px ${isInverted ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.1)'}`,
+                animation: isInverted ? 'joystick-glitch 0.2s infinite' : 'none'
             }} />
 
             {/* Stick */}
@@ -113,10 +101,10 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
                 width: 50,
                 height: 50,
                 borderRadius: '50%',
-                background: active ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.5)',
+                background: active ? stickColor : (isInverted ? 'rgba(168, 85, 247, 0.5)' : 'rgba(59, 130, 246, 0.5)'),
                 transform: `translate(${position.x}px, ${position.y}px)`,
                 transition: active ? 'none' : 'transform 0.1s ease-out',
-                boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)'
+                boxShadow: `0 0 10px ${isInverted ? 'rgba(168, 85, 247, 0.6)' : 'rgba(59, 130, 246, 0.5)'}`
             }} />
 
             {/* Label */}
@@ -126,14 +114,25 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInput }) => {
                     top: -30,
                     width: '100%',
                     textAlign: 'center',
-                    color: 'rgba(255,255,255,0.5)',
+                    color: isInverted ? '#ff00ff' : 'rgba(255,255,255,0.5)',
                     fontSize: 10,
                     fontWeight: 'bold',
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    textShadow: isInverted ? '0 0 5px #ff00ff' : 'none'
                 }}>
-                    MOVE
+                    {isInverted ? 'SYSTEM GLITCHED' : 'MOVE'}
                 </div>
             )}
+
+            <style>{`
+                @keyframes joystick-glitch {
+                    0% { transform: translate(0, 0); opacity: 1; }
+                    25% { transform: translate(-2px, 2px); opacity: 0.8; }
+                    50% { transform: translate(2px, -2px); opacity: 0.9; }
+                    75% { transform: translate(-1px, 1px); opacity: 0.8; }
+                    100% { transform: translate(0, 0); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

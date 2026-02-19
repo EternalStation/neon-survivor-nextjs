@@ -194,104 +194,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     <LegendaryDetail hex={gameState.pendingLegendaryHex} gameState={gameState} hexIdx={-1} pending={true} placementAlert={placementAlert} />
                 ) : (hoveredHex && !movedItem) ? (
                     <LegendaryDetail hex={hoveredHex.hex} gameState={gameState} hexIdx={hoveredHex.index} pending={false} />
-                ) : recalibrateSlot ? (
-                    <div style={{
-                        flex: 1,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        position: 'relative', padding: '0'
-                    }}>
-                        <RecalibrateInterface
-                            item={recalibrateSlot}
-                            gameState={gameState}
-                            onClose={handleExitRecalibrate}
-                            onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
-                            onRerollType={(indices: number[]) => {
-                                if (rerollPerkType(gameState, recalibrateSlot, indices)) {
-                                    // Apply Auto-Lock
-                                    const newLocked = [...indices];
-                                    let changed = false;
-                                    recalibrateSlot.perks.forEach((p, idx) => {
-                                        if (!newLocked.includes(idx)) {
-                                            const lvl = idx + 1;
-                                            const filter = recalibrateFilters[lvl];
-                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
-                                                newLocked.push(idx);
-                                                changed = true;
-                                            }
-                                        }
-                                    });
-                                    if (changed) setLockedRecalibrateIndices(newLocked);
-                                    onUpdate?.();
-                                }
-                            }}
-                            onRerollValue={(indices: number[]) => {
-                                if (rerollPerkValue(gameState, recalibrateSlot, indices)) {
-                                    // Apply Auto-Lock
-                                    const newLocked = [...indices];
-                                    let changed = false;
-                                    recalibrateSlot.perks.forEach((p, idx) => {
-                                        if (!newLocked.includes(idx)) {
-                                            const lvl = idx + 1;
-                                            const filter = recalibrateFilters[lvl];
-                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
-                                                newLocked.push(idx);
-                                                changed = true;
-                                            }
-                                        }
-                                    });
-                                    if (changed) setLockedRecalibrateIndices(newLocked);
-                                    onUpdate?.();
-                                }
-                            }}
-                            lockedIndices={lockedRecalibrateIndices}
-                            onToggleLock={onToggleRecalibrateLock}
-                            recalibrateFilters={recalibrateFilters}
-                            setRecalibrateFilters={setRecalibrateFilters}
-                        />
-                        {/* DRAG HANDLE TO EJECT */}
-                        <div
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'auto' }}
-                            onMouseDown={(e) => {
-                                if (e.button === 0 && setMovedItem) {
-                                    e.preventDefault();
-                                    // Don't clear recalibrateSlot here - let the drop handler do it
-                                    setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
-                                }
-                            }}
-                        />
-                    </div>
-                ) : lockedItem ? (
-                    <div style={{ flex: 1, overflowY: 'auto' }}>
-                        <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
-                    </div>
-                ) : (hoveredItem && hoveredItem.item.isBlueprint) ? (
-                    <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
-                            <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
-                            <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
-                            <div style={{
-                                border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
-                                background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
-                                position: 'relative', overflow: 'hidden'
-                            }}>
-                                <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
-                                <div style={{
-                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                                    background: 'linear-gradient(transparent, rgba(59, 130, 246, 0.4), transparent)',
-                                    animation: 'scan-vertical 2s infinite linear'
-                                }} />
-                            </div>
-                            <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>RIGHT-CLICK TO BEGIN DECRYPTION</div>
-                        </div>
-                    </div>
-                ) : hoveredItem ? (
-                    <div style={{ flex: 1, overflowY: 'auto' }}>
-                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
-                        <MeteoriteTooltip meteorite={hoveredItem.item} gameState={gameState} meteoriteIdx={hoveredItem.index} x={0} y={0} isEmbedded={true} />
-                    </div>
-                ) : hoveredBlueprint ? (
+                ) : (hoveredBlueprint && !movedItem) ? (
+                    // Move the hoveredBlueprint logic here
                     (() => {
                         const isResearching = hoveredBlueprint.status === 'researching';
                         const timeLeft = isResearching && hoveredBlueprint.researchFinishTime ? Math.max(0, hoveredBlueprint.researchFinishTime - gameState.gameTime) : 0;
@@ -476,6 +380,106 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             </div>
                         );
                     })()
+                ) : (hoveredItem && !movedItem && (!recalibrateSlot || hoveredItem.item !== recalibrateSlot)) ? (
+                    // Move the hoveredItem logic here
+                    hoveredItem.item.isBlueprint ? (
+                        <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
+                                <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
+                                <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
+                                <div style={{
+                                    border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
+                                    background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
+                                    <div style={{
+                                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                        background: 'linear-gradient(transparent, rgba(59, 130, 246, 0.4), transparent)',
+                                        animation: 'scan-vertical 2s infinite linear'
+                                    }} />
+                                </div>
+                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>RIGHT-CLICK TO BEGIN DECRYPTION</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
+                            <MeteoriteTooltip meteorite={hoveredItem.item} gameState={gameState} meteoriteIdx={hoveredItem.index} x={0} y={0} isEmbedded={true} />
+                        </div>
+                    )
+                ) : recalibrateSlot ? (
+                    <div style={{
+                        flex: 1,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        position: 'relative', padding: '0'
+                    }}>
+                        <RecalibrateInterface
+                            item={recalibrateSlot}
+                            gameState={gameState}
+                            onClose={handleExitRecalibrate}
+                            onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
+                            onRerollType={(indices: number[]) => {
+                                if (rerollPerkType(gameState, recalibrateSlot, indices)) {
+                                    // Apply Auto-Lock
+                                    const newLocked = [...indices];
+                                    let changed = false;
+                                    recalibrateSlot.perks.forEach((p, idx) => {
+                                        if (!newLocked.includes(idx)) {
+                                            const lvl = idx + 1;
+                                            const filter = recalibrateFilters[lvl];
+                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
+                                                newLocked.push(idx);
+                                                changed = true;
+                                            }
+                                        }
+                                    });
+                                    if (changed) setLockedRecalibrateIndices(newLocked);
+                                    onUpdate?.();
+                                }
+                            }}
+                            onRerollValue={(indices: number[]) => {
+                                if (rerollPerkValue(gameState, recalibrateSlot, indices)) {
+                                    // Apply Auto-Lock
+                                    const newLocked = [...indices];
+                                    let changed = false;
+                                    recalibrateSlot.perks.forEach((p, idx) => {
+                                        if (!newLocked.includes(idx)) {
+                                            const lvl = idx + 1;
+                                            const filter = recalibrateFilters[lvl];
+                                            if (filter && filter.active && matchesPerk(p, lvl, filter)) {
+                                                newLocked.push(idx);
+                                                changed = true;
+                                            }
+                                        }
+                                    });
+                                    if (changed) setLockedRecalibrateIndices(newLocked);
+                                    onUpdate?.();
+                                }
+                            }}
+                            lockedIndices={lockedRecalibrateIndices}
+                            onToggleLock={onToggleRecalibrateLock}
+                            recalibrateFilters={recalibrateFilters}
+                            setRecalibrateFilters={setRecalibrateFilters}
+                        />
+                        {/* DRAG HANDLE TO EJECT */}
+                        <div
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'auto' }}
+                            onMouseDown={(e) => {
+                                if (e.button === 0 && setMovedItem) {
+                                    e.preventDefault();
+                                    // Don't clear recalibrateSlot here - let the drop handler do it
+                                    setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
+                                }
+                            }}
+                        />
+                    </div>
+                ) : lockedItem ? (
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
+                    </div>
                 ) : selectedBestiaryEnemy ? (
                     <BestiaryDetailView entry={selectedBestiaryEnemy} />
                 ) : extractionDialogActive ? (

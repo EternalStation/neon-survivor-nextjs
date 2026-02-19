@@ -15,6 +15,20 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         handleVoidBurrowerDeath(state, e, onEvent);
     }
 
+    // --- PHALANX DRONE DEATH TRANSFER ---
+    if (e.isPhalanxDrone && e.soulLinkHostId) {
+        const host = state.enemies.find(h => h.id === e.soulLinkHostId);
+        if (host && !host.dead) {
+            // Give a massive burst to boss if drone is somehow killed
+            // Drones have 1,000,000 HP, so 1% is 10k. 
+            // Let's just deal a flat significant % or a standard amount.
+            const deathPenalty = host.maxHp * 0.05; // 5% of Boss Max HP as penalty
+            host.hp -= deathPenalty;
+            spawnFloatingNumber(state, host.x, host.y, `PHALANX BREACH -${Math.round(deathPenalty)}`, '#ef4444', true);
+            playSfx('rare-kill');
+        }
+    }
+
     e.dead = true; e.hp = 0;
 
     // Soul Reward Multipliers (Kill Count)
@@ -169,6 +183,11 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     if (e.boss && state.extractionStatus === 'none') {
         state.bossKills++; // Track boss kills correctly
+
+        // Restore Souls if Circle Boss Lvl 4 dies
+        if (e.shape === 'circle' && e.isLevel4) {
+            state.player.soulDrainMult = 1.0;
+        }
 
         // --- ANOMALY BOSS DEATH LOGIC ---
         if (e.isAnomaly) {

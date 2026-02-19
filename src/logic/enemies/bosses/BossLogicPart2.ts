@@ -3,8 +3,20 @@ import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic
 import { playSfx } from '../../audio/AudioLogic';
 import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
 
-export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean) {
+export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let isBerserk = false;
+
+    // LVL 4: Mortality Curse (Anti-Healing Aura)
+    if (isLevel4) {
+        state.player.healingDisabled = true;
+        if (state.players) {
+            Object.values(state.players).forEach(p => p.healingDisabled = true);
+        }
+        // Visual for "Reaper" aura
+        if (state.frameCount % 10 === 0) {
+            spawnParticles(state, e.x, e.y, '#7f1d1d', 5, 8, 30, 'void');
+        }
+    }
 
     if (isLevel2) {
         if (!e.berserkTimer) e.berserkTimer = 0;
@@ -46,7 +58,8 @@ export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy:
     return { vx, vy };
 }
 
-export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, onEvent?: (event: string, data?: any) => void) {
+export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, onEvent?: (event: string, data?: any) => void) {
+    // LVL 4: Convergence Zone (Handled in Beam Logic)
     // LVL 3: Orbital Satellites
     if (isLevel3) {
         if (!e.satelliteTimer) e.satelliteTimer = 0;
@@ -200,53 +213,60 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
             return { vx, vy };
 
         } else if (e.beamState === 2) {
-            // Fire (Instant Burst + Linger Visual)
+            // Fire (Instant Burst or Sustained Convergence)
             const vx = 0; const vy = 0;
-
-            const laserAngle = e.beamAngle || 0;
+            const centerAngle = e.beamAngle || 0;
             const px = state.player.x - e.x;
             const py = state.player.y - e.y;
             const pDist = Math.hypot(px, py);
             const pAngle = Math.atan2(py, px);
-            const angleDiff = Math.abs(pAngle - laserAngle);
-            const normalizedDiff = Math.min(angleDiff, Math.abs(angleDiff - Math.PI * 2));
 
-            // Laser Damage Logic (Once per burst)
-            if (normalizedDiff < 0.1 && pDist < 3000 && !e.hasHitThisBurst) {
-                e.hasHitThisBurst = true;
-                const rawDmg = e.maxHp * 0.05; // 5% of Boss Max HP
+            const duration = isLevel4 ? 240 : 30; // 4s for Lvl 4, 0.5s for Lvl 2/3
 
-                // LASER REDUCTION LOGIC
-                // User: LVL 1 & 2 is reduced by armor. LVL 3 PIERCES ALL ARMOR.
-                let finalDmg = rawDmg;
-                if (!isLevel3) {
-                    const armor = calcStat(state.player.arm);
-                    const reduction = getDefenseReduction(armor);
-                    finalDmg = rawDmg * (1 - reduction);
+            if (isLevel4) {
+                // Convergence Logic
+                const t = Math.min(1, e.beamTimer / duration);
+                const startOff = (45 * Math.PI) / 180;
+                const endOff = (4.5 * Math.PI) / 180; // 9 deg gap total
+                const currentOffset = startOff - (startOff - endOff) * t;
 
-                    // Track Stats
-                    state.player.damageBlockedByArmor += (rawDmg - finalDmg);
-                    state.player.damageBlocked += (rawDmg - finalDmg);
-                }
+                const laser1 = centerAngle + currentOffset;
+                const laser2 = centerAngle - currentOffset;
 
-                state.player.curHp -= finalDmg;
-                state.player.damageTaken += finalDmg;
-                state.player.lastHitDamage = finalDmg;
-                state.player.killerHp = e.hp;
-                state.player.killerMaxHp = e.maxHp;
+                // Check collisions for both lasers
+                [laser1, laser2].forEach(angle => {
+                    const diff = Math.abs(pAngle - angle);
+                    const normDiff = Math.min(diff, Math.abs(diff - Math.PI * 2));
 
-                spawnFloatingNumber(state, state.player.x, state.player.y, Math.round(finalDmg).toString(), e.palette[1], isLevel2); // LVL 2 gets Crit look (larger)
-                spawnParticles(state, state.player.x, state.player.y, e.palette[1], 10);
+                    if (normDiff < 0.05 && pDist < 3000) {
+                        // Periodic damage if inside the laser
+                        if (state.frameCount % 5 === 0) {
+                            const finalDmg = e.maxHp * 0.005; // 0.5% max HP per 5 frames (~6% per sec)
 
-                // Kinetic Battery: Trigger Zap on Beam Hit
-                const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                if (triggerZap) triggerZap(state, state.player, 1);
+                            state.player.curHp -= finalDmg;
+                            state.player.damageTaken += finalDmg;
+                            state.player.lastHitDamage = finalDmg;
+                            state.player.killerHp = e.hp;
+                            state.player.killerMaxHp = e.maxHp;
+                            spawnFloatingNumber(state, state.player.x, state.player.y, Math.round(finalDmg).toString(), '#ef4444', false);
+                        }
+                    }
+                });
+            } else {
+                // Standard Lvl 2/3 Burst
+                const laserAngle = centerAngle;
+                const angleDiff = Math.abs(pAngle - laserAngle);
+                const normalizedDiff = Math.min(angleDiff, Math.abs(angleDiff - Math.PI * 2));
 
-                if (state.player.curHp <= 0) {
-                    state.player.curHp = 0;
-                    state.gameOver = true;
-                    state.player.deathCause = "Killed by Diamond Boss: Kinetic Beam";
-                    if (onEvent) onEvent('game_over');
+                if (normalizedDiff < 0.1 && pDist < 3000 && !e.hasHitThisBurst) {
+                    e.hasHitThisBurst = true;
+                    const finalDmg = e.maxHp * 0.05; // 5% of Boss Max HP (True Damage from Lvl 2+)
+                    state.player.curHp -= finalDmg;
+                    state.player.damageTaken += finalDmg;
+                    state.player.lastHitDamage = finalDmg;
+                    state.player.killerHp = e.hp;
+                    state.player.killerMaxHp = e.maxHp;
+                    spawnFloatingNumber(state, state.player.x, state.player.y, Math.round(finalDmg).toString(), e.palette[1], isLevel2);
                 }
             }
 
@@ -256,7 +276,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                     const zdx = z.x - e.x, zdy = z.y - e.y;
                     const zDist = Math.hypot(zdx, zdy);
                     const zAngle = Math.atan2(zdy, zdx);
-                    const zAngleDiff = Math.abs(zAngle - laserAngle);
+                    const zAngleDiff = Math.abs(zAngle - centerAngle);
                     const zNormDiff = Math.min(zAngleDiff, Math.abs(zAngleDiff - Math.PI * 2));
 
                     if (zNormDiff < 0.1 && zDist < 3000) {
@@ -266,7 +286,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                 }
             });
 
-            if (e.beamTimer > 30) { // 0.5s Fire animation
+            if (e.beamTimer > duration) {
                 e.beamState = 0;
                 e.beamTimer = 0;
             }
@@ -281,8 +301,119 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
     return { vx, vy };
 }
 
-export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, onEvent?: (event: string, data?: any) => void) {
+export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, onEvent?: (event: string, data?: any) => void) {
+    e.isLevel3 = isLevel3;
+    e.isLevel4 = isLevel4;
+    if (isLevel4) e.bossTier = 4;
+    else if (isLevel3) e.bossTier = 3;
+    else if (isLevel2) e.bossTier = 2;
+    else e.bossTier = 1;
+
     if (isLevel2) {
+        // LVL 4: Hivemind Phalanx (Tactical Sweep)
+        if (isLevel4) {
+            if (e.phalanxState === undefined) e.phalanxState = 0;
+            if (e.phalanxTimer === undefined) e.phalanxTimer = 0;
+            e.phalanxTimer++;
+
+            const PHALANX_CD = 720; // 12s
+            const FORMATION_DUR = 180; // 3.0s
+            const CHARGE_DUR = 93; // 1400px @ 15spd
+            const RUSH_SPD = 15;
+
+            if (e.phalanxState === 0) {
+                if (e.phalanxTimer! > PHALANX_CD) {
+                    e.phalanxState = 1; e.phalanxTimer = 0;
+                    // Initial drone spawn
+                    e.phalanxDrones = [];
+                    const dxP = state.player.x - e.x;
+                    const dyP = state.player.y - e.y;
+                    const initialAngle = Math.atan2(dyP, dxP);
+                    const perp = initialAngle + Math.PI / 2;
+                    for (let i = 0; i < 8; i++) {
+                        const offset = (i - 3.5) * 80;
+                        const sx = e.x + Math.cos(perp) * offset;
+                        const sy = e.y + Math.sin(perp) * offset;
+                        const droneId = Math.random();
+                        const drone: Enemy = {
+                            id: droneId,
+                            shape: 'long_drone',
+                            type: 'minion',
+                            x: sx, y: sy,
+                            hp: Math.max(state.player.curHp * 10, 1000), maxHp: Math.max(state.player.curHp * 10, 1000),
+                            size: 25,
+                            spd: 0,
+                            isPhalanxDrone: true,
+                            soulLinkHostId: e.id,
+                            phalanxDroneAngle: i,
+                            palette: ['#000000', '#334155', '#eab308'],
+                            knockback: { x: 0, y: 0 },
+                            dead: false,
+                            spawnedAt: state.gameTime,
+                            lastAttack: state.gameTime,
+                            pulsePhase: 0,
+                            fluxState: 0,
+                            rotationPhase: initialAngle,
+                            boss: false,
+                            bossType: 0,
+                            bossAttackPattern: 0,
+                            shellStage: 0,
+                            isLevel3: false,
+                            isLevel4: false
+                        };
+                        state.enemies.push(drone);
+                        e.phalanxDrones.push(droneId.toString());
+                    }
+                    playSfx('warning');
+                }
+            } else if (e.phalanxState === 1) {
+                // Phase 1: Tracking/Looking (3s)
+                if (e.phalanxTimer! > FORMATION_DUR) {
+                    e.phalanxState = 2; e.phalanxTimer = 0;
+
+                    // LOCK DIRECTION NOW (Start of 1.5s wait)
+                    const targetDx = state.player.x - e.x;
+                    const targetDy = state.player.y - e.y;
+                    e.phalanxAngle = Math.atan2(targetDy, targetDx);
+
+                    playSfx('lock-on');
+                }
+                return { vx: 0, vy: 0 };
+            } else if (e.phalanxState === 2) {
+                // Phase 2: Locked (1.5s) - Waiting to fly
+                if (e.phalanxTimer! > 90) { // 1.5s
+                    e.phalanxState = 3; e.phalanxTimer = 0;
+                    playSfx('dash');
+                }
+                return { vx: 0, vy: 0 };
+            } else if (e.phalanxState === 3) {
+                // Phase 3: Rush/Sweep
+                if (e.phalanxTimer! > CHARGE_DUR) {
+                    e.phalanxState = 0; e.phalanxTimer = 0;
+                    // Cleanup drones
+                    state.enemies.forEach(d => {
+                        if (d.isPhalanxDrone && d.soulLinkHostId === e.id) {
+                            d.dead = true;
+                            spawnParticles(state, d.x, d.y, '#eab308', 15);
+                            const dist = Math.hypot(state.player.x - d.x, state.player.y - d.y);
+                            if (dist < 100) {
+                                // One-shot damage (150% max hp)
+                                const maxHp = calcStat(state.player.hp);
+                                const oneShotDmg = maxHp * 1.5;
+                                state.player.curHp -= oneShotDmg;
+                                state.player.damageTaken += oneShotDmg;
+                                spawnFloatingNumber(state, state.player.x, state.player.y, "CRIT", '#ef4444', true);
+                                playSfx('impact');
+                            }
+                        }
+                    });
+                }
+                return { vx: 0, vy: 0 };
+            }
+        }
+        // LVL 4: Entropy Link (Draining more if already linked)
+        // (Removed old L4 logic in favor of Phalanx)
+
         // LVL 3: Parasitic Link (Player)
         if (isLevel3) {
             const pDist = Math.hypot(state.player.x - e.x, state.player.y - e.y);
@@ -334,7 +465,8 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
         e.soulLinkTargets = [];
         state.enemies.forEach(other => {
             if (other.id !== e.id && !other.dead) {
-                // Restriction: Only Normal and Elite enemies (No Bosses, Zombies, Snitches, Minions)
+                // Restriction: Only Normal and Elite enemies (No Bosses, Zombies, Snitches, or Minions)
+                // Phalanx Drones are NOW allowed for Level 4 link
                 if (other.boss || other.isZombie || other.shape === 'snitch' || other.shape === 'minion') {
                     // Force unlink if previously linked
                     if (other.soulLinkHostId === e.id) other.soulLinkHostId = undefined;
@@ -342,7 +474,10 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
                 }
 
                 const d = Math.hypot(other.x - e.x, other.y - e.y);
-                if (d < 500) {
+                // Phalanx drones are always linked if they belong to this host
+                const isMyDrone = other.isPhalanxDrone && other.soulLinkHostId === e.id;
+
+                if (d < 500 || isMyDrone) {
                     e.soulLinkTargets!.push(other.id);
                     other.soulLinkHostId = e.id;
                 } else {

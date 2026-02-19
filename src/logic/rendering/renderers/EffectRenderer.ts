@@ -50,7 +50,10 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             frostGrad.addColorStop(0.8, 'rgba(14, 165, 233, 0.15)');
             frostGrad.addColorStop(1, 'rgba(34, 211, 238, 0)');
             ctx.fillStyle = frostGrad; ctx.fill();
-            ctx.shadowBlur = 10; ctx.shadowColor = '#22d3ee'; ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0;
+
+            // Replacing shadowBlur with Glow Stroke
+            ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)'; ctx.stroke();
+            ctx.lineWidth = 2; ctx.strokeStyle = '#22d3ee'; ctx.stroke();
 
 
             const pulseR = baseR * (0.5 + (state.gameTime % 1.5) / 1.5);
@@ -124,8 +127,9 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 const opacity = (0.35 - layer * 0.05) * (0.7 + Math.sin(t * 4 + layer) * 0.3);
                 ctx.strokeStyle = `rgba(126, 34, 206, ${Math.max(0, opacity)})`;
                 ctx.lineWidth = 3 - layer * 0.4;
-                ctx.shadowColor = '#7e22ce';
-                ctx.shadowBlur = 12 - layer * 1.5;
+
+                // Optimized: Removed shadowBlur in organic disk as there are 6 layers (360 segments each!)
+                // The overlapping layers already create depth.
                 ctx.stroke();
             }
 
@@ -134,10 +138,15 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.arc(0, 0, coreRadius + 4, 0, Math.PI * 2);
             ctx.strokeStyle = '#f8fafc'; // Sharp white rim
             ctx.lineWidth = 2;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#38bdf8';
+            // Neon Glow replacement
+            ctx.globalAlpha = 0.5;
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#38bdf8';
             ctx.stroke();
-            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1.0;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#f8fafc';
+            ctx.stroke();
 
             // 3. THE SINGULARITY (Keep the pitch black core)
             ctx.beginPath();
@@ -315,7 +324,10 @@ export function renderEpicenterShield(ctx: CanvasRenderingContext2D, state: Game
         grad.addColorStop(0.8, 'rgba(59, 130, 246, 0.2)');
         grad.addColorStop(1, 'rgba(34, 211, 238, 0.6)');
         ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 3; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 15; ctx.stroke();
+
+        // Neon Glow replacement
+        ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)'; ctx.stroke();
+        ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 3; ctx.stroke();
         ctx.clip();
         const sweepY = (t * 200) % (radius * 4) - radius * 2;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.fillRect(-radius, sweepY, radius * 2, 20);
@@ -374,11 +386,13 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.globalAlpha = alpha;
             ctx.strokeStyle = p.color || '#FFFFFF';
             ctx.lineWidth = 3;
-            ctx.shadowColor = p.color || '#FFFFFF';
-            ctx.shadowBlur = 8;
+            // Neon Glow replacement
+            ctx.globalAlpha = alpha * 0.3;
+            ctx.lineWidth = 10;
             ctx.beginPath(); ctx.arc(cx, cy, radius, angle - 0.7, angle + 0.7); ctx.stroke();
-
-            ctx.shadowBlur = 0;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath(); ctx.arc(cx, cy, radius, angle - 0.7, angle + 0.7); ctx.stroke();
             ctx.lineWidth = 1.5;
             ctx.globalAlpha = alpha * 0.6;
             ctx.beginPath(); ctx.arc(cx, cy, radius * 0.85, angle - 0.6, angle + 0.6); ctx.stroke();
@@ -429,33 +443,35 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
 
     // Draw batched particles
     colorGroups.forEach((items, color) => {
-        // Group by alpha to avoid too many globalAlpha changes if possible, 
-        // but for simplicity we'll just draw each color in one go if they share alpha logic
-        // Most common case is alpha=1.0
-
         ctx.fillStyle = color;
+
+        // Pass 1: Draw all fully opaque particles in one path
         ctx.beginPath();
+        let hasOpaque = false;
         items.forEach(item => {
-            if (item.alpha === 1) {
+            if (item.alpha >= 0.98) {
                 ctx.moveTo(item.x + item.size, item.y);
                 ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                hasOpaque = true;
             }
         });
-        ctx.fill();
+        if (hasOpaque) ctx.fill();
 
-        // Handle fading and translucent particles with batching
-        const alphaGroups = new Map<number, { x: number, y: number, size: number }[]>();
+        // Pass 2: Draw faded particles grouped by alpha
+        // Use a simple object as a map to avoid Map object overhead in the inner loop
+        const alphaGroups: Record<string, { x: number, y: number, size: number }[]> = {};
         items.forEach(item => {
-            if (item.alpha < 1) {
-                const roundedAlpha = Math.round(item.alpha * 20) / 20; // Group by 0.05 steps
-                if (!alphaGroups.has(roundedAlpha)) alphaGroups.set(roundedAlpha, []);
-                alphaGroups.get(roundedAlpha)!.push(item);
+            if (item.alpha < 0.98) {
+                const aKey = (Math.round(item.alpha * 10) / 10).toString(); // Group by 0.1 steps
+                if (!alphaGroups[aKey]) alphaGroups[aKey] = [];
+                alphaGroups[aKey].push(item);
             }
         });
 
-        alphaGroups.forEach((groupItems, alpha) => {
+        for (const aKey in alphaGroups) {
+            const groupItems = alphaGroups[aKey];
             ctx.save();
-            ctx.globalAlpha = alpha;
+            ctx.globalAlpha = parseFloat(aKey);
             ctx.beginPath();
             groupItems.forEach(item => {
                 ctx.moveTo(item.x + item.size, item.y);
@@ -463,7 +479,7 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             });
             ctx.fill();
             ctx.restore();
-        });
+        }
     });
 
     ctx.globalAlpha = 1;
@@ -508,7 +524,8 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
             grad.addColorStop(0, '#ef4444'); // Bright Blood Red
             grad.addColorStop(0.5, '#991b1b'); // Deep Crimson
             grad.addColorStop(1, '#450a0a'); // Dark Dried Blood
-            ctx.fillStyle = grad; ctx.shadowColor = 'rgba(220, 38, 38, 0.6)'; ctx.shadowBlur = 6;
+            ctx.fillStyle = grad;
+            // Removed shadowBlur on text for performance
         } else ctx.fillStyle = fn.color;
         ctx.fillText(fn.value, 0, 0);
         ctx.restore();

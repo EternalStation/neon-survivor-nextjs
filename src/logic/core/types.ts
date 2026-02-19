@@ -140,6 +140,11 @@ export interface Player {
     lastHitDamage?: number; // Final hit damage that killed the player
     killerHp?: number; // HP of the enemy that killed the player
     killerMaxHp?: number; // Max HP of the enemy that killed the player
+
+    // Level 4 Boss Debuffs
+    soulDrainMult?: number;
+    healingDisabled?: boolean;
+
     // Blueprint System
     temporalGuardActive?: boolean;
     phaseShiftUntil?: number; // Timestamp for ghost state (no dmg dealt/taken)
@@ -249,7 +254,7 @@ export interface Bullet {
     explodeRadius?: number;
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -521,6 +526,28 @@ export interface Enemy {
     minionsSpawned?: boolean; // Track stage 2 spawn
     anomalyBurnTimer?: number;
     dieOnCollision?: boolean;
+    lastPushX?: number;
+    lastPushY?: number;
+
+    // Level 4 Boss Mechanics
+    isLevel3?: boolean;
+    isLevel4?: boolean;
+    thornsIgnoresArmor?: boolean;
+    dementorActive?: boolean;
+    dementorX?: number;
+    dementorY?: number;
+    soulSuckActive?: boolean;
+    soulSuckTimer?: number;
+    soulSuckUsed?: boolean;
+    soulSuckCoreSize?: number;
+
+    // Pentagon Phalanx
+    phalanxTimer?: number;
+    phalanxState?: number;
+    phalanxDrones?: string[];
+    phalanxAngle?: number;
+    isPhalanxDrone?: boolean;
+    phalanxDroneAngle?: number;
 }
 
 export interface Upgrade {
@@ -736,6 +763,7 @@ export interface GameState {
     hpRegenBuffMult: number; // For Defense Arena
     dmgAtkBuffMult: number; // For Combat Arena
     xpSoulBuffMult: number; // For Economic Arena
+    meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
 
     // Extraction System
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';

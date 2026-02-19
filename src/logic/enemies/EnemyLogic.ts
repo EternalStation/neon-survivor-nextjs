@@ -7,12 +7,12 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
 
-// Modular Enemy Logic
+import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { updateNormalCircle, updateNormalTriangle, updateNormalSquare, updateNormalDiamond, updateNormalPentagon, updateUniquePentagon } from './NormalEnemyLogic';
 import { updateEliteCircle, updateEliteTriangle, updateEliteSquare, updateEliteDiamond, updateElitePentagon } from './EliteEnemyLogic';
 import { updateBossEnemy } from './BossEnemyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
-import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette } from './EnemySpawnLogic';
+import { getProgressionParams, spawnEnemy, manageRareSpawnCycles, getEventPalette, getCycleHpMult } from './EnemySpawnLogic';
 import { scanForMerges, manageMerges } from './EnemyMergeLogic';
 import { updateZombie, updateSnitch, updateMinion, updatePrismGlitcher } from './UniqueEnemyLogic';
 import { updateVoidBurrower, spawnVoidBurrower } from './WormLogic';
@@ -26,21 +26,31 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
     const { enemies, player, gameTime } = state;
     const { shapeDef, pulseDef } = getProgressionParams(gameTime);
 
+    // --- EVENT HORIZON: Blackhole Physics Pre-Calc ---
+    const blackholes = state.areaEffects.filter(ae => ae.type === 'blackhole');
+    let bhPullSpeed = 0;
+    if (blackholes.length > 0) {
+        const resonance = getChassisResonance(state);
+        // User Request: "5% not pull at all, 100% hard pull"
+        // Formula: Total% * 5.
+        // Base (0.05) -> 0.25 speed (Negligible).
+        // Max/Boosted (1.00) -> 5.0 speed (Hard Pull).
+        bhPullSpeed = (0.05 + resonance) * 5;
+    }
+
     // Spawning Logic
     const minutes = gameTime / 60;
 
-    // Tiered Spawn Rate Scaling (User Request)
-    // 0-10m: +0.2/min
-    // 10-20m: +0.3/min (+2.0 total from previous)
-    // 20m+: +0.4/min (+5.0 total from previous)
+    // 5-minute Cycle Based Spawn Scaling (User Request)
+    // Every 5 mins, the "rate of increase per minute" grows by +0.2
+    // Cycle 0 (0-5m): +0.2/min, Cycle 1 (5-10m): +0.4/min, etc.
     let addedRate = 0;
-    if (minutes <= 10) {
-        addedRate = minutes * 0.2;
-    } else if (minutes <= 20) {
-        addedRate = (10 * 0.2) + ((minutes - 10) * 0.3);
-    } else {
-        addedRate = (10 * 0.2) + (10 * 0.3) + ((minutes - 20) * 0.4);
+    const fullCycles = Math.floor(minutes / 5);
+    for (let i = 0; i < fullCycles; i++) {
+        addedRate += 1.0 * (i + 1); // 5 minutes * (0.2 * (i + 1)) = 1.0 * (i + 1)
     }
+    const currentCycleRate = 0.2 * (fullCycles + 1);
+    addedRate += (minutes % 5) * currentCycleRate;
 
     const baseSpawnRate = GAME_CONFIG.ENEMY.BASE_SPAWN_RATE + addedRate;
     let actualRate = baseSpawnRate * shapeDef.spawnWeight;
@@ -63,8 +73,9 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
     if (state.lastArena !== state.currentArena) {
         state.lastArena = state.currentArena;
         // When entering a new arena, reset its POIs with a 30s delay
+        // Skip turrets - they are relocated instantly by relocateTurretsToArena and should stay visible.
         state.pois.forEach(poi => {
-            if (poi.arenaId === state.currentArena) {
+            if (poi.arenaId === state.currentArena && poi.type !== 'turret') {
                 poi.respawnTimer = 30;
                 poi.active = (poi.type === 'anomaly'); // Reset to default state
                 poi.progress = 0;
@@ -137,8 +148,16 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         actualRate *= 2.0; // Double spawn rate in Overclock zone
     }
 
-    if (Math.random() < actualRate / 60 && state.portalState !== 'transferring') {
-        spawnEnemy(state);
+    // --- SPAWN EXECUTION ---
+    // Fix: Allow spawning multiple enemies per frame if actualRate > 60
+    const spawnChancePerFrame = actualRate * step;
+    let spawnsToExecute = Math.floor(spawnChancePerFrame);
+    if (Math.random() < (spawnChancePerFrame - spawnsToExecute)) spawnsToExecute++;
+
+    for (let i = 0; i < spawnsToExecute; i++) {
+        if (state.portalState !== 'transferring') {
+            spawnEnemy(state);
+        }
     }
 
     // --- POI EFFECTS: Anomaly Summoning ---
@@ -297,8 +316,10 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         const minutesRaw = gameTime / 60;
         const current10MinCycle = Math.floor(minutesRaw / 10);
 
-        // Determine tier (1, 2, or 3+)
-        const tier = Math.min(3, current10MinCycle + 1);
+        // Determine tier (1, 2, 3, or 4+)
+        const tier = Math.min(4, current10MinCycle + 1);
+
+        // At 30:00, current10MinCycle is 3. Tier becomes 4.
 
         spawnEnemy(state, undefined, undefined, undefined, true, tier);
 
@@ -415,10 +436,9 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         // Scaling (Matching EnemySpawnLogic.ts)
         const minutes = state.gameTime / 60;
-        const cycleCount = Math.floor(minutes / 5);
         const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-        const hpMult = Math.pow(1.65, cycleCount) * shapeDef.hpMult;
-        const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, 1.65 cycle multiplier
+        const hpMult = getCycleHpMult(state.gameTime) * shapeDef.hpMult;
+        const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, progressive cycle multiplier
         const finalHp = baseHp * hpMult;
 
         const sharedShield = (finalHp * 30) * 1.0; // 100% of combined HP (User Request)
@@ -578,6 +598,70 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         // --- ZOMBIE LOGIC ---
         if (e.isZombie) {
             updateZombie(e, state, step, onEvent);
+            return;
+        }
+
+        // --- PHALANX DRONE LOGIC (Tactical Wall Rush) ---
+        if (e.isPhalanxDrone) {
+            let host = state.enemies.find(h => h.id === e.soulLinkHostId);
+            if (!host) {
+                host = state.enemies.find(h => h.boss && h.shape === 'pentagon');
+            }
+
+            const age = state.gameTime - (e.spawnedAt || 0);
+            if (!host || host.dead || (host.phalanxState === 0 && age > 0.5)) {
+                e.dead = true;
+                return;
+            }
+
+            if (host.phalanxState === 1) {
+                // Phase 1: Tracking/Looking (3s) - Follow player direction
+                const aimAngle = Math.atan2(state.player.y - host.y, state.player.x - host.x);
+                const perp = aimAngle + Math.PI / 2;
+                const index = e.phalanxDroneAngle || 0;
+                const offset = (index - 3.5) * 80;
+
+                e.x = host.x + Math.cos(perp) * offset;
+                e.y = host.y + Math.sin(perp) * offset;
+                e.rotationPhase = aimAngle;
+                e.vx = 0; e.vy = 0;
+            } else if (host.phalanxState === 2) {
+                // Phase 2: Locked (1.5s) - Stay in formation, stop tracking
+                const aimAngle = host.phalanxAngle || 0;
+                const perp = aimAngle + Math.PI / 2;
+                const index = e.phalanxDroneAngle || 0;
+                const offset = (index - 3.5) * 80;
+
+                e.x = host.x + Math.cos(perp) * offset;
+                e.y = host.y + Math.sin(perp) * offset;
+                e.rotationPhase = aimAngle; // Maintain locked rotation
+                e.vx = 0; e.vy = 0;
+
+                // Visual flicker to indicate lock
+                if (state.frameCount % 10 < 5) {
+                    spawnParticles(state, e.x, e.y, '#FFFFFF', 1, 4, 10);
+                }
+            } else if (host.phalanxState === 3) {
+                // Phase 3: Rush/Sweep (15 spd)
+                const spd = 15;
+                const moveAngle = host.phalanxAngle || 0;
+                e.x += Math.cos(moveAngle) * spd;
+                e.y += Math.sin(moveAngle) * spd;
+                e.rotationPhase = moveAngle; // Maintain locked rotation during flight
+
+                const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
+                if (distToPlayer < (e.size + state.player.size)) {
+                    // One-shot damage (150% max hp)
+                    const maxHp = calcStat(state.player.hp);
+                    const oneShotDmg = maxHp * 1.5;
+                    state.player.curHp -= oneShotDmg;
+                    state.player.damageTaken += oneShotDmg;
+                    spawnFloatingNumber(state, state.player.x, state.player.y, "CRIT", '#ef4444', true);
+                    e.dead = true;
+                    spawnParticles(state, e.x, e.y, '#eab308', 15);
+                    playSfx('impact');
+                }
+            }
             return;
         }
 
@@ -797,13 +881,15 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
         // if (targetZombie && dist < e.size + targetZombie.size) { ... }
 
         // Separator
-        let pushX = 0;
-        let pushY = 0;
+
 
         // Optimized Push Logic - Only run for enemies near player and stagger checks
-        const shouldCheckPush = dist < 1000 && (e.id + state.frameCount) % 2 === 0;
+        // Throttled to every 4 frames per enemy to save CPU
+        const shouldCheckPush = dist < 1000 && (e.id + state.frameCount) % 4 === 0;
 
         if (shouldCheckPush) {
+            let nextPushX = 0;
+            let nextPushY = 0;
             const nearbyEnemies = state.spatialGrid.query(e.x, e.y, e.size * 3);
 
             nearbyEnemies.forEach(other => {
@@ -821,13 +907,19 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                             let multiplier = 0.01;
                             if (other.legionId) multiplier = 0.8; // Harder wall-like push
 
-                            pushX += (odx / odist) * pushDist * multiplier;
-                            pushY += (ody / odist) * pushDist * multiplier;
+                            nextPushX += (odx / odist) * pushDist * multiplier;
+                            nextPushY += (ody / odist) * pushDist * multiplier;
                         }
                     }
                 }
             });
+            // Store for use in future frames when throttled
+            e.lastPushX = nextPushX;
+            e.lastPushY = nextPushY;
         }
+
+        let pushX = e.lastPushX || 0;
+        let pushY = e.lastPushY || 0;
 
         // Apply Speed Modifiers
         // Speed - elites move at same speed as normal enemies generally, unless specific shape logic overrides
@@ -939,6 +1031,34 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
 
         let vx = v.vx;
         let vy = v.vy;
+
+        // --- EVENT HORIZON: Blackhole Pull ---
+
+        if (blackholes.length > 0) {
+            // Uses pre-calculated 'bhPullSpeed' from outer scope
+
+            blackholes.forEach(bh => {
+                const dx = bh.x - e.x;
+                const dy = bh.y - e.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < bh.radius) {
+                    // Pull Force: Stronger closer to center
+                    // "void radius of pull is made deep"
+                    const intensity = 1 - (dist / bh.radius);
+                    // Apply pull speed.
+                    const finalPull = bhPullSpeed * intensity;
+
+                    const angle = Math.atan2(dy, dx);
+                    // Add to velocity vector
+                    vx += Math.cos(angle) * finalPull;
+                    vy += Math.sin(angle) * finalPull;
+
+                    // Mark for effects
+                    e.voidAmplified = true;
+                }
+            });
+        }
 
 
 

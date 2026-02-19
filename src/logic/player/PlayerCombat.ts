@@ -91,7 +91,7 @@ export function handlePlayerCombat(
                 }
             });
 
-            if (radLvl >= 2 && enemiesInAura.length > 0) {
+            if (radLvl >= 2 && enemiesInAura.length > 0 && !player.healingDisabled) {
                 const healPerEnemy = playerMaxHp * (0.002 * m) / 6;
                 const totalHeal = healPerEnemy * enemiesInAura.length;
                 player.curHp = Math.min(maxHp, player.curHp + totalHeal);
@@ -139,7 +139,7 @@ export function handlePlayerCombat(
     // SHOOTING LOGIC
     const now = state.gameTime;
     const atkAtkValue = calcStat(player.atk, state.dmgAtkBuffMult);
-    const shotsPerSec = Math.max(0.1, 2.64 * Math.log(atkAtkValue / 100) - 1.25);
+    const shotsPerSec = Math.max(0.1, (2.64 * Math.log(atkAtkValue / 100) - 1.25));
     const atkDelay = 1 / shotsPerSec;
     if (now - (player.lastShot || 0) >= atkDelay) {
         // Only host or guest for themselves should trigger firing logic
@@ -201,12 +201,19 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     const playerMaxHp = calcStat(player.hp);
                     rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
                 } else {
-                    // New requested formula: 5% of enemy max HP
-                    rawDmg = e.maxHp * 0.05;
+                    // Level 4 Triangle Boss: Dealing 15% Player Max HP as True Damage (Counter to high HP builds)
+                    if (e.boss && e.shape === 'triangle' && e.isLevel4) {
+                        const playerMaxHp = calcStat(player.hp);
+                        rawDmg = playerMaxHp * 0.15;
+                        e.wormTrueDamage = 15; // Flags for True Damage bypass below
+                    } else {
+                        // New requested formula: 5% of enemy max HP
+                        rawDmg = e.maxHp * 0.05;
+                    }
                 }
 
                 // Bosses deal 7.5% of their max HP (1.5x of the base 5%)
-                if (e.boss) rawDmg *= 1.5;
+                if (e.boss && !e.isLevel4) rawDmg *= 1.5;
 
                 // Anomaly Bosses still get an extra kick
                 if (e.isAnomaly) rawDmg *= 1.5;
@@ -252,8 +259,8 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                 let absorbed = 0;
                 let damageToApply = finalDmg;
 
-                // --- SPECIAL: Worm Head True Damage (Pierces Armor & Reduction) ---
-                if (e.wormRole === 'head' && e.wormTrueDamage) {
+                // --- SPECIAL: Worm Head or Level 4 Boss True Damage (Pierces Armor & Reduction) ---
+                if ((e.wormRole === 'head' || e.isLevel4) && e.wormTrueDamage) {
                     const playerMaxHp = calcStat(player.hp);
                     damageToApply = playerMaxHp * (e.wormTrueDamage / 100);
                 }

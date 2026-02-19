@@ -106,7 +106,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 // Duration is effectively infinite for sorting purposes relative to decaying buffs
                 if (arenaIdx === 0 && (gameState.arenaLevels[0] || 0) >= 1) {
                     buffs.push({ id: 'eco1', title: 'Econ Sector', buff: `+${30 * surgeMult}% XP & Soul Yield`, color: '#22d3ee', remaining: 99999, priority: 2 });
-                    buffs.push({ id: 'eco2', title: 'Econ Sector', buff: `+${30 * surgeMult}% Meteorite rate`, color: '#22d3ee', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'eco2', title: 'Econ Sector', buff: `+30% Meteorite rate`, color: '#22d3ee', remaining: 99999, priority: 2 });
                 } else if (arenaIdx === 1 && (gameState.arenaLevels[1] || 0) >= 1) {
                     buffs.push({ id: 'com1', title: 'Combat Sector', buff: `+${30 * surgeMult}% DMG & Atk Spd`, color: '#ef4444', remaining: 99999, priority: 2 });
                 } else if (arenaIdx === 2 && (gameState.arenaLevels[2] || 0) >= 1) {

@@ -137,8 +137,8 @@ export const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
     { min: 15, max: 20, weights: [10, 30, 40, 14, 5, 1] },
     // 20-25 min: 0% Anomalous, 0% Radiant, 20% Abyss, 40% Eternal, 30% Divine, 10% Singularity
     { min: 20, max: 25, weights: [0, 0, 20, 40, 30, 10] },
-    // 25-30 min: 0% Anomalous, 0% Radiant, 0% Abyss, 0% Eternal, 50% Divine, 40% Singularity
-    { min: 25, max: 30, weights: [0, 0, 0, 0, 50, 40] },
+    // 25-30 min: 0% Anomalous, 0% Radiant, 0% Abyss, 0% Eternal, 60% Divine, 40% Singularity
+    { min: 25, max: 30, weights: [0, 0, 0, 0, 60, 40] },
     // 30+ min: 20% Divine, 80% Singularity
     { min: 30, max: 9999, weights: [0, 0, 0, 0, 20, 80] }
 ];
@@ -273,15 +273,15 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     // Base chance is the sum of the weights (e.g. 1.6 + 1.0 + 0.4 = 3.0 -> 3%)
     let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.05; // 5% Chance (Normalizing 100 weight sum to 0.05)
 
-    chance *= state.xpSoulBuffMult;
+    // Multiplied by Sector Buff (Econ Sector) - specifically the meteorite rate version
+    chance *= state.meteoriteRateBuffMult;
 
     // Add Legendary Bonus
     chance += calculateLegendaryBonus(state, 'met_drop_per_kill');
 
-    // Blueprint: Meteor Shower (+50% DROP RATE) - Boosted by Surge
+    // Blueprint: Meteor Shower (+50% DROP RATE) - Never boosted by Surge (Player Stat)
     if (isBuffActive(state, 'METEOR_SHOWER')) {
-        const surge = isBuffActive(state, 'ARENA_SURGE') ? 2.0 : 1.0;
-        chance *= (1 + (0.5 * surge));
+        chance *= 1.5;
     }
 
     // DELAY MECHANIC: No meteorites until 1 minute (60s)

@@ -108,7 +108,7 @@ export function updateTurrets(state: GameState, step: number) {
             if (variant === 'heal') {
                 const dToPlayer = Math.hypot(state.player.x - turret.x, state.player.y - turret.y);
 
-                if (dToPlayer <= TURRET_RANGE) {
+                if (dToPlayer <= TURRET_RANGE && !state.player.healingDisabled) {
                     // Base: 5% HP/sec, +1% per level
                     const healPercent = 0.05 + (level - 1) * 0.01;
                     const maxHp = calcStat(state.player.hp);
@@ -379,7 +379,7 @@ export function updateAllies(state: GameState, step: number) {
 
             // Heal pulse (every 1s)
             if (Math.floor(state.gameTime) !== Math.floor(state.gameTime - step)) {
-                if (dToPlayer < 200) {
+                if (dToPlayer < 200 && !p.healingDisabled) {
                     const maxHp = calcStat(p.hp);
                     const heal = maxHp * (ally.healPower || 0.05);
                     p.curHp = Math.min(maxHp, p.curHp + heal);

@@ -226,7 +226,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '10px 0 250px',
+            padding: '10px 0 100px',
             pointerEvents: 'auto'
         }}>
             {/* Action Buttons */}
@@ -299,7 +299,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             {/* Content Logic - Compacted height */}
             <div style={{ width: '1000px', display: 'flex', flexDirection: 'column' }}>
                 {activeTab === 'overview' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
 
                         {/* MISSION LOG */}
                         <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
@@ -319,15 +319,6 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             {gameState.player.killerMaxHp !== undefined && (
                                 <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="#f59e0b" />
                             )}
-
-                            <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
-                                SECTOR ALLOCATION
-                                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENSE</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
-                                </div>
-                            </div>
                         </div>
 
                         {/* FINAL SYSTEM PERFORMANCE */}
@@ -346,6 +337,15 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                 <FinalStatItem label="SPEED" value={gameState.player.speed.toFixed(1)} color="#22d3ee" />
                                 <FinalStatItem label="COL REDUC" value={colRed + '%'} color="#3b82f6" />
                                 <FinalStatItem label="PROJ REDUC" value={projRed + '%'} color="#3b82f6" />
+                            </div>
+
+                            <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
+                                SECTOR ALLOCATION
+                                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENSE</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
+                                </div>
                             </div>
                         </div>
 

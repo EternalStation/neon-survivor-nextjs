@@ -321,7 +321,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             // Ignore friendly zombies or dead/immune stuff
             // Friendly zombies shouldn't be hit by player bullets? Usually yes.
             // "on your side".
-            if (e.dead || e.hp <= 0 || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground') continue;
+            if (e.dead || e.hp <= 0 || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || e.soulSuckActive) continue;
 
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
             const hitRadius = e.size + 10;
@@ -438,6 +438,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     }
                 }
 
+
                 // --- ComLife Lvl 3: +2% Max HP Dmg (Non-Boss) ---
                 const lifeLevel = getHexLevel(state, 'ComLife');
                 if (lifeLevel >= 3 && !e.boss) {
@@ -531,7 +532,18 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                 // 0.5 Thorns Logic (Reflect Damage)
                 if (e.thorns && e.thorns > 0 && damageAmount > 0) {
-                    const reflected = damageAmount * e.thorns;
+                    let reflected = damageAmount * e.thorns;
+
+                    if (!e.thornsIgnoresArmor) {
+                        const armorValue = calcStat(owner.arm);
+                        const drCap = 0.95;
+                        const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
+                        reflected *= armRedMult;
+
+                        owner.damageBlockedByArmor += (damageAmount * e.thorns - reflected);
+                        owner.damageBlocked += (damageAmount * e.thorns - reflected);
+                    }
+
                     owner.curHp -= reflected;
                     owner.lastHitDamage = reflected;
                     owner.killerHp = e.hp;
@@ -626,7 +638,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                             type: 'blackhole',
                             x: b.x,
                             y: b.y,
-                            radius: 400, // Reduced from 450px
+                            radius: 400, // User Request: Fixed 400px range
                             duration: blackholeDuration,
                             creationTime: now,
                             level: 1
@@ -675,7 +687,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
                 // --- ComLife Lvl 1: Lifesteal ---
-                if (lifeLevel >= 1 && (b.id !== -1)) { // Ensure it's a projectile (Shockwave shouldn't trigger this? Bullet ID check is weak but ok)
+                if (lifeLevel >= 1 && (b.id !== -1) && !owner.healingDisabled) { // Ensure it's a projectile (Shockwave shouldn't trigger this? Bullet ID check is weak but ok)
                     // "Lifesteal from dmg dealth of projectiles"
                     const heal = damageAmount * 0.03;
 

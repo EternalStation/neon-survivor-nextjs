@@ -205,7 +205,10 @@ export default function Home() {
                   />
 
                   {isMobile && !hook.gameOver && (
-                    <MobileControls onInput={hook.handleJoystickInput} />
+                    <MobileControls
+                      onInput={hook.handleJoystickInput}
+                      isInverted={!!(hook.gameState.player.invertedControlsUntil && hook.gameState.gameTime < hook.gameState.player.invertedControlsUntil)}
+                    />
                   )}
                 </div>
               )}

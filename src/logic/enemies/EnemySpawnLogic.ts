@@ -7,7 +7,24 @@ import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 
 // Helper to determine current game era params
-// Helper to determine current game era params
+
+export function getCycleHpMult(gameTime: number) {
+    const minutes = gameTime / 60;
+    const cycleCount = Math.floor(minutes / 5);
+    let cycleMult = 1.0;
+    for (let i = 1; i <= cycleCount; i++) {
+        if (i < 3) {
+            cycleMult *= 1.65;
+        } else if (i === 3) {
+            cycleMult *= 2.0; // User request: min 15 = 2.0x base jump
+        } else {
+            // User request: +0.2 to cycle rate every 5 mins after min 15
+            cycleMult *= (2.0 + (i - 3) * 0.2);
+        }
+    }
+    return cycleMult;
+}
+
 export function getProgressionParams(gameTime: number) {
     const minutes = Math.floor(gameTime / 60);
     const eraIndex = Math.floor(minutes / 15);
@@ -76,10 +93,9 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 
     // Scaling
     const minutes = gameTime / 60;
-    const cycleCount = Math.floor(minutes / 5);
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-    const hpMult = Math.pow(1.65, cycleCount) * SHAPE_DEFS[chosenShape].hpMult;
-    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, 1.65 cycle multiplier
+    const hpMult = getCycleHpMult(gameTime) * SHAPE_DEFS[chosenShape].hpMult;
+    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, progressive cycle multiplier
 
     // Extraction Rage scaling (Fast growth)
     if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
@@ -88,9 +104,18 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     }
 
     const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1)); // 10-20 min
-    const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)); // 20+ min
+    const isLvl4 = isBoss && (bossTier === 4 || (minutes >= 30 && bossTier !== 1)); // 30+ min
+    const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)) || isLvl4; // 20+ min
 
-    const bossHpMult = 25 + Math.floor(minutes);
+    // Progressive Boss Scaling: 25 + (+1/min 0-5, +2/min 5-10, +3/min 10-15, etc.)
+    const mTotal = Math.floor(minutes);
+    let progressiveBonus = 0;
+    const fullIntervals = Math.floor(mTotal / 5);
+    for (let i = 0; i < fullIntervals; i++) {
+        progressiveBonus += 5 * (i + 1);
+    }
+    progressiveBonus += (mTotal % 5) * (fullIntervals + 1);
+    const bossHpMult = 25 + progressiveBonus;
     let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
     if (isAnomaly) {
         const gen = state.anomalyBossCount || 0;
@@ -98,7 +123,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     }
 
     // Boss Size Scaling
-    const baseSize = isBoss ? (isLvl3 ? 80 : (isLvl2 ? 70 : 65)) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
+    const baseSize = isBoss ? 80 : (20 * SHAPE_DEFS[chosenShape].sizeMult);
     const size = isAnomaly ? baseSize * 1.0 : baseSize; // Anomaly same size as normal boss tier
 
     const eventPalette = getEventPalette(state);

@@ -3,8 +3,15 @@ import { spawnParticles } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 import { PALETTES } from '../../core/constants';
 
+
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
     const { enemies } = state;
+    // Build O(1) Lookup Map for performance (Fixes O(N^2) links)
+    const enemyMap = new Map<number, Enemy>();
+    enemies.forEach(e => { if (!e.dead) enemyMap.set(e.id, e); });
+    const bossMap = new Map<number, Enemy>();
+    enemies.forEach(e => { if (e.boss && !e.dead) bossMap.set(e.id, e); });
+
     // Defensive Reset: Ensure no leaked shadows or styles from previous layers affect enemies
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
@@ -61,14 +68,19 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.save();
             ctx.strokeStyle = linkColor;
             ctx.lineWidth = 2;
-            ctx.shadowColor = linkColor;
-            ctx.shadowBlur = 10;
             ctx.lineCap = 'round';
+
+            // Neon Glow replacement for shadowBlur
+            ctx.lineWidth = 6;
+            ctx.globalAlpha = 0.3;
+            ctx.stroke();
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 1.0;
 
             const time = state.gameTime;
 
             e.soulLinkTargets.forEach((targetId, i) => {
-                const target = enemies.find(t => t.id === targetId && !t.dead);
+                const target = enemyMap.get(targetId);
                 if (target) {
                     // Draw Snake Line
                     ctx.beginPath();
@@ -104,43 +116,36 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // PENTAGON LVL 3 PLAYER TETHER (Distorted Glitchy Link)
-        if (e.shape === 'pentagon' && e.boss && e.parasiteLinkActive && (e.bossTier === 3 || (state.gameTime > 1200 && e.bossTier !== 1))) {
-            // Determine Color based on Era
+        const isLvl4 = !!e.isLevel4;
+        const isLvl3 = !!e.isLevel3 || isLvl4;
+
+        if (e.shape === 'pentagon' && e.boss && e.parasiteLinkActive && isLvl3) {
+            // Match Era Palette
             const minutes = (e.spawnedAt || state.gameTime) / 60;
             const eraIndex = Math.floor(minutes / 15) % PALETTES.length;
-            const tetherColor = PALETTES[eraIndex].colors[0]; // Brightest era color
-            const tetherColorDark = PALETTES[eraIndex].colors[2]; // Darkest for contrast
+            const eraColor = PALETTES[eraIndex].colors[0];
 
             ctx.save();
             const time = state.gameTime;
 
-            // Glitchy distorted line - multiple overlapping segments
+            // Tight Thin Glitchy line
             const segments = 8;
             for (let s = 0; s < segments; s++) {
                 const progress = s / segments;
                 const nextProgress = (s + 1) / segments;
 
-                // Calculate positions with glitch offset
-                const glitchAmp = 15 + Math.sin(time * 20 + s) * 10;
-                const glitchX1 = (Math.random() - 0.5) * glitchAmp;
-                const glitchY1 = (Math.random() - 0.5) * glitchAmp;
-                const glitchX2 = (Math.random() - 0.5) * glitchAmp;
-                const glitchY2 = (Math.random() - 0.5) * glitchAmp;
+                const glitchAmp = (isLvl4 ? 10 : 5) + Math.sin(time * 20 + s) * 5;
+                const x1 = e.x + (state.player.x - e.x) * progress + (Math.random() - 0.5) * glitchAmp;
+                const y1 = e.y + (state.player.y - e.y) * progress + (Math.random() - 0.5) * glitchAmp;
+                const x2 = e.x + (state.player.x - e.x) * nextProgress + (Math.random() - 0.5) * glitchAmp;
+                const y2 = e.y + (state.player.y - e.y) * nextProgress + (Math.random() - 0.5) * glitchAmp;
 
-                const x1 = e.x + (state.player.x - e.x) * progress + glitchX1;
-                const y1 = e.y + (state.player.y - e.y) * progress + glitchY1;
-                const x2 = e.x + (state.player.x - e.x) * nextProgress + glitchX2;
-                const y2 = e.y + (state.player.y - e.y) * nextProgress + glitchY2;
+                ctx.strokeStyle = eraColor;
+                ctx.lineWidth = 1.5;
+                ctx.globalAlpha = 0.5 + Math.sin(time * 10 + s * 0.5) * 0.2;
 
-                // Alternating colors for glitch effect
-                ctx.strokeStyle = s % 2 === 0 ? tetherColor : tetherColorDark;
-                ctx.lineWidth = 3 + Math.sin(time * 15 + s) * 1.5;
-                ctx.globalAlpha = 0.6 + Math.sin(time * 10 + s * 0.5) * 0.3;
-
-                // Add shadow for scary effect
-                ctx.shadowColor = tetherColor;
-                ctx.shadowBlur = 15;
+                ctx.shadowColor = eraColor;
+                ctx.shadowBlur = 10;
 
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
@@ -148,14 +153,42 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.stroke();
             }
 
-            // Add crackling particles along the line
-            if (state.frameCount % 3 === 0) {
+            if (state.frameCount % 8 === 0) {
                 const particlePos = Math.random();
-                const px = e.x + (state.player.x - e.x) * particlePos;
-                const py = e.y + (state.player.y - e.y) * particlePos;
-                spawnParticles(state, px, py, tetherColor, 2);
+                spawnParticles(state, e.x + (state.player.x - e.x) * particlePos, e.y + (state.player.y - e.y) * particlePos, eraColor, 1);
             }
+            ctx.restore();
+        }
 
+        // PENTAGON LVL 4 HIVEMIND PHALANX TETHERS (Restored Purple)
+        if (e.shape === 'pentagon' && isLvl4 && e.phalanxState && e.phalanxState > 0) {
+            ctx.save();
+            const time = state.gameTime;
+            const phalanxColor = '#a855f7'; // Purple Command Color (Preferred by User)
+
+            ctx.strokeStyle = phalanxColor;
+            ctx.lineWidth = 4;
+            ctx.shadowColor = phalanxColor;
+            ctx.shadowBlur = 15;
+
+            state.enemies.forEach(d => {
+                if (d.isPhalanxDrone && d.soulLinkHostId === e.id && !d.dead) {
+                    ctx.beginPath();
+                    ctx.moveTo(e.x, e.y);
+
+                    // Bezier command tether
+                    const midX = (e.x + d.x) / 2;
+                    const midY = (e.y + d.y) / 2;
+                    const ang = Math.atan2(d.y - e.y, d.x - e.x);
+                    const wave = Math.sin(time * 10 + d.id) * 30;
+                    const cpx = midX + Math.cos(ang + Math.PI / 2) * wave;
+                    const cpy = midY + Math.sin(ang + Math.PI / 2) * wave;
+
+                    ctx.quadraticCurveTo(cpx, cpy, d.x, d.y);
+                    ctx.stroke();
+
+                }
+            });
             ctx.restore();
         }
 
@@ -186,20 +219,104 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
+        // CIRCLE LVL 4 SOUL SUCK (Milky Way Effect)
+        if (e.shape === 'circle' && e.soulSuckActive) {
+            ctx.save();
+            const time = state.gameTime;
+            const dist = Math.hypot(state.player.x - e.x, state.player.y - e.y);
+            const angle = Math.atan2(e.y - state.player.y, e.x - state.player.x);
+
+            ctx.translate(state.player.x, state.player.y);
+            ctx.rotate(angle);
+
+            // 1. Dark Milky Way Base (Wide semi-transparent flow)
+            const beamWidth = 80;
+            const grad = ctx.createLinearGradient(0, -beamWidth / 2, 0, beamWidth / 2);
+            grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            grad.addColorStop(0.5, 'rgba(40, 40, 40, 0.85)'); // Darker Grey / Blackish
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.globalCompositeOperation = 'source-over';
+
+            // Draw flowing wavy path
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            for (let d = 0; d < dist; d += 20) {
+                const wave = Math.sin(d * 0.01 + time * 5) * 15;
+                ctx.lineTo(d, wave);
+            }
+
+            // Draw the volume of the flow
+            ctx.save();
+            ctx.lineWidth = beamWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = grad;
+            ctx.stroke();
+            ctx.restore();
+
+            // 2. Swirling "Souls" (White/Purple specs flowing towards boss)
+            const particleCount = 15;
+            for (let i = 0; i < particleCount; i++) {
+                const pTime = (time * 1.5 + (i / particleCount)) % 1.0;
+                const pd = pTime * dist;
+                const pWave = Math.sin(pd * 0.01 + time * 5 + i) * 20;
+                const pSize = 2 + Math.random() * 3;
+
+                if (i % 3 === 0) ctx.fillStyle = '#eab308'; // Gold
+                else if (i % 3 === 1) ctx.fillStyle = '#facc15'; // Bright Yellow
+                else ctx.fillStyle = '#94a3b8'; // Slate Grey
+
+                ctx.globalAlpha = 1.0 * (1 - Math.abs(pTime - 0.5) * 2);
+                ctx.beginPath();
+                ctx.arc(pd, pWave, pSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. Boss Dark Vortex Aura
+            ctx.restore();
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            const vortexPulse = 1.0 + Math.sin(time * 15) * 0.15;
+            const vortexGrad = ctx.createRadialGradient(0, 0, e.size * 0.2, 0, 0, e.size * 2 * vortexPulse);
+            vortexGrad.addColorStop(0, 'rgba(234, 179, 8, 0.4)'); // Yellow Core Glow
+            vortexGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0.6)');
+            vortexGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = vortexGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, e.size * 2 * vortexPulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         // DIAMOND BEAM CHARGE (Pre-Fire)
         if (e.shape === 'diamond' && e.beamState === 1 && e.beamX && e.beamY) {
             ctx.save();
+            const isLvl4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1);
             const ang = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
             const isLocked = (e.beamTimer || 0) > 30;
 
-            // Thin guide line
+            // Guide line(s)
             ctx.strokeStyle = e.palette[1];
-            ctx.globalAlpha = isLocked ? 0.8 : 0.3; // Much brighter when locked
-            ctx.lineWidth = isLocked ? 3 : 1; // Thicker when locked
-            ctx.beginPath();
-            ctx.moveTo(e.x, e.y);
-            ctx.lineTo(e.x + Math.cos(ang) * 3000, e.y + Math.sin(ang) * 3000);
-            ctx.stroke();
+            ctx.globalAlpha = isLocked ? 0.8 : 0.3;
+            ctx.lineWidth = isLocked ? 3 : 1;
+
+            if (isLvl4) {
+                const off = (45 * Math.PI) / 180;
+                [ang + off, ang - off].forEach(a => {
+                    ctx.beginPath();
+                    ctx.moveTo(e.x, e.y);
+                    ctx.lineTo(e.x + Math.cos(a) * 3000, e.y + Math.sin(a) * 3000);
+                    ctx.stroke();
+                });
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(e.x, e.y);
+                ctx.lineTo(e.x + Math.cos(ang) * 3000, e.y + Math.sin(ang) * 3000);
+                ctx.stroke();
+            }
 
             // Charge buildup at source
             const chargeProgress = (e.beamTimer || 0) / 60;
@@ -445,7 +562,29 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // ZOMBIE RENDERER
+        if (e.isPhalanxDrone && !e.dead) {
+            const host = e.soulLinkHostId ? bossMap.get(e.soulLinkHostId) : null;
+            if (host && host.phalanxState === 3) {
+                ctx.save();
+                ctx.translate(e.x, e.y);
+                const angle = e.rotationPhase || 0;
+                const rx = Math.cos(angle);
+                const ry = Math.sin(angle);
+
+                ctx.strokeStyle = '#eab308'; // Thin yellow line
+                ctx.lineWidth = 1; // "make very thing" -> 1px
+                ctx.globalAlpha = 0.8;
+                ctx.beginPath();
+                // Start at the back edge of the long_drone shape (approx 1.5 * size)
+                const edgeOffset = e.size * 1.5;
+                ctx.moveTo(-rx * edgeOffset, -ry * edgeOffset);
+                ctx.lineTo(-rx * (edgeOffset + 30), -ry * (edgeOffset + 30)); // "longer like 30 pxiels"
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // --- ZOMBIE RENDERER ---
         if (e.isZombie) {
             const zombieImg = (meteoriteImages as any).zombie;
             if (zombieImg && zombieImg.complete) {
@@ -602,24 +741,33 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         let innerColor = e.eraPalette?.[1] || p[1];
         let outerColor = e.eraPalette?.[0] || p[2];
 
+        // LVL 4 Circle Boss Soul Suck: Black/Grey/Yellow Layers
         const fState = e.fluxState || 0;
-        if (fState === 0) {
-            // Prime: High Contrast (Stable)
-            coreColor = e.eraPalette?.[0] || p[0];
-            innerColor = e.eraPalette?.[2] || p[1];
-            outerColor = e.eraPalette?.[1] || p[2];
-        } else if (fState === 1) {
-            // Resonance: Inner Pulse (Solid)
-            coreColor = e.eraPalette?.[1] || p[0];
-            innerColor = e.eraPalette?.[0] || p[1];
-            outerColor = e.eraPalette?.[2] || p[2];
-        } else if (fState === 2) {
-            // Radiance: Overloaded Aura (Static Glow)
-            coreColor = '#FFFFFF'; // White Hot
-            innerColor = e.eraPalette?.[0] || e.palette[0];
-            outerColor = e.eraPalette?.[1] || e.palette[1];
-            ctx.shadowColor = innerColor;
-            ctx.shadowBlur = 15;
+        if (e.soulSuckActive || e.soulSuckUsed) {
+            coreColor = '#eab308'; // Gold Core
+            innerColor = '#334155'; // Dark Slate Grey
+            outerColor = '#000000'; // Black silhouette base
+            ctx.shadowColor = e.soulSuckActive ? '#eab308' : '#000000';
+            ctx.shadowBlur = e.soulSuckActive ? 25 : 5;
+        } else {
+            if (fState === 0) {
+                // Prime: High Contrast (Stable)
+                coreColor = e.eraPalette?.[0] || p[0];
+                innerColor = e.eraPalette?.[2] || p[1];
+                outerColor = e.eraPalette?.[1] || p[2];
+            } else if (fState === 1) {
+                // Resonance: Inner Pulse (Solid)
+                coreColor = e.eraPalette?.[1] || p[0];
+                innerColor = e.eraPalette?.[0] || p[1];
+                outerColor = e.eraPalette?.[2] || p[2];
+            } else if (fState === 2) {
+                // Radiance: Overloaded Aura (Static Glow)
+                coreColor = '#FFFFFF'; // White Hot
+                innerColor = e.eraPalette?.[0] || e.palette[0];
+                outerColor = e.eraPalette?.[1] || e.palette[1];
+                ctx.shadowColor = innerColor;
+                ctx.shadowBlur = 15;
+            }
         }
 
         // --- SECOND 5-MIN CYCLE (5-10, 20-25, etc.) BRIGHTNESS TWEAK ---
@@ -667,113 +815,49 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 return { x: px + offset, y: py };
             };
             if (e.shape === 'abomination') {
-                // ANOMALY BOSS: TRUE BULL HEAD SHAPE
-                // No random jitter on vertices to keep shape clean and recognizable
-                // Face orientation: locked on player
                 const dx = state.player.x - e.x;
                 const dy = state.player.y - e.y;
                 const angleToPlayer = Math.atan2(dy, dx);
-                // Points UP by default, so +90 deg correction
                 const relativeAngle = angleToPlayer - (e.rotationPhase || 0) + Math.PI / 2;
 
                 ctx.save();
                 ctx.rotate(relativeAngle);
 
-                // --- 1. BULL HEAD SILHOUETTE ---
-                // Wide forehead, narrowing to a strong snout
-                const s = size; // Base scale
+                const s = size;
                 const snoutW = s * 0.5;
-                const snoutH = s * 0.9;
-                const headCW = s * 0.8; // Cheek width (half)
-                const headCY = -s * 0.2; // Cheek Y pos
+                const headCW = s * 0.8;
+                const headCY = -s * 0.2;
 
                 ctx.beginPath();
-                // Start top center (between horns)
                 ctx.moveTo(0, -s * 0.8);
-                // Top Right Head
                 ctx.lineTo(s * 0.5, -s * 0.8);
-                // Right Temple
                 ctx.lineTo(headCW, -s * 0.5);
-                // Right Cheekbone (widest)
                 ctx.lineTo(headCW, headCY);
-                // Right Jaw -> Snout connection
                 ctx.lineTo(snoutW, s * 0.4);
-                // Right Nostril flare
                 ctx.lineTo(snoutW * 1.2, s * 0.7);
-                // Snout bottom (Chin)
                 ctx.lineTo(0, s * 1.0);
-                // Left Nostril flare
                 ctx.lineTo(-snoutW * 1.2, s * 0.7);
-                // Left Jaw -> Snout connection
                 ctx.lineTo(-snoutW, s * 0.4);
-                // Left Cheekbone
                 ctx.lineTo(-headCW, headCY);
-                // Left Temple
                 ctx.lineTo(-headCW, -s * 0.5);
-                // Top Left Head
                 ctx.lineTo(-s * 0.5, -s * 0.8);
-                // Close at top center
                 ctx.lineTo(0, -s * 0.8);
                 ctx.closePath();
 
-                // --- 2. LONG HORNS ---
-                // Drawn as separate path to ensure they look sharp and attached
                 const drawHorn = (side: number) => {
                     const hornBaseX = side * s * 0.5;
                     const hornBaseY = -s * 0.8;
-                    const hornTipX = side * s * 2.2; // Very wide/long
-                    const hornTipY = -s * 1.4; // Foreward/Upward curve
+                    const hornTipX = side * s * 2.2;
+                    const hornTipY = -s * 1.4;
 
-                    // Base Connection
                     ctx.moveTo(hornBaseX, hornBaseY);
-                    // Outer Curve to Tip
-                    ctx.quadraticCurveTo(
-                        side * s * 1.5, -s * 0.7, // Control point: wide out
-                        hornTipX, hornTipY        // Tip
-                    );
-                    // Inner Curve back to Head (thinner tip, thick base)
-                    ctx.quadraticCurveTo(
-                        side * s * 0.9, -s * 0.4, // Control point: closer to head
-                        hornBaseX - (side * s * 0.2), hornBaseY + (s * 0.3) // Inner base
-                    );
+                    ctx.quadraticCurveTo(side * s * 1.5, -s * 0.7, hornTipX, hornTipY);
+                    ctx.quadraticCurveTo(side * s * 0.9, -s * 0.4, hornBaseX - (side * s * 0.2), hornBaseY + (s * 0.3));
                 };
                 drawHorn(1);
                 drawHorn(-1);
 
-                // Draw Core or Detail
-                if (isCore) {
-                    ctx.closePath(); // Ensure main path closed if just filling core
-                    // For core pass, maybe just a smaller diamond in center?
-                    // The function continues to fill/strike current path...
-                } else {
-                    // --- FACE DETAILS (Eyes, Nostrils) ---
-                    // We draw these as "holes" (canvas winding rule) or separate fills?
-                    // Render function fills current path with 'InnerColor'.
-                    // We'll draw details on TOP after this function returns via separate logic?
-                    // No, `renderEnemies` calls `drawShape(size, true); ctx.fill();`
-                    // So we are defining the path TO BE FILLED.
-
-                    // Let's add eyes/nostrils as holes in the path by drawing them counter-clockwise?
-                    // Or just let main fill happen, and draw details later?
-                    // The renderer logic is:
-                    // 1. Stroke Outer (Larger)
-                    // 2. Fill Inner (Normal)
-                    // 3. Boss Overlay (Black clip)
-
-                    // To make them visible "inside", we can rely on proper geometry or the boss overlay.
-                    // But user said "looks like a crown and 2 eyes". 
-                    // Let's stick to the silhouette for the fill.
-                }
-
-                if (!isCore) {
-                    // Custom Detail Rendering (manually invoked here as cheat since we are inside path def)
-                    // We can't really draw *pixels* here because we are building a path for fill/stroke.
-                    // BUT, the renderer calls `drawShape` then `ctx.stroke()`.
-                    // If we want details, we have to wait or cheat.
-                }
-
                 ctx.restore();
-                // End of 'abomination' shape block
             } else if (e.shape === 'circle') {
                 if (warpAmp > 0) {
                     for (let i = 0; i <= 20; i++) {
@@ -796,6 +880,17 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     const p3 = wp(-size * 0.3, 0); const p4 = wp(-size, -size * 0.7);
                     ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
                 }
+                ctx.closePath();
+            } else if (e.shape === 'long_drone') {
+                const s = size;
+                const p1 = wp(s * 2.5, 0); // Extended Tip
+                const p2 = wp(-s * 1.5, s * 0.4); // Back right
+                const p3 = wp(-s * 0.8, 0); // Depth
+                const p4 = wp(-s * 1.5, -s * 0.4); // Back left
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.lineTo(p4.x, p4.y);
                 ctx.closePath();
             } else if (e.shape === 'triangle') {
                 const p1 = wp(0, -size); const p2 = wp(size * 0.866, size * 0.5); const p3 = wp(-size * 0.866, size * 0.5);
@@ -1112,13 +1207,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         if (e.boss) {
             const redAlpha = (0.6 + Math.sin(state.gameTime * 10) * 0.4) * (Math.random() > 0.5 ? 1 : 0.8);
-            ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 3; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 20; ctx.globalAlpha = redAlpha; drawShape(e.size * 1.25, true); ctx.stroke(); ctx.globalAlpha = 1.0;
+            ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 3;
+            // Replacing shadowBlur with Glow Stroke
+            ctx.lineWidth = 8; ctx.globalAlpha = redAlpha * 0.3; drawShape(e.size * 1.25, true); ctx.stroke();
+            ctx.lineWidth = 3; ctx.globalAlpha = redAlpha; drawShape(e.size * 1.25, true); ctx.stroke();
+            ctx.globalAlpha = 1.0;
         }
 
         ctx.strokeStyle = outerColor; ctx.lineWidth = 1.5;
         if (e.boss) {
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = outerColor;
+            // Replacing shadowBlur with Glow Stroke
+            ctx.lineWidth = 6; ctx.strokeStyle = outerColor; ctx.globalAlpha = 0.4; drawShape(e.size * 1.1, true); ctx.stroke();
+            ctx.lineWidth = 1.5; ctx.globalAlpha = 1.0;
         } else {
             ctx.shadowBlur = 0;
             ctx.shadowColor = 'transparent';
@@ -1233,7 +1333,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         } else {
             // Existing Logic
             ctx.fillStyle = coreColor; ctx.globalAlpha = 1.0;
-            if (e.isNecroticZombie) {
+
+            if (e.soulSuckCoreSize) {
+                // Growth during soul sucking (Yellow core growing)
+                ctx.fillStyle = coreColor;
+                drawShape(e.soulSuckCoreSize, true, false);
+            } else if (e.isNecroticZombie) {
                 // Only zombies get the unique shapeshifting core
                 drawShape(e.size * 0.5, true, true);
             } else {
@@ -1303,51 +1408,46 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         // DIAMOND HYPER BEAM (FIRE STATE)
         if (e.shape === 'diamond' && e.beamState === 2 && e.beamX && e.beamY) {
-            ctx.save();
-            // Global coords, so need to untranslate or just calculate correctly
-            // Currently inside `translate(e.x, e.y)`
+            const isLvl4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1);
+            const centerAngle = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
+            const duration = isLvl4 ? 240 : 30;
+            const t = Math.min(1, (e.beamTimer || 0) / duration);
 
-            const dx = e.beamX - e.x;
-            const dy = e.beamY - e.y;
-            const dist = 3000; // Screen length
-            const angle = Math.atan2(dy, dx);
+            const drawLaser = (angle: number) => {
+                ctx.save();
+                ctx.rotate(angle - (e.rotationPhase || 0));
+                const dist = 3000;
+                const beamWidth = (isLvl4 ? 30 : 40) + Math.sin(state.gameTime * 50) * 10;
 
-            ctx.rotate(angle - (e.rotationPhase || 0)); // Align with beam
-            // e.rotationPhase accumulates, so `rotate(-rot)` creates 0 aligned context?
-            // Actually `angle` is absolute. Current context is rotated by `e.rotationPhase`?
-            // Wait, line 250: `ctx.translate(e.x, e.y);`. Line 338: `if (e.rotationPhase) ctx.rotate(e.rotationPhase);`.
-            // The Elite code block (where this snippet matches) is INSIDE the main loop after rotation?
-            // checking context...
-            // YES. 
-            // We should use `ctx.save()` before rotation if possible, but we are inserting at the end of the loop where rotation might be active.
-            // Actually, inserting at the end of the `enemies.forEach` loop (Line 840ish) is safer for "Overlays".
-            // But here we are modifying the "Elite HP Bar" section which is inside the per-enemy loop.
-            // The per-enemy loop DOES apply rotation (line 338).
-            // So we need to cancel it out to draw a beam to a world coordinate.
-            // `ctx.rotate(-(e.rotationPhase || 0));`
+                // 1. Ultimate Glow Base (Broad)
+                ctx.fillStyle = e.palette[1];
+                ctx.globalAlpha = 0.3;
+                ctx.fillRect(0, -beamWidth / 2, dist, beamWidth);
 
-            // Draw Beam
-            const beamWidth = 40 + Math.sin(state.gameTime * 50) * 10;
+                // 2. Searing Core (Intense)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = e.palette[1];
+                ctx.shadowBlur = isLvl4 ? 30 : 40;
+                ctx.globalAlpha = 0.8;
+                ctx.fillRect(0, -beamWidth / 6, dist, beamWidth / 3);
 
-            // 1. Ultimate Glow Base (Broad)
-            ctx.fillStyle = e.palette[1];
-            ctx.globalAlpha = 0.3;
-            ctx.fillRect(0, -beamWidth / 2, dist, beamWidth);
+                // 3. Ultra-Bright Center Line
+                ctx.fillStyle = '#FFFFFF';
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(0, -1.5, dist, 3);
+                ctx.restore();
+            };
 
-            // 2. Searing Core (Intense)
-            ctx.fillStyle = '#FFFFFF';
-            ctx.shadowColor = e.palette[1];
-            ctx.shadowBlur = 40;
-            ctx.globalAlpha = 0.8;
-            ctx.fillRect(0, -beamWidth / 6, dist, beamWidth / 3);
-
-            // 3. Ultra-Bright Center Line (Extreme Opacity)
-            ctx.fillStyle = '#FFFFFF';
-            ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 10;
-            ctx.fillRect(0, -1.5, dist, 3); // 3px sharp center line
-
-            ctx.restore();
+            if (isLvl4) {
+                const startOff = (45 * Math.PI) / 180;
+                const endOff = (4.5 * Math.PI) / 180; // Adjusted to 9 deg total gap
+                const currentOffset = startOff - (startOff - endOff) * t;
+                drawLaser(centerAngle + currentOffset);
+                drawLaser(centerAngle - currentOffset);
+            } else {
+                drawLaser(centerAngle);
+            }
         }
 
         // --- LEGION VISUALS (Aura & Shield Bar) ---

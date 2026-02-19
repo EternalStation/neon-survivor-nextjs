@@ -230,24 +230,57 @@ export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameSt
     const dpr = window.devicePixelRatio || 1;
     const zoom = scaleFactor * 0.58 * dpr;
 
-    // Boss Indicators (Skull)
-    state.enemies.filter(e => e.boss && !e.dead).forEach(e => {
+    // Boss Indicators (Skull + Shape/Color)
+    const activeBosses = state.enemies.filter(e => e.boss && !e.dead);
+    activeBosses.forEach((e, index) => {
         const screenX = (e.x - camera.x) * zoom + width / 2;
         const screenY = (e.y - camera.y) * zoom + height / 2;
-        const pad = 50 * dpr;
+        const pad = 60 * dpr;
+
+        // Show indicator if off-screen
         if (screenX < pad || screenX > width - pad || screenY < pad || screenY > height - pad) {
-            const ix = Math.max(pad, Math.min(width - pad, screenX));
-            const iy = Math.max(pad, Math.min(height - pad, screenY));
-            ctx.save(); ctx.translate(ix, iy); ctx.scale(1 + Math.sin(Date.now() / 150) * 0.15, 1 + Math.sin(Date.now() / 150) * 0.15);
-            ctx.fillStyle = '#ef4444'; ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444';
-            const size = 50;
-            ctx.beginPath(); ctx.arc(0, -size * 0.2, size * 0.8, 0, Math.PI * 2); ctx.fill();
+            let ix = Math.max(pad, Math.min(width - pad, screenX));
+            let iy = Math.max(pad, Math.min(height - pad, screenY));
+
+            // Offset overlapping indicators slightly
+            if (activeBosses.length > 1) {
+                const offset = (index - (activeBosses.length - 1) / 2) * (40 * dpr);
+                // Offset along the perimeter
+                if (ix === pad || ix === width - pad) iy += offset;
+                else ix += offset;
+            }
+
+            ctx.save();
+            ctx.translate(ix, iy);
+
+            // Pulse synced with game time to avoid 'laging' feel of Date.now()
+            const pulse = 1 + Math.sin(state.gameTime * 8) * 0.15;
+            ctx.scale(pulse, pulse);
+
+            const bossColor = '#ff0000'; // Force to clean red
+            ctx.fillStyle = bossColor;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = bossColor;
+
+            const size = 45 * dpr;
+
+            // 1. Draw Skull Base
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+
             // Rounded Jaw
             ctx.beginPath();
-            ctx.roundRect(-size * 0.4, size * 0.3, size * 0.8, size * 0.4, 4 * dpr);
+            ctx.roundRect(-size * 0.25, size * 0.25, size * 0.5, size * 0.3, 4 * dpr);
             ctx.fill();
-            ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(-size * 0.3, 0, size * 0.2, 0, Math.PI * 2); ctx.arc(size * 0.3, 0, size * 0.2, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(0, size * 0.2); ctx.lineTo(-size * 0.1, size * 0.4); ctx.lineTo(size * 0.1, size * 0.4); ctx.closePath(); ctx.fill();
+
+            // Eyes (Black)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(-size * 0.18, size * 0.05, size * 0.12, 0, Math.PI * 2);
+            ctx.arc(size * 0.18, size * 0.05, size * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.restore();
         }
     });

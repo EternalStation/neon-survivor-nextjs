@@ -200,7 +200,7 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
         const finalValue = Math.round(baseValue * multiplier);
         const id = choice.type.id;
 
-        if (choice.type.id === 'heal') {
+        if (choice.type.id === 'heal' && !player.healingDisabled) {
             player.curHp = Math.min(player.curHp + 50, calcStat(player.hp));
         } else {
             if (id === 'dmg_f') player.dmg.flat += finalValue;

@@ -115,7 +115,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
 
             // --- CHEAT CODES ---
             cheatBuffer += key;
-            if (cheatBuffer.length > 20) cheatBuffer = cheatBuffer.slice(-20); // Longer buffer to handle movement noise
+            if (cheatBuffer.length > 40) cheatBuffer = cheatBuffer.slice(-40); // Buffer for readable names
 
             // GLI - Spawn Prism Glitcher (MANUAL CONSTRUCTION)
             if (cheatBuffer.endsWith('gli')) {
@@ -218,31 +218,44 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 }
             }
 
-            // B1-B5 Boss Spawning
-            for (const [num, shape] of Object.entries(shapes)) {
-                if (cheatBuffer.endsWith(`b${num}-`)) {
+            // --- BOSS SUMMONING CHEATS ---
+            // --- BOSS SUMMONING CHEATS ---
+            const bossForms: Record<number, string> = {
+                1: 'circle',
+                2: 'triangle',
+                3: 'square',
+                4: 'pentagon',
+                5: 'diamond'
+            };
+
+            Object.entries(bossForms).forEach(([numStr, form]) => {
+                const shapeNum = parseInt(numStr);
+
+                // v1, v2, v3, v4, v5 - Default to Level 4 (Max Tier)
+                if (cheatBuffer.endsWith(`v${shapeNum}`)) {
                     const p = gameState.current.player;
-                    spawnEnemy(gameState.current, p.x + 500, p.y + 500, shape, true, 1);
-                    console.log(`[CHEAT] Spawned Tier 1 ${shape} Boss`);
-                }
-                if (cheatBuffer.endsWith(`b${num}b`)) {
-                    const p = gameState.current.player;
-                    spawnEnemy(gameState.current, p.x + 500, p.y + 500, shape, true, 2);
-                    console.log(`[CHEAT] Spawned Tier 2 ${shape} Boss`);
-                }
-                if (cheatBuffer.endsWith(`b${num}b${num}`) || (num === '5' && cheatBuffer.endsWith('b5b5'))) {
-                    const recentT2Index = gameState.current.enemies.findIndex(e =>
-                        e.boss && e.bossTier === 2 && e.shape === shape && (gameState.current.gameTime - (e.spawnedAt || 0)) < 2
-                    );
-                    if (recentT2Index !== -1) {
-                        gameState.current.enemies.splice(recentT2Index, 1);
-                    }
-                    const p = gameState.current.player;
-                    spawnEnemy(gameState.current, p.x + 500, p.y + 500, shape, true, 3);
-                    console.log(`[CHEAT] Spawned Tier 3 ${shape} Boss`);
+                    spawnEnemy(gameState.current, p.x + 500, p.y, form as any, true, 4);
+                    spawnFloatingNumber(gameState.current, p.x, p.y, `SUMMONED LVL 4 ${form.toUpperCase()}`, '#ef4444', true);
+                    playSfx('rare-spawn');
                     cheatBuffer = '';
                 }
-            }
+
+                for (let level = 1; level <= 5; level++) {
+                    const code = `v${shapeNum}-${level}`; // e.g. v1-1 for Circle Lvl 1
+
+                    if (cheatBuffer.endsWith(code)) {
+                        const p = gameState.current.player;
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 500;
+                        spawnEnemy(gameState.current, p.x + Math.cos(angle) * dist, p.y + Math.sin(angle) * dist, form as any, true, level);
+
+                        spawnFloatingNumber(gameState.current, p.x, p.y, `SUMMONED LVL ${level} ${form.toUpperCase()}`, '#ef4444', true);
+                        playSfx('rare-spawn');
+                        console.log(`[CHEAT] Summoned Level ${level} ${form} Boss (MAPPED)`);
+                        cheatBuffer = '';
+                    }
+                }
+            });
 
             // E6 - Snitch
             if (cheatBuffer.endsWith('e6')) {

@@ -4,7 +4,7 @@ import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { isInMap, getHexDistToWall } from '../mission/MapLogic';
-import { getProgressionParams } from './EnemySpawnLogic';
+import { getProgressionParams, getCycleHpMult } from './EnemySpawnLogic';
 
 export function spawnVoidBurrower(state: GameState, x: number, y: number, segments: number = 16) {
     const wormId = `worm_${Math.random()}`;
@@ -13,7 +13,7 @@ export function spawnVoidBurrower(state: GameState, x: number, y: number, segmen
     // Scaling (matches spawnEnemy base logic roughly)
     const minutes = state.gameTime / 60;
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-    const hpMult = Math.pow(1.65, Math.floor(minutes / 5)) * 1.5; // Worm is tough
+    const hpMult = getCycleHpMult(state.gameTime) * 1.5; // Worm is tough, uses progressive multiplier
     const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
     const bossHpMult = 25 + Math.floor(minutes);
     const finalHp = baseHp * hpMult * bossHpMult; // Updated to 25x + 1x per minute as requested for bosses

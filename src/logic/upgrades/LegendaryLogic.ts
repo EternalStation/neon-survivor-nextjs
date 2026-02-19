@@ -450,7 +450,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             const startKills = kl[lvl] ?? hex.killsAtAcquisition ?? state.killCount;
             // Use killCount directly as it accumulates souls
             const rawSouls = Math.max(0, state.killCount - startKills);
-            return rawSouls * multiplier; // Apply dynamic multiplier
+            const soulBonus = rawSouls * (player.soulDrainMult ?? 1.0);
+            return soulBonus * multiplier; // Apply dynamic multiplier
         };
 
         if (hex.type === 'EcoDMG') {
@@ -533,9 +534,9 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             // Lvl 1: DMG% & ATS% increased by 1% of your Armor
             if (hex.level >= 1) {
                 const totalArmor = calcStat(player.arm);
-                // 1% per point of armor -> totalArmor * 1
-                if (statKey === 'dmg_pct_per_kill') total += totalArmor * 1.0 * multiplier;
-                if (statKey === 'ats_pct_per_kill') total += totalArmor * 1.0 * multiplier;
+                // 1% of total armor -> totalArmor * 0.01
+                if (statKey === 'dmg_pct_per_kill') total += totalArmor * 0.01 * multiplier;
+                if (statKey === 'ats_pct_per_kill') total += totalArmor * 0.01 * multiplier;
             }
             // Lvl 2: +1% DMG for every 100 HP
             if (statKey === 'dmg_pct_per_hp' && hex.level >= 2) {
