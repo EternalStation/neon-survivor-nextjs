@@ -532,7 +532,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                 // 0.5 Thorns Logic (Reflect Damage)
                 if (e.thorns && e.thorns > 0 && damageAmount > 0) {
-                    let reflected = damageAmount * e.thorns;
+                    // User Request: Cap thorns by how much damage boss actually received (current HP)
+                    const actualDmg = Math.min(damageAmount, Math.max(0, e.hp));
+                    let reflected = actualDmg * e.thorns;
 
                     if (!e.thornsIgnoresArmor) {
                         const armorValue = calcStat(owner.arm);
@@ -737,7 +739,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 // ELITE SKILL: SQUARE THORNS (Blade Mail)
                 if (e.isElite && e.shape === 'square' && damageAmount > 0) {
                     // Returns 3% of player's damage for every hit
-                    let reflectDmg = damageAmount * 0.03;
+                    // User Request: Cap thorns by how much damage enemy actually received (current HP)
+                    const actualDmg = Math.min(damageAmount, Math.max(0, e.hp));
+                    let reflectDmg = actualDmg * 0.03;
 
                     if (reflectDmg > 0) {
                         // Thorns are reduced by armor

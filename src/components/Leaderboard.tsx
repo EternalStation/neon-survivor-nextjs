@@ -388,7 +388,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                         <FinalStatItem label="MAX HP" value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
                                                                         <FinalStatItem label="XP/KILL" value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
                                                                         <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
-                                                                        <FinalStatItem label="REGEN" value={entry.final_stats.regen.toFixed(1) + '/s'} color="#4ade80" />
+                                                                        <FinalStatItem label="REGEN" value={formatLargeNumber(entry.final_stats.regen) + '/s'} color="#4ade80" />
                                                                         <FinalStatItem label="ARMOR" value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
                                                                         <FinalStatItem label="SPEED" value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
                                                                     </div>

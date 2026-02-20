@@ -519,7 +519,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 </div>
 
                 {/* BOTTOM CONSOLE: REROLL ACTIONS */}
-                <div style={{ marginTop: 'auto', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ marginTop: '-5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
                             disabled={!canAffordRerollType}

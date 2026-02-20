@@ -31,11 +31,8 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
     let bhPullSpeed = 0;
     if (blackholes.length > 0) {
         const resonance = getChassisResonance(state);
-        // User Request: "5% not pull at all, 100% hard pull"
-        // Formula: Total% * 5.
-        // Base (0.05) -> 0.25 speed (Negligible).
-        // Max/Boosted (1.00) -> 5.0 speed (Hard Pull).
-        bhPullSpeed = (0.05 + resonance) * 5;
+        // User Requested Formula: v = 0.66 + (resonance * 0.85)
+        bhPullSpeed = 0.66 + (resonance * 0.85);
     }
 
     // Spawning Logic
@@ -1043,11 +1040,9 @@ export function updateEnemies(state: GameState, onEvent?: (event: string, data?:
                 const dist = Math.hypot(dx, dy);
 
                 if (dist < bh.radius) {
-                    // Pull Force: Stronger closer to center
+                    // Constant pull to hit timing targets (10s at 5%, 0.5s at 50%)
                     // "void radius of pull is made deep"
-                    const intensity = 1 - (dist / bh.radius);
-                    // Apply pull speed.
-                    const finalPull = bhPullSpeed * intensity;
+                    const finalPull = bhPullSpeed;
 
                     const angle = Math.atan2(dy, dx);
                     // Add to velocity vector

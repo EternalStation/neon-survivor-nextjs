@@ -15,13 +15,13 @@ export interface RunSubmissionData {
     bossKills: number;
     classUsed: string;
     patchVersion: string;
-    damageDealt: number;
-    damageTaken: number;
-    damageBlocked: number;
-    damageBlockedArmor: number;
-    damageBlockedCollision: number;
-    damageBlockedProjectile: number;
-    damageBlockedShield: number;
+    damageDealt: string;
+    damageTaken: string;
+    damageBlocked: string;
+    damageBlockedArmor: string;
+    damageBlockedCollision: string;
+    damageBlockedProjectile: string;
+    damageBlockedShield: string;
     radarCounts: { DPS: number; ARM: number; EXP: number; HP: number; REG: number };
     meteoritesCollected: number;
     portalsUsed: number;
@@ -115,13 +115,13 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         bossKills: gameState.bossKills,
         classUsed: gameState.player.playerClass || 'unknown',
         patchVersion: CURRENT_PATCH_VERSION,
-        damageDealt: Math.floor(gameState.player.damageDealt),
-        damageTaken: Math.floor(gameState.player.damageTaken),
-        damageBlocked: Math.floor(gameState.player.damageBlocked),
-        damageBlockedArmor: Math.floor(gameState.player.damageBlockedByArmor),
-        damageBlockedCollision: Math.floor(gameState.player.damageBlockedByCollisionReduc),
-        damageBlockedProjectile: Math.floor(gameState.player.damageBlockedByProjectileReduc),
-        damageBlockedShield: Math.floor(gameState.player.damageBlockedByShield || 0),
+        damageDealt: safeIntString(gameState.player.damageDealt),
+        damageTaken: safeIntString(gameState.player.damageTaken),
+        damageBlocked: safeIntString(gameState.player.damageBlocked),
+        damageBlockedArmor: safeIntString(gameState.player.damageBlockedByArmor),
+        damageBlockedCollision: safeIntString(gameState.player.damageBlockedByCollisionReduc),
+        damageBlockedProjectile: safeIntString(gameState.player.damageBlockedByProjectileReduc),
+        damageBlockedShield: safeIntString(gameState.player.damageBlockedByShield || 0),
         radarCounts,
         meteoritesCollected: gameState.meteoritesPickedUp,
         portalsUsed: gameState.portalsUsed,
@@ -184,28 +184,40 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
  * Calculate final score based on game performance
  * You can adjust this formula to weight different factors
  */
-const BIGINT_MAX = 9_007_199_254_740_991; // Number.MAX_SAFE_INTEGER (fits BIGINT column)
+const BIGINT_MAX = 9_007_199_254_740_991; // Number.MAX_SAFE_INTEGER
+const NUMERIC_MAX = '9999999999999999999999999999999999999999'; // Support massive numbers
 
 function calculateScore(gameState: GameState): number {
-    const baseScore = gameState.killCount * 100;
-    const bossBonus = gameState.bossKills * 5000;
-    const timeBonus = Math.floor(gameState.gameTime) * 10;
-    const levelBonus = gameState.player.level * 500;
-    // Cap damageBonus to avoid absurdly large scores from damage inflation
-    const damageBonus = Math.min(Math.floor(gameState.player.damageDealt / 1000), 1_000_000_000);
+    const baseScore = (gameState.killCount || 0) * 100;
+    const bossBonus = (gameState.bossKills || 0) * 5000;
+    const timeBonus = Math.floor(gameState.gameTime || 0) * 10;
+    const levelBonus = (gameState.player?.level || 1) * 500;
+    const damageBonus = Math.floor((gameState.player?.damageDealt || 0) / 1000);
 
     const total = baseScore + bossBonus + timeBonus + levelBonus + damageBonus;
-    // Clamp to MAX_SAFE_INTEGER so the DB BIGINT column can always store it
-    return Math.min(Math.floor(total), BIGINT_MAX);
+
+    if (isNaN(total)) {
+        console.warn('[Leaderboard] Score calculation resulted in NaN, falling back to 0');
+        return 0;
+    }
+
+    return Math.floor(total);
 }
 
 /**
  * Convert a number to a clean integer string without scientific notation.
- * Clamps to BIGINT-safe range to prevent DB overflow.
+ * Uses toFixed(0) to prevent scientific notation for very large numbers.
  */
 function safeIntString(num: number): string {
-    const clamped = Math.min(Math.max(Math.floor(num), 0), BIGINT_MAX);
-    return String(clamped);
+    if (isNaN(num) || num === null) return '0';
+    // Use toFixed(0) to avoid scientific notation like 1.2e+30
+    // BigInt constructor handles strings from toFixed correctly
+    try {
+        const str = num.toFixed(0);
+        return str;
+    } catch {
+        return '0';
+    }
 }
 
 /**
@@ -222,6 +234,7 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
         // Check if user is authenticated
         const token = api.getToken();
         if (!token) {
+            console.warn('[Leaderboard] No token found, skipping submission');
             return {
                 success: false,
                 error: 'Not authenticated. Please login to submit runs.'
@@ -230,9 +243,19 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
 
         // Prepare run data
         const runData = prepareRunData(gameState);
+        console.log('[Leaderboard] Submitting run data:', {
+            score: runData.score,
+            time: runData.survivalTime,
+            kills: runData.kills,
+            ver: runData.patchVersion
+        });
 
         // Submit to API
         const response = await api.submitRun(runData);
+
+        if (!response || !response.run) {
+            throw new Error('Invalid response from server');
+        }
 
         return {
             success: true,
@@ -240,7 +263,7 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
             rank: response.run.rank
         };
     } catch (error: any) {
-        console.error('Failed to submit run:', error);
+        console.error('[Leaderboard] Failed to submit run:', error);
         return {
             success: false,
             error: error.message || 'Failed to submit run'

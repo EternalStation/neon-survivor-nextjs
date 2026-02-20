@@ -24,6 +24,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     const [activeTab, setActiveTab] = useState<'overview' | 'modules'>('overview');
     const [rank, setRank] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(true);
+    const [submissionError, setSubmissionError] = useState<string | null>(null);
     const [displayStats, setDisplayStats] = useState({
         kills: 0,
         level: 0,
@@ -45,6 +46,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
         submitRunToLeaderboard(gameState).then(result => {
             if (result.success && result.rank) {
                 setRank(result.rank);
+            } else if (result.error) {
+                setSubmissionError(result.error);
             }
             setIsSubmitting(false);
         });
@@ -243,6 +246,10 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
                     {isSubmitting ? (
                         <div style={{ color: '#22d3ee', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>UPLOADING...</div>
+                    ) : submissionError ? (
+                        <div style={{ color: '#ef4444', fontSize: 8, letterSpacing: 1, fontWeight: 700, maxWidth: 100, textAlign: 'center' }}>
+                            {submissionError.toUpperCase()}
+                        </div>
                     ) : rank ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ color: '#94a3b8', fontSize: 8, letterSpacing: 1, fontWeight: 800 }}>GLOBAL RANK</div>
@@ -329,10 +336,10 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', background: 'rgba(10, 15, 30, 0.4)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0, 255, 255, 0.1)' }}>
                                 <FinalStatItem label="DMG/HIT" value={formatLargeNumber(calcStat(gameState.player.dmg))} color="#f59e0b" />
                                 <FinalStatItem label="MAX HP" value={formatLargeNumber(maxHp)} color="#4ade80" />
-                                <FinalStatItem label="XP/KILL" value={finalXpPerKill} color="#22d3ee" />
+                                <FinalStatItem label="XP/KILL" value={formatLargeNumber(finalXpPerKill)} color="#22d3ee" />
                                 <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
-                                <FinalStatItem label="REGEN" value={regen + '/s'} color="#4ade80" />
-                                <FinalStatItem label="ARMOR" value={Math.round(calcStat(gameState.player.arm))} color="#3b82f6" />
+                                <FinalStatItem label="REGEN" value={formatLargeNumber(regen) + '/s'} color="#4ade80" />
+                                <FinalStatItem label="ARMOR" value={formatLargeNumber(Math.round(calcStat(gameState.player.arm)))} color="#3b82f6" />
                                 <FinalStatItem label="ARM REDUC" value={armRed + '%'} color="#3b82f6" />
                                 <FinalStatItem label="SPEED" value={gameState.player.speed.toFixed(1)} color="#22d3ee" />
                                 <FinalStatItem label="COL REDUC" value={colRed + '%'} color="#3b82f6" />

@@ -202,6 +202,7 @@ export default function Home() {
                     showStats={hook.showStats}
                     showUpgradeMenu={!!hook.upgradeChoices}
                     onSkipTime={hook.skipTime}
+                    onTriggerPortal={hook.triggerPortal}
                   />
 
                   {isMobile && !hook.gameOver && (
@@ -282,6 +283,7 @@ export default function Home() {
                 showStats={hook.showStats}
                 showUpgradeMenu={!!hook.upgradeChoices}
                 onSkipTime={hook.skipTime}
+                onTriggerPortal={hook.triggerPortal}
               />
             </div>
           </div>

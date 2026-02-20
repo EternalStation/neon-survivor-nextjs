@@ -62,16 +62,16 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     if (e.boss) {
         // Optimized: Scale with time to match increasing reroll costs
-        // Base: 100 | Time: +10 per min | Random: +/- 15
-        const timeScaling = Math.floor(minutes * 10);
+        // Base: 100 | Time: +15 per min | Random: +/- 15
+        const timeScaling = Math.floor(minutes * 15);
         const variance = Math.floor(Math.random() * 31) - 15; // -15 to +15
         fluxDrop = Math.max(50, 100 + timeScaling + variance);
     } else if (e.isElite) {
         // Optimized: Scale with time
-        // Base: 20 | Time: +3.0 per min | Random: +/- 4
-        const timeScaling = Math.floor(minutes * 3.0);
+        // Base: 25 | Time: +5.0 per min | Random: +/- 4
+        const timeScaling = Math.floor(minutes * 5.0);
         const variance = Math.floor(Math.random() * 9) - 4; // -4 to +4
-        fluxDrop = Math.max(10, 20 + timeScaling + variance);
+        fluxDrop = Math.max(15, 25 + timeScaling + variance);
     }
 
     if (fluxDrop > 0) {

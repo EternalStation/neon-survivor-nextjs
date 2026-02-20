@@ -35,6 +35,17 @@ export function useGameUIHandlers({
     const triggerPortal = useCallback(() => {
         const cost = Math.floor(1 + gameState.current.gameTime / 60);
 
+        // --- PROGRESSION GATE: First Boss & Neural Gate Blueprint Required ---
+        if (gameState.current.bossKills === 0 || !gameState.current.portalsUnlocked) {
+            setPortalError(true);
+            setUiState(p => p + 1);
+            setTimeout(() => {
+                setPortalError(false);
+                setUiState(p => p + 1);
+            }, 1000);
+            return false;
+        }
+
         // Block portal use during evacuation (One way trip only)
         if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(gameState.current.extractionStatus) || gameState.current.portalOneTimeUse) {
             setPortalError(true);

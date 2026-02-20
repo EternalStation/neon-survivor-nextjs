@@ -224,8 +224,10 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
             if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
             if (contextMatches && f.thing2 !== 'All') {
                 if (f.thing2.includes('-')) {
-                    // Pair check (e.g. S1-S1 -> eco_eco)
-                    if (!p.id.includes(t2)) contextMatches = false;
+                    // Pair check (e.g. Eco-Eco -> eco_eco)
+                    // Level 5 pair starts at pts[2]
+                    const itemPair = pts.slice(2, 4).join('_');
+                    if (itemPair !== t2) contextMatches = false;
                 } else if (pts[2] !== t2) contextMatches = false;
             }
         } else if (lvl === 3 || lvl === 4) {
@@ -237,7 +239,10 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
             // [lvl, NeighborQual, Pair...]
             if (f.thing1 !== 'All' && pts[1] !== t1) contextMatches = false;
             if (contextMatches && f.thing2 !== 'All') {
-                if (!p.id.includes(t2)) contextMatches = false;
+                // Pair check (e.g. Eco-Eco -> eco_eco)
+                // Level 6 pair starts at pts[2]
+                const itemPair = pts.slice(2, 4).join('_');
+                if (itemPair !== t2) contextMatches = false;
             }
         }
 

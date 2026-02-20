@@ -55,9 +55,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // --- SCHEMA UPGRADE (ONE-TIME / PREEMPTIVE) ---
+        // Ensure huge number support for endgame stats
+        try {
+            await sql`
+                ALTER TABLE game_runs 
+                ALTER COLUMN score TYPE NUMERIC,
+                ALTER COLUMN damage_dealt TYPE NUMERIC,
+                ALTER COLUMN damage_taken TYPE NUMERIC,
+                ALTER COLUMN damage_blocked TYPE NUMERIC,
+                ALTER COLUMN damage_blocked_armor TYPE NUMERIC,
+                ALTER COLUMN damage_blocked_collision TYPE NUMERIC,
+                ALTER COLUMN damage_blocked_projectile TYPE NUMERIC,
+                ALTER COLUMN damage_blocked_shield TYPE NUMERIC
+            `;
+        } catch (schemaErr) {
+            // Likely already upgraded or insufficient perms, log and continue
+            // console.log('Schema upgrade check:', schemaErr.message);
+        }
+
         // Insert run
-
-
+        // We use string representation for huge numbers to prevent scientific notation issues
         const result = await sql`
       INSERT INTO game_runs (
         player_id, score, survival_time, kills, boss_kills, class_used,
@@ -66,10 +84,10 @@ export async function POST(request: NextRequest) {
         damage_blocked_shield, radar_counts, meteorites_collected, portals_used,
         arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats, blueprints
       ) VALUES (
-        ${user.id}, ${score}, ${survivalTime}, ${kills}, ${bossKills || 0},
-        ${classUsed}, ${patchVersion}, ${damageDealt || 0}, ${damageTaken || 0},
-        ${damageBlocked || 0}, ${damageBlockedArmor || 0}, ${damageBlockedCollision || 0},
-        ${damageBlockedProjectile || 0}, ${damageBlockedShield || 0},
+        ${user.id}, ${score.toString()}, ${survivalTime}, ${kills}, ${bossKills || 0},
+        ${classUsed}, ${patchVersion}, ${damageDealt?.toString() || '0'}, ${damageTaken?.toString() || '0'},
+        ${damageBlocked?.toString() || '0'}, ${damageBlockedArmor?.toString() || '0'}, ${damageBlockedCollision?.toString() || '0'},
+        ${damageBlockedProjectile?.toString() || '0'}, ${damageBlockedShield?.toString() || '0'},
         ${JSON.stringify(radarCounts || {})}, ${meteoritesCollected || 0},
         ${portalsUsed || 0}, ${JSON.stringify(arenaTimes || { 0: 0, 1: 0, 2: 0 })},
         ${JSON.stringify(legendaryHexes || [])}, ${JSON.stringify(hexLevelupOrder || [])},

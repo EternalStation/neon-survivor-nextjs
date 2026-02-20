@@ -34,12 +34,13 @@ interface HUDProps {
     showStats: boolean;
     showUpgradeMenu: boolean;
     onSkipTime?: (min: number) => void;
+    onTriggerPortal: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
     gameState, upgradeChoices, onUpgradeSelect, gameOver, onRestart, bossWarning,
     fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail,
-    isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime
+    isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime, onTriggerPortal
 }) => {
     const { player, activeEvent } = gameState;
 
@@ -117,6 +118,8 @@ export const HUD: React.FC<HUDProps> = ({
                 portalCost={portalCost}
                 isFull={!gameState.inventory.slice(20).some(slot => slot === null)}
                 portalsUnlocked={gameState.portalsUnlocked}
+                bossKills={gameState.bossKills}
+                onTriggerPortal={onTriggerPortal}
             />
             <AlertPanel gameState={gameState} bossWarning={bossWarning} />
 

@@ -108,7 +108,7 @@ export function rerollPerkType(state: GameState, item: Meteorite, lockedIndices:
     });
 
     playSfx('reroll');
-    spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "PERKS RECONFIGURED", '#6366f1', true);
+    // spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "PERKS RECONFIGURED", '#6366f1', true);
     return true;
 }
 
@@ -150,6 +150,6 @@ export function rerollPerkValue(state: GameState, item: Meteorite, lockedIndices
     });
 
     playSfx('upgrade');
-    spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "VALUES TUNED", '#4ade80', true);
+    // spawnFloatingNumber(state, item.x || state.player.x, item.y || state.player.y, "VALUES TUNED", '#4ade80', true);
     return true;
 }

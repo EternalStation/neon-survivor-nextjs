@@ -74,11 +74,11 @@ const formatDescription = (text: string, highlightColor: string) => {
     const keywords = [
         'Sector-01', 'Sector-02', 'Sector-03',
         'Eco Arena', 'Combat Arena', 'Defence Arena',
-        'Legendary Upgrade', 'Legendary Upgrades',
+        'Economic', 'Combat', 'Defence',
         '\\bEco\\b', 'Com', 'Def',
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
         'HEX', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
-        'Type', 'Rarity', 'Arena', 'Sector',
+        'Type', 'Rarity', 'Sector',
         '\\(Any\\)', 'same level'
     ];
 
