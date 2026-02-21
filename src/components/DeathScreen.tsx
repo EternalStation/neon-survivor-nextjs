@@ -349,9 +349,9 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
                                 SECTOR ALLOCATION
                                 <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENSE</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENCE ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -365,19 +365,22 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
                                         <StatItem label="DMG Dealt" value={formatLargeNumber(gameState.player.damageDealt)} color="#f59e0b" />
-                                        <StatItem label="DMG Blocked" value={formatLargeNumber(gameState.player.damageBlocked)} color="#3b82f6" />
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Orbitron, sans-serif' }}>DMG Blocked</span>
+                                            <span style={{ color: '#3b82f6', fontSize: 15, fontWeight: 800, fontFamily: 'Orbitron, sans-serif', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlocked)}</span>
+                                        </div>
                                         <StatItem label="DMG Received" value={formatLargeNumber(gameState.player.damageTaken)} color="#ef4444" />
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>ARMOR</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByArmor || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>SHIELD</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByShield || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>COLLISION</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>PROJECTILE</span><span style={{ color: '#94a3b8' }}>{formatLargeNumber(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>ARMOR</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByArmor || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>SHIELD</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByShield || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>COLLISION</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
+                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>PROJECTILE</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginLeft: 40, marginTop: 15, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <RadarChart player={gameState.player} size={110} />
+                                <div style={{ marginLeft: 30, marginTop: 15, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+                                    <RadarChart player={gameState.player} size={150} />
                                 </div>
                             </div>
                         </div>

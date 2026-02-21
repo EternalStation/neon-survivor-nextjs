@@ -160,7 +160,7 @@ export const HUD: React.FC<HUDProps> = ({
                         color: '#94a3b8', fontFamily: 'monospace', fontSize: 11,
                         fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase'
                     }}>
-                        Sector 0{getArenaIndex(player.x, player.y) + 1}: {SECTOR_NAMES[getArenaIndex(player.x, player.y)]}
+                        {SECTOR_NAMES[getArenaIndex(player.x, player.y)]}
                     </span>
                 </div>
             </div>

@@ -16,3 +16,11 @@ export function getDefenseReduction(armor: number, cap: number = 0.95): number {
     const reduction = 0.0945 * Math.pow(Math.log10(cappedArmor / 2 + 1), 1.4);
     return Math.min(cap, reduction);
 }
+
+export function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number) {
+    const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+    if (l2 === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+}

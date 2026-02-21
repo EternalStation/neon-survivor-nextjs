@@ -119,6 +119,13 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
 
             // GLI - Spawn Prism Glitcher (MANUAL CONSTRUCTION)
             if (cheatBuffer.endsWith('gli')) {
+                // Check if one already exists
+                if (gameState.current.enemies.some(e => e.shape === 'glitcher' && !e.dead)) {
+                    console.log('[CHEAT] Glitcher already exists, skipping spawn');
+                    cheatBuffer = '';
+                    return;
+                }
+
                 const p = gameState.current.player;
                 const now = gameState.current.gameTime;
 
@@ -198,8 +205,8 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 cheatBuffer = '';
             }
 
-            // L1 - Level Up
-            if (cheatBuffer.endsWith('l1')) {
+            // L1 / LVL - Level Up
+            if (cheatBuffer.endsWith('l1') || cheatBuffer.endsWith('lvl')) {
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;
                 refreshUI();
                 cheatBuffer = '';
@@ -224,8 +231,8 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 1: 'circle',
                 2: 'triangle',
                 3: 'square',
-                4: 'pentagon',
-                5: 'diamond'
+                4: 'diamond',
+                5: 'pentagon'
             };
 
             Object.entries(bossForms).forEach(([numStr, form]) => {
@@ -240,6 +247,22 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                     cheatBuffer = '';
                 }
 
+                // b[ShapeNum][Level] - e.g., b11 for Circle Lvl 1
+                for (let level = 1; level <= 5; level++) {
+                    const bCode = `b${shapeNum}${level}`;
+                    if (cheatBuffer.endsWith(bCode)) {
+                        const p = gameState.current.player;
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 500;
+                        spawnEnemy(gameState.current, p.x + Math.cos(angle) * dist, p.y + Math.sin(angle) * dist, form as any, true, level);
+                        spawnFloatingNumber(gameState.current, p.x, p.y, `SUMMONED LVL ${level} ${form.toUpperCase()}`, '#ef4444', true);
+                        playSfx('rare-spawn');
+                        console.log(`[CHEAT] Summoned Level ${level} ${form} Boss (MAPPED bXY)`);
+                        cheatBuffer = '';
+                    }
+                }
+
+                // Legacy v-pattern
                 for (let level = 1; level <= 5; level++) {
                     const code = `v${shapeNum}-${level}`; // e.g. v1-1 for Circle Lvl 1
 
@@ -257,15 +280,19 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 }
             });
 
-            // E6 - Snitch
-            if (cheatBuffer.endsWith('e6')) {
+            // E6 / SNI - Snitch
+            if (cheatBuffer.endsWith('e6') || cheatBuffer.endsWith('sni')) {
                 spawnRareEnemy(gameState.current);
                 cheatBuffer = '';
             }
 
-            // o1-o8 - Spawn Blueprint (Drop in world at 300px range)
-            const blueprintTypes: BlueprintType[] = ['METEOR_SHOWER', 'NEURAL_OVERCLOCK', 'STASIS_FIELD', 'PERK_RESONANCE', 'ARENA_SURGE', 'QUANTUM_SCRAPPER', 'MATRIX_OVERDRIVE', 'TEMPORAL_GUARD'];
-            for (let i = 1; i <= 8; i++) {
+            // o1-o12 - Spawn Blueprint (Drop in world at 300px range)
+            const blueprintTypes: BlueprintType[] = [
+                'METEOR_SHOWER', 'NEURAL_OVERCLOCK', 'STASIS_FIELD', 'PERK_RESONANCE',
+                'ARENA_SURGE', 'QUANTUM_SCRAPPER', 'MATRIX_OVERDRIVE', 'TEMPORAL_GUARD',
+                'DIMENSIONAL_GATE', 'SECTOR_UPGRADE_ECO', 'SECTOR_UPGRADE_COM', 'SECTOR_UPGRADE_DEF'
+            ];
+            for (let i = 1; i <= blueprintTypes.length; i++) {
                 if (cheatBuffer.endsWith(`o${i}`)) {
                     const p = gameState.current.player;
                     const angle = Math.random() * Math.PI * 2;
@@ -318,11 +345,11 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
 
             // Z1-Z2 - Events
             if (cheatBuffer.endsWith('z1')) {
-                gameState.current.activeEvent = { type: 'necrotic_surge', startTime: gameState.current.gameTime, duration: 30, endTime: gameState.current.gameTime + 30 };
+                gameState.current.activeEvent = { type: 'legion_formation', startTime: gameState.current.gameTime, duration: 600, endTime: gameState.current.gameTime + 600, data: { legions: [] } };
                 cheatBuffer = '';
             }
             if (cheatBuffer.endsWith('z2')) {
-                gameState.current.activeEvent = { type: 'legion_formation', startTime: gameState.current.gameTime, duration: 30, endTime: gameState.current.gameTime + 30, data: { legions: [] } };
+                gameState.current.activeEvent = { type: 'necrotic_surge', startTime: gameState.current.gameTime, duration: 30, endTime: gameState.current.gameTime + 30 };
                 cheatBuffer = '';
             }
             if (cheatBuffer.endsWith('z3')) {

@@ -1,7 +1,8 @@
 import type { Enemy, GameState } from '../../core/types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
-import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
+import { calcStat, getDefenseReduction, distToSegment } from '../../utils/MathUtils';
+import { PALETTES } from '../../core/constants';
 
 export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let isBerserk = false;
@@ -58,7 +59,91 @@ export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy:
     return { vx, vy };
 }
 
-export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, onEvent?: (event: string, data?: any) => void) {
+export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, isLevel5: boolean, onEvent?: (event: string, data?: any) => void) {
+    // LVL 5: Electric Crystal Fence
+    if (isLevel5) {
+        const distToPlayer = Math.hypot(dx, dy);
+
+        // Determine Era Color
+        const spawnedMinutes = (e.spawnedAt || state.gameTime) / 60;
+        const eraIndex = Math.floor(spawnedMinutes / 15) % PALETTES.length;
+        const crystalColor = PALETTES[eraIndex].colors[0];
+
+        if (!e.crystalState || e.crystalState === 0) {
+            const isCooldownDone = (e.timer || 0) >= 0;
+            const isFirstCast = !e.crystalState;
+
+            // Only require distance for the VERY FIRST cast. 
+            // Subsequent casts (looping) trigger immediately when cooldown is done.
+            if ((isFirstCast && distToPlayer < 1000) || (!isFirstCast && isCooldownDone)) {
+                // Initial Spawn
+                e.crystalState = 1; // Spawning (Wait 1s)
+                e.timer = 0;
+                e.crystalPositions = [];
+                const baseRot = Math.random() * Math.PI * 2;
+                for (let i = 0; i < 5; i++) {
+                    const ang = baseRot + (i * Math.PI * 2) / 5;
+                    e.crystalPositions.push({
+                        x: state.player.x + Math.cos(ang) * 600,
+                        y: state.player.y + Math.sin(ang) * 600
+                    });
+                }
+                playSfx('lock-on');
+            }
+        } else if (e.crystalState === 1) {
+            e.timer = (e.timer || 0) + 1;
+            if (e.timer > 60) { // 1 second
+                e.crystalState = 2; // Active
+                e.timer = 0;
+                playSfx('laser'); // Activation sound
+            }
+            // Visual for crystals appearing
+            if (e.crystalPositions) {
+                e.crystalPositions.forEach(p => {
+                    if (state.frameCount % 5 === 0) {
+                        spawnParticles(state, p.x, p.y, crystalColor, 2, 5, Math.random() * 6.28, 'spark');
+                    }
+                });
+            }
+        } else if (e.crystalState === 2) {
+            e.timer = (e.timer || 0) + 1;
+            // Damage check (Electric Fence)
+            if (state.frameCount % 5 === 0 && e.crystalPositions) {
+                const fenceDmg = e.maxHp * 0.01; // 1% max HP per 5 frames (~12% per sec)
+                const px = state.player.x;
+                const py = state.player.y;
+                const pSize = state.player.size;
+
+                // Check distance to each of the 5 segments
+                for (let i = 0; i < 5; i++) {
+                    const p1 = e.crystalPositions[i];
+                    const p2 = e.crystalPositions[(i + 1) * 1 % 5];
+
+                    // Distance from point to line segment
+                    const dist = distToSegment(px, py, p1.x, p1.y, p2.x, p2.y);
+                    if (dist < pSize + 15) { // 15px fence thickness grace
+                        state.player.curHp -= fenceDmg;
+                        state.player.damageTaken += fenceDmg;
+                        state.player.lastHitDamage = fenceDmg;
+                        state.player.killerHp = e.hp;
+                        state.player.killerMaxHp = e.maxHp;
+                        spawnFloatingNumber(state, px, py, Math.round(fenceDmg).toString(), '#ef4444', false);
+                        spawnParticles(state, px, py, crystalColor, 5); // Electric sparks
+                    }
+                }
+            }
+
+            if (e.timer > 600) { // 10 seconds
+                e.crystalState = 0; // Reset (Cooldown)
+                e.timer = -600; // 10 second cooldown before next use
+                e.crystalPositions = undefined;
+                playSfx('dash'); // End sound
+            }
+        } else if (e.crystalState === 0 && (e.timer || 0) < 0) {
+            e.timer = (e.timer || 0) + 1; // Cooldown counting up
+        }
+    }
+
     // LVL 4: Convergence Zone (Handled in Beam Logic)
     // LVL 3: Orbital Satellites
     if (isLevel3) {

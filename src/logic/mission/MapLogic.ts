@@ -31,7 +31,7 @@ export interface ArenaDetails {
 export const ARENA_DATA: Record<number, ArenaDetails> = {
     0: {
         id: 0,
-        name: "ECO HEX",
+        name: "Economic Arena",
         location: "Sector-01 - Resource Hub",
         description: "Optimized for maximum efficiency. High-fidelity data extraction increases yield by 30%.",
         buffs: ["+30% XP & Soul Yield"],
@@ -40,7 +40,7 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
     },
     1: {
         id: 1,
-        name: "COM HEX",
+        name: "Combat Arena",
         location: "Sector-02 - Weapon Testing",
         description: "Restored offensive protocols enhance weapon output and cycling speed by 30%.",
         buffs: ["+30% DMG & Atk Speed"],
@@ -49,7 +49,7 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
     },
     2: {
         id: 2,
-        name: "DEF HEX",
+        name: "Defence Arena",
         location: "Sector-03 - Fortress Perimeter",
         description: "Fortified structural integrity and nano-repair systems increase vitality metrics by 30%.",
         buffs: ["+30% Max HP & Regen"],
@@ -67,9 +67,9 @@ export function getArenaDetails(id: number, level: number = 1): ArenaDetails {
 }
 
 export const SECTOR_NAMES: Record<number, string> = {
-    0: "ECO HEX",
-    1: "COM HEX",
-    2: "DEF HEX"
+    0: "Economic Arena",
+    1: "Combat Arena",
+    2: "Defence Arena"
 };
 
 // Portal Definitions

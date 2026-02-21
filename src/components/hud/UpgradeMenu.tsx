@@ -99,6 +99,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                             }}
                             onHover={setSelectedIndex}
                             isSelecting={false}
+                            gameState={gameState}
                         />
                     </div>
                 ))}

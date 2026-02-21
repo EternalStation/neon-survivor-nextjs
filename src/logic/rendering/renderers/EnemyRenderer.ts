@@ -294,7 +294,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         // DIAMOND BEAM CHARGE (Pre-Fire)
         if (e.shape === 'diamond' && e.beamState === 1 && e.beamX && e.beamY) {
             ctx.save();
-            const isLvl4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1);
+            const isLvl4 = (e.bossTier || 0) >= 4 || (state.gameTime > 1800 && e.bossTier !== 1);
             const ang = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
             const isLocked = (e.beamTimer || 0) > 30;
 
@@ -427,7 +427,86 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.beginPath();
             ctx.ellipse(0, 0, satSize * 1.8, satSize * 0.6, 0, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.restore();
+        }
 
+        // DIAMOND LVL 5 ELECTRIC FENCE
+        if (e.shape === 'diamond' && e.crystalPositions && e.crystalState && e.crystalState > 0) {
+            ctx.save();
+            const time = state.gameTime;
+            const spawnedMinutes = (e.spawnedAt || time) / 60;
+            const eraIndex = Math.floor(spawnedMinutes / 15) % PALETTES.length;
+            const crystalColor = PALETTES[eraIndex].colors[0];
+            const fenceActive = e.crystalState === 2;
+
+            e.crystalPositions.forEach((p, i) => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+
+                // PERFORMANCE FIX: Optimized Crystal Rendering
+                const pulse = 1.0 + Math.sin(time * 10 + i) * 0.1;
+                ctx.scale(pulse, pulse);
+                const spin = time * 3 + i;
+                const crystalH = 34;
+                const crystalW = 16;
+                const gap = 5;
+
+                ctx.globalAlpha = 1.0;
+
+                // Simple 4-sided Obelisk (Optimized over 8-sided)
+                for (let side = 0; side < 4; side++) {
+                    const ang1 = spin + (side * Math.PI) / 2;
+                    const ang2 = ang1 + Math.PI / 2;
+                    const x1 = Math.cos(ang1) * crystalW;
+                    const x2 = Math.cos(ang2) * crystalW;
+
+                    if (Math.sin(ang1) > 0 || Math.sin(ang2) > 0) {
+                        const shadeFactor = 0.6 + Math.cos(ang1) * 0.4;
+                        ctx.fillStyle = crystalColor;
+                        ctx.globalAlpha = shadeFactor; // Use alpha for shading instead of dimHex string parsing
+
+                        // Tapered Segments
+                        ctx.beginPath();
+                        ctx.moveTo(0, -crystalH); ctx.lineTo(x1, -gap); ctx.lineTo(x2, -gap); ctx.closePath(); ctx.fill();
+                        ctx.beginPath();
+                        ctx.moveTo(0, crystalH); ctx.lineTo(x1, gap); ctx.lineTo(x2, gap); ctx.closePath(); ctx.fill();
+
+                        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.2; ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+
+                // Internal Beam
+                ctx.fillStyle = '#FFF'; ctx.globalAlpha = 0.8;
+                ctx.fillRect(-1.5, -gap, 3, gap * 2);
+                ctx.restore();
+
+                // Optimized Fence Line
+                if (fenceActive && e.crystalPositions) {
+                    const nextP = e.crystalPositions[(i + 1) * 1 % 5];
+                    ctx.save();
+                    ctx.strokeStyle = crystalColor;
+                    ctx.lineWidth = 4 + Math.sin(time * 20 + i) * 2;
+                    ctx.globalAlpha = 0.7 + Math.sin(time * 15) * 0.2;
+
+                    // Reduced segments (12 -> 6) for performance
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    const segments = 6;
+                    const ang = Math.atan2(nextP.y - p.y, nextP.x - p.x);
+                    const perpA = ang + Math.PI / 2;
+                    for (let s = 1; s <= segments; s++) {
+                        const progress = s / segments;
+                        const jitter = (Math.random() - 0.5) * 20;
+                        ctx.lineTo(
+                            p.x + (nextP.x - p.x) * progress + Math.cos(perpA) * jitter,
+                            p.y + (nextP.y - p.y) * progress + Math.sin(perpA) * jitter
+                        );
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
             ctx.restore();
         }
 
@@ -1408,7 +1487,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         // DIAMOND HYPER BEAM (FIRE STATE)
         if (e.shape === 'diamond' && e.beamState === 2 && e.beamX && e.beamY) {
-            const isLvl4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1);
+            const isLvl4 = (e.bossTier || 0) >= 4 || (state.gameTime > 1800 && e.bossTier !== 1);
             const centerAngle = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
             const duration = isLvl4 ? 240 : 30;
             const t = Math.min(1, (e.beamTimer || 0) / duration);

@@ -239,6 +239,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '2px', textTransform: 'uppercase' }}>
                                                     PARSING SYSTEM PACKETS...
                                                 </div>
+                                                <div style={{ fontSize: '8px', color: '#64748b', marginTop: '8px', letterSpacing: '1px' }}>(OR CLICK TO RECYCLE FOR +5 DUST)</div>
                                             </div>
 
                                             <div style={{ width: '100%', maxWidth: '300px', height: '8px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
@@ -401,7 +402,10 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                         animation: 'scan-vertical 2s infinite linear'
                                     }} />
                                 </div>
-                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>RIGHT-CLICK TO BEGIN DECRYPTION</div>
+                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
+                                    RIGHT-CLICK TO BEGIN DECRYPTION
+                                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
+                                </div>
                             </div>
                         </div>
                     ) : (

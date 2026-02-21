@@ -49,7 +49,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ player, counts: propCoun
         { label: 'REG', val: getPct(counts.REG), a: 198 }  // Top Left
     ];
 
-    const radius = size * 0.30; // slightly smaller than half to fit labels
+    const radius = size * 0.28; // slightly smaller than half to fit labels
     const center = size / 2;
 
     const points = pts.map(p => {

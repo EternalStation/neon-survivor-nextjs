@@ -246,7 +246,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     onHoverBlueprint(null);
                                 }}
                                 onClick={() => {
-                                    if (bp && bp.status !== 'researching') setPromptBlueprint(bp);
+                                    if (bp) setPromptBlueprint(bp);
                                 }}
                                 style={{
                                     cursor: bp ? 'pointer' : 'default',
@@ -389,7 +389,30 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                             >
                                 CLOSE
                             </button>
-                            {promptBlueprint.status !== 'active' && promptBlueprint.status !== 'broken' && (
+                            {/* DEPLOY / RESEARCH STATUS */}
+                            {promptBlueprint.status === 'active' && (
+                                <div style={{
+                                    flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '4px',
+                                    background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontWeight: 900,
+                                    letterSpacing: '1px', fontSize: '12px'
+                                }}>
+                                    DEPLOYED
+                                </div>
+                            )}
+
+                            {promptBlueprint.status === 'researching' && (
+                                <div style={{
+                                    flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    border: '1px solid rgba(250, 204, 21, 0.4)', borderRadius: '4px',
+                                    background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', fontWeight: 900,
+                                    letterSpacing: '1px', fontSize: '10px', textAlign: 'center'
+                                }}>
+                                    DECRYPTING...
+                                </div>
+                            )}
+
+                            {promptBlueprint.status === 'ready' && (
                                 <>
                                     {isBuffActive(gameState, promptBlueprint.type) ? (
                                         <button
@@ -413,10 +436,10 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                             disabled={gameState.player.dust < promptBlueprint.cost}
                                             style={{
                                                 flex: 2, padding: '10px',
-                                                background: gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#ef4444',
-                                                border: `1px solid ${gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? '#60a5fa' : '#f87171'}`,
+                                                background: gameState.player.dust >= promptBlueprint.cost ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#ef4444',
+                                                border: `1px solid ${gameState.player.dust >= promptBlueprint.cost ? '#60a5fa' : '#f87171'}`,
                                                 color: '#fff',
-                                                borderRadius: '4px', cursor: gameState.player.dust >= promptBlueprint.cost && promptBlueprint.status === 'ready' ? 'pointer' : 'not-allowed',
+                                                borderRadius: '4px', cursor: gameState.player.dust >= promptBlueprint.cost ? 'pointer' : 'not-allowed',
                                                 fontWeight: 900, fontSize: '12px', letterSpacing: '1px',
                                                 boxShadow: gameState.player.dust >= promptBlueprint.cost ? '0 0 15px rgba(59, 130, 246, 0.5)' : '0 5px 10px rgba(239, 68, 68, 0.4)',
                                                 transition: 'all 0.2s',
@@ -433,22 +456,14 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     )}
                                 </>
                             )}
-                            {promptBlueprint.status === 'active' && (
-                                <div style={{
-                                    flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '4px',
-                                    background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontWeight: 900,
-                                    letterSpacing: '1px', fontSize: '12px'
-                                }}>
-                                    DEPLOYED
-                                </div>
-                            )}
 
-                            {promptBlueprint.status === 'broken' && (
+                            {/* RECYCLE OPTION (Available for Researching, Ready, and Broken) */}
+                            {(promptBlueprint.status === 'researching' || promptBlueprint.status === 'ready' || promptBlueprint.status === 'broken') && (
                                 <button
                                     onClick={handleScrap}
                                     style={{
-                                        flex: 2, padding: '10px',
+                                        flex: promptBlueprint.status === 'ready' ? 1 : 2,
+                                        padding: '10px',
                                         background: '#334155',
                                         border: '1px solid #475569',
                                         color: '#94a3b8',

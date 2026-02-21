@@ -548,6 +548,10 @@ export interface Enemy {
     phalanxAngle?: number;
     isPhalanxDrone?: boolean;
     phalanxDroneAngle?: number;
+
+    // Level 5 Boss Mechanics
+    crystalPositions?: Vector[];
+    crystalState?: number;
 }
 
 export interface Upgrade {

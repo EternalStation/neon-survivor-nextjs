@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import type { UpgradeChoice } from '../logic/core/types';
+import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/types';
 import { BASE_UPGRADE_VALUES } from '../logic/core/constants';
+import { calcStat } from '../logic/utils/MathUtils';
+import { formatLargeNumber } from '../utils/format';
 import { getIcon } from './UpgradeIcons';
 import '../styles/UpgradeMenu.css';
 
@@ -11,6 +13,7 @@ interface UpgradeCardProps {
     onSelect: (choice: UpgradeChoice) => void;
     onHover: (index: number) => void;
     isSelecting: boolean; // Kept for prop compatibility but unused for delay
+    gameState: GameState;
 }
 
 // Updated Rarity Map per User Request
@@ -28,7 +31,7 @@ const RARITY_COLORS: Record<string, string> = {
 
 const RARITY_ORDER = ['scrap', 'anomalous', 'quantum', 'astral', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
 
-export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSelected, onSelect, onHover }) => {
+export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSelected, onSelect, onHover, gameState }) => {
     // Fallback to 'quantum' (common equivalent) if ID is missing or unknown
     let rId = c.rarity?.id || 'quantum';
     // Remove legacy mapping or map old IDs if necessary for safety?
@@ -48,12 +51,51 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
 
     // Value Formatter
     let valStr = '';
-    if (!c.isSpecial && c.type && c.rarity) {
+    let finalIncreaseStr = '';
+
+    if (!c.isSpecial && c.type && c.rarity && gameState) {
         const id = c.type.id || '';
         const baseVal = BASE_UPGRADE_VALUES[id] || 0;
         const mult = c.rarity.mult || 1;
         const val = Math.round(baseVal * mult);
         valStr = id.endsWith('_m') ? `+${val}%` : `+${val}`;
+
+        // Final Increase Calculation
+        const p = gameState.player;
+        let stat: PlayerStats | null = null;
+        let arenaMult = 1;
+        let unit = '';
+
+        if (id.startsWith('hp_')) { stat = p.hp; arenaMult = gameState.hpRegenBuffMult || 1; unit = 'HP'; }
+        else if (id.startsWith('dmg_')) { stat = p.dmg; arenaMult = gameState.dmgAtkBuffMult || 1; unit = 'DMG'; }
+        else if (id.startsWith('reg_')) { stat = p.reg; arenaMult = gameState.hpRegenBuffMult || 1; unit = 'REG'; }
+        else if (id.startsWith('arm_')) { stat = p.arm; arenaMult = 1; unit = 'ARM'; }
+        else if (id.startsWith('xp_')) { stat = p.xp_per_kill as unknown as PlayerStats; arenaMult = gameState.xpSoulBuffMult || 1; unit = 'XP'; }
+        else if (id === 'atk_s') { stat = p.atk; arenaMult = gameState.dmgAtkBuffMult || 1; unit = 'ATK'; }
+
+        if (stat) {
+            const currentVal = calcStat(stat, arenaMult);
+            // Simulate upgrade
+            const tempStat = { ...stat };
+            if (id.endsWith('_m')) tempStat.mult = (tempStat.mult || 0) + val;
+            else tempStat.flat = (tempStat.flat || 0) + val;
+
+            const newVal = calcStat(tempStat, arenaMult);
+            const diff = newVal - currentVal;
+
+            if (diff !== 0) {
+                if (id === 'atk_s') {
+                    const currentSPS = Math.max(0.1, (2.64 * Math.log(currentVal / 100) - 1.25));
+                    const newSPS = Math.max(0.1, (2.64 * Math.log(newVal / 100) - 1.25));
+                    const spsDiff = newSPS - currentSPS;
+                    finalIncreaseStr = `(+${spsDiff.toFixed(2)} S/S)`;
+                } else {
+                    // Formatting for readability using standard project formatter
+                    const formattedDiff = formatLargeNumber(diff);
+                    finalIncreaseStr = `(+${formattedDiff} ${unit})`;
+                }
+            }
+        }
     }
 
     const handleClick = () => {
@@ -120,8 +162,20 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                 </div>
 
                 {/* 3. Value (Center Below Title) */}
-                <div className="card-value-center" style={{ color: baseColor, textShadow: `0 0 10px ${baseColor}` }}>
-                    {valStr}
+                <div className="card-value-center" style={{ color: baseColor, textShadow: `0 0 10px ${baseColor}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span>{valStr}</span>
+                    {finalIncreaseStr && (
+                        <span style={{
+                            fontSize: '11px',
+                            opacity: 0.8,
+                            marginTop: '0px',
+                            fontWeight: 'normal',
+                            textShadow: 'none',
+                            letterSpacing: '0px'
+                        }}>
+                            {finalIncreaseStr}
+                        </span>
+                    )}
                 </div>
 
                 {/* Spacer - removed in favor of absolute positioning */}

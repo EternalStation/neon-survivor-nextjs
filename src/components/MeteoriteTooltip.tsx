@@ -44,7 +44,7 @@ const getMeteoriteImage = (m: Meteorite) => {
 const formatDescription = (text: string, highlightColor: string) => {
     // Dynamic replacement for correct terminology
     // 1. "Found in" context -> Arena Name
-    text = text.replace(/found in ECO HEX/gi, 'found in Eco Arena')
+    text = text.replace(/found in ECO HEX/gi, 'found in Economic Arena')
         .replace(/found in COM HEX/gi, 'found in Combat Arena')
         .replace(/found in DEF HEX/gi, 'found in Defence Arena')
 
@@ -73,7 +73,7 @@ const formatDescription = (text: string, highlightColor: string) => {
     // Keywords to highlight - Order matters (longest first to avoid partial matches)
     const keywords = [
         'Sector-01', 'Sector-02', 'Sector-03',
-        'Eco Arena', 'Combat Arena', 'Defence Arena',
+        'Economic Arena', 'Combat Arena', 'Defence Arena',
         'Economic', 'Combat', 'Defence',
         '\\bEco\\b', 'Com', 'Def',
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
@@ -526,7 +526,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             </span>
                         </div>
                         <div style={{ color: '#fff' }}>
-                            <span style={{ color: rarityColor, opacity: 0.8 }}>FOUND IN:</span> {meteorite.discoveredIn.replace(/Sector-01/gi, 'Eco Arena').replace(/Sector-02/gi, 'Combat Arena').replace(/Sector-03/gi, 'Defence Arena').replace(/ECO HEX/gi, 'Eco Arena').replace(/COM HEX/gi, 'Combat Arena').replace(/DEF HEX/gi, 'Defence Arena')}
+                            <span style={{ color: rarityColor, opacity: 0.8 }}>FOUND IN:</span> {meteorite.discoveredIn.replace(/Sector-01/gi, 'Economic Arena').replace(/Sector-02/gi, 'Combat Arena').replace(/Sector-03/gi, 'Defence Arena').replace(/ECO HEX/gi, 'Economic Arena').replace(/COM HEX/gi, 'Combat Arena').replace(/DEF HEX/gi, 'Defence Arena')}
                         </div>
                     </div>
 

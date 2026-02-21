@@ -597,7 +597,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
     // 2. GLITCH CLOUD ASSAULT (Spawn clouds NEAR PLAYER, not at Glitcher)
     const cloudInterval = 5; // Every 5 seconds (was 4)
     if (distToPlayer < 700 && (!e.lastLeak || now - e.lastLeak > cloudInterval)) {
-        // ALWAYS spawn 2 clouds: 1 on player, 1 nearby
+        // ALWAYS spawn 3 clouds: 1 on player, 2 nearby
 
         // Cloud 1: Directly on the player
         state.areaEffects.push({
@@ -612,8 +612,8 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         });
         spawnParticles(state, player.x, player.y, ['#ff00ff', '#00ffff'], 8);
 
-        // Cloud 2: Near the player (150-350px away)
-        for (let i = 0; i < 1; i++) {
+        // Clouds 2 & 3: Near the player (150-350px away)
+        for (let i = 0; i < 2; i++) {
             const angle = Math.random() * Math.PI * 2;
             const distance = 150 + Math.random() * 200; // 150-350px from player
             const cloudX = player.x + Math.cos(angle) * distance;
@@ -635,7 +635,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         }
 
         e.lastLeak = now;
-        console.log(`[GLITCHER] Spawned 2 Glitch Clouds: 1 on player, 1 nearby`);
+        console.log(`[GLITCHER] Spawned 3 Glitch Clouds: 1 on player, 2 nearby`);
         playSfx('smoke-puff');
     }
 

@@ -4,7 +4,8 @@ import { updateTriangleBoss, updateDiamondBoss, updatePentagonBoss } from './bos
 
 export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, onEvent?: (event: string, data?: any) => void) {
     // Level 3 Boss Logic (20 Minutes+)
-    const isLevel4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1);
+    const isLevel5 = e.bossTier === 5 || (state.gameTime > 2400 && e.bossTier !== 1);
+    const isLevel4 = e.bossTier === 4 || (state.gameTime > 1800 && e.bossTier !== 1) || isLevel5;
     const isLevel3 = e.bossTier === 3 || (state.gameTime > 1200 && e.bossTier !== 1) || isLevel4;
     const isLevel2 = e.bossTier === 2 || (state.gameTime > 600 && e.bossTier !== 1) || isLevel3; // Lvl 3 includes Lvl 2 mechanics usually, unless overridden
 
@@ -30,7 +31,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
 
     // --- DIAMOND BOSS (THE MARKSMAN) ---
     if (e.shape === 'diamond') {
-        return updateDiamondBoss(e, currentSpd, dx, dy, pushX, pushY, state, isLevel2, isLevel3, isLevel4, onEvent);
+        return updateDiamondBoss(e, currentSpd, dx, dy, pushX, pushY, state, isLevel2, isLevel3, isLevel4, isLevel5, onEvent);
     }
 
     // --- PENTAGON BOSS (THE OMEGA) ---

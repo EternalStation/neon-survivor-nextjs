@@ -126,6 +126,15 @@ const BOSS_SKILLS_L4: Record<string, { name: string; desc: string; color: string
     }
 };
 
+const BOSS_SKILLS_L5: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
+    diamond: {
+        name: 'CRYSTAL FENCE',
+        desc: 'Places 5 resonance crystals around the player that form a deadly electric fence. Touching the fence deals 1% Boss HP damage every 5 frames.',
+        color: '#06b6d4',
+        iconLabel: '⚡'
+    }
+};
+
 export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDetail, setShowSkillDetail }) => {
     const activeBosses = gameState.enemies.filter(e => e.boss && !e.dead);
     // Sort by spawn time to keep order consistent with appearance
@@ -153,7 +162,8 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
             }}>
                 {activeBosses.map((boss) => {
                     const hpPct = (boss.hp / boss.maxHp) * 100;
-                    const isLevel4 = boss.bossTier === 4 || (gameState.gameTime > 1800 && boss.bossTier !== 1);
+                    const isLevel5 = boss.bossTier === 5 || (gameState.gameTime > 2400 && boss.bossTier !== 1);
+                    const isLevel4 = boss.bossTier === 4 || (gameState.gameTime > 1800 && boss.bossTier !== 1) || isLevel5;
                     const isLevel3 = boss.bossTier === 3 || (gameState.gameTime > 1200 && boss.bossTier !== 1) || isLevel4;
                     const isLevel2 = boss.bossTier === 2 || gameState.gameTime > 600 || isLevel3;
 
@@ -162,6 +172,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                     if (isLevel2 && BOSS_SKILLS[boss.shape]) skills.push(BOSS_SKILLS[boss.shape]);
                     if (isLevel3 && BOSS_SKILLS_L3[boss.shape]) skills.push(BOSS_SKILLS_L3[boss.shape]);
                     if (isLevel4 && BOSS_SKILLS_L4[boss.shape]) skills.push(BOSS_SKILLS_L4[boss.shape]);
+                    if (isLevel5 && BOSS_SKILLS_L5[boss.shape]) skills.push(BOSS_SKILLS_L5[boss.shape]);
 
                     return (
                         <div key={boss.id} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -173,7 +184,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                             }}>
                                 <span>{BOSS_NAMES[boss.shape] || 'ANOMALY'}</span>
                                 <span style={{ color: '#ef4444' }}>
-                                    LVL {isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1'))}
+                                    LVL {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
                                 </span>
                             </div>
 
