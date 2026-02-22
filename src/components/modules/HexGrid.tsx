@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/types';
-import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
+import { calculateMeteoriteEfficiency, getSector } from '../../logic/upgrades/EfficiencyLogic';
 import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices, RARITY_COLORS, getMeteoriteColor } from './ModuleUtils';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { BestiaryView } from './BestiaryView';
+import { useEffect, useRef } from 'react';
 
 import type { BestiaryEntry } from '../../data/BestiaryData';
 
@@ -26,6 +27,123 @@ interface HexGridProps {
     onSelectBestiaryEnemy?: (enemy: BestiaryEntry | null) => void;
 }
 
+interface EfficiencyLabelProps {
+    value: number;
+    x: number;
+    y: number;
+    color: string;
+    onLevitateChange?: (isLevitating: boolean) => void;
+}
+
+const EfficiencyLabel: React.FC<EfficiencyLabelProps> = ({ value, x, y, color, onLevitateChange }) => {
+    const [displayValue, setDisplayValue] = React.useState(value);
+    const [pulseId, setPulseId] = React.useState(0);
+    const [dir, setDir] = React.useState<'up' | 'down'>('up');
+    const [isCounting, setIsCounting] = React.useState(false);
+    const [vibeFactor, setVibeFactor] = React.useState(0); // 0 to 1
+    const prevValueRef = React.useRef(value);
+    const animRef = React.useRef<number | null>(null);
+
+    React.useEffect(() => {
+        if (value !== prevValueRef.current) {
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+
+            const startVal = displayValue;
+            const targetVal = value;
+            const isIncreasing = targetVal > startVal;
+            const diffPct = Math.abs(targetVal - startVal) * 100;
+            // 1% per 4 frames
+            const totalFrames = Math.max(1, Math.round(diffPct * 4));
+
+            let frame = 0;
+            let lastPulsePct = Math.round(startVal * 100);
+            setIsCounting(true);
+            onLevitateChange?.(true);
+
+            const animate = () => {
+                frame++;
+                const progress = Math.min(frame / totalFrames, 1);
+                const current = startVal + (targetVal - startVal) * progress;
+                setDisplayValue(current);
+
+                // Intensity grows with progress and total delta (maxed at 100% change)
+                const intensity = progress * Math.min(1, diffPct / 100);
+                setVibeFactor(intensity);
+
+                // Pulse every 5% growth or drop
+                const currentWholePct = Math.round(current * 100);
+                const startBucket = Math.floor(lastPulsePct / 5);
+                const currentBucket = Math.floor(currentWholePct / 5);
+
+                if (currentBucket !== startBucket) {
+                    setDir(isIncreasing ? 'up' : 'down');
+                    setPulseId(id => id + 1);
+                    lastPulsePct = currentWholePct;
+                }
+
+                if (frame < totalFrames) {
+                    animRef.current = requestAnimationFrame(animate);
+                } else {
+                    setIsCounting(false);
+                    setVibeFactor(0);
+                    onLevitateChange?.(false);
+                }
+            };
+
+            animRef.current = requestAnimationFrame(animate);
+            prevValueRef.current = value;
+            return () => {
+                if (animRef.current) cancelAnimationFrame(animRef.current);
+            };
+        }
+    }, [value]);
+
+    const labelColor = color || '#ffffff';
+    const animClass = pulseId > 0 ? `animate-${dir}-${pulseId % 2}` : "";
+
+    // Scale from 1.15 to 1.55 based on intensity
+    const currentScale = 1.15 + (vibeFactor * 0.4);
+    const currentBright = 1.2 + (vibeFactor * 0.8);
+
+    return (
+        <g
+            transform={`translate(${x}, ${y})`}
+            className={animClass}
+            style={{
+                '--glow-color': labelColor,
+                '--vibe-scale': currentScale,
+                '--vibe-bright': currentBright,
+                pointerEvents: 'none'
+            } as any}
+        >
+            <rect
+                x={-32}
+                y={-9}
+                width="64"
+                height="18"
+                rx="4"
+                fill="rgba(15, 23, 42, 0.98)"
+                stroke={labelColor}
+                strokeWidth="1.5"
+                style={{ filter: `drop-shadow(0 0 8px ${labelColor}66)` }}
+            />
+            <text
+                x={0}
+                y={4}
+                textAnchor="middle"
+                fill={labelColor}
+                fontSize="11"
+                fontWeight="900"
+                className={isCounting ? "animate-vibe" : ""}
+                style={{ letterSpacing: '0.5px' }}
+                pointerEvents="none"
+            >
+                +{Math.round(displayValue * 100)}%
+            </text>
+        </g>
+    );
+};
+
 export const HexGrid: React.FC<HexGridProps> = ({
     gameState,
     movedItem,
@@ -44,6 +162,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
     onSelectBestiaryEnemy
 }) => {
     const [view, setView] = useState<'matrix' | 'bestiary'>('matrix');
+    const [levitatingDiamonds, setLevitatingDiamonds] = useState<Record<number, boolean>>({});
     const { moduleSockets } = gameState;
     const centerX = 432; // Centered in 45% of 1920 (864px wide)
     const centerY = 540; // True Vertical Centering
@@ -52,6 +171,42 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const edgeRadius = 350;
 
     const INACTIVE_STROKE = "rgba(74, 85, 104, 0.2)";
+
+    const activeConnections = {
+        diamonds: new Set<number>(),
+        hexagons: new Set<number>(),
+        sectors: new Set<string>()
+    };
+
+    const isRecentlyBoosted = (i: number) => {
+        const lp = gameState.lastPlacement;
+        if (!lp || (Date.now() - lp.timestamp) > 1000) return false;
+        if (lp.type === 'diamond' && lp.index === i) return false;
+
+        const eff = meteoriteEfficiencies[i];
+        if (!eff) return false;
+
+        return Object.values(eff.perkResults).some(pr => {
+            if (!pr.connections) return false;
+            if (lp.type === 'diamond') return pr.connections.diamonds.includes(lp.index);
+            if (lp.type === 'hex') return pr.connections.hexagons.includes(lp.index);
+            return false;
+        });
+    };
+
+    // Pre-calculate all efficiencies and connections
+    const meteoriteEfficiencies = Array.from({ length: 12 }).map((_, i) => {
+        if (!moduleSockets.diamonds[i]) return null;
+        const result = calculateMeteoriteEfficiency(gameState, i);
+        Object.values(result.perkResults).forEach(pr => {
+            if (pr.connections) {
+                pr.connections.diamonds.forEach(d => activeConnections.diamonds.add(d));
+                pr.connections.hexagons.forEach(h => activeConnections.hexagons.add(h));
+                pr.connections.sectors.forEach(s => activeConnections.sectors.add(s));
+            }
+        });
+        return result;
+    });
 
     const hexPositions = Array.from({ length: 6 }).map((_, i) => {
         const angle = (Math.PI / 3) * i;
@@ -221,6 +376,10 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                         const edgeAngle = Math.atan2(o1.y - o0.y, o1.x - o0.x) * (180 / Math.PI);
                         const rotation = (sector.name === 'SECTOR-02') ? edgeAngle + 180 : edgeAngle;
+                        const targetSector: 'Economic' | 'Combat' | 'Defensive' = sector.code === 'SEC-01' ? 'Economic' : (sector.code === 'SEC-02' ? 'Combat' : 'Defensive');
+
+                        const lp = gameState.lastPlacement;
+                        const isRecentlyPlacedInSector = lp && lp.type === 'diamond' && getSector(lp.index) === targetSector && (Date.now() - lp.timestamp) < 1000;
 
                         return (
                             <g key={sIdx}>
@@ -278,7 +437,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     const v2 = nextPos;
                     return (
                         <g key={`ms-ii-adj-group-${i}`}>
-                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.3 : 1} className={active ? "pulse-crimson" : ""} />
+                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.6 : 1} className={active ? "pulse-crimson energy-flow-line" : ""} />
                             {active && (
                                 <>
                                     <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
@@ -296,7 +455,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     const v2 = iPos;
                     return (
                         <g key={`ms-io-rad-group-${i}`}>
-                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.3 : 1} className={active ? "pulse-crimson" : ""} />
+                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.6 : 1} className={active ? "pulse-crimson energy-flow-line" : ""} />
                             {active && (
                                 <>
                                     <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
@@ -315,7 +474,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     const targetV = pos;
                     return (
                         <g key={`xms-ci-perp-group-${i}`}>
-                            <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke={active ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active ? "2" : "1"} opacity={active ? 0.3 : 1} className={active ? "synergy-trail" : ""} />
+                            <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke={active ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active ? "2" : "1"} opacity={active ? 0.6 : 1} className={active ? "synergy-trail energy-flow-line" : ""} />
                             {active && (
                                 <>
                                     <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
@@ -517,7 +676,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 stroke={hex ? info?.color : "rgba(250, 204, 21, 0.5)"}
                                 strokeWidth={hex ? "4" : "2"}
                                 className={hex ? "glow-hex" : "glow-yellow"}
-                                style={{ '--hex-color': info?.color } as any}
+                                style={{ '--hex-color': info?.color, '--glow-color': info?.color || '#fbbf24' } as any}
                             />
                             {hex && (
                                 <g>
@@ -583,6 +742,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     );
                 })}
 
+                {/* 1. LAYER: METEORITE SOCKETS (Background) */}
                 {allDiamondPositions.map((pos, i) => {
                     const meteorite = moduleSockets.diamonds[i];
                     const socketColor = meteorite ? getMeteoriteColor(meteorite.discoveredIn) : '#64748b'; // slate-500
@@ -674,104 +834,125 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 filter="url(#rugged-rim)"
                             />
                             <circle cx={pos.x} cy={pos.y} r="25" fill="rgba(0,0,0,0.3)" />
+                        </g>
+                    )
+                })}
 
-                            {moduleSockets.diamonds[i] && (
-                                <>
-                                    <foreignObject x={pos.x - 35} y={pos.y - 35} width="70" height="70" style={{ pointerEvents: 'auto' }}>
-                                        <div
-                                            style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            onMouseMove={(e) => {
-                                                const item = moduleSockets.diamonds[i];
-                                                if (item && !movedItem) {
-                                                    handleMouseEnterItem(item, e.clientX, e.clientY, i);
-                                                    if (item.isNew) {
-                                                        item.isNew = false;
-                                                        onSocketUpdate('diamond', i, item);
-                                                    }
+                {/* 2. LAYER: METEORITE VISUALS (Foreground Layer - Priority) */}
+                {allDiamondPositions.map((pos, i) => {
+                    const meteorite = moduleSockets.diamonds[i];
+                    if (!meteorite) return null;
+
+                    const rarityColor = RARITY_COLORS[meteorite.rarity];
+                    const isBoosted = isRecentlyBoosted(i);
+                    const isLevitating = levitatingDiamonds[i];
+
+                    return (
+                        <g key={`meteorite-foreground-${i}`}
+                            transform={`translate(${pos.x}, ${pos.y})`}
+                            style={{ cursor: movedItem ? 'copy' : 'help' }}
+                            onMouseDown={(e) => {
+                                if (gameState.pendingLegendaryHex) return;
+                                if (!movedItem && meteorite) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onAttemptRemove(i, meteorite);
+                                }
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (!movedItem && meteorite) {
+                                    setLockedItem({ item: meteorite, x: e.clientX, y: e.clientY, index: i });
+                                }
+                            }}
+                            onMouseUp={(e) => {
+                                e.stopPropagation();
+                                if (movedItem) {
+                                    const itemAtTarget = meteorite;
+                                    if (itemAtTarget) {
+                                        onAttemptRemove(i, itemAtTarget, movedItem);
+                                        setMovedItem(null);
+                                    }
+                                }
+                            }}
+                        >
+                            {/* Rarity Glow Ring */}
+                            <circle
+                                r="32"
+                                fill="none"
+                                stroke={rarityColor}
+                                strokeWidth="2"
+                                style={{ opacity: 0.6, filter: `drop-shadow(0 0 5px ${rarityColor})` }}
+                                pointerEvents="none"
+                            />
+
+                            {/* The Meteorite Group (Animate this) */}
+                            <g
+                                className={`meteorite-visual-group ${isBoosted ? "is-boosted" : ""} ${isLevitating ? "is-levitating" : ""}`}
+                                style={{ '--glow-color': rarityColor, pointerEvents: 'none' } as any}
+                            >
+                                <g className="meteorite-inner-bob">
+                                    <image
+                                        href={getMeteoriteImage(meteorite)}
+                                        x={-35}
+                                        y={-35}
+                                        width="70"
+                                        height="70"
+                                        style={{ pointerEvents: 'auto' }}
+                                        onMouseMove={(e) => {
+                                            if (!movedItem) {
+                                                handleMouseEnterItem(meteorite, e.clientX, e.clientY, i);
+                                                if (meteorite.isNew) {
+                                                    meteorite.isNew = false;
+                                                    onSocketUpdate('diamond', i, meteorite);
                                                 }
-                                            }}
+                                            }
+                                        }}
+                                        onMouseLeave={() => handleMouseLeaveItem(100)}
+                                    />
 
-                                            onMouseLeave={() => handleMouseLeaveItem(100)}
-                                        >
-                                            {moduleSockets.diamonds[i]?.isNew && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    right: 0,
-                                                    background: '#ef4444',
-                                                    color: 'white',
-                                                    fontSize: '8px',
-                                                    fontWeight: 900,
-                                                    padding: '2px 4px',
-                                                    borderRadius: '4px',
-                                                    boxShadow: '0 0 10px #ef4444',
-                                                    zIndex: 10,
-                                                    pointerEvents: 'none',
-                                                    animation: 'pulse-red 1s infinite'
-                                                }}>
-                                                    NEW
-                                                </div>
-                                            )}
-                                            <img
-                                                src={getMeteoriteImage(moduleSockets.diamonds[i]!)}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: 'contain',
-                                                    pointerEvents: 'auto', // Allow mouse events for hover
-                                                    cursor: movedItem ? 'copy' : 'help' // Indicate info available
-                                                }}
-                                                alt="meteorite"
-                                            />
-                                        </div>
-                                    </foreignObject>
+                                    {/* NEW Label - SVG Style */}
+                                    {meteorite.isNew && (
+                                        <g transform="translate(20, -20)">
+                                            <rect x="-12" y="-6" width="24" height="12" rx="4" fill="#ef4444" className="pulse-red" style={{ filter: 'drop-shadow(0 0 5px #ef4444)' }} />
+                                            <text x="0" y="3" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>NEW</text>
+                                        </g>
+                                    )}
 
-                                    {/* SVG-based Efficiency Label (to avoid clipping) */}
+                                    {/* Status Icons */}
                                     <g pointerEvents="none">
-                                        <rect
-                                            x={pos.x - 32}
-                                            y={pos.y + 25}
-                                            width="64"
-                                            height="18"
-                                            rx="4"
-                                            fill="rgba(15, 23, 42, 0.98)"
-                                            stroke={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
-                                            strokeWidth="1.5"
-                                            style={{ filter: `drop-shadow(0 0 8px ${RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}66)` }}
-                                        />
-                                        <text
-                                            x={pos.x}
-                                            y={pos.y + 38}
-                                            textAnchor="middle"
-                                            fill={RARITY_COLORS[moduleSockets.diamonds[i]!.rarity]}
-                                            fontSize={isBuffActive(gameState, 'MATRIX_OVERDRIVE') ? "10" : "11"}
-                                            fontWeight="900"
-                                            style={{ letterSpacing: '0.5px' }}
-                                        >
-                                            +{Math.round(calculateMeteoriteEfficiency(gameState, i).totalBoost * 100)}%
-                                        </text>
-
-                                        {moduleSockets.diamonds[i]!.isCorrupted && (
-                                            <g transform={`translate(${pos.x + 22}, ${pos.y - 24})`}>
+                                        {meteorite.isCorrupted && (
+                                            <g transform="translate(22, -24)">
                                                 <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
-                                                <text x="0" y="4" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>C</text>
+                                                <text x="0" y="3" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900">C</text>
                                             </g>
                                         )}
                                         {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
-                                            <g transform={`translate(${pos.x + 22}, ${pos.y + 24})`}>
+                                            <g transform="translate(22, 24)">
                                                 <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
-                                                <text x="0" y="4" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>M</text>
+                                                <text x="0" y="3" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900">M</text>
                                             </g>
                                         )}
-                                        {moduleSockets.diamonds[i]!.blueprintBoosted && (
-                                            <g transform={`translate(${pos.x - 22}, ${pos.y + 24})`}>
+                                        {meteorite.blueprintBoosted && (
+                                            <g transform="translate(-22, 24)">
                                                 <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
-                                                <text x="0" y="4" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>H</text>
+                                                <text x="0" y="3" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900">H</text>
                                             </g>
                                         )}
                                     </g>
-                                </>
-                            )}
+                                </g>
+                            </g>
+
+                            {/* Efficiency Label - Priority on top */}
+                            <EfficiencyLabel
+                                value={meteoriteEfficiencies[i]?.totalBoost || 0}
+                                x={0}
+                                y={35}
+                                color={rarityColor}
+                                onLevitateChange={(lev) => {
+                                    setLevitatingDiamonds(prev => ({ ...prev, [i]: lev }));
+                                }}
+                            />
                         </g>
                     )
                 })}

@@ -633,7 +633,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 
                     <div className="recycle-btn" style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
-                        marginTop: '2px'
+                        marginTop: '2px',
+                        transform: 'translateX(-15px)'
                     }}>
                         <button
                             onClick={onToggleRecycle}

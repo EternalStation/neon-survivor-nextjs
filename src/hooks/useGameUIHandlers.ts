@@ -152,7 +152,14 @@ export function useGameUIHandlers({
         } else {
             gameState.current.moduleSockets.diamonds[index] = item;
         }
-        if (item) playSfx('socket-place');
+        if (item) {
+            playSfx('socket-place');
+            gameState.current.lastPlacement = {
+                type,
+                index,
+                timestamp: Date.now()
+            };
+        }
         setUiState(prev => prev + 1);
     }, [gameState, setUiState]);
 

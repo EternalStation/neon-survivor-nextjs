@@ -4,6 +4,11 @@ import { isBuffActive } from './BlueprintLogic';
 export interface PerkResult {
     activeValue: number;
     count: number;
+    connections?: {
+        diamonds: number[];
+        hexagons: number[];
+        sectors: string[];
+    };
 }
 
 export function getSector(idx: number): 'Economic' | 'Combat' | 'Defensive' {
@@ -34,7 +39,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
 
     const neighbors = getMeteoriteNeighbors(state, meteoriteIdx);
     const secondaryNeighbors = getMeteoriteNeighbors(state, meteoriteIdx, true);
-    const hexConnections = getMeteoriteHexConnections(state, meteoriteIdx);
+    const hexConnData = getMeteoriteHexConnections(state, meteoriteIdx);
     const sector = getSector(meteoriteIdx);
 
     if (meteorite.perks) {
@@ -42,14 +47,20 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
             let count = 0;
             const pts = perk.id.split('_');
             const level = pts[0]; // 'lvl1', 'lvl2' etc.
+            const conns: { diamonds: number[], hexagons: number[], sectors: string[] } = { diamonds: [], hexagons: [], sectors: [] };
 
             switch (level) {
                 case 'lvl1': {
                     // lvl1_{sector}_{hexType}
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const targetHexType = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
-                    if (sector === targetSector && hexConnections.some(h => h.category === targetHexType)) {
-                        count = 1;
+                    if (sector === targetSector) {
+                        const matchingHexIndices = hexConnData.indices.filter(hIdx => state.moduleSockets.hexagons[hIdx]?.category === targetHexType);
+                        if (matchingHexIndices.length > 0) {
+                            count = 1;
+                            conns.sectors.push(targetSector);
+                            conns.hexagons.push(...matchingHexIndices);
+                        }
                     }
                     break;
                 }
@@ -57,8 +68,13 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     // lvl2_{sector}_{neighborQuality}
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
-                    if (sector === targetSector && neighbors.meteorites.some(m => m.quality === targetQuality)) {
-                        count = neighbors.meteorites.filter(m => m.quality === targetQuality).length;
+                    if (sector === targetSector) {
+                        const matchingNeighbors = neighbors.indices.filter(nIdx => state.moduleSockets.diamonds[nIdx]?.quality === targetQuality);
+                        if (matchingNeighbors.length > 0) {
+                            count = matchingNeighbors.length;
+                            conns.sectors.push(targetSector);
+                            conns.diamonds.push(...matchingNeighbors);
+                        }
                     }
                     break;
                 }
@@ -66,14 +82,28 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     // lvl3_{arena}_{neighborQuality}
                     const targetArena = pts[1].toUpperCase(); // 'ECO', 'COM', 'DEF'
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
-                    count = neighbors.meteorites.filter(m => getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality).length;
+                    const matchingNeighbors = neighbors.indices.filter(nIdx => {
+                        const m = state.moduleSockets.diamonds[nIdx];
+                        return m && getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality;
+                    });
+                    if (matchingNeighbors.length > 0) {
+                        count = matchingNeighbors.length;
+                        conns.diamonds.push(...matchingNeighbors);
+                    }
                     break;
                 }
                 case 'lvl4': {
                     // lvl4_{arena}_{neighborQuality} (Secondary)
                     const targetArena = pts[1].toUpperCase();
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
-                    count = secondaryNeighbors.meteorites.filter(m => getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality).length;
+                    const matchingNeighbors = secondaryNeighbors.indices.filter(nIdx => {
+                        const m = state.moduleSockets.diamonds[nIdx];
+                        return m && getArenaKey(m.discoveredIn) === pts[1] && m.quality === targetQuality;
+                    });
+                    if (matchingNeighbors.length > 0) {
+                        count = matchingNeighbors.length;
+                        conns.diamonds.push(...matchingNeighbors);
+                    }
                     break;
                 }
                 case 'lvl5': {
@@ -81,10 +111,14 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
-                    if (sector === targetSector && hexConnections.length >= 2) {
-                        const categories = [hexConnections[0].category, hexConnections[1].category].sort();
+                    if (sector === targetSector && hexConnData.hexes.length >= 2) {
+                        const categories = [hexConnData.hexes[0].category, hexConnData.hexes[1].category].sort();
                         const targets = [t1, t2].sort();
-                        if (categories[0] === targets[0] && categories[1] === targets[1]) count = 1;
+                        if (categories[0] === targets[0] && categories[1] === targets[1]) {
+                            count = 1;
+                            conns.sectors.push(targetSector);
+                            conns.hexagons.push(...hexConnData.indices);
+                        }
                     }
                     break;
                 }
@@ -93,25 +127,27 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const targetQuality = pts[1] === 'bro' ? 'Broken' : (pts[1] === 'dam' ? 'Damaged' : 'New');
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
-                    const hasQual = neighbors.meteorites.some(m => m.quality === targetQuality);
-                    const isBridge = hexConnections.length >= 2 && (() => {
-                        const categories = [hexConnections[0].category, hexConnections[1].category].sort();
+                    const matchingNeighborIdxs = neighbors.indices.filter(nIdx => state.moduleSockets.diamonds[nIdx]?.quality === targetQuality);
+                    const isBridge = hexConnData.hexes.length >= 2 && (() => {
+                        const categories = [hexConnData.hexes[0].category, hexConnData.hexes[1].category].sort();
                         const targets = [t1, t2].sort();
                         return (categories[0] === targets[0] && categories[1] === targets[1]);
                     })();
-                    if (hasQual && isBridge) count = 1;
+                    if (matchingNeighborIdxs.length > 0 && isBridge) {
+                        count = 1;
+                        conns.diamonds.push(...matchingNeighborIdxs);
+                        conns.hexagons.push(...hexConnData.indices);
+                    }
                     break;
                 }
                 // Deprecated Fallback
                 case 'base_efficiency': count = 1; break;
-                case 'neighbor_new_eco': count = neighbors.meteorites.filter(m => m.discoveredIn === 'ECONOMIC HEX' && m.quality === 'New').length; break;
-                // ... other legacy cases can be added if needed, but we replaced the pool.
             }
 
             const resonanceBonus = calculateLegendaryBonus(state, 'metric_resonance', true);
             const activeValue = count * (perk.value + resonanceBonus);
             totalActiveBoostPct += activeValue;
-            perkResults[perk.id] = { activeValue, count };
+            perkResults[perk.id] = { activeValue, count, connections: count > 0 ? conns : undefined };
         });
     }
 
@@ -127,7 +163,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
 
 import { calculateLegendaryBonus } from './LegendaryLogic';
 
-function getMeteoriteNeighbors(state: GameState, idx: number, secondary: boolean = false) {
+function getMeteoriteNeighbors(state: GameState, idx: number, secondary: boolean = false): { meteorites: Meteorite[], indices: number[] } {
     const meteorites: Meteorite[] = [];
     const isInner = idx < 6;
 
@@ -174,12 +210,12 @@ function getMeteoriteNeighbors(state: GameState, idx: number, secondary: boolean
         if (met) meteorites.push(met);
     });
 
-    return { meteorites };
+    return { meteorites, indices: neighborIdxs };
 }
 
 
 
-function getMeteoriteHexConnections(state: GameState, idx: number): LegendaryHex[] {
+function getMeteoriteHexConnections(state: GameState, idx: number): { hexes: LegendaryHex[], indices: number[] } {
     const hexes: LegendaryHex[] = [];
     const hexIdxs = idx < 6 ? [idx, (idx + 1) % 6] : [idx - 6, (idx - 6 + 1) % 6];
 
@@ -187,7 +223,7 @@ function getMeteoriteHexConnections(state: GameState, idx: number): LegendaryHex
         if (state.moduleSockets.hexagons[hIdx]) hexes.push(state.moduleSockets.hexagons[hIdx]!);
     });
 
-    return hexes;
+    return { hexes, indices: hexIdxs };
 }
 
 

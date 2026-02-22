@@ -10,13 +10,19 @@ export type PerkFilter = {
 };
 
 
-export const RARITY_COLORS: Record<MeteoriteRarity, string> = {
+export const RARITY_COLORS: Record<string, string> = {
     anomalous: '#60a5fa', // Blue (Anomalous)
     radiant: '#FFD700',   // Gold
     abyss: '#8B0000',      // Dark Red
     eternal: '#B8860B',   // Bronze/Orange
     divine: '#FFFFFF',    // White
-    singularity: '#E942FF' // Magenta
+    singularity: '#E942FF', // Magenta
+    // Compatibility fallbacks for older items or direct mapping
+    Common: '#94a3b8',
+    Uncommon: '#22c55e',
+    Rare: '#3b82f6',
+    Epic: '#a855f7',
+    Legendary: '#fbbf24'
 };
 
 // Rarity Order for Dust Value (1 to 6)

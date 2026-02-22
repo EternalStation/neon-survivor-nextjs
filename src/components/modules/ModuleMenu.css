@@ -398,3 +398,210 @@
         border-color: rgba(34, 211, 238, 0.7);
     }
 }
+
+@keyframes valueIncrease {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.25);
+        filter: brightness(2);
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.animate-value-change {
+    animation: valueIncrease 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+@keyframes efficiencyPopUp {
+    0% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(2.5) drop-shadow(0 0 12px var(--glow-color));
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes efficiencyPopDown {
+    0% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(2) drop-shadow(0 0 12px #ef4444);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.animate-up-0,
+.animate-up-1 {
+    animation: efficiencyPopUp 0.12s ease-out;
+}
+
+.animate-down-0,
+.animate-down-1 {
+    animation: efficiencyPopDown 0.12s ease-out;
+}
+
+@keyframes textVibration {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(var(--vibe-scale, 1.2));
+        filter: brightness(var(--vibe-bright, 1.3));
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.animate-vibe {
+    animation: textVibration 0.08s infinite linear;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+
+@keyframes tickPulse {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+        filter: brightness(1.8) drop-shadow(0 0 5px var(--glow-color));
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.animate-tick-pulse {
+    animation: tickPulse 0.15s ease-out;
+    /* ~9 frames at 60fps */
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+@keyframes flowPulse {
+    0% {
+        stroke-dashoffset: 20;
+        opacity: 0.5;
+    }
+
+    50% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: -20;
+        opacity: 0.5;
+    }
+}
+
+.energy-flow-line {
+    stroke-dasharray: 5, 5;
+    animation: flowPulse 1.5s infinite linear;
+}
+
+@keyframes glowPulsePlacement {
+    0% {
+        filter: drop-shadow(0 0 5px var(--glow-color));
+        opacity: 0.7;
+    }
+
+    50% {
+        filter: drop-shadow(0 0 25px var(--glow-color));
+        opacity: 1;
+    }
+
+    100% {
+        filter: drop-shadow(0 0 5px var(--glow-color));
+        opacity: 0.7;
+    }
+}
+
+@keyframes meteoriteBob {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-6px) scale(1.02);
+    }
+}
+
+.meteorite-visual-group {
+    transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease-in-out;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, filter;
+}
+
+.meteorite-visual-group.is-levitating {
+    transform: translateY(-16px) scale(1.05);
+    filter: brightness(1.2) drop-shadow(0 0 18px var(--glow-color));
+}
+
+.meteorite-visual-group.is-boosted {
+    transform: translateY(-10px) scale(1.04);
+}
+
+.meteorite-visual-group.is-levitating .meteorite-inner-bob {
+    animation: meteoriteBob 3.5s infinite ease-in-out;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.placement-highlight {
+    animation: glowPulsePlacement 1s ease-in-out forwards;
+}
+
+@keyframes pulse-red {
+    0% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+}
+
+.pulse-red {
+    animation: pulse-red 1s infinite;
+}

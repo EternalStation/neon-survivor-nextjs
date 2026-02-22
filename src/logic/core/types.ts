@@ -756,6 +756,7 @@ export interface GameState {
         center: PlayerClass | null; // Center slot for class
     };
     chassisDetailViewed: boolean;
+    lastPlacement: { type: 'diamond' | 'hex', index: number, timestamp: number } | null;
     // Frame-based caches (Not persistent)
     legionLeads?: Record<string, Enemy>;
     playerName?: string;
