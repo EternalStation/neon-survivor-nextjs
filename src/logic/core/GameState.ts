@@ -247,7 +247,8 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
             hasOpenedModules: false,
             hasOpenedStats: false
         },
-        firstMeteoriteSpawned: false
+        firstMeteoriteSpawned: false,
+        lastPlacement: null
     };
 
     // User Request: Ensure turrets are in the arena the player entered (even at start)
