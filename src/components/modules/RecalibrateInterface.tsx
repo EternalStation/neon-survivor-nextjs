@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { GameState, Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
 
@@ -43,6 +43,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
     const canAffordRerollType = gameState.player.isotopes >= rerollTypeCost;
     const canAffordRerollValue = gameState.player.isotopes >= rerollValueCost;
+
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [spinningLevel, setSpinningLevel] = useState<number | null>(null); // null means all or none
 
     // Local state for Accordion Behavior
     const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
@@ -342,6 +345,34 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 }
                             };
 
+                            const renderDescription = () => {
+                                const parts = getPerkParts(p.id);
+                                if (parts.length === 0 || !isSpinning || lockedIndices.includes(idx)) {
+                                    return p.description;
+                                }
+
+                                // Replace keywords with spinning components
+                                let res: (string | React.ReactNode)[] = [p.description];
+                                parts.forEach(part => {
+                                    const nextRes: (string | React.ReactNode)[] = [];
+                                    res.forEach(item => {
+                                        if (typeof item === 'string') {
+                                            const sub = item.split(part);
+                                            sub.forEach((s, i) => {
+                                                nextRes.push(s);
+                                                if (i < sub.length - 1) {
+                                                    nextRes.push(<SpinningWord key={part + i} target={part} isSpinning={true} />);
+                                                }
+                                            });
+                                        } else {
+                                            nextRes.push(item);
+                                        }
+                                    });
+                                    res = nextRes;
+                                });
+                                return <span>{res}</span>;
+                            };
+
                             return (
                                 <div key={idx}
                                     style={{
@@ -439,7 +470,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         borderTop: '1px solid rgba(255,255,255,0.05)',
                                         fontStyle: 'italic'
                                     }}>
-                                        {p.description}
+                                        {renderDescription()}
                                     </div>
 
                                     {/* FILTER CONFIG PANEL - Show if EXPANDED */}
@@ -522,8 +553,15 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 <div style={{ marginTop: '-5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            disabled={!canAffordRerollType}
-                            onClick={() => onRerollType(lockedIndices)}
+                            disabled={!canAffordRerollType || isSpinning}
+                            onClick={() => {
+                                setIsSpinning(true);
+                                playSfx('reroll');
+                                setTimeout(() => {
+                                    onRerollType(lockedIndices);
+                                    setIsSpinning(false);
+                                }, 1000);
+                            }}
                             style={{
                                 flex: 1,
                                 height: '44px',
@@ -546,11 +584,19 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             <span style={{ fontSize: '12px' }}>REROLL PERKS</span>
                             <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX</span>
                             {canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
+                            {isSpinning && <div style={{ position: 'absolute', inset: 0, background: 'rgba(168, 85, 247, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
 
                         <button
-                            disabled={!canAffordRerollValue}
-                            onClick={() => onRerollValue(lockedIndices)}
+                            disabled={!canAffordRerollValue || isSpinning}
+                            onClick={() => {
+                                setIsSpinning(true);
+                                playSfx('upgrade');
+                                setTimeout(() => {
+                                    onRerollValue(lockedIndices);
+                                    setIsSpinning(false);
+                                }, 500); // Shorter for range
+                            }}
                             style={{
                                 flex: 1,
                                 height: '44px',
@@ -573,6 +619,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             <span style={{ fontSize: '12px' }}>REROLL RANGE</span>
                             <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollValueCost.toLocaleString()} FLUX</span>
                             {canAffordRerollValue && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />}
+                            {isSpinning && <div style={{ position: 'absolute', inset: 0, background: 'rgba(16, 185, 129, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
                     </div>
                 </div>
@@ -603,7 +650,59 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                     from { transform: rotate(360deg); }
                     to { transform: rotate(0deg); }
                 }
+
+                @keyframes pulse-fast {
+                    from { opacity: 0.5; filter: blur(0px); }
+                    to { opacity: 1; filter: blur(1px); }
+                }
             `}</style>
         </div>
+    );
+};
+
+const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ target, isSpinning }) => {
+    const [current, setCurrent] = useState(target);
+
+    useEffect(() => {
+        if (!isSpinning) {
+            setCurrent(target);
+            return;
+        }
+
+        let pool: string[] = [];
+        if (SPIN_POOLS.Sector.includes(target)) pool = SPIN_POOLS.Sector;
+        else if (SPIN_POOLS.Arena.includes(target)) pool = SPIN_POOLS.Arena;
+        else if (SPIN_POOLS.Legendary.includes(target)) pool = SPIN_POOLS.Legendary;
+        else if (SPIN_POOLS.Quality.includes(target)) pool = SPIN_POOLS.Quality;
+        else pool = [target, '???', 'ERROR', '---'];
+
+        const interval = setInterval(() => {
+            setCurrent(pool[Math.floor(Math.random() * pool.length)]);
+        }, 60);
+
+        return () => clearInterval(interval);
+    }, [isSpinning, target]);
+
+    return (
+        <span style={{
+            display: 'inline-block',
+            padding: '1px 6px',
+            margin: '0 2px',
+            background: 'rgba(59, 130, 246, 0.15)',
+            border: '1px solid rgba(59, 130, 246, 0.4)',
+            borderRadius: '4px',
+            color: '#60a5fa',
+            fontWeight: 900,
+            fontSize: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            minWidth: '60px',
+            textAlign: 'center',
+            boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)',
+            verticalAlign: 'middle',
+            animation: isSpinning ? 'pulse-fast 0.1s infinite alternate' : 'none'
+        }}>
+            {current}
+        </span>
     );
 };

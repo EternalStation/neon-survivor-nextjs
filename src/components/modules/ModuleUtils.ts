@@ -258,4 +258,80 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
     }
 
     return false;
-};;
+};
+
+export const SPIN_POOLS = {
+    Sector: ['Sector-01', 'Sector-02', 'Sector-03'],
+    Arena: ['Economic Arena', 'Combat Arena', 'Defence Arena'],
+    Legendary: ['Economic Legendary Upgrades', 'Combat Legendary Upgrades', 'Defence Legendary Upgrades'],
+    Quality: ['Broken', 'Damaged', 'New']
+};
+
+/**
+ * Extracts the "spinny parts" from a perk ID for the casino animation.
+ * Returns an array of strings that should be animated.
+ */
+export const getPerkParts = (id: string | number): string[] => {
+    const sId = String(id);
+    if (!sId.includes('_')) return [];
+
+    const pts = sId.split('_');
+    // pts[0] is lvlX
+    const parts: string[] = [];
+
+    const mapSector = (s: string) => {
+        if (s === 'eco') return 'Sector-01';
+        if (s === 'com') return 'Sector-02';
+        if (s === 'def') return 'Sector-03';
+        return s;
+    };
+
+    const mapArena = (s: string) => {
+        if (s === 'eco') return 'Economic Arena';
+        if (s === 'com') return 'Combat Arena';
+        if (s === 'def') return 'Defence Arena';
+        return s;
+    };
+
+    const mapLegendary = (s: string) => {
+        if (s === 'eco') return 'Economic Legendary Upgrades';
+        if (s === 'com') return 'Combat Legendary Upgrades';
+        if (s === 'def') return 'Defence Legendary Upgrades';
+        return s;
+    };
+
+    const mapQuality = (s: string) => {
+        if (s === 'bro') return 'Broken';
+        if (s === 'dam') return 'Damaged';
+        if (s === 'new') return 'New';
+        return s;
+    };
+
+    const lvl = parseInt(pts[0].replace('lvl', ''));
+
+    if (lvl === 1) {
+        // lvl1_SECTOR_LEGENDARY
+        parts.push(mapSector(pts[1]));
+        parts.push(mapLegendary(pts[2]));
+    } else if (lvl === 2) {
+        // lvl2_SECTOR_NEIGHBOR
+        parts.push(mapSector(pts[1]));
+        parts.push(mapQuality(pts[2]));
+    } else if (lvl === 3 || lvl === 4) {
+        // lvl3_ARENA_NEIGHBOR
+        parts.push(mapArena(pts[1]));
+        parts.push(mapQuality(pts[2]));
+    } else if (lvl === 5) {
+        // lvl5_SECTOR_PAIR1_PAIR2
+        parts.push(mapSector(pts[1]));
+        parts.push(mapLegendary(pts[2]));
+        parts.push(mapLegendary(pts[3]));
+    } else if (lvl === 6) {
+        // lvl6_NEIGHBOR_PAIR1_PAIR2
+        parts.push(mapQuality(pts[1]));
+        parts.push(mapLegendary(pts[2]));
+        parts.push(mapLegendary(pts[3]));
+    }
+
+    return parts;
+};
