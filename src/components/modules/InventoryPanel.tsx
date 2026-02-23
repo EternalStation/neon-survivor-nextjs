@@ -9,7 +9,8 @@ interface InventoryPanelProps {
     movedItem: { item: any, source: string, index: number } | null;
     onInventoryUpdate: (index: number, item: any) => void;
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
-    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
+    onAttemptRemove?: (index: number, item: any, replaceWith?: any, dropTarget?: { type: 'inventory' | 'recalibrate', index?: number }) => void;
+    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null) => void;
     handleMouseEnterItem: (item: any, x: number, y: number) => void;
     handleMouseLeaveItem: (delay?: number) => void;
     isRecycleMode: boolean;
@@ -38,6 +39,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     movedItem,
     onInventoryUpdate,
     onSocketUpdate,
+    onAttemptRemove,
     setMovedItem,
     handleMouseEnterItem,
     handleMouseLeaveItem,
@@ -129,15 +131,19 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     e.stopPropagation();
                     if (movedItem) {
                         if (movedItem.source === 'diamond') {
-                            const itemAtTarget = inventory[idx];
-                            onInventoryUpdate(idx, { ...movedItem.item });
-                            onSocketUpdate('diamond', movedItem.index, itemAtTarget);
+                            if (onAttemptRemove) {
+                                onAttemptRemove(movedItem.index, movedItem.item, undefined, { type: 'inventory', index: idx });
+                            } else {
+                                const itemAtTarget = inventory[idx];
+                                onInventoryUpdate(idx, { ...movedItem.item });
+                                onSocketUpdate('diamond', movedItem.index, itemAtTarget);
+                            }
                         } else if (movedItem.source === 'inventory') {
                             const itemAtTarget = inventory[idx];
                             onInventoryUpdate(idx, { ...movedItem.item });
                             onInventoryUpdate(movedItem.index, itemAtTarget);
-                        } else if (movedItem.source === 'recalibrate') {
-                            // DROP FROM RECALIBRATE INTO INVENTORY
+                        } else if (movedItem.source === 'recalibrate' || movedItem.source === 'incubator') {
+                            // DROP FROM LAB MODULES INTO INVENTORY
                             const itemAtTarget = inventory[idx];
                             if (itemAtTarget) {
                                 // Find first empty slot instead of overwriting
@@ -218,16 +224,62 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         <span style={{ fontSize: '5px', fontWeight: 900, color: '#a855f7', lineHeight: 1, marginTop: '0.5px' }}>C</span>
                     </div>
                 )}
+                {item?.incubatorBoost && item.incubatorBoost > 0 && (
+                    <div style={{
+                        position: 'absolute', bottom: '2px', right: '2px',
+                        width: '8px', height: '8px',
+                        background: '#1e293b',
+                        border: '0.5px solid #00d9ff',
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 3px rgba(0, 217, 255, 0.5)',
+                        zIndex: 5,
+                        filter: isVisible ? 'none' : 'grayscale(100%)',
+                        opacity: isVisible ? 1 : 0.5
+                    }}>
+                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#00d9ff', lineHeight: 1, marginTop: '0.5px' }}>I</span>
+                    </div>
+                )}
                 {item && (
-                    <img
-                        src={item.isBlueprint ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
-                        style={{
-                            width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
-                            filter: isVisible ? 'none' : 'grayscale(100%)',
-                            opacity: isVisible ? 1 : 0.2
-                        }}
-                        alt="meteorite"
-                    />
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <img
+                            src={item.isBlueprint ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
+                            style={{
+                                width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
+                                filter: isVisible ? 'none' : 'grayscale(100%)',
+                                opacity: isVisible ? 1 : 0.2
+                            }}
+                            alt="meteorite"
+                        />
+                        {item.isBlueprint && (
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center',
+                                background: item.status === 'researching' ? 'rgba(0,0,0,0.4)' : 'transparent',
+                                zIndex: 10,
+                                pointerEvents: 'none'
+                            }}>
+                                <span style={{
+                                    fontSize: '5px',
+                                    color: item.status === 'researching' ? '#facc15' : item.status === 'ready' ? '#2dd4bf' : '#60a5fa',
+                                    fontWeight: 900,
+                                    textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {item.status === 'researching' ? 'LOCKED' : item.status === 'ready' ? 'READY' : ''}
+                                </span>
+                                {item.status === 'researching' && (item as any).researchFinishTime && (
+                                    <span style={{
+                                        fontSize: '7px', color: '#facc15', fontWeight: 900,
+                                        fontFamily: 'monospace', textShadow: '0 0 5px #000'
+                                    }}>
+                                        {Math.ceil(Math.max(0, ((item as any).researchFinishTime - Date.now() / 1000))).toFixed(0)}s
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         );

@@ -77,12 +77,39 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         { label: 'Skill 6', key: 'skill6' },
     ];
 
+    const renderBindItem = (item: { label: string; key: keyof Keybinds }) => (
+        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
+            <button
+                onClick={() => setListening(item.key)}
+                className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
+                style={{
+                    padding: '6px 10px',
+                    background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
+                    border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
+                    color: '#fff',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    minWidth: 80,
+                    textAlign: 'center',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    transition: 'all 0.2s',
+                    boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
+                    letterSpacing: '1px'
+                }}
+            >
+                {conflict === item.key ? '!' : (listening === item.key ? '...' : getKeyDisplay(keybinds[item.key]))}
+            </button>
+        </div>
+    );
+
     return (
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 15 }}>
             <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid #334155', paddingBottom: 10, marginBottom: 10 }}>CONTROLS</h3>
 
             <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
-                {/* COLUMN 1: MOVEMENT & SYSTEM */}
+                {/* COLUMN 1: MOVEMENT */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <h4 style={{ color: '#22d3ee', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>MOVEMENT</h4>
@@ -106,104 +133,39 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                             </div>
                         ))}
                     </div>
-
-                    <div style={{ height: 1, background: 'rgba(51, 65, 85, 0.2)', margin: '5px 0' }} />
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#6366f1', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SYSTEM</h4>
-                        {menuItems.map(item => (
-                            <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
-                                <button
-                                    onClick={() => setListening(item.key)}
-                                    className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
-                                    style={{
-                                        padding: '6px 10px',
-                                        background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
-                                        border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
-                                        color: '#fff',
-                                        borderRadius: 4,
-                                        cursor: 'pointer',
-                                        minWidth: 80,
-                                        textAlign: 'center',
-                                        fontSize: 12,
-                                        fontWeight: 900,
-                                        transition: 'all 0.2s',
-                                        boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
-                                        letterSpacing: '1px'
-                                    }}
-                                >
-                                    {conflict === item.key ? '!' : (listening === item.key ? '...' : getKeyDisplay(keybinds[item.key]))}
-                                </button>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
                 <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.3)', alignSelf: 'stretch' }} />
 
                 {/* COLUMN 2: SKILLS 1-3 */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SKILLS</h4>
-                    {skillItems.slice(0, 3).map(item => (
-                        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
-                            <button
-                                onClick={() => setListening(item.key)}
-                                className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
-                                style={{
-                                    padding: '6px 10px',
-                                    background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
-                                    border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
-                                    color: '#fff',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    minWidth: 80,
-                                    textAlign: 'center',
-                                    fontSize: 12,
-                                    fontWeight: 900,
-                                    transition: 'all 0.2s',
-                                    boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
-                                    letterSpacing: '1px'
-                                }}
-                            >
-                                {conflict === item.key ? '!' : (listening === item.key ? '...' : getKeyDisplay(keybinds[item.key]))}
-                            </button>
-                        </div>
-                    ))}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SKILLS</h4>
+                        {skillItems.slice(0, 3).map(item => renderBindItem(item))}
+                    </div>
                 </div>
 
                 <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.3)', alignSelf: 'stretch' }} />
 
                 {/* COLUMN 3: SKILLS 4-6 */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>&nbsp;</h4>
-                    {skillItems.slice(3).map(item => (
-                        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
-                            <button
-                                onClick={() => setListening(item.key)}
-                                className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
-                                style={{
-                                    padding: '6px 10px',
-                                    background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
-                                    border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
-                                    color: '#fff',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    minWidth: 80,
-                                    textAlign: 'center',
-                                    fontSize: 12,
-                                    fontWeight: 900,
-                                    transition: 'all 0.2s',
-                                    boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
-                                    letterSpacing: '1px'
-                                }}
-                            >
-                                {conflict === item.key ? '!' : (listening === item.key ? '...' : getKeyDisplay(keybinds[item.key]))}
-                            </button>
-                        </div>
-                    ))}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>&nbsp;</h4>
+                        {skillItems.slice(3).map(item => renderBindItem(item))}
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ height: 1, background: 'rgba(51, 65, 85, 0.2)', margin: '0px 0' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <h4 style={{ color: '#6366f1', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SYSTEM</h4>
+                <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
+                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[0])}</div>
+                    <div style={{ width: 1, alignSelf: 'stretch' }} />
+                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[1])}</div>
+                    <div style={{ width: 1, alignSelf: 'stretch' }} />
+                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[2])}</div>
                 </div>
             </div>
 

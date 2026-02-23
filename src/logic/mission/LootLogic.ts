@@ -23,15 +23,15 @@ interface PerkDef {
 export const PERK_POOLS: Record<number, PerkDef[]> = {
     1: [
         // LVL1: Sector + Connected Leg
-        { id: 'lvl1_eco_eco', description: 'Located in Sector-01 & connected to Economic Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_eco_com', description: 'Located in Sector-01 & connected to Combat Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_eco_def', description: 'Located in Sector-01 & connected to Defence Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_eco', description: 'Located in Sector-02 & connected to Economic Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_com', description: 'Located in Sector-02 & connected to Combat Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_com_def', description: 'Located in Sector-02 & connected to Defence Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_eco', description: 'Located in Sector-03 & connected to Economic Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_com', description: 'Located in Sector-03 & connected to Combat Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
-        { id: 'lvl1_def_def', description: 'Located in Sector-03 & connected to Defence Legendary Upgrades', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_eco', description: 'Located in Sector-01 & connects Eco ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_com', description: 'Located in Sector-01 & connects Com ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_eco_def', description: 'Located in Sector-01 & connects Def ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_eco', description: 'Located in Sector-02 & connects Eco ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_com', description: 'Located in Sector-02 & connects Com ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_com_def', description: 'Located in Sector-02 & connects Def ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_eco', description: 'Located in Sector-03 & connects Eco ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_com', description: 'Located in Sector-03 & connects Com ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
+        { id: 'lvl1_def_def', description: 'Located in Sector-03 & connects Def ⬢', ranges: { Broken: { min: 1, max: 3 }, Damaged: { min: 4, max: 6 }, New: { min: 7, max: 9 } } },
     ],
     2: [
         // LVL2: Sector + Neighbors Quality
@@ -71,45 +71,45 @@ export const PERK_POOLS: Record<number, PerkDef[]> = {
     ],
     5: [
         // LVL5: Sector + Connecting Pairs
-        { id: 'lvl5_eco_eco_eco', description: 'Located in Sector-01. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_eco_com', description: 'Located in Sector-01. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_eco_def', description: 'Located in Sector-01. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_com_com', description: 'Located in Sector-01. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_com_def', description: 'Located in Sector-01. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_eco_def_def', description: 'Located in Sector-01. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_eco', description: 'Located in Sector-02. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_com', description: 'Located in Sector-02. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_eco_def', description: 'Located in Sector-02. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_com_com', description: 'Located in Sector-02. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_com_def', description: 'Located in Sector-02. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_com_def_def', description: 'Located in Sector-02. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_eco', description: 'Located in Sector-03. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_com', description: 'Located in Sector-03. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_eco_def', description: 'Located in Sector-03. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_com_com', description: 'Located in Sector-03. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_com_def', description: 'Located in Sector-03. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
-        { id: 'lvl5_def_def_def', description: 'Located in Sector-03. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_eco', description: 'Located in Sector-01. Connects Eco & Eco ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_com', description: 'Located in Sector-01. Connects Eco & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_eco_def', description: 'Located in Sector-01. Connects Eco & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_com_com', description: 'Located in Sector-01. Connects Com & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_com_def', description: 'Located in Sector-01. Connects Com & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_eco_def_def', description: 'Located in Sector-01. Connects Def & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_eco', description: 'Located in Sector-02. Connects Eco & Eco ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_com', description: 'Located in Sector-02. Connects Eco & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_eco_def', description: 'Located in Sector-02. Connects Eco & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_com_com', description: 'Located in Sector-02. Connects Com & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_com_def', description: 'Located in Sector-02. Connects Com & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_com_def_def', description: 'Located in Sector-02. Connects Def & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_eco', description: 'Located in Sector-03. Connects Eco & Eco ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_com', description: 'Located in Sector-03. Connects Eco & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_eco_def', description: 'Located in Sector-03. Connects Eco & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_com_com', description: 'Located in Sector-03. Connects Com & Com ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_com_def', description: 'Located in Sector-03. Connects Com & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
+        { id: 'lvl5_def_def_def', description: 'Located in Sector-03. Connects Def & Def ⬢', ranges: { Broken: { min: 11, max: 17 }, Damaged: { min: 14, max: 19 }, New: { min: 17, max: 24 } } },
     ],
     6: [
         // LVL6: Neighbor Quality + Bridge
-        { id: 'lvl6_bro_eco_eco', description: 'Neighboring a Broken Meteorite. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_bro_eco_com', description: 'Neighboring a Broken Meteorite. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_bro_eco_def', description: 'Neighboring a Broken Meteorite. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_bro_com_com', description: 'Neighboring a Broken Meteorite. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_bro_com_def', description: 'Neighboring a Broken Meteorite. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_bro_def_def', description: 'Neighboring a Broken Meteorite. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_eco_eco', description: 'Neighboring a Damaged Meteorite. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_eco_com', description: 'Neighboring a Damaged Meteorite. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_eco_def', description: 'Neighboring a Damaged Meteorite. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_com_com', description: 'Neighboring a Damaged Meteorite. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_com_def', description: 'Neighboring a Damaged Meteorite. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_dam_def_def', description: 'Neighboring a Damaged Meteorite. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_eco_eco', description: 'Neighboring a New Meteorite. Connects Economic & Economic Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_eco_com', description: 'Neighboring a New Meteorite. Connects Economic & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_eco_def', description: 'Neighboring a New Meteorite. Connects Economic & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_com_com', description: 'Neighboring a New Meteorite. Connects Combat & Combat Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_com_def', description: 'Neighboring a New Meteorite. Connects Combat & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
-        { id: 'lvl6_new_def_def', description: 'Neighboring a New Meteorite. Connects Defence & Defence Legendary Upgrades', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_eco_eco', description: 'Neighboring a Broken meteorite. Connects Eco & Eco ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_eco_com', description: 'Neighboring a Broken meteorite. Connects Eco & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_eco_def', description: 'Neighboring a Broken meteorite. Connects Eco & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_com_com', description: 'Neighboring a Broken meteorite. Connects Com & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_com_def', description: 'Neighboring a Broken meteorite. Connects Com & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_bro_def_def', description: 'Neighboring a Broken meteorite. Connects Def & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_eco_eco', description: 'Neighboring a Damaged meteorite. Connects Eco & Eco ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_eco_com', description: 'Neighboring a Damaged meteorite. Connects Eco & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_eco_def', description: 'Neighboring a Damaged meteorite. Connects Eco & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_com_com', description: 'Neighboring a Damaged meteorite. Connects Com & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_com_def', description: 'Neighboring a Damaged meteorite. Connects Com & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_dam_def_def', description: 'Neighboring a Damaged meteorite. Connects Def & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_eco_eco', description: 'Neighboring a New meteorite. Connects Eco & Eco ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_eco_com', description: 'Neighboring a New meteorite. Connects Eco & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_eco_def', description: 'Neighboring a New meteorite. Connects Eco & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_com_com', description: 'Neighboring a New meteorite. Connects Com & Com ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_com_def', description: 'Neighboring a New meteorite. Connects Com & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
+        { id: 'lvl6_new_def_def', description: 'Neighboring a New meteorite. Connects Def & Def ⬢', ranges: { Broken: { min: 16, max: 23 }, Damaged: { min: 19, max: 25 }, New: { min: 23, max: 30 } } },
     ]
 };
 
@@ -327,6 +327,25 @@ export function spawnVoidFlux(state: GameState, x: number, y: number, amount: nu
     state.meteorites.push(item);
 }
 
+export function spawnDustPile(state: GameState, x: number, y: number, amount: number) {
+    const item: any = {
+        id: Math.random(),
+        x,
+        y,
+        type: 'dust_pile',
+        amount,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        magnetized: false,
+        spawnedAt: state.gameTime,
+        rarity: 'anomalous',
+        quality: 'New',
+        perks: [],
+        stats: {}
+    };
+    state.meteorites.push(item);
+}
+
 export function updateLoot(state: GameState) {
     const { meteorites, player, inventory } = state;
 
@@ -391,7 +410,13 @@ export function updateLoot(state: GameState) {
             if (dist < PICKUP_RANGE) {
                 if (item.type === 'void_flux') {
                     state.player.isotopes += item.amount || 0;
-                    spawnFloatingNumber(state, target.x, target.y - 20, `+${(item.amount || 0).toLocaleString()} FLUX`, '#a855f7', true);
+                    playSfx('shoot');
+                    meteorites.splice(i, 1);
+                    continue;
+                }
+
+                if (item.type === 'dust_pile') {
+                    state.player.dust += item.amount || 0;
                     playSfx('shoot');
                     meteorites.splice(i, 1);
                     continue;

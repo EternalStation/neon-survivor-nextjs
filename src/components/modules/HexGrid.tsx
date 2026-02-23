@@ -13,7 +13,7 @@ interface HexGridProps {
     movedItem: { item: any, source: string, index: number } | null;
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
     onInventoryUpdate: (index: number, item: any) => void;
-    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex', index: number } | null) => void;
+    setMovedItem: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null) => void;
     setHoveredItem: (item: { item: any, x: number, y: number, index?: number } | null) => void;
     setLockedItem: (item: { item: any, x: number, y: number, index?: number } | null) => void;
     handleMouseEnterItem: (item: any, x: number, y: number, index?: number) => void;
@@ -756,7 +756,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 if (!movedItem && moduleSockets.diamonds[i]) {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    onAttemptRemove(i, moduleSockets.diamonds[i]);
+                                    if (gameState.player.autoUnsocket) {
+                                        setMovedItem({ item: moduleSockets.diamonds[i], source: 'diamond', index: i });
+                                        setHoveredItem(null);
+                                        setLockedItem(null);
+                                    } else {
+                                        onAttemptRemove(i, moduleSockets.diamonds[i]);
+                                    }
                                     return;
                                 }
                             }}
@@ -770,6 +776,12 @@ export const HexGrid: React.FC<HexGridProps> = ({
                             onMouseUp={(_e) => {
                                 _e.stopPropagation();
                                 if (movedItem) {
+                                    // Cancel if dropped back on the exact same slot
+                                    if (movedItem.source === 'diamond' && movedItem.index === i) {
+                                        setMovedItem(null);
+                                        return;
+                                    }
+
                                     const itemAtTarget = moduleSockets.diamonds[i];
                                     // FIX: If target is filled, force removal check (5-dust fee) instead of free swap
                                     if (itemAtTarget) {
@@ -794,10 +806,10 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                         // Move from socket to socket (both were empty or source index is reset)
                                         onSocketUpdate('diamond', i, movedItem.item);
                                         onSocketUpdate('diamond', movedItem.index, null);
-                                    } else if (movedItem.source === 'recalibrate') {
-                                        // Move from recalibrate slot to socket
+                                    } else if (movedItem.source === 'recalibrate' || movedItem.source === 'incubator') {
+                                        // Move from lab modules to socket
                                         onSocketUpdate('diamond', i, movedItem.item);
-                                        // The onSocketUpdate in ModuleMenu will clear recalibrateSlot
+                                        // The onSocketUpdate in ModuleMenu will clear recalibrateSlot or incubator slot
                                     }
                                     setMovedItem(null);
                                     setHoveredItem(null);
@@ -856,7 +868,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 if (!movedItem && meteorite) {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    onAttemptRemove(i, meteorite);
+                                    if (gameState.player.autoUnsocket) {
+                                        setMovedItem({ item: moduleSockets.diamonds[i], source: 'diamond', index: i });
+                                        setHoveredItem(null);
+                                        setLockedItem(null);
+                                    } else {
+                                        onAttemptRemove(i, meteorite);
+                                    }
                                 }
                             }}
                             onClick={(e) => {
@@ -868,6 +886,12 @@ export const HexGrid: React.FC<HexGridProps> = ({
                             onMouseUp={(e) => {
                                 e.stopPropagation();
                                 if (movedItem) {
+                                    // Cancel if dropped back on the exact same slot
+                                    if (movedItem.source === 'diamond' && movedItem.index === i) {
+                                        setMovedItem(null);
+                                        return;
+                                    }
+
                                     const itemAtTarget = meteorite;
                                     if (itemAtTarget) {
                                         onAttemptRemove(i, itemAtTarget, movedItem);
@@ -913,22 +937,22 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                                     {/* NEW Label - SVG Style */}
                                     {meteorite.isNew && (
-                                        <g transform="translate(20, -20)">
+                                        <g transform="translate(0, -35)">
                                             <rect x="-12" y="-6" width="24" height="12" rx="4" fill="#ef4444" className="pulse-red" style={{ filter: 'drop-shadow(0 0 5px #ef4444)' }} />
                                             <text x="0" y="3" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>NEW</text>
                                         </g>
                                     )}
 
-                                    {/* Status Icons */}
+                                    {/* Status Icons - Standardized Quadrants: TL: C, TR: M, BL: H, BR: I */}
                                     <g pointerEvents="none">
                                         {meteorite.isCorrupted && (
-                                            <g transform="translate(22, -24)">
+                                            <g transform="translate(-22, -24)">
                                                 <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
                                                 <text x="0" y="3" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900">C</text>
                                             </g>
                                         )}
                                         {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
-                                            <g transform="translate(22, 24)">
+                                            <g transform="translate(22, -24)">
                                                 <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
                                                 <text x="0" y="3" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900">M</text>
                                             </g>
@@ -937,6 +961,12 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                             <g transform="translate(-22, 24)">
                                                 <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
                                                 <text x="0" y="3" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900">H</text>
+                                            </g>
+                                        )}
+                                        {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
+                                            <g transform="translate(22, 24)">
+                                                <circle r="7" fill="#1e293b" stroke="#00d9ff" strokeWidth="1" />
+                                                <text x="0" y="3" textAnchor="middle" fill="#00d9ff" fontSize="8" fontWeight="900">I</text>
                                             </g>
                                         )}
                                     </g>

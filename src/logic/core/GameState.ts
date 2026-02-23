@@ -190,6 +190,9 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         // Inventory Defaults
         meteorites: [],
         inventory: Array(320).fill(null), // 320 slots (10 reserved + 310 storage)
+        incubator: Array(3).fill(null), // 3 slots for the void forge
+        incubatorFuel: 0,
+        incubatorFuelMax: 30,
 
         // Module Menu Defaults
         showModuleMenu: false,

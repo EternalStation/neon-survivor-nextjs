@@ -263,7 +263,11 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
 export const SPIN_POOLS = {
     Sector: ['Sector-01', 'Sector-02', 'Sector-03'],
     Arena: ['Economic Arena', 'Combat Arena', 'Defence Arena'],
-    Legendary: ['Economic Legendary Upgrades', 'Combat Legendary Upgrades', 'Defence Legendary Upgrades'],
+    Legendary: ['Eco ⬢', 'Com ⬢', 'Def ⬢'],
+    Pairing: [
+        'Eco & Eco ⬢', 'Eco & Com ⬢', 'Eco & Def ⬢',
+        'Com & Com ⬢', 'Com & Def ⬢', 'Def & Def ⬢'
+    ],
     Quality: ['Broken', 'Damaged', 'New']
 };
 
@@ -294,9 +298,16 @@ export const getPerkParts = (id: string | number): string[] => {
     };
 
     const mapLegendary = (s: string) => {
-        if (s === 'eco') return 'Economic Legendary Upgrades';
-        if (s === 'com') return 'Combat Legendary Upgrades';
-        if (s === 'def') return 'Defence Legendary Upgrades';
+        if (s === 'eco') return 'Eco';
+        if (s === 'com') return 'Com';
+        if (s === 'def') return 'Def';
+        return s;
+    };
+
+    const mapLegendarySuffix = (s: string) => {
+        if (s === 'eco') return 'Eco ⬢';
+        if (s === 'com') return 'Com ⬢';
+        if (s === 'def') return 'Def ⬢';
         return s;
     };
 
@@ -312,7 +323,7 @@ export const getPerkParts = (id: string | number): string[] => {
     if (lvl === 1) {
         // lvl1_SECTOR_LEGENDARY
         parts.push(mapSector(pts[1]));
-        parts.push(mapLegendary(pts[2]));
+        parts.push(mapLegendarySuffix(pts[2]));
     } else if (lvl === 2) {
         // lvl2_SECTOR_NEIGHBOR
         parts.push(mapSector(pts[1]));
@@ -324,13 +335,11 @@ export const getPerkParts = (id: string | number): string[] => {
     } else if (lvl === 5) {
         // lvl5_SECTOR_PAIR1_PAIR2
         parts.push(mapSector(pts[1]));
-        parts.push(mapLegendary(pts[2]));
-        parts.push(mapLegendary(pts[3]));
+        parts.push(`${mapLegendary(pts[2])} & ${mapLegendarySuffix(pts[3])}`);
     } else if (lvl === 6) {
         // lvl6_NEIGHBOR_PAIR1_PAIR2
         parts.push(mapQuality(pts[1]));
-        parts.push(mapLegendary(pts[2]));
-        parts.push(mapLegendary(pts[3]));
+        parts.push(`${mapLegendary(pts[2])} & ${mapLegendarySuffix(pts[3])}`);
     }
 
     return parts;

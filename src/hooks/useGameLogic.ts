@@ -12,6 +12,7 @@ import { updateProjectiles } from '../logic/combat/ProjectileLogic';
 import { updateLoot } from '../logic/mission/LootLogic';
 import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { spawnUpgrades, spawnSnitchUpgrades } from '../logic/upgrades/UpgradeLogic';
+import { updateIncubator } from '../logic/upgrades/IncubatorLogic';
 import { getLegendaryOptions } from '../logic/upgrades/LegendaryLogic';
 import { playSfx, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/audio/AudioLogic';
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/mission/MapLogic';
@@ -393,6 +394,7 @@ export function useGameLogic({
         // Particles should probably run on both for visuals, but we rely on Host for important state)
         // For MVP: Run on both
         updateBlueprints(state, step);
+        updateIncubator(state, step);
         updateParticles(state);
         if (state.critShake > 0) state.critShake *= 0.85;
         if (state.timeInArena) {

@@ -133,15 +133,22 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         timezoneOffset: new Date().getTimezoneOffset(), // Capture player's timezone offset in minutes
         blueprints: (() => {
             const grouped: Record<string, { name: string; type: string; count: number }> = {};
-            gameState.blueprints.forEach(bp => {
+            const allBps = [
+                ...gameState.blueprints,
+                ...gameState.inventory.filter(item => item && item.isBlueprint)
+            ];
+
+            allBps.forEach(bp => {
                 if (!bp) return;
-                const key = bp.serial || bp.type;
+                const b = bp as any;
+                const key = b.serial || b.type || b.blueprintType;
+                if (!key) return;
                 if (grouped[key]) {
                     grouped[key].count++;
                 } else {
                     grouped[key] = {
-                        name: bp.serial || bp.name,
-                        type: bp.type,
+                        name: b.serial || b.name,
+                        type: b.type || b.blueprintType,
                         count: 1
                     };
                 }

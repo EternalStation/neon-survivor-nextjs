@@ -129,8 +129,11 @@ export function rerollPerkValue(state: GameState, item: Meteorite, lockedIndices
     item.perks = item.perks.map((p, idx) => {
         if (lockedIndices.includes(idx)) return p;
 
-        const { min, max } = p.range;
-        let newValue = p.value;
+        const boost = item.incubatorBoost || 0;
+        const min = p.range.min + boost;
+        const max = p.range.max + boost;
+
+        let newValue = p.value + boost;
         let attempts = 0;
 
         // Try to roll a different value if range allows
@@ -138,15 +141,19 @@ export function rerollPerkValue(state: GameState, item: Meteorite, lockedIndices
             do {
                 newValue = min + Math.floor(Math.random() * (max - min + 1));
                 attempts++;
-            } while (newValue === p.value && attempts < 10);
+            } while (newValue === (p.value + boost) && attempts < 10);
 
             // Force change if RNG fails after attempts
-            if (newValue === p.value) {
-                newValue = (p.value < max) ? p.value + 1 : p.value - 1;
+            if (newValue === (p.value + boost)) {
+                newValue = (p.value + boost < max) ? (p.value + boost) + 1 : (p.value + boost) - 1;
             }
         }
 
-        return { ...p, value: newValue };
+        // Store as base value, UI and EfficiencyLogic add the boost dynamically
+        return {
+            ...p,
+            value: newValue - boost
+        };
     });
 
     playSfx('upgrade');

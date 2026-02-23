@@ -155,41 +155,44 @@ export function trySpawnBlueprint(state: GameState, x: number, y: number) {
 
 export function researchBlueprint(state: GameState, inventoryIndex: number): boolean {
     const item = state.inventory[inventoryIndex];
-    if (!item) return false;
+    if (!item || !item.isBlueprint) return false;
 
-    const type = (item as any).blueprintType || (item as any).type;
-    if (!type || !BLUEPRINT_DATA[type as BlueprintType]) return false;
+    // Convert format if needed
+    const blueprint: any = (item as any).blueprintType ? createBlueprint((item as any).blueprintType) : item;
 
-    // If it's a world-drop meteorite format, convert it to a full blueprint
-    const blueprint = (item as any).blueprintType ? createBlueprint((item as any).blueprintType) : (item as unknown as Blueprint);
+    blueprint.researched = false;
+    blueprint.status = 'researching';
+    // Random duration between 30 and 60 seconds
+    const randomDuration = 30 + Math.random() * 30;
+    blueprint.researchFinishTime = state.gameTime + randomDuration;
 
-    // Find empty blueprint slot (Only slots 0-7 are available for now)
-    const slotIdx = state.blueprints.findIndex((s, idx) => s === null && idx < 8);
-    if (slotIdx !== -1) {
-        blueprint.researched = false;
-        blueprint.status = 'researching';
-        // Random duration between 30 and 60 seconds
-        const randomDuration = 30 + Math.random() * 30; // 30 + (0 to 30) = 30 to 60
-        blueprint.researchFinishTime = state.gameTime + randomDuration;
-        state.blueprints[slotIdx] = blueprint;
-        state.inventory[inventoryIndex] = null;
-        playSfx('socket-place');
-        return true;
+    // Try to move to a Safe Slot (0-9) if not already in one
+    if (inventoryIndex >= 10) {
+        const safeSlotIdx = state.inventory.findIndex((s, idx) => s === null && idx < 10);
+        if (safeSlotIdx !== -1) {
+            state.inventory[safeSlotIdx] = blueprint;
+            state.inventory[inventoryIndex] = null;
+        } else {
+            // Slaps it back in current slot if no safe slot available
+            state.inventory[inventoryIndex] = blueprint;
+        }
     } else {
-        // Warning: Slots full. (Handled via UI)
-        return false;
+        state.inventory[inventoryIndex] = blueprint;
     }
+
+    playSfx('socket-place');
+    return true;
 }
 
 export function checkResearchProgress(state: GameState) {
     const now = state.gameTime;
     let updated = false;
-    state.blueprints.forEach(bp => {
-        if (bp && bp.status === 'researching' && bp.researchFinishTime) {
-            if (now >= bp.researchFinishTime) {
-                bp.status = 'ready';
-                bp.researched = true;
-                playSfx('rare-spawn'); // Research Complete Sound
+    state.inventory.forEach(item => {
+        if (item && item.isBlueprint && item.status === 'researching' && (item as any).researchFinishTime) {
+            if (now >= (item as any).researchFinishTime) {
+                item.status = 'ready';
+                item.researched = true;
+                playSfx('rare-spawn');
                 updated = true;
             }
         }
@@ -197,9 +200,10 @@ export function checkResearchProgress(state: GameState) {
     return updated;
 }
 
-export function activateBlueprint(state: GameState, slotIndex: number): boolean {
-    const blueprint = state.blueprints[slotIndex];
-    if (!blueprint || slotIndex >= 8 || state.player.dust < blueprint.cost) return false;
+export function activateBlueprint(state: GameState, inventoryIndex: number): boolean {
+    const item = state.inventory[inventoryIndex];
+    if (!item || !item.isBlueprint || state.player.dust < (item as any).cost) return false;
+    const blueprint = item as unknown as Blueprint;
     if (blueprint.status === 'broken') return false;
 
     // Check if duplicate is active
@@ -286,15 +290,16 @@ export function updateBlueprints(state: GameState, step: number) {
     }
 
     // Check for expired blueprints (Broken State Transition)
-    state.blueprints.forEach(bp => {
-        if (bp && bp.status === 'active') {
-            const data = BLUEPRINT_DATA[bp.type];
+    state.inventory.forEach(item => {
+        if (item && item.isBlueprint && item.status === 'active') {
+            const blueprint = item as unknown as Blueprint;
+            const data = BLUEPRINT_DATA[blueprint.type];
             if (data.duration === -1) return;
 
-            const isActive = isBuffActive(state, bp.type);
+            const isActive = isBuffActive(state, blueprint.type);
             if (!isActive) {
-                bp.status = 'broken';
-                playSfx('impact'); // Or 'shield-break'
+                blueprint.status = 'broken';
+                playSfx('impact');
             }
         }
     });
@@ -304,24 +309,21 @@ export function updateBlueprints(state: GameState, step: number) {
         const t = type as BlueprintType;
         if (state.activeBlueprintCharges[t]! <= 0) {
             delete state.activeBlueprintCharges[t];
-            // Mark the blueprint as broken
-            const bp = state.blueprints.find(b => b && b.type === t);
-            if (bp && bp.status === 'active') {
-                bp.status = 'broken';
+            // Mark the blueprint as broken in inventory
+            const item = state.inventory.find(i => i && i.isBlueprint && (i as any).type === t);
+            if (item && item.status === 'active') {
+                item.status = 'broken';
                 playSfx('impact');
             }
         }
     }
 }
 
-export function scrapBlueprint(state: GameState, slotIndex: number) {
-    const bp = state.blueprints[slotIndex];
-    if (bp) {
-        // Broken = 5 dust scrap.
-        // Ready = 5 dust (sold).
-
+export function scrapBlueprint(state: GameState, inventoryIndex: number) {
+    const item = state.inventory[inventoryIndex];
+    if (item && item.isBlueprint) {
         state.player.dust += 5;
-        state.blueprints[slotIndex] = null;
+        state.inventory[inventoryIndex] = null;
         spawnFloatingNumber(state, state.player.x, state.player.y, "+5", '#60a5fa', true);
         playSfx('recycle');
     }

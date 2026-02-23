@@ -204,6 +204,48 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 style={{ width: '32px', height: '100%', objectFit: 'contain', filter: `drop-shadow(0 0 12px ${rarityColor})` }}
                                 alt="loaded unit"
                             />
+                            {item.isCorrupted && (
+                                <div style={{
+                                    position: 'absolute', top: '-4px', left: '-4px',
+                                    width: '10px', height: '10px',
+                                    background: '#1e293b',
+                                    border: '1px solid #a855f7',
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: '0 0 5px rgba(168, 85, 247, 0.4)',
+                                    zIndex: 5
+                                }}>
+                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#a855f7', lineHeight: 1 }}>C</span>
+                                </div>
+                            )}
+                            {item.blueprintBoosted && (
+                                <div style={{
+                                    position: 'absolute', bottom: '-4px', left: '-4px',
+                                    width: '10px', height: '10px',
+                                    background: '#1e293b',
+                                    border: '1px solid #60a5fa',
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: '0 0 5px rgba(96, 165, 250, 0.4)',
+                                    zIndex: 5
+                                }}>
+                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                </div>
+                            )}
+                            {item.incubatorBoost && item.incubatorBoost > 0 && (
+                                <div style={{
+                                    position: 'absolute', bottom: '-4px', right: '-4px',
+                                    width: '10px', height: '10px',
+                                    background: '#1e293b',
+                                    border: '1px solid #00d9ff',
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: '0 0 5px rgba(0, 217, 255, 0.4)',
+                                    zIndex: 5
+                                }}>
+                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -271,16 +313,26 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                         {/* VERSION & CORRUPTION STATUS (Bottom Right) */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ fontSize: '7px', color: '#64748b', fontWeight: 900, letterSpacing: '1px' }}>VERSION ID</span>
-                                <span style={{
-                                    fontSize: '9px', color: '#fff',
-                                    fontWeight: 900, fontFamily: 'monospace',
-                                    opacity: 0.8
+                            <span style={{
+                                fontSize: '9px', color: '#fff',
+                                fontWeight: 900, fontFamily: 'monospace',
+                                opacity: 0.8
+                            }}>
+                                V {item.version?.toFixed(1) || '1.0'}
+                            </span>
+                            {item.incubatorBoost && item.incubatorBoost > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '4px',
+                                    background: 'rgba(0, 217, 255, 0.1)', padding: '1px 6px', borderRadius: '4px',
+                                    border: '1px solid rgba(0, 217, 255, 0.3)',
+                                    boxShadow: '0 0 10px rgba(0, 217, 255, 0.2)',
+                                    marginTop: '2px'
                                 }}>
-                                    V {item.version?.toFixed(1) || '1.0'}
-                                </span>
-                            </div>
+                                    <span style={{ fontSize: '7px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
+                                        INCUB: <span style={{ color: '#00d9ff' }}>+{item.incubatorBoost}%</span>
+                                    </span>
+                                </div>
+                            )}
                             {item.isCorrupted && (
                                 <div style={{
                                     display: 'flex', alignItems: 'center', gap: '4px',
@@ -423,7 +475,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         </span>
 
                                         <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', letterSpacing: '1px' }}>
-                                            [{p.range.min}-{p.range.max}%]
+                                            [{p.range.min + (item.incubatorBoost || 0)}-{p.range.max + (item.incubatorBoost || 0)}%]
                                         </span>
 
                                         <div style={{ flex: 1 }} />
@@ -431,9 +483,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <div style={{ fontSize: '15px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
                                                 {isSpinningRange && !lockedIndices.includes(idx) ?
-                                                    <SpinningNumber min={p.range.min} max={p.range.max} isSpinning={true} />
+                                                    <SpinningNumber min={p.range.min + (item.incubatorBoost || 0)} max={p.range.max + (item.incubatorBoost || 0)} isSpinning={true} />
                                                     :
-                                                    `${p.value}%`
+                                                    `${p.value + (item.incubatorBoost || 0)}%`
                                                 }
                                             </div>
 
@@ -664,7 +716,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                     to { opacity: 1; filter: blur(1px); }
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 
@@ -681,6 +733,7 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
         if (SPIN_POOLS.Sector.includes(target)) pool = SPIN_POOLS.Sector;
         else if (SPIN_POOLS.Arena.includes(target)) pool = SPIN_POOLS.Arena;
         else if (SPIN_POOLS.Legendary.includes(target)) pool = SPIN_POOLS.Legendary;
+        else if (SPIN_POOLS.Pairing.includes(target)) pool = SPIN_POOLS.Pairing;
         else if (SPIN_POOLS.Quality.includes(target)) pool = SPIN_POOLS.Quality;
         else pool = [target, '???', 'ERROR', '---'];
 
@@ -696,6 +749,7 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
     if (SPIN_POOLS.Sector.includes(target)) longestStringInPool = [...SPIN_POOLS.Sector].sort((a, b) => b.length - a.length)[0];
     else if (SPIN_POOLS.Arena.includes(target)) longestStringInPool = [...SPIN_POOLS.Arena].sort((a, b) => b.length - a.length)[0];
     else if (SPIN_POOLS.Legendary.includes(target)) longestStringInPool = [...SPIN_POOLS.Legendary].sort((a, b) => b.length - a.length)[0];
+    else if (SPIN_POOLS.Pairing.includes(target)) longestStringInPool = [...SPIN_POOLS.Pairing].sort((a, b) => b.length - a.length)[0];
     else if (SPIN_POOLS.Quality.includes(target)) longestStringInPool = [...SPIN_POOLS.Quality].sort((a, b) => b.length - a.length)[0];
 
     return (

@@ -164,6 +164,7 @@ export interface Player {
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
+    autoUnsocket?: boolean;
 }
 
 export interface ClassMetric {
@@ -738,6 +739,9 @@ export interface GameState {
     // Inventory System
     meteorites: Meteorite[]; // Dropped items in the world
     inventory: (Meteorite | null)[];  // Collected items (30 slots)
+    incubator: (IncubatedMeteorite | null)[]; // 3 slots
+    incubatorFuel: number;
+    incubatorFuelMax: number;
 
     // Module Menu System
     showModuleMenu: boolean;
@@ -850,6 +854,8 @@ export interface Meteorite {
         sameType?: number;
         hexType?: number;
     };
+    incubatorBoost?: number; // Total points added by the Void Forge
+    instability?: number; // Persistence of incubator instability
     // Loot Props
     type?: 'dust_pile' | 'meteorite' | 'void_flux';
     amount?: number; // For dust piles
@@ -859,9 +865,20 @@ export interface Meteorite {
     isBlueprint?: boolean;
     blueprintType?: BlueprintType;
     name?: string; // For blueprints to show name instead of rarity
+    status?: 'ready' | 'active' | 'broken' | 'researching';
+    researched?: boolean;
+    researchFinishTime?: number;
+    researchRemainingTime?: number;
     targetPlayer?: import('./types').Player | null;
     isCorrupted?: boolean;
     version?: number;
+}
+
+export interface IncubatedMeteorite extends Meteorite {
+    insertedAt: number; // gameTime when inserted
+    growthTicks: number; // number of times it has grown (1 tick = 1 minute)
+    instability: number; // 0-100 percentage chance to break on next tick
+    isRuined?: boolean; // Failed the overload check, turned to useless slag
 }
 
 export type BlueprintType =

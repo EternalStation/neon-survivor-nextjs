@@ -60,7 +60,7 @@ const formatDescription = (text: string, highlightColor: string) => {
 
         // 4. Handle "Connects Eco & Eco Hexes" style phrases manually or generically
         // Since we already handled "connected to ... Hexes", the remaining "Hexes" likely refer to the connection targets
-        .replace(/Hexes/gi, 'Legendary Upgrades')
+        .replace(/Hexes/gi, 'Legendary ⬢')
 
         // 5. Fallback for any remaining legacy caps that were effectively "Located in" but missed?
         // Actually, "ECO HEX" by itself usually means the socket.
@@ -75,6 +75,7 @@ const formatDescription = (text: string, highlightColor: string) => {
         'Sector-01', 'Sector-02', 'Sector-03',
         'Economic Arena', 'Combat Arena', 'Defence Arena',
         'Economic', 'Combat', 'Defence',
+        '(?:Eco|Com|Def) & (?:Eco|Com|Def) ⬢',
         '\\bEco\\b', 'Com', 'Def',
         'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
         'HEX', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
@@ -396,6 +397,18 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                         <span style={{ fontSize: '9px', fontWeight: 900, color: '#fb923c', letterSpacing: '0.5px' }}>CORE-X +{formatPct(efficiency.blueprintBoost)}%</span>
                                     </div>
                                 )}
+                                {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px',
+                                        background: 'rgba(15, 23, 42, 0.8)', padding: '1px 8px', borderRadius: '4px',
+                                        border: '1px solid #475569',
+                                        boxShadow: '0 0 15px rgba(0, 217, 255, 0.3)'
+                                    }}>
+                                        <span style={{ fontSize: '10px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
+                                            INCUB: <span style={{ color: '#00d9ff' }}>+{formatPct(meteorite.incubatorBoost, true)}%</span>
+                                        </span>
+                                    </div>
+                                )}
                                 {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>(UNPLACED)</span>}
                             </div>
                         </div>
@@ -419,6 +432,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                             backgroundImage: `linear-gradient(${rarityColor} 1px, transparent 1px), linear-gradient(90deg, ${rarityColor} 1px, transparent 1px)`,
                             backgroundSize: '20px 20px'
                         }} />
+                        {/* USER MANUAL EDIT REPLACED IMG WITH DIV IN BLUEPRINTBAY, BUT TOOLTIP SHOULD KEEP IMG */}
                         <img
                             src={getMeteoriteImage(meteorite)}
                             alt={meteorite.rarity}
@@ -481,7 +495,9 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                     <div className="content" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                                             <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>{getPerkName(perk.id)}</span>
-                                            <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>({perk.range.min}-{perk.range.max}%)</span>
+                                            <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>
+                                                ({perk.range.min + (meteorite.incubatorBoost || 0)}-{perk.range.max + (meteorite.incubatorBoost || 0)}%)
+                                            </span>
                                         </div>
                                         <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', opacity: 0.9 }}>
                                             {formatDescription(perk.description, rarityColor)}
@@ -496,7 +512,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                         textAlign: 'right',
                                         minWidth: '45px'
                                     }}>
-                                        +{formatPct(isActive ? perkResult.activeValue : perk.value, true)}%
+                                        +{formatPct(isActive ? perkResult.activeValue : (perk.value + (meteorite.incubatorBoost || 0)), true)}%
                                     </span>
                                 </div>
                             );

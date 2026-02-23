@@ -182,9 +182,9 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
             })()}
 
             {/* RESEARCH PROGRESS INDICATORS */}
-            {gameState.blueprints.map((bp, i) => {
-                if (bp && bp.status === 'researching' && bp.researchFinishTime) {
-                    const timeLeftRaw = bp.researchFinishTime - gameState.gameTime;
+            {gameState.inventory.map((item, i) => {
+                if (item && item.isBlueprint && item.status === 'researching' && (item as any).researchFinishTime) {
+                    const timeLeftRaw = (item as any).researchFinishTime - gameState.gameTime;
                     if (timeLeftRaw <= 0) return null;
                     const timeLeft = Math.max(0, timeLeftRaw).toFixed(1);
                     return (

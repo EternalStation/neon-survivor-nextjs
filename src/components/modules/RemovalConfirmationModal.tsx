@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 
 interface RemovalCandidate {
     index: number;
@@ -12,11 +11,12 @@ interface RemovalConfirmationModalProps {
     dust: number;
     cost: number;
     onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: (dontAskAgain: boolean) => void;
 }
 
 export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> = ({ candidate, dust, cost, onCancel, onConfirm }) => {
     const isCorrupted = candidate.item?.quality === 'Corrupted';
+    const [dontAskAgain, setDontAskAgain] = useState(false);
     return (
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -39,16 +39,16 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
             >
                 <div style={{ fontSize: '18px', fontWeight: 900, color: '#ef4444', letterSpacing: '1px' }}>
-                    {candidate.replaceWith ? 'REPLACE MODULE?' : 'UNSOCKET MODULE?'}
+                    {candidate.replaceWith ? 'REPLACE METEORITE?' : 'UNSOCKET METEORITE?'}
                 </div>
                 <div style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px' }}>
                     {candidate.replaceWith
-                        ? 'Replacing this module will move the current one to your inventory.'
-                        : 'Removing this module requires energy to safely extract.'}
+                        ? 'Replacing this meteorite will move the current one to your inventory.'
+                        : 'Removing this meteorite costs meteorite dust to extract.'}
                 </div>
                 {isCorrupted && (
                     <div style={{ color: '#a855f7', textAlign: 'center', fontSize: '11px', fontWeight: 800 }}>
-                        CORRUPTED MODULE: EXTRACTION COST IS TRIPLED
+                        CORRUPTED METEORITE: EXTRACTION COST IS TRIPLED
                     </div>
                 )}
 
@@ -56,6 +56,21 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                     <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>COST: {cost}</span>
                     <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{ width: '20px', height: '20px' }} />
                 </div>
+
+                {!candidate.replaceWith && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+                        <input
+                            type="checkbox"
+                            id="dontAskAgain"
+                            checked={dontAskAgain}
+                            onChange={(e) => setDontAskAgain(e.target.checked)}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#ef4444' }}
+                        />
+                        <label htmlFor="dontAskAgain" style={{ color: '#94a3b8', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
+                            Don't ask again
+                        </label>
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '5px' }}>
                     <button
@@ -69,7 +84,7 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                         CANCEL
                     </button>
                     <button
-                        onClick={onConfirm}
+                        onClick={() => onConfirm(dontAskAgain)}
                         disabled={dust < cost}
                         style={{
                             flex: 1, padding: '10px',

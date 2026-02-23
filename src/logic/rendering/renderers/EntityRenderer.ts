@@ -63,43 +63,41 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
     state.meteorites.forEach(m => {
         ctx.save();
         ctx.translate(m.x, m.y);
-        ctx.translate(0, Math.sin(state.gameTime * 3 + m.id) * 5);
+
+        // Subtle scaling animation, and enable image smoothing to lessen sharpness
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        const pulseScale = 1 + Math.sin(state.gameTime * 3 + m.id) * 0.08;
+        ctx.scale(pulseScale, pulseScale);
+
         if (m.magnetized) ctx.translate((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
 
         if (m.isBlueprint) {
             const size = 32;
-            const bloomSize = size * 2.5;
-            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, bloomSize / 2);
-            grad.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
-            grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
-            ctx.fillStyle = grad;
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillRect(-bloomSize / 2, -bloomSize / 2, bloomSize, bloomSize);
-            ctx.globalCompositeOperation = 'source-over';
-
             const img = (meteoriteImages as any).blueprint;
             if (img && img.complete && img.naturalWidth !== 0) {
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.2 + Math.sin(state.gameTime * 5) * 0.1;
-                ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
-                ctx.globalAlpha = 1.0;
-                ctx.globalCompositeOperation = 'source-over';
             }
         } else if (m.type === 'void_flux') {
             const size = 32;
             const img = (meteoriteImages as any).void_flux;
             if (img && img.complete && img.naturalWidth !== 0) {
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 4) * 0.2;
-                ctx.drawImage(img, -size / 2 - 4, -size / 2 - 4, size + 8, size + 8);
-                ctx.globalAlpha = 1.0;
-                ctx.globalCompositeOperation = 'source-over';
             } else {
                 ctx.fillStyle = '#a855f7';
                 ctx.beginPath();
                 ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        } else if (m.type === 'dust_pile') {
+            const size = 24; // slightly smaller than void_flux (32) to match standard drops
+            const img = (meteoriteImages as any).dust_pile;
+            if (img && img.complete && img.naturalWidth !== 0) {
+                ctx.drawImage(img, -size / 2, -size / 2, size, size);
+            } else {
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(0, 0, 6, 0, Math.PI * 2);
                 ctx.fill();
             }
         } else {
@@ -109,13 +107,6 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
             if (img && img.complete && img.naturalWidth !== 0) {
                 const size = 32;
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
-                // Always apply glow for now, or maybe only for non-Radiant?
-                // For now, let's just apply it to everything to look nice.
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.4;
-                ctx.drawImage(img, -size / 2 - 2, -size / 2 - 2, size + 4, size + 4);
-                ctx.globalAlpha = 1.0;
-                ctx.globalCompositeOperation = 'source-over';
             } else {
                 let color = '#EAB308'; // Radiant (Gold)
                 if (m.rarity === 'anomalous') color = '#60a5fa'; // Blue
@@ -124,7 +115,7 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 else if (m.rarity === 'divine') color = '#FFFFFF'; // Divine (White)
                 else if (m.rarity === 'singularity') color = '#E942FF'; // Singularity (Magenta)
 
-                ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.fillStyle = color;
+                ctx.fillStyle = color;
                 ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -6); ctx.lineTo(12, 6); ctx.lineTo(0, 12); ctx.lineTo(-10.5, 7.5); ctx.lineTo(-9, -7.5); ctx.closePath(); ctx.fill();
                 ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
             }

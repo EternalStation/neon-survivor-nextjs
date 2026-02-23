@@ -12,6 +12,7 @@ import { PlayerStatus } from './hud/PlayerStatus';
 import { BossStatus } from './hud/BossStatus';
 import { UpgradeMenu } from './hud/UpgradeMenu';
 import { TutorialOverlay } from './hud/TutorialOverlay';
+import { IncubatorMonitor } from './hud/IncubatorMonitor';
 import { SpotlightOverlay } from './common/SpotlightOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import { TutorialStep } from '../logic/core/types';
@@ -174,6 +175,7 @@ export const HUD: React.FC<HUDProps> = ({
             <PlayerStatus gameState={gameState} maxHp={maxHp} />
 
             <Minimap gameState={gameState} />
+            <IncubatorMonitor gameState={gameState} />
 
             {/* EXTRACTION COORDINATES PERSISTENCE */}
             {['waiting', 'active', 'arriving', 'arrived'].includes(gameState.extractionStatus) && (

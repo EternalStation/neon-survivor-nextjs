@@ -145,7 +145,8 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
             }
 
             const resonanceBonus = calculateLegendaryBonus(state, 'metric_resonance', true);
-            const activeValue = count * (perk.value + resonanceBonus);
+            const incubatorBonus = meteorite.incubatorBoost || 0;
+            const activeValue = count * (perk.value + resonanceBonus + incubatorBonus);
             totalActiveBoostPct += activeValue;
             perkResults[perk.id] = { activeValue, count, connections: count > 0 ? conns : undefined };
         });

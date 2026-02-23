@@ -34,7 +34,7 @@ interface ModuleMenuProps {
 }
 
 export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClose, onSocketUpdate, onInventoryUpdate, onRecycle, spendDust, onViewChassisDetail }) => {
-    const [movedItem, setMovedItem] = useState<{ item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null>(null);
+    const [movedItem, setMovedItem] = useState<{ item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
     const [hoveredItem, setHoveredItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
@@ -99,10 +99,16 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     });
 
     // Removal Confirmation State
-    const [removalCandidate, setRemovalCandidate] = useState<{ index: number, item: any, replaceWith?: { item: any, source: string, index: number } } | null>(null);
     const [corruptionCandidate, setCorruptionCandidate] = useState<{ index: number, item: any, source: string, sourceIndex: number } | null>(null);
+
+    const [removalCandidate, setRemovalCandidate] = useState<{
+        index: number,
+        item: any,
+        replaceWith?: { item: any, source: string, index: number },
+        dropTarget?: { type: 'inventory' | 'recalibrate', index?: number }
+    } | null>(null);
+
     const [placementAlert, setPlacementAlert] = useState(false);
-    const [archiveFullAlert, setArchiveFullAlert] = useState(false);
     const [refresh, setRefresh] = useState(0);
 
     const hoverTimeout = useRef<number | null>(null);
@@ -158,48 +164,73 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         return item?.isCorrupted ? baseCost * 3 : baseCost;
     };
 
-    const handleAttemptRemove = (index: number, item: any, replaceWith?: { item: any, source: string, index: number }) => {
-        setLockedItem(null); // Clear tooltip lock so popup is visible
-        setRemovalCandidate({ index, item, replaceWith });
-    };
+    const executeRemoval = (
+        index: number,
+        item: any,
+        replaceWith?: { item: any, source: string, index: number },
+        dropTarget?: { type: 'inventory' | 'recalibrate', index?: number }
+    ) => {
+        // Check if WE ARE ABOUT TO PLACE a corrupted item via replacement
+        if (replaceWith?.item?.isCorrupted) {
+            setCorruptionCandidate({
+                index: index,
+                item: replaceWith.item,
+                source: replaceWith.source,
+                sourceIndex: replaceWith.index
+            });
+        }
 
-    const confirmRemoval = () => {
-        if (removalCandidate) {
-            // Check if WE ARE ABOUT TO PLACE a corrupted item via replacement
-            if (removalCandidate.replaceWith?.item?.isCorrupted) {
-                setCorruptionCandidate({
-                    index: removalCandidate.index,
-                    item: removalCandidate.replaceWith.item,
-                    source: removalCandidate.replaceWith.source,
-                    sourceIndex: removalCandidate.replaceWith.index
-                });
-                // We don't clear the removalCandidate yet, OR we clear it and let corruption modal finish it.
-                // Better approach: If they confirm removal, but the replacement is corrupted, 
-                // we should have warned them about the corruption FIRST or SIMULTANEOUSLY.
-                // Actually, the UX is: "You want to replace X with Y (Corrupted)".
-                // Let's modify the RemovalConfirmationModal later or just chain them.
-                // For now, let's assume they confirmed the removal (paid the dust), 
-                // then if the new item is corrupted, we warn them BEFORE finalizing the swap into the socket.
+        const removalCost = getRemovalCost(item);
+        if (spendDust(removalCost)) {
+            const newItem = { ...item, isNew: false };
+
+            // 1. Clear the source slot first (frees up inventory slot if needed)
+            if (replaceWith) {
+                if (replaceWith.source === 'inventory') {
+                    onInventoryUpdate(replaceWith.index, null);
+                } else if (replaceWith.source === 'diamond') {
+                    onSocketUpdate('diamond', replaceWith.index, null);
+                } else if (replaceWith.source === 'recalibrate') {
+                    setRecalibrateSlot(null);
+                } else if (replaceWith.source === 'incubator') {
+                    onIncubatorUpdate(0, null);
+                }
             }
 
-            const removalCost = getRemovalCost(removalCandidate.item);
-            if (spendDust(removalCost)) {
-                const { index, item, replaceWith } = removalCandidate;
-                const newItem = { ...item, isNew: false };
+            // 2. Extract old item to inventory (or specified drop target)
+            if (dropTarget?.type === 'inventory' && dropTarget.index !== undefined) {
+                // If dropping explicitly to a slot, perform swap if needed
+                const itemAtTarget = gameState.inventory[dropTarget.index];
 
-                // 1. Clear the source slot first (frees up inventory slot if needed)
-                if (replaceWith) {
-                    if (replaceWith.source === 'inventory') {
-                        onInventoryUpdate(replaceWith.index, null);
-                    } else if (replaceWith.source === 'diamond') {
-                        onSocketUpdate('diamond', replaceWith.index, null);
-                    } else if (replaceWith.source === 'recalibrate') {
-                        setRecalibrateSlot(null);
+                // If the target item is corrupted, don't swap (prevents bypassing corruption warning)
+                // Instead, find the first empty slot for the extracted item
+                if (itemAtTarget && itemAtTarget.isCorrupted) {
+                    let emptySlotIdx = -1;
+                    for (let i = 10; i < gameState.inventory.length; i++) {
+                        if (gameState.inventory[i] === null) { emptySlotIdx = i; break; }
+                    }
+                    if (emptySlotIdx === -1) {
+                        for (let i = 0; i < 10; i++) {
+                            if (gameState.inventory[i] === null) { emptySlotIdx = i; break; }
+                        }
+                    }
+                    if (emptySlotIdx !== -1) {
+                        onInventoryUpdate(emptySlotIdx, newItem);
+                    }
+                    onSocketUpdate('diamond', index, null);
+                } else {
+                    onInventoryUpdate(dropTarget.index, newItem);
+                    if (itemAtTarget) {
+                        onSocketUpdate('diamond', index, itemAtTarget);
+                    } else {
+                        onSocketUpdate('diamond', index, null); // Make sure the original socket is cleared if not replacing
                     }
                 }
-
-                // 2. Extract old item to inventory
-                // User Request: Prioritize "Storage" (Index 10+) over "Safe Slots" (0-9)
+            } else if (dropTarget?.type === 'recalibrate') {
+                setRecalibrateSlot(newItem);
+                onSocketUpdate('diamond', index, null);
+            } else {
+                // Auto-find slot
                 let emptySlotIdx = -1;
 
                 // Check Storage (10+)
@@ -227,23 +258,41 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 // 3. Place new item in target socket if replacing
                 if (replaceWith) {
                     if (replaceWith.item.quality === 'Corrupted') {
-                        // Delay final placement for corruption confirmation
-                        setCorruptionCandidate({
-                            index,
-                            item: replaceWith.item,
-                            source: replaceWith.source,
-                            sourceIndex: replaceWith.index // This index might be invalid if it was inventory and we already set it to null...
-                            // Actually, in confirmRemoval step 1, we set it to null.
-                        });
+                        // Handled by corruption confirmation logic
                     } else {
                         onSocketUpdate('diamond', index, replaceWith.item);
                     }
                 } else {
                     onSocketUpdate('diamond', index, null);
                 }
-
-                setRemovalCandidate(null);
             }
+        }
+    };
+
+    const handleAttemptRemove = (
+        index: number,
+        item: any,
+        replaceWith?: { item: any, source: string, index: number },
+        dropTarget?: { type: 'inventory' | 'recalibrate', index?: number }
+    ) => {
+        setLockedItem(null); // Clear tooltip lock so popup is visible
+
+        const removalCost = getRemovalCost(item);
+        if (gameState.player.autoUnsocket && !replaceWith && gameState.player.dust >= removalCost) {
+            executeRemoval(index, item, replaceWith, dropTarget);
+            return;
+        }
+
+        setRemovalCandidate({ index, item, replaceWith, dropTarget });
+    };
+
+    const confirmRemoval = (dontAskAgain?: boolean) => {
+        if (removalCandidate) {
+            if (dontAskAgain) {
+                gameState.player.autoUnsocket = true;
+            }
+            executeRemoval(removalCandidate.index, removalCandidate.item, removalCandidate.replaceWith, removalCandidate.dropTarget);
+            setRemovalCandidate(null);
         }
     };
 
@@ -256,11 +305,17 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 onInventoryUpdate(sourceIndex, null);
             } else if (source === 'diamond') {
                 onSocketUpdate('diamond', sourceIndex, null);
+            } else if (source === 'incubator') {
+                onIncubatorUpdate(sourceIndex, null);
             } else if (source === 'recalibrate') {
                 setRecalibrateSlot(null);
             }
             setCorruptionCandidate(null);
         }
+    };
+
+    const onIncubatorUpdate = (index: number, item: any | null) => {
+        gameState.incubator[index] = item;
     };
 
     // Destroy Item Logic
@@ -284,11 +339,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     const newCharges = charges - 1;
                     gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] = newCharges;
 
-                    // If charges hit 0, immediately mark blueprint as broken
+                    // If charges hit 0, mark as broken
                     if (newCharges <= 0) {
-                        const bp = gameState.blueprints.find(b => b && b.type === 'QUANTUM_SCRAPPER');
-                        if (bp && bp.status === 'active') {
-                            bp.status = 'broken';
+                        const invBp = gameState.inventory.find(i => i && i.isBlueprint && (i as any).blueprintType === 'QUANTUM_SCRAPPER' && i.status === 'active');
+                        if (invBp) {
+                            invBp.status = 'broken';
                         }
                         delete gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'];
                     }
@@ -315,14 +370,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const handleResearch = (idx: number) => {
         if (researchBlueprint(gameState, idx)) {
             setRefresh(p => p + 1);
-        } else {
-            // Check if it failed due to full slots
-            const emptySlot = gameState.blueprints.find(b => b === null);
-            if (emptySlot === undefined) {
-                // If no empty slot is found (all occupied), trigger full alert
-                setArchiveFullAlert(true);
-                setTimeout(() => setArchiveFullAlert(false), 2000);
-            }
         }
     };
 
@@ -348,11 +395,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         const newCharges = charges - 1;
                         gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] = newCharges;
 
-                        // If charges hit 0, immediately mark blueprint as broken
+                        // If charges hit 0, mark as broken
                         if (newCharges <= 0) {
-                            const bp = gameState.blueprints.find(b => b && b.type === 'QUANTUM_SCRAPPER');
-                            if (bp && bp.status === 'active') {
-                                bp.status = 'broken';
+                            const invBp = gameState.inventory.find(i => i && i.isBlueprint && (i as any).blueprintType === 'QUANTUM_SCRAPPER' && i.status === 'active');
+                            if (invBp) {
+                                invBp.status = 'broken';
                             }
                             delete gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'];
                             bonusActive = false;
@@ -607,12 +654,16 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         onInventoryUpdate={(index, item) => {
                             if (movedItem && movedItem.source === 'recalibrate') {
                                 setRecalibrateSlot(null);
+                            } else if (movedItem && movedItem.source === 'incubator') {
+                                onIncubatorUpdate(0, null);
                             }
                             onInventoryUpdate(index, item);
                         }}
                         onSocketUpdate={(type, index, item) => {
                             if (movedItem && movedItem.source === 'recalibrate') {
                                 setRecalibrateSlot(null);
+                            } else if (movedItem && movedItem.source === 'incubator') {
+                                onIncubatorUpdate(0, null);
                             }
                             onSocketUpdate(type, index, item);
                         }}
@@ -842,15 +893,20 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         borderLeftStyle: 'solid',
                         borderLeftColor: 'rgba(59, 130, 246, 0.3)'
                     }}>
+
+
                         <InventoryPanel
                             inventory={gameState.inventory}
                             movedItem={movedItem}
                             onSocketUpdate={(type, index, item) => {
                                 if (movedItem && movedItem.source === 'recalibrate') {
                                     setRecalibrateSlot(null);
+                                } else if (movedItem && movedItem.source === 'incubator') {
+                                    onIncubatorUpdate(0, null);
                                 }
                                 onSocketUpdate(type, index, item);
                             }}
+                            onAttemptRemove={handleAttemptRemove}
                             setMovedItem={(item) => {
                                 if (gameState.pendingLegendaryHex) {
                                     setPlacementAlert(true);
@@ -862,6 +918,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             onInventoryUpdate={(index, item) => {
                                 if (movedItem && movedItem.source === 'recalibrate') {
                                     setRecalibrateSlot(null);
+                                } else if (movedItem && movedItem.source === 'incubator') {
+                                    onIncubatorUpdate(0, null);
                                 }
                                 onInventoryUpdate(index, item);
                                 setRefresh(p => p + 1);
@@ -897,8 +955,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             onHoverBlueprint={setHoveredBlueprint}
                             recalibrateSlot={recalibrateSlot}
                             setRecalibrateSlot={setRecalibrateSlot}
+                            onAttemptRemove={handleAttemptRemove}
                             movedItem={movedItem}
-                            setMovedItem={(item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => {
+                            setMovedItem={(item) => {
                                 if (gameState.pendingLegendaryHex) {
                                     setPlacementAlert(true);
                                     setTimeout(() => setPlacementAlert(false), 2000);
@@ -908,6 +967,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             }}
                             onInventoryUpdate={onInventoryUpdate}
                             onSocketUpdate={onSocketUpdate}
+                            onIncubatorUpdate={onIncubatorUpdate}
                         />
                     </div>
 
@@ -946,6 +1006,48 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             alt="moved"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
+                        {movedItem.item.isCorrupted && (
+                            <div style={{
+                                position: 'absolute', top: '2px', left: '2px',
+                                width: '10px', height: '10px',
+                                background: '#1e293b',
+                                border: '1px solid #a855f7',
+                                borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 0 5px rgba(168, 85, 247, 0.4)',
+                                zIndex: 10000
+                            }}>
+                                <span style={{ fontSize: '6px', fontWeight: 900, color: '#a855f7', lineHeight: 1 }}>C</span>
+                            </div>
+                        )}
+                        {movedItem.item.blueprintBoosted && (
+                            <div style={{
+                                position: 'absolute', bottom: '2px', left: '2px',
+                                width: '10px', height: '10px',
+                                background: '#1e293b',
+                                border: '1px solid #60a5fa',
+                                borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 0 5px rgba(96, 165, 250, 0.4)',
+                                zIndex: 10000
+                            }}>
+                                <span style={{ fontSize: '6px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                            </div>
+                        )}
+                        {movedItem.item.incubatorBoost && movedItem.item.incubatorBoost > 0 && (
+                            <div style={{
+                                position: 'absolute', bottom: '-4px', right: '-4px',
+                                width: '10px', height: '10px',
+                                background: '#1e293b',
+                                border: '1px solid #00d9ff',
+                                borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 0 5px rgba(0, 217, 255, 0.4)',
+                                zIndex: 10000
+                            }}>
+                                <span style={{ fontSize: '6px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                            </div>
+                        )}
                     </div>
                 )
             }

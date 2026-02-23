@@ -12,7 +12,7 @@ interface SettingsMenuProps {
 export const SettingsMenu = ({ onClose, onRestart, onQuit, mode = 'game' }: SettingsMenuProps) => {
     const [musVol, setMusVol] = useState(getMusicVolume());
     const [sfxVol, setSfxVol] = useState(getSfxVolume());
-    const [activeTab, setActiveTab] = useState<'general' | 'controls'>(mode === 'game' ? 'controls' : 'general');
+    const [activeTab, setActiveTab] = useState<'general' | 'controls'>('general');
 
     const handleMusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const v = parseFloat(e.target.value);
@@ -90,28 +90,19 @@ export const SettingsMenu = ({ onClose, onRestart, onQuit, mode = 'game' }: Sett
                 </div>
 
                 <div className="settings-actions">
-                    {activeTab === 'general' && (
-                        <>
-                            <button className="btn-settings-primary" onClick={onClose}>
-                                {mode === 'game' ? 'RESUME MISSION' : 'BACK TO MENU'}
-                            </button>
+                    <button className="btn-settings-primary" onClick={onClose}>
+                        {mode === 'game' ? 'RESUME MISSION' : 'BACK TO MENU'}
+                    </button>
 
-                            {mode === 'game' && (
-                                <div style={{ display: 'flex', gap: 15 }}>
-                                    <button className="btn-settings-secondary" onClick={onRestart}>
-                                        INITIATE RESTART
-                                    </button>
-                                    <button className="btn-settings-muted" onClick={onQuit}>
-                                        ABORT TO MENU
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    )}
-                    {activeTab === 'controls' && (
-                        <button className="btn-settings-primary" onClick={() => setActiveTab('general')}>
-                            BACK
-                        </button>
+                    {mode === 'game' && (
+                        <div style={{ display: 'flex', gap: 15 }}>
+                            <button className="btn-settings-secondary" onClick={onRestart}>
+                                INITIATE RESTART
+                            </button>
+                            <button className="btn-settings-muted" onClick={onQuit}>
+                                ABORT TO MENU
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

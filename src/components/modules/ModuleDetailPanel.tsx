@@ -18,7 +18,7 @@ interface ModuleDetailPanelProps {
     gameState: GameState;
     placementAlert: boolean;
     hoveredHex: { hex: LegendaryHex, index: number, x: number, y: number } | null;
-    movedItem: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null;
+    movedItem: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null;
     hoveredItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
     lockedItem: { item: Meteorite | any, x: number, y: number, index?: number } | null;
     hoveredBlueprint: Blueprint | null;
@@ -28,7 +28,7 @@ interface ModuleDetailPanelProps {
     onUpdate?: () => void;
     recalibrateSlot: Meteorite | null;
     setRecalibrateSlot: (item: Meteorite | null) => void;
-    setMovedItem?: (item: { item: Meteorite | any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate', index: number } | null) => void;
+    setMovedItem?: (item: { item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null) => void;
     lockedRecalibrateIndices: number[];
     onToggleRecalibrateLock: (idx: number) => void;
     recalibrateFilters: Record<number, PerkFilter>;

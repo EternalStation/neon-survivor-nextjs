@@ -2,7 +2,7 @@ import type { GameState, Enemy, ShapeType } from '../core/types';
 import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite, createMeteorite, spawnVoidFlux } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
@@ -76,6 +76,12 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     if (fluxDrop > 0) {
         spawnVoidFlux(state, e.x, e.y, fluxDrop);
+    }
+
+    // --- 3% Dust Drop ---
+    if (Math.random() < 0.03) {
+        const dustAmount = e.isElite ? 5 : 1;
+        spawnDustPile(state, e.x, e.y, dustAmount);
     }
 
     // --- EcoXP Lvl 2: Dust Extraction ---

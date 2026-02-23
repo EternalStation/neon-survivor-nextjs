@@ -391,7 +391,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
     // Specific HP Milestones
     const targetHPPoints = [
         hpData[0], // Start
-        12000000,   // 12M (Updated from 7M)
+        20000000,   // 20M (Updated from 12M)
         6000000000, // 6B 
         500000000000, // 500B
         hpData[60]  // Max

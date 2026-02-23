@@ -159,6 +159,9 @@ export function useGameLoop(gameStarted: boolean) {
         const fluxImg = new Image();
         fluxImg.src = '/assets/Icons/Void Flux.png';
         (meteoriteImagesRef.current as any).void_flux = fluxImg;
+        const dustImg = new Image();
+        dustImg.src = '/assets/Icons/MeteoriteDust.png';
+        (meteoriteImagesRef.current as any).dust_pile = dustImg;
 
         workerRef.current = new Worker(new URL('../logic/core/gameWorker.ts', import.meta.url), { type: 'module' });
         workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
