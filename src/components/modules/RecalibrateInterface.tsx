@@ -44,7 +44,8 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     const canAffordRerollType = gameState.player.isotopes >= rerollTypeCost;
     const canAffordRerollValue = gameState.player.isotopes >= rerollValueCost;
 
-    const [isSpinning, setIsSpinning] = useState(false);
+    const [isSpinningPerks, setIsSpinningPerks] = useState(false);
+    const [isSpinningRange, setIsSpinningRange] = useState(false);
     const [spinningLevel, setSpinningLevel] = useState<number | null>(null); // null means all or none
 
     // Local state for Accordion Behavior
@@ -200,7 +201,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                             <img
                                 src={getMeteoriteImage(item)}
-                                style={{ width: '32px', height: '32px', filter: `drop-shadow(0 0 12px ${rarityColor})` }}
+                                style={{ width: '32px', height: '100%', objectFit: 'contain', filter: `drop-shadow(0 0 12px ${rarityColor})` }}
                                 alt="loaded unit"
                             />
                         </div>
@@ -347,9 +348,11 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                             const renderDescription = () => {
                                 const parts = getPerkParts(p.id);
-                                if (parts.length === 0 || !isSpinning || lockedIndices.includes(idx)) {
+                                if (parts.length === 0) {
                                     return p.description;
                                 }
+
+                                const isActuallySpinning = isSpinningPerks && !lockedIndices.includes(idx);
 
                                 // Replace keywords with spinning components
                                 let res: (string | React.ReactNode)[] = [p.description];
@@ -361,7 +364,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                             sub.forEach((s, i) => {
                                                 nextRes.push(s);
                                                 if (i < sub.length - 1) {
-                                                    nextRes.push(<SpinningWord key={part + i} target={part} isSpinning={true} />);
+                                                    nextRes.push(<SpinningWord key={part + i} target={part} isSpinning={isActuallySpinning} />);
                                                 }
                                             });
                                         } else {
@@ -427,7 +430,11 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                                         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <div style={{ fontSize: '15px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
-                                                {p.value}%
+                                                {isSpinningRange && !lockedIndices.includes(idx) ?
+                                                    <SpinningNumber min={p.range.min} max={p.range.max} isSpinning={true} />
+                                                    :
+                                                    `${p.value}%`
+                                                }
                                             </div>
 
                                             {/* AUTO-LOCK TOGGLE SWITCH */}
@@ -465,7 +472,8 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
                                     <div style={{
                                         fontSize: '9px', color: 'rgba(255,255,255,0.5)',
-                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                        whiteSpace: 'normal',
+                                        lineHeight: '1.4',
                                         paddingTop: '6px',
                                         borderTop: '1px solid rgba(255,255,255,0.05)',
                                         fontStyle: 'italic'
@@ -553,13 +561,13 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 <div style={{ marginTop: '-5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            disabled={!canAffordRerollType || isSpinning}
+                            disabled={!canAffordRerollType || isSpinningPerks || isSpinningRange}
                             onClick={() => {
-                                setIsSpinning(true);
+                                setIsSpinningPerks(true);
                                 playSfx('reroll');
                                 setTimeout(() => {
                                     onRerollType(lockedIndices);
-                                    setIsSpinning(false);
+                                    setIsSpinningPerks(false);
                                 }, 1000);
                             }}
                             style={{
@@ -584,17 +592,17 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             <span style={{ fontSize: '12px' }}>REROLL PERKS</span>
                             <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX</span>
                             {canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
-                            {isSpinning && <div style={{ position: 'absolute', inset: 0, background: 'rgba(168, 85, 247, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
+                            {isSpinningPerks && <div style={{ position: 'absolute', inset: 0, background: 'rgba(168, 85, 247, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
 
                         <button
-                            disabled={!canAffordRerollValue || isSpinning}
+                            disabled={!canAffordRerollValue || isSpinningPerks || isSpinningRange}
                             onClick={() => {
-                                setIsSpinning(true);
+                                setIsSpinningRange(true);
                                 playSfx('upgrade');
                                 setTimeout(() => {
                                     onRerollValue(lockedIndices);
-                                    setIsSpinning(false);
+                                    setIsSpinningRange(false);
                                 }, 500); // Shorter for range
                             }}
                             style={{
@@ -619,7 +627,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             <span style={{ fontSize: '12px' }}>REROLL RANGE</span>
                             <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollValueCost.toLocaleString()} FLUX</span>
                             {canAffordRerollValue && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />}
-                            {isSpinning && <div style={{ position: 'absolute', inset: 0, background: 'rgba(16, 185, 129, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
+                            {isSpinningRange && <div style={{ position: 'absolute', inset: 0, background: 'rgba(16, 185, 129, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
                     </div>
                 </div>
@@ -683,9 +691,19 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
         return () => clearInterval(interval);
     }, [isSpinning, target]);
 
+    // Find the longest string in the relevant pool to act as the stable width metric
+    let longestStringInPool = target;
+    if (SPIN_POOLS.Sector.includes(target)) longestStringInPool = [...SPIN_POOLS.Sector].sort((a, b) => b.length - a.length)[0];
+    else if (SPIN_POOLS.Arena.includes(target)) longestStringInPool = [...SPIN_POOLS.Arena].sort((a, b) => b.length - a.length)[0];
+    else if (SPIN_POOLS.Legendary.includes(target)) longestStringInPool = [...SPIN_POOLS.Legendary].sort((a, b) => b.length - a.length)[0];
+    else if (SPIN_POOLS.Quality.includes(target)) longestStringInPool = [...SPIN_POOLS.Quality].sort((a, b) => b.length - a.length)[0];
+
     return (
         <span style={{
-            display: 'inline-block',
+            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             padding: '1px 6px',
             margin: '0 2px',
             background: 'rgba(59, 130, 246, 0.15)',
@@ -696,13 +714,40 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
             fontSize: '8px',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
-            minWidth: '60px',
             textAlign: 'center',
             boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)',
             verticalAlign: 'middle',
-            animation: isSpinning ? 'pulse-fast 0.1s infinite alternate' : 'none'
+            animation: isSpinning ? 'pulse-fast 0.1s infinite alternate' : 'none',
+            overflow: 'hidden'
         }}>
-            {current}
+            <span style={{ visibility: 'hidden', whiteSpace: 'nowrap' }}>{longestStringInPool}</span>
+            <span style={{ position: 'absolute', whiteSpace: 'nowrap' }}>{current}</span>
+        </span>
+    );
+};
+
+const SpinningNumber: React.FC<{ min: number, max: number, isSpinning: boolean }> = ({ min, max, isSpinning }) => {
+    const [current, setCurrent] = useState(max);
+
+    useEffect(() => {
+        if (!isSpinning) return;
+
+        const interval = setInterval(() => {
+            const rangeSpan = Math.max(1, max - min);
+            const randomVal = min + Math.floor(Math.random() * (rangeSpan + 1));
+            setCurrent(randomVal);
+        }, 30);
+
+        return () => clearInterval(interval);
+    }, [isSpinning, min, max]);
+
+    return (
+        <span style={{
+            animation: isSpinning ? 'pulse-fast 0.05s infinite alternate' : 'none',
+            display: 'inline-block',
+            filter: isSpinning ? 'blur(0.5px)' : 'none'
+        }}>
+            {current}%
         </span>
     );
 };
