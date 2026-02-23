@@ -17,6 +17,7 @@ interface BlueprintBayProps {
     onAttemptRemove?: (index: number, item: any, replaceWith?: any, dropTarget?: { type: 'inventory' | 'recalibrate', index?: number }) => void;
     onIncubatorUpdate: (index: number, item: any | null) => void;
     onUpdate: () => void;
+    onInsufficientDust?: () => void;
 }
 
 export const BlueprintBay: React.FC<BlueprintBayProps> = ({
@@ -30,10 +31,12 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
     onSocketUpdate,
     onAttemptRemove,
     onIncubatorUpdate,
-    onUpdate
+    onUpdate,
+    onInsufficientDust
 }) => {
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
     const [isHoveringForge, setHoveringForge] = useState(false);
+    const [fuelError, setFuelError] = useState(false);
     const [, setTick] = useState(0);
     const INSTABILITY_THRESHOLD = 5; // 5 ticks before instability kicks in (testing)
     // Shutter stays OPEN if: hovering, dragging, OR meteorite is inside
@@ -163,19 +166,40 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                             <button
                                 className="load-fuel-btn mini"
                                 onClick={() => {
-                                    if (gameState.player.dust >= 3 && gameState.incubatorFuel < gameState.incubatorFuelMax) {
+                                    if (gameState.incubatorFuel >= gameState.incubatorFuelMax) return;
+
+                                    if (gameState.player.dust >= 3) {
                                         gameState.player.dust -= 3;
                                         gameState.incubatorFuel = Math.min(gameState.incubatorFuelMax, gameState.incubatorFuel + 3);
                                         playSfx('upgrade-confirm');
                                         onUpdate();
                                     } else {
                                         playSfx('ui-click');
+                                        setFuelError(true);
+                                        setTimeout(() => setFuelError(false), 2000);
+                                        if (onInsufficientDust) onInsufficientDust();
                                     }
                                 }}
-                                disabled={gameState.player.dust < 3 || gameState.incubatorFuel >= gameState.incubatorFuelMax}
+                                disabled={gameState.incubatorFuel >= gameState.incubatorFuelMax}
                             >
                                 LOAD
                             </button>
+                            {fuelError && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '-15px',
+                                    right: '5px',
+                                    color: '#ef4444',
+                                    fontSize: '8px',
+                                    fontWeight: 900,
+                                    textShadow: '0 0 5px black',
+                                    animation: 'fadeOutUp 1.5s forwards',
+                                    whiteSpace: 'nowrap',
+                                    pointerEvents: 'none'
+                                }}>
+                                    NOT ENOUGH DUST
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -634,6 +658,12 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     padding: 1px 4px;
                     height: 14px;
                     margin-left: 2px;
+                }
+                
+                @keyframes fadeOutUp {
+                    0% { opacity: 1; transform: translateY(0); }
+                    80% { opacity: 1; transform: translateY(-5px); }
+                    100% { opacity: 0; transform: translateY(-10px); }
                 }
 
                 /* RECALIBRATION SCANNER DOCK */

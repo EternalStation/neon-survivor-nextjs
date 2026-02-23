@@ -44,6 +44,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [isRecycleMode, setIsRecycleMode] = useState(false);
     const [recyclingAnim, setRecyclingAnim] = useState(false); // Used for visual feedback on button
     const [dustIndicators, setDustIndicators] = useState<{ id: number, baseValue: number, bonusValue: number }[]>([]);
+    const [dustErrorBlink, setDustErrorBlink] = useState(false);
 
     const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
     const [recalibrateSlot, setRecalibrateSlot] = useState<Meteorite | null>(null);
@@ -799,7 +800,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 width: '100%'
                             }}>
                                 {/* DUST RESOURCE DISPLAY */}
-                                <div className="dust-display-container" style={{
+                                <div className={`dust-display-container ${dustErrorBlink ? 'dust-error' : ''}`} style={{
                                     flex: '1',
                                     background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%)',
                                     border: '1px solid #475569',
@@ -968,6 +969,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             onInventoryUpdate={onInventoryUpdate}
                             onSocketUpdate={onSocketUpdate}
                             onIncubatorUpdate={onIncubatorUpdate}
+                            onInsufficientDust={() => {
+                                setDustErrorBlink(true);
+                                setTimeout(() => setDustErrorBlink(false), 1500);
+                            }}
                         />
                     </div>
 
@@ -1085,7 +1090,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             }
 
 
-            {/* EXTRACTION FOCUS DIMMER (Left: Matrix Only) */}
             {extractionFocusActive && (
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '37%', height: '100%',
@@ -1095,7 +1099,15 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 }} />
             )}
 
-
+            <style jsx>{`
+                .dust-error {
+                    animation: error-flash 0.5s ease-in-out 3;
+                }
+                @keyframes error-flash {
+                    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.3); border-color: #475569; }
+                    50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.3); border-color: #ef4444; }
+                }
+            `}</style>
         </div >
     );
 };
