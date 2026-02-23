@@ -195,7 +195,8 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     textShadow: '0 0 5px black',
                                     animation: 'fadeOutUp 1.5s forwards',
                                     whiteSpace: 'nowrap',
-                                    pointerEvents: 'none'
+                                    pointerEvents: 'none',
+                                    zIndex: 9999
                                 }}>
                                     NOT ENOUGH DUST
                                 </span>
@@ -515,7 +516,8 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(59, 130, 246, 0.05);
                     margin-top: 8px;
                     height: 200px;
-                    overflow: hidden;
+                    overflow: visible;
+                    z-index: 100;
                     display: flex;
                     flex-direction: column;
                 }
