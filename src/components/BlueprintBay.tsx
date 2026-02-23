@@ -18,6 +18,8 @@ interface BlueprintBayProps {
     onIncubatorUpdate: (index: number, item: any | null) => void;
     onUpdate: () => void;
     onInsufficientDust?: () => void;
+    /** Called once on mount so the parent can trigger opening the deploy modal from elsewhere (e.g. InventoryPanel) */
+    onRegisterBlueprintClick?: (fn: (bp: Blueprint) => void) => void;
 }
 
 export const BlueprintBay: React.FC<BlueprintBayProps> = ({
@@ -32,7 +34,8 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
     onAttemptRemove,
     onIncubatorUpdate,
     onUpdate,
-    onInsufficientDust
+    onInsufficientDust,
+    onRegisterBlueprintClick
 }) => {
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
     const [isHoveringForge, setHoveringForge] = useState(false);
@@ -41,6 +44,14 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
     const INSTABILITY_THRESHOLD = 5; // 5 ticks before instability kicks in (testing)
     // Shutter stays OPEN if: hovering, dragging, OR meteorite is inside
     const isForgeShieldOpen = !!movedItem || isHoveringForge || !!gameState.incubator[0];
+
+    // Register the open-modal callback so parent/InventoryPanel can trigger it
+    React.useEffect(() => {
+        if (onRegisterBlueprintClick) {
+            onRegisterBlueprintClick((bp: Blueprint) => setPromptBlueprint(bp));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [onRegisterBlueprintClick]);
 
     React.useEffect(() => {
         const hasResearch = gameState.inventory.some(item => item?.isBlueprint && item.status === 'researching');

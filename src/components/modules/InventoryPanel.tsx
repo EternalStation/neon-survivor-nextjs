@@ -20,6 +20,10 @@ interface InventoryPanelProps {
     onSort: () => void;
     onToggleRecycle: () => void;
     onResearch?: (index: number) => void;
+    /** Called when a ready blueprint is right-clicked — deploys it immediately */
+    onBlueprintActivate?: (index: number) => void;
+    /** Called when a blueprint slot is left-clicked — opens the deploy/recycle modal */
+    onBlueprintClick?: (bp: any) => void;
     recyclingAnim?: boolean;
     coreFilter: { quality: string | string[], rarity: string | string[], arena: string | string[] };
     setCoreFilter: React.Dispatch<React.SetStateAction<{ quality: string | string[], rarity: string | string[], arena: string | string[] }>>;
@@ -51,6 +55,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     onSort,
     onToggleRecycle,
     onResearch,
+    onBlueprintActivate,
+    onBlueprintClick,
     recyclingAnim,
     coreFilter,
     setCoreFilter,
@@ -63,6 +69,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [massRecycleCandidate, setMassRecycleCandidate] = useState<{ type: 'SELECTED' | 'GHOSTS', indices: number[] } | null>(null);
     const [tick, setTick] = useState(0);
+    const [hoveredSlotIdx, setHoveredSlotIdx] = useState<number | null>(null);
 
     React.useEffect(() => {
         const hasResearch = inventory.some(item => item?.isBlueprint && item.status === 'researching');
@@ -111,6 +118,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         onRecycleClick(idx);
                     }
                 }}
+                onMouseEnter={(e) => {
+                    if (item && !movedItem) {
+                        handleMouseEnterItem(item, e.clientX, e.clientY);
+                        if (item.isBlueprint) setHoveredSlotIdx(idx);
+                    }
+                }}
                 onMouseMove={(e) => {
                     if (item && !movedItem) {
                         handleMouseEnterItem(item, e.clientX, e.clientY);
@@ -120,22 +133,26 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         }
                     }
                 }}
-                onMouseLeave={() => handleMouseLeaveItem(0)}
+                onMouseLeave={() => {
+                    handleMouseLeaveItem(0);
+                    setHoveredSlotIdx(null);
+                }}
                 onMouseDown={(e) => {
                     if (isRecycleMode) return;
                     if (e.button === 0 && item && !movedItem) {
                         setLockedItem({ item, x: e.clientX, y: e.clientY, index: idx }); // LOCK ON CLICK
-                        if (item.isBlueprint) {
-                            return;
-                        }
                         e.preventDefault();
                         setMovedItem({ item, source: 'inventory', index: idx });
-                        // handleMouseLeaveItem(0) removed to persist lock
                     }
                 }}
                 onContextMenu={(e) => {
                     e.preventDefault();
-                    if (item && item.isBlueprint) {
+                    if (!item || !item.isBlueprint) return;
+                    if (item.status === 'ready') {
+                        // Right-click on ready blueprint → deploy directly
+                        onBlueprintActivate?.(idx);
+                    } else if (item.status === 'locked') {
+                        // Right-click on locked blueprint → start research
                         onResearch?.(idx);
                     }
                 }}
@@ -259,30 +276,76 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             src={item.isBlueprint ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
                             style={{
                                 width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
-                                filter: isVisible ? 'none' : 'grayscale(100%)',
-                                opacity: isVisible ? 1 : 0.2
+                                filter: item.isBlueprint && item.status === 'broken'
+                                    ? 'grayscale(1) brightness(0.4) sepia(1) hue-rotate(-50deg)'
+                                    : isVisible ? 'none' : 'grayscale(100%)',
+                                opacity: item.isBlueprint && item.status === 'broken' ? 0.5 : isVisible ? 1 : 0.2
                             }}
-                            alt="meteorite"
+                            alt="blueprint"
                         />
+                        {/* Blueprint status label */}
                         {item.isBlueprint && (
                             <div style={{
                                 position: 'absolute', inset: 0,
                                 display: 'flex', flexDirection: 'column',
                                 alignItems: 'center', justifyContent: 'center',
-                                background: item.status === 'researching' ? 'rgba(0,0,0,0.4)' : 'transparent',
                                 zIndex: 10,
                                 pointerEvents: 'none'
                             }}>
-                                <span style={{
-                                    fontSize: '5px',
-                                    color: item.status === 'researching' ? '#facc15' : item.status === 'ready' ? '#2dd4bf' : item.status === 'locked' ? '#ef4444' : '#60a5fa',
-                                    fontWeight: 900,
-                                    textShadow: '0 0 4px rgba(0,0,0,0.8)',
-                                    textTransform: 'uppercase'
-                                }}>
-                                    {item.status === 'researching' ? 'DECRYPTING' : item.status === 'ready' ? 'READY' : item.status === 'locked' ? 'ENCRYPTED' : ''}
-                                </span>
-                                {item.status === 'researching' && (item as any).researchFinishTime && (
+                                {/* Hover overlay: action hint */}
+                                {hoveredSlotIdx === idx && !movedItem ? (
+                                    <div style={{
+                                        position: 'absolute', inset: 0,
+                                        background: 'rgba(0,0,0,0.82)',
+                                        backdropFilter: 'blur(2px)',
+                                        display: 'flex', flexDirection: 'column',
+                                        alignItems: 'center', justifyContent: 'center',
+                                        borderRadius: '5px', gap: '2px'
+                                    }}>
+                                        {item.status === 'ready' && (
+                                            <>
+                                                <span style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>RIGHT-CLICK</span>
+                                                <span style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>TO DEPLOY</span>
+                                                <span style={{ fontSize: '5px', color: '#94a3b8', marginTop: '2px' }}>{(item as any).cost} DUST</span>
+                                            </>
+                                        )}
+                                        {item.status === 'locked' && (
+                                            <>
+                                                <span style={{ fontSize: '6px', color: '#f59e0b', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>RIGHT-CLICK</span>
+                                                <span style={{ fontSize: '6px', color: '#f59e0b', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>TO DECRYPT</span>
+                                            </>
+                                        )}
+                                        {item.status === 'researching' && (
+                                            <span style={{ fontSize: '6px', color: '#fbbf24', fontWeight: 900, textAlign: 'center' }}>DECRYPTING...</span>
+                                        )}
+                                        {item.status === 'active' && (
+                                            <span style={{ fontSize: '6px', color: '#60a5fa', fontWeight: 900, textAlign: 'center' }}>ACTIVE</span>
+                                        )}
+                                        {item.status === 'broken' && (
+                                            <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900, textAlign: 'center' }}>EXHAUSTED</span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* Normal status badge */
+                                    <span style={{
+                                        fontSize: '5px',
+                                        color: item.status === 'researching' ? '#facc15'
+                                            : item.status === 'ready' ? '#2dd4bf'
+                                                : item.status === 'locked' ? '#ef4444'
+                                                    : item.status === 'active' ? '#60a5fa'
+                                                        : '#64748b',
+                                        fontWeight: 900,
+                                        textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {item.status === 'researching' ? 'DECRYPTING'
+                                            : item.status === 'ready' ? 'READY'
+                                                : item.status === 'locked' ? 'ENCRYPTED'
+                                                    : item.status === 'active' ? 'ACTIVE'
+                                                        : 'BROKEN'}
+                                    </span>
+                                )}
+                                {item.status === 'researching' && hoveredSlotIdx !== idx && (item as any).researchFinishTime && (
                                     <span style={{
                                         fontSize: '7px', color: '#facc15', fontWeight: 900,
                                         fontFamily: 'monospace', textShadow: '0 0 5px #000'

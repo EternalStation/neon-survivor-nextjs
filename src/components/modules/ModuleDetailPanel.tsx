@@ -2,7 +2,7 @@ import React from 'react';
 import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/core/types';
 import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
-import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
+import { isBuffActive, activateBlueprint, scrapBlueprint } from '../../logic/upgrades/BlueprintLogic';
 import { ARENA_DATA, SECTOR_NAMES } from '../../logic/mission/MapLogic';
 import { EXTRACTION_MESSAGES } from '../../logic/mission/ExtractionLogic';
 import type { BestiaryEntry } from '../../data/BestiaryData';
@@ -142,6 +142,178 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                 setRecalibrateSlot(null);
             }
         }
+    };
+
+    const renderBlueprintPanel = (bp: any, gs: GameState, onUpd?: () => void) => {
+        const status = bp.status as string;
+        const cost = bp.cost ?? 0;
+        const canDeploy = gs.player.dust >= cost;
+        const alreadyActive = isBuffActive(gs, bp.type);
+
+        const findBpIdx = () => gs.inventory.findIndex((i: any) => i && i.isBlueprint && i.id === bp.id);
+
+        const handleDeploy = () => {
+            const idx = findBpIdx();
+            if (idx === -1) return;
+            if (activateBlueprint(gs, idx)) {
+                playSfx('upgrade-confirm');
+                onUpd?.();
+            }
+        };
+
+        const handleScrap = () => {
+            const idx = findBpIdx();
+            if (idx === -1) return;
+            scrapBlueprint(gs, idx);
+            playSfx('recycle');
+            onUpd?.();
+        };
+
+        const timeLeft = status === 'researching' && bp.researchFinishTime
+            ? Math.max(0, bp.researchFinishTime - gs.gameTime) : 0;
+        const endTime = gs.activeBlueprintBuffs?.[bp.type as import('../../logic/core/types').BlueprintType];
+        const charges = gs.activeBlueprintCharges?.[bp.type as import('../../logic/core/types').BlueprintType];
+        const activeTimeLeft = endTime ? Math.max(0, endTime - gs.gameTime) : 0;
+
+        return (
+            <div style={{ padding: '24px 28px', color: '#fff', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+                {/* HEADER */}
+                <div style={{ borderBottom: '1px solid rgba(59,130,246,0.4)', paddingBottom: '12px' }}>
+                    <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, letterSpacing: '3px', marginBottom: '4px' }}>ARCHIVE ANOMALY</div>
+                    <div style={{ fontSize: '26px', fontWeight: 900, lineHeight: 1.1 }}>{bp.name || 'ENCRYPTED DATASET'}</div>
+                    {bp.serial && <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace', marginTop: '4px' }}>ID: {bp.serial}</div>}
+                </div>
+
+                {/* DESCRIPTION */}
+                {bp.desc && status !== 'locked' && (
+                    <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6, borderLeft: '2px solid #3b82f6', paddingLeft: '12px', flexShrink: 0 }}>
+                        {bp.desc}
+                    </div>
+                )}
+
+                {/* STATUS BODY */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                    {/* LOCKED — needs decryption */}
+                    {status === 'locked' && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+                            <div style={{ border: '2px solid #3b82f6', borderRadius: '12px', padding: '20px', background: 'rgba(59,130,246,0.08)', boxShadow: '0 0 30px rgba(59,130,246,0.3)', position: 'relative', overflow: 'hidden' }}>
+                                <img src="/assets/Icons/Blueprint.png" style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 16px #3b82f6)' }} />
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(transparent, rgba(59,130,246,0.3), transparent)', animation: 'scan-vertical 2s infinite linear' }} />
+                            </div>
+                            <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '13px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
+                                RIGHT-CLICK TO BEGIN DECRYPTION
+                                <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* RESEARCHING — countdown */}
+                    {status === 'researching' && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                            <div style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 900, letterSpacing: '2px' }}>DECRYPTION IN PROGRESS</div>
+                            <div style={{ fontSize: '52px', color: '#fbbf24', fontWeight: 900, fontFamily: 'monospace', textShadow: '0 0 15px #fbbf24' }}>{timeLeft.toFixed(1)}s</div>
+                            <div style={{ width: '100%', maxWidth: '240px', height: '6px', background: 'rgba(251,191,36,0.1)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(251,191,36,0.2)' }}>
+                                <div style={{ height: '100%', background: '#fbbf24', width: `${Math.max(5, (1 - (timeLeft / 60)) * 100)}%`, boxShadow: '0 0 10px #fbbf24' }} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* READY — main deploy UI */}
+                    {status === 'ready' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {/* Cost row */}
+                            <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)', borderLeft: '3px solid #3b82f6', borderRadius: '6px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', marginBottom: '4px' }}>ACTIVATION COST</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '20px', height: '20px', filter: 'drop-shadow(0 0 4px #22d3ee)' }} />
+                                        <span style={{ fontSize: '28px', fontWeight: 900, color: canDeploy ? '#fff' : '#ef4444', textShadow: canDeploy ? '0 0 10px rgba(59,130,246,0.5)' : '0 0 10px rgba(239,68,68,0.5)' }}>{cost.toLocaleString()}</span>
+                                        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>DUST</span>
+                                    </div>
+                                    {!canDeploy && <div style={{ fontSize: '9px', color: '#ef4444', marginTop: '2px' }}>INSUFFICIENT DUST ({Math.floor(gs.player.dust).toLocaleString()} available)</div>}
+                                </div>
+                            </div>
+
+                            {/* DEPLOY button */}
+                            {alreadyActive ? (
+                                <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '4px', fontSize: '11px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>
+                                    ALREADY ACTIVE
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleDeploy}
+                                    disabled={!canDeploy}
+                                    style={{
+                                        padding: '14px', fontSize: '13px', fontWeight: 900, letterSpacing: '2px',
+                                        background: canDeploy ? 'linear-gradient(90deg, #1e3a8a, #1d4ed8)' : '#450a0a',
+                                        border: `1px solid ${canDeploy ? '#3b82f6' : '#ef4444'}`,
+                                        color: canDeploy ? '#fff' : '#fee2e2',
+                                        borderRadius: '4px', cursor: canDeploy ? 'pointer' : 'not-allowed',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                        transition: 'all 0.2s',
+                                        boxShadow: canDeploy ? '0 0 15px rgba(59,130,246,0.3)' : 'none',
+                                        fontFamily: 'Orbitron, sans-serif'
+                                    }}
+                                    onMouseEnter={(e) => { if (canDeploy) e.currentTarget.style.boxShadow = '0 0 25px rgba(59,130,246,0.6)'; }}
+                                    onMouseLeave={(e) => { if (canDeploy) e.currentTarget.style.boxShadow = '0 0 15px rgba(59,130,246,0.3)'; }}
+                                >
+                                    ⚡ DEPLOY PROTOCOL
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ACTIVE — show timer/charges */}
+                    {status === 'active' && (
+                        <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)', borderLeft: '3px solid #3b82f6', borderRadius: '6px', padding: '12px 16px' }}>
+                            {charges !== undefined ? (
+                                <div>
+                                    <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', marginBottom: '4px' }}>USES REMAINING</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{charges}<span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '5px' }}>/ 50</span></div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div style={{ fontSize: '9px', color: '#60a5fa', fontWeight: 900, letterSpacing: '2px', marginBottom: '4px' }}>TIME REMAINING</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{activeTimeLeft.toFixed(0)}s</div>
+                                    <div style={{ marginTop: '8px', height: '3px', background: 'rgba(59,130,246,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${bp.duration > 0 ? Math.min(100, (activeTimeLeft / bp.duration) * 100) : 100}%`, background: '#3b82f6', boxShadow: '0 0 6px #3b82f6', transition: 'width 0.5s linear' }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* BROKEN — recycle only */}
+                    {status === 'broken' && (
+                        <div style={{ background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.3)', borderLeft: '3px solid #64748b', borderRadius: '6px', padding: '10px 16px', fontSize: '10px', color: '#64748b', fontWeight: 900, letterSpacing: '2px' }}>
+                            PROTOCOL EXHAUSTED
+                        </div>
+                    )}
+
+                    {/* RECYCLE button — always visible except active */}
+                    {status !== 'active' && (
+                        <button
+                            onClick={handleScrap}
+                            style={{
+                                padding: '10px', fontSize: '11px', fontWeight: 900, letterSpacing: '1px',
+                                background: 'rgba(30,41,59,0.8)', border: '1px solid #334155',
+                                color: '#94a3b8', borderRadius: '4px', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                transition: 'all 0.2s', fontFamily: 'Orbitron, sans-serif'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.color = '#94a3b8'; }}
+                        >
+                            RECYCLE
+                            <span style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                +5 <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '12px', height: '12px' }} />
+                            </span>
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -383,31 +555,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     })()
                 ) : (hoveredItem && !movedItem && (!recalibrateSlot || hoveredItem.item !== recalibrateSlot)) ? (
                     // Move the hoveredItem logic here
-                    hoveredItem.item.isBlueprint && hoveredItem.item.status === 'locked' ? (
-                        <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
-                                <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
-                                <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
-                            </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
-                                <div style={{
-                                    border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
-                                    background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
-                                    <div style={{
-                                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                                        background: 'linear-gradient(transparent, rgba(59, 130, 246, 0.4), transparent)',
-                                        animation: 'scan-vertical 2s infinite linear'
-                                    }} />
-                                </div>
-                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
-                                    RIGHT-CLICK TO BEGIN DECRYPTION
-                                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
-                                </div>
-                            </div>
-                        </div>
+                    hoveredItem.item.isBlueprint ? (
+                        renderBlueprintPanel(hoveredItem.item, gameState, onUpdate)
                     ) : (
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
@@ -481,31 +630,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         />
                     </div>
                 ) : lockedItem ? (
-                    lockedItem.item.isBlueprint && lockedItem.item.status === 'locked' ? (
-                        <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
-                                <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
-                                <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
-                            </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
-                                <div style={{
-                                    border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
-                                    background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
-                                    <div style={{
-                                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                                        background: 'linear-gradient(transparent, rgba(59, 130, 246, 0.4), transparent)',
-                                        animation: 'scan-vertical 2s infinite linear'
-                                    }} />
-                                </div>
-                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
-                                    RIGHT-CLICK TO BEGIN DECRYPTION
-                                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
-                                </div>
-                            </div>
-                        </div>
+                    lockedItem.item.isBlueprint ? (
+                        renderBlueprintPanel(lockedItem.item, gameState, onUpdate)
                     ) : (
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />

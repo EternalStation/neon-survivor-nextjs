@@ -9,7 +9,7 @@ import { InventoryPanel } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
 import { getMeteoriteImage, getDustValue, PerkFilter, matchesFilter } from './modules/ModuleUtils';
-import { isBuffActive, researchBlueprint } from '../logic/upgrades/BlueprintLogic';
+import { isBuffActive, researchBlueprint, activateBlueprint } from '../logic/upgrades/BlueprintLogic';
 import type { BestiaryEntry } from '../data/BestiaryData';
 import { BlueprintBay } from './BlueprintBay';
 import { Blueprint } from '../logic/core/types';
@@ -113,6 +113,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [refresh, setRefresh] = useState(0);
 
     const hoverTimeout = useRef<number | null>(null);
+    // Ref storing the BlueprintBay's open-prompt fn, registered via onRegisterBlueprintClick
+    const blueprintClickRef = useRef<((bp: any) => void) | null>(null);
 
     // Reset Recycle Mode when menu closes (because component might stay mounted but return null)
     React.useEffect(() => {
@@ -371,6 +373,13 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const handleResearch = (idx: number) => {
         if (researchBlueprint(gameState, idx)) {
             setRefresh(p => p + 1);
+        }
+    };
+
+    const handleBlueprintActivate = (idx: number) => {
+        if (activateBlueprint(gameState, idx)) {
+            setRefresh(p => p + 1);
+            playSfx('upgrade-confirm');
         }
     };
 
@@ -941,6 +950,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             onSort={handleSortByRarity}
                             onToggleRecycle={() => setIsRecycleMode(!isRecycleMode)}
                             onResearch={handleResearch}
+                            onBlueprintActivate={handleBlueprintActivate}
+                            onBlueprintClick={(bp) => {
+                                if (blueprintClickRef.current) blueprintClickRef.current(bp);
+                            }}
                             recyclingAnim={recyclingAnim}
                             coreFilter={coreFilter}
                             setCoreFilter={setCoreFilter}
@@ -974,6 +987,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                 setDustErrorBlink(true);
                                 setTimeout(() => setDustErrorBlink(false), 1500);
                             }}
+                            onRegisterBlueprintClick={(fn) => { blueprintClickRef.current = fn; }}
                         />
                     </div>
 
@@ -1008,8 +1022,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         filter: 'drop-shadow(0 0 15px cyan)'
                     }}>
                         <img
-                            src={getMeteoriteImage(movedItem.item)}
-                            alt="moved"
+                            src={movedItem.item.isBlueprint
+                                ? '/assets/Icons/Blueprint.png'
+                                : getMeteoriteImage(movedItem.item)}
+                            alt="item"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
                         {movedItem.item.isCorrupted && (
