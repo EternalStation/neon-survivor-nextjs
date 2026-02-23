@@ -285,6 +285,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     player.curHp -= actualDmg;
                     player.damageTaken += actualDmg;
                     player.lastHitDamage = actualDmg;
+                    player.lastDamageTime = state.gameTime;
                     player.killerHp = e.hp;
                     player.killerMaxHp = e.maxHp;
                 }

@@ -383,7 +383,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     })()
                 ) : (hoveredItem && !movedItem && (!recalibrateSlot || hoveredItem.item !== recalibrateSlot)) ? (
                     // Move the hoveredItem logic here
-                    hoveredItem.item.isBlueprint ? (
+                    hoveredItem.item.isBlueprint && hoveredItem.item.status === 'locked' ? (
                         <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
                                 <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
@@ -481,9 +481,36 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         />
                     </div>
                 ) : lockedItem ? (
-                    <div style={{ flex: 1, overflowY: 'auto' }}>
-                        <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
-                    </div>
+                    lockedItem.item.isBlueprint && lockedItem.item.status === 'locked' ? (
+                        <div style={{ padding: '30px', color: '#fff', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ borderBottom: '1px solid #3b82f6', paddingBottom: '12px', marginBottom: '24px' }}>
+                                <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 900, letterSpacing: '4px' }}>ARCHIVE ANOMALY</div>
+                                <div style={{ fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>ENCRYPTED DATASET</div>
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', marginTop: '60px' }}>
+                                <div style={{
+                                    border: '2px solid #3b82f6', borderRadius: '12px', padding: '25px',
+                                    background: 'rgba(59, 130, 246, 0.1)', boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '96px', height: '96px', filter: 'drop-shadow(0 0 20px #3b82f6)' }} />
+                                    <div style={{
+                                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                        background: 'linear-gradient(transparent, rgba(59, 130, 246, 0.4), transparent)',
+                                        animation: 'scan-vertical 2s infinite linear'
+                                    }} />
+                                </div>
+                                <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
+                                    RIGHT-CLICK TO BEGIN DECRYPTION
+                                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <MeteoriteTooltip meteorite={lockedItem.item} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
+                        </div>
+                    )
                 ) : selectedBestiaryEnemy ? (
                     <BestiaryDetailView entry={selectedBestiaryEnemy} />
                 ) : extractionDialogActive ? (

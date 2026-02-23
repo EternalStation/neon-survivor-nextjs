@@ -9,6 +9,15 @@ import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
 
 export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1) {
+    // Universal damage detection for red blink effect
+    if ((window as any)._lastRenderedPlayerHp !== undefined) {
+        if (state.player.curHp < (window as any)._lastRenderedPlayerHp) {
+            // Check if damage actually happened (ignoring maxHp recalculation drops if any, but curHp drops usually mean damage)
+            state.player.lastDamageTime = state.gameTime;
+        }
+    }
+    (window as any)._lastRenderedPlayerHp = state.player.curHp;
+
     const { width, height } = ctx.canvas;
     const { camera } = state;
 

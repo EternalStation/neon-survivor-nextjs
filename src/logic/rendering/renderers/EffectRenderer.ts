@@ -680,6 +680,19 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
     if (state.unpauseDelay && state.unpauseDelay > 0 && state.unpauseMode === 'slow_motion') {
         // Text removed as requested by user - just the slow motion and flash remain
     }
+
+    // Damage Red Screen Blink
+    if (state.player.lastDamageTime !== undefined) {
+        const elapsedDamage = state.gameTime - state.player.lastDamageTime;
+        if (elapsedDamage < 0.2) { // 200 ms blink duration
+            const alpha = 1 - (elapsedDamage / 0.2);
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.25})`; // Max opacity of 0.25
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+        }
+    }
 }
 
 // Cache to avoid recreating gradient and fill every frame

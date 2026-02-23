@@ -898,6 +898,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
                         <InventoryPanel
                             inventory={gameState.inventory}
+                            gameTime={gameState.gameTime}
                             movedItem={movedItem}
                             onSocketUpdate={(type, index, item) => {
                                 if (movedItem && movedItem.source === 'recalibrate') {

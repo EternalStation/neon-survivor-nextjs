@@ -108,7 +108,7 @@ export function createBlueprint(type: BlueprintType): Blueprint {
         ...data,
         isBlueprint: true,
         researched: false,
-        status: 'ready'
+        status: 'locked'
     };
 }
 
@@ -128,7 +128,7 @@ export function dropBlueprint(state: GameState, type: BlueprintType, x: number, 
         blueprintType: type,
         name: data.name,
         researched: false,
-        status: 'ready',
+        status: 'locked',
         spawnedAt: state.gameTime,
         discoveredIn: 'BLUEPRINT ARCHIVE',
         perks: [],
@@ -155,7 +155,7 @@ export function trySpawnBlueprint(state: GameState, x: number, y: number) {
 
 export function researchBlueprint(state: GameState, inventoryIndex: number): boolean {
     const item = state.inventory[inventoryIndex];
-    if (!item || !item.isBlueprint) return false;
+    if (!item || !item.isBlueprint || item.status !== 'locked') return false;
 
     // Convert format if needed
     const blueprint: any = (item as any).blueprintType ? createBlueprint((item as any).blueprintType) : item;

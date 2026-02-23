@@ -6,6 +6,7 @@ import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
 
 interface InventoryPanelProps {
     inventory: (Meteorite | null)[];
+    gameTime: number;
     movedItem: { item: any, source: string, index: number } | null;
     onInventoryUpdate: (index: number, item: any) => void;
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
@@ -36,6 +37,7 @@ const ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
 
 export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     inventory,
+    gameTime,
     movedItem,
     onInventoryUpdate,
     onSocketUpdate,
@@ -60,6 +62,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     // State lifted to ModuleMenu for persistence
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [massRecycleCandidate, setMassRecycleCandidate] = useState<{ type: 'SELECTED' | 'GHOSTS', indices: number[] } | null>(null);
+    const [tick, setTick] = useState(0);
+
+    React.useEffect(() => {
+        const hasResearch = inventory.some(item => item?.isBlueprint && item.status === 'researching');
+        if (hasResearch) {
+            const interval = setInterval(() => {
+                setTick(t => t + 1);
+            }, 1000); // Update every second for the timer
+            return () => clearInterval(interval);
+        }
+    }, [inventory]);
 
     const toggleFilterValue = (key: 'quality' | 'rarity' | 'arena', value: string) => {
         const current = coreFilter[key] || ['All'];
@@ -262,19 +275,19 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             }}>
                                 <span style={{
                                     fontSize: '5px',
-                                    color: item.status === 'researching' ? '#facc15' : item.status === 'ready' ? '#2dd4bf' : '#60a5fa',
+                                    color: item.status === 'researching' ? '#facc15' : item.status === 'ready' ? '#2dd4bf' : item.status === 'locked' ? '#ef4444' : '#60a5fa',
                                     fontWeight: 900,
                                     textShadow: '0 0 4px rgba(0,0,0,0.8)',
                                     textTransform: 'uppercase'
                                 }}>
-                                    {item.status === 'researching' ? 'LOCKED' : item.status === 'ready' ? 'READY' : ''}
+                                    {item.status === 'researching' ? 'DECRYPTING' : item.status === 'ready' ? 'READY' : item.status === 'locked' ? 'ENCRYPTED' : ''}
                                 </span>
                                 {item.status === 'researching' && (item as any).researchFinishTime && (
                                     <span style={{
                                         fontSize: '7px', color: '#facc15', fontWeight: 900,
                                         fontFamily: 'monospace', textShadow: '0 0 5px #000'
                                     }}>
-                                        {Math.ceil(Math.max(0, ((item as any).researchFinishTime - Date.now() / 1000))).toFixed(0)}s
+                                        {Math.ceil(Math.max(0, ((item as any).researchFinishTime - gameTime))).toFixed(0)}s
                                     </span>
                                 )}
                             </div>

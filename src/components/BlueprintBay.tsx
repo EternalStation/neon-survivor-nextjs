@@ -461,6 +461,10 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     <div className="status-label active">DEPLOYED</div>
                                 )}
 
+                                {promptBlueprint.status === 'locked' && (
+                                    <div className="status-label" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid currentColor' }}>ENCRYPTED</div>
+                                )}
+
                                 {promptBlueprint.status === 'researching' && (
                                     <div className="status-label researching">DECRYPTING...</div>
                                 )}
@@ -485,7 +489,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     </>
                                 )}
 
-                                {(promptBlueprint.status === 'researching' || promptBlueprint.status === 'ready' || promptBlueprint.status === 'broken') && (
+                                {(promptBlueprint.status === 'locked' || promptBlueprint.status === 'researching' || promptBlueprint.status === 'ready' || promptBlueprint.status === 'broken') && (
                                     <button className="btn-recycle" onClick={handleScrap}>
                                         <span>RECYCLE</span>
                                         <div className="price-tag">

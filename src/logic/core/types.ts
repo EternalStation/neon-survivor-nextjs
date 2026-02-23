@@ -138,6 +138,7 @@ export interface Player {
     blackholeCooldown?: number; // Timestamp when next blackhole can be created (Event Horizon)
     deathCause?: string; // Reason for game over
     lastHitDamage?: number; // Final hit damage that killed the player
+    lastDamageTime?: number; // Timestamp when player took damage
     killerHp?: number; // HP of the enemy that killed the player
     killerMaxHp?: number; // Max HP of the enemy that killed the player
 
@@ -865,7 +866,7 @@ export interface Meteorite {
     isBlueprint?: boolean;
     blueprintType?: BlueprintType;
     name?: string; // For blueprints to show name instead of rarity
-    status?: 'ready' | 'active' | 'broken' | 'researching';
+    status?: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
     researched?: boolean;
     researchFinishTime?: number;
     researchRemainingTime?: number;
@@ -905,7 +906,7 @@ export interface Blueprint {
     duration: number; // in seconds
     isBlueprint: boolean;
     researched: boolean;
-    status: 'ready' | 'active' | 'broken' | 'researching';
+    status: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
     researchRemainingTime?: number;
     researchFinishTime?: number;
 }
