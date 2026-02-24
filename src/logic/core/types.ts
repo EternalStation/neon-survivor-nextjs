@@ -166,6 +166,7 @@ export interface Player {
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
+    rerolls: number;
 }
 
 export interface ClassMetric {
@@ -731,6 +732,7 @@ export interface GameState {
     portalTimer: number; // Cycles every 4 minutes (240s)
     portalOpenDuration: number; // 10s
     isUpgradeMenuOpen?: boolean;
+    shownUpgradeIds?: string[];
     portalBlockedByWorms?: boolean;
     transferTimer: number; // 3s delay during teleport
     nextArenaId: number | null; // Destination

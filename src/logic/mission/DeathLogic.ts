@@ -302,6 +302,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                 const speedBoost = 1.0;
                 const crimsonRiseDelay = 5000;
                 const now = state.gameTime * 1000;
+                const zombieSpd = 6.5; // Scaled to player speed
                 const zombie: Enemy = {
                     id: Math.random(),
                     type: e.type,
@@ -310,7 +311,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     size: e.size,
                     hp: Math.floor(e.maxHp * 0.5),
                     maxHp: Math.floor(e.maxHp * 0.5),
-                    spd: 1.92 * speedBoost,
+                    spd: zombieSpd,
                     boss: false,
                     bossType: 0,
                     bossAttackPattern: 0,
@@ -318,7 +319,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     dead: false,
                     shellStage: 0,
                     zombieTimer: now + crimsonRiseDelay,
-                    zombieSpd: 1.92 * speedBoost,
+                    zombieSpd: zombieSpd,
                     palette: ['#4ade80', '#22c55e', '#166534'], // Undead Green
                     pulsePhase: 0,
                     rotationPhase: 0,

@@ -30,7 +30,7 @@ export function spawnVoidBurrower(state: GameState, x: number, y: number, segmen
         size: 28, // Smaller head
         hp: finalHp,
         maxHp: finalHp,
-        spd: 1.6,
+        spd: state.player.speed * 0.63,
         boss: false, bossType: 0, bossAttackPattern: 0, lastAttack: state.gameTime, dead: false,
         shellStage: 2,
         palette: wormPalette,
@@ -318,7 +318,7 @@ function updateWormSegment(e: Enemy, state: GameState, step: number) {
 
     // Follow history of head
     // Each segment is spaced by ~30-45px
-    const historyIndex = e.wormSegmentIndex! * 9; // Increased from 6 for more elongated spacing
+    const historyIndex = e.wormSegmentIndex! * 6; // Reduced from 9 to keep segments tighter at variable speeds
     if (head.wormHistory && head.wormHistory[historyIndex]) {
         const target = head.wormHistory[historyIndex];
         // Move towards history point
@@ -345,29 +345,42 @@ export function handleVoidBurrowerDeath(state: GameState, deadUnit: Enemy, onEve
         prev.wormNextId = undefined;
     }
 
-    // 2. Find the NEXT ALIVE segment to promote to the new head
+    // 2. Count remaining segments and find the NEXT ALIVE segment to promote to the new head
+    let remainingSegments = 0;
     let nextToPromote = null;
     let scanId = deadUnit.wormNextId;
     while (scanId) {
         const candidate = state.enemies.find(s => s.id === scanId);
         if (!candidate) break;
-        if (!candidate.dead) {
-            nextToPromote = candidate;
-            break;
+        if (candidate.hp > 0 && !candidate.dead) {
+            if (!nextToPromote) nextToPromote = candidate;
+            remainingSegments++;
         }
         scanId = candidate.wormNextId;
     }
 
-    if (nextToPromote) {
+    if (nextToPromote && remainingSegments >= 3) {
         const isHeadDeath = deadUnit.wormRole === 'head';
         // Head death: same worm. Body death: Hydra Split (new worm).
         promoteToHead(state, nextToPromote, deadUnit, !isHeadDeath);
 
-        if (!isHeadDeath) {
-            // Specific Split logic: Spawn floating number and timer (already in promote if we want, but let's keep it here)
+        if (isHeadDeath) {
+            // Head death delay: 3 seconds to prevent spam
+            nextToPromote.wormPromotionTimer = state.gameTime + 3.0;
+        } else {
+            // Specific Split logic: 1.0s delay
             nextToPromote.wormPromotionTimer = state.gameTime + 1.0;
             console.log('[WORM] Segment destroyed. Tail promoted to new worm.');
-            spawnFloatingNumber(state, nextToPromote.x, nextToPromote.y, 'HYDRA SPLIT', '#ff0000', true);
+        }
+    } else if (nextToPromote) {
+        // Not enough segments to reform a head, orphan them and they effectively die.
+        let killId: number | undefined = nextToPromote.id;
+        while (killId) {
+            const candidate = state.enemies.find(s => s.id === killId);
+            if (!candidate) break;
+            const nextKillId = candidate.wormNextId;
+            handleEnemyDeath(state, candidate, onEvent);
+            killId = nextKillId;
         }
     }
 }

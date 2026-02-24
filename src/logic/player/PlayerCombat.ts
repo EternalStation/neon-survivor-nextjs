@@ -48,7 +48,7 @@ export function handlePlayerCombat(
             const enemiesInAura: Enemy[] = [];
 
             state.enemies.forEach(e => {
-                if (e.dead || e.isNeutral) return;
+                if (e.dead || e.isNeutral || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
 
                 const d = Math.hypot(e.x - player.x, e.y - player.y);
                 let tickDmg = 0;
@@ -122,7 +122,7 @@ export function handlePlayerCombat(
         let nearest: Enemy | null = null;
         let minDist = 800;
         state.enemies.forEach((e: Enemy) => {
-            if (e.dead || e.isNeutral || e.isZombie) return;
+            if (e.dead || e.isNeutral || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
             const d = Math.hypot(e.x - player.x, e.y - player.y);
             if (d < minDist) { minDist = d; nearest = e; }
         });
@@ -163,7 +163,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
     const kinLvl = getHexLevel(state, 'KineticBattery');
 
     state.enemies.forEach(e => {
-        if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground') return;
+        if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
         if (e.spawnGracePeriod && e.spawnGracePeriod > 0) return; // Boss just spawned, no collision yet
 
         const dToE = Math.hypot(e.x - player.x, e.y - player.y);
@@ -285,7 +285,9 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     player.curHp -= actualDmg;
                     player.damageTaken += actualDmg;
                     player.lastHitDamage = actualDmg;
-                    player.lastDamageTime = state.gameTime;
+                    if (state.gameTime - (player.lastDamageTime ?? -999) >= 1.5) {
+                        player.lastDamageTime = state.gameTime;
+                    }
                     player.killerHp = e.hp;
                     player.killerMaxHp = e.maxHp;
                 }
@@ -384,7 +386,7 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     let first: Enemy | null = null;
     let minD = Infinity;
     state.enemies.forEach(target => {
-        if (target.dead || target.isNeutral) return;
+        if (target.dead || target.isNeutral || target.wormBurrowState === 'underground') return;
         const d = Math.hypot(target.x - sx, target.y - sy);
         if (d < minD) { minD = d; first = target; }
     });
@@ -397,7 +399,7 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
             let best: Enemy | null = null;
             let bestD = Infinity;
             state.enemies.forEach((cand: Enemy) => {
-                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id)) return;
+                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
                 const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
                 if (d < bestD) { bestD = d; best = cand; }
             });

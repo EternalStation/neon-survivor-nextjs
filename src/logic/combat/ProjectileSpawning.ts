@@ -45,7 +45,7 @@ export function triggerShockwave(state: GameState, player: Player, angle: number
 
         // Damage Logic (Instant Hitscan for gameplay feel, visualization catches up)
         state.enemies.forEach(e => {
-            if (e.dead || e.isFriendly || e.isZombie) return;
+            if (e.dead || e.isFriendly || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
             const dx = e.x - player.x;
             const dy = e.y - player.y;
             const dist = Math.hypot(dx, dy);
@@ -164,7 +164,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
             // Range-limited Targeting Logic (1000px)
             const maxRange = 1000;
             const liveEnemies = state.enemies.filter(e => {
-                if (e.dead || e.isFriendly) return false;
+                if (e.dead || e.isFriendly || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return false;
                 const d = Math.hypot(e.x - x, e.y - y);
                 return d <= maxRange;
             });
@@ -373,7 +373,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 }
 
 export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
-    const spd = 6;
+    const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED;
 
     // Always use the bright color from the current 15-minute era palette
     const minutes = state.gameTime / 60;

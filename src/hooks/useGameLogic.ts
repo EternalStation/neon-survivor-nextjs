@@ -8,6 +8,7 @@ import { updateEnemies } from '../logic/enemies/EnemyLogic';
 import { updateDirector } from '../logic/enemies/DirectorLogic';
 import { updateExtraction } from '../logic/mission/ExtractionLogic';
 import { updateBlueprints, isBuffActive } from '../logic/upgrades/BlueprintLogic';
+import { handleEnemyDeath } from '../logic/mission/DeathLogic';
 import { updateProjectiles } from '../logic/combat/ProjectileLogic';
 import { updateLoot } from '../logic/mission/LootLogic';
 import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic';
@@ -252,7 +253,7 @@ export function useGameLogic({
             if (effect.type === 'puddle') {
                 const range = effect.radius;
                 state.enemies.forEach(e => {
-                    if (e.dead) return;
+                    if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                     const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
                     if (dist < range + e.size) {
                         const slowAmt = effect.level >= 4 ? 0.40 : 0.20;
@@ -276,7 +277,7 @@ export function useGameLogic({
                     const pDmg = calcStat(state.player.dmg);
                     const dmg = pDmg * (effect.level >= 4 ? 0.35 : 0.25);
                     state.enemies.forEach(e => {
-                        if (e.dead) return;
+                        if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                         if (Math.hypot(e.x - effect.x, e.y - effect.y) < range) {
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
@@ -296,8 +297,10 @@ export function useGameLogic({
                 const bossDps = 0.10;  // 10% MaxHP/sec
                 const minionCoreRadius = 80; // Center kill zone
 
+                const damagedWorms = new Set<string>();
+
                 state.enemies.forEach(e => {
-                    if (e.dead) return;
+                    if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                     // Elliptical collision to match visual perspective (0.6 squashed Y)
                     // User Request: "consume radius exact same as void radius"
                     const dx = e.x - effect.x;
@@ -322,22 +325,27 @@ export function useGameLogic({
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
+                            if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                         } else if (e.isElite || e.isRare) {
                             const dmg = (e.maxHp * eliteDps) * step;
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
+                            if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                         } else {
-                            // Normal Enemies
+                            // Normal Enemies & Worm Segments
                             if (dist < minionCoreRadius) {
                                 // Instantly consume
                                 e.hp = 0;
                                 state.player.damageDealt += e.maxHp;
                                 spawnParticles(state, e.x, e.y, '#8b5cf6', 5, 2, 30, 'void');
-                            } else {
-                                // Drag damage
+                                // Trigger immediate death
+                                handleEnemyDeath(state, e, eventHandler);
+                            } else if (e.shape !== 'worm') {
+                                // Drag damage (Skip for Worms to prevent periodic damage numbers/drain)
                                 const dmg = (e.maxHp * 0.5) * step; // 50% HP/sec drag dmg
                                 e.hp -= dmg;
+                                if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                             }
                         }
                     }
@@ -352,7 +360,7 @@ export function useGameLogic({
                     const dmg = pDmg * 1.5; // 150% Damage
 
                     state.enemies.forEach(e => {
-                        if (e.dead) return;
+                        if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                         const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
                         if (dist < range) {
                             e.hp -= dmg;

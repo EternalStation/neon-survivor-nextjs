@@ -262,7 +262,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             const MAX_HITS_PER_FRAME = 5; // Cap to prevent lag spikes processing too many hits?
 
             for (const e of nearbyEnemies) {
-                if (e.dead || e.hp <= 0 || e.isFriendly || e.isZombie) continue;
+                if (e.dead || e.isFriendly || e.isZombie || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
 
                 const dist = Math.hypot(e.x - b.x, e.y - b.y);
                 const ringWidth = 20; // Visual width approximation
@@ -321,7 +321,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             // Ignore friendly zombies or dead/immune stuff
             // Friendly zombies shouldn't be hit by player bullets? Usually yes.
             // "on your side".
-            if (e.dead || e.hp <= 0 || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || e.soulSuckActive) continue;
+            if (e.dead || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || e.soulSuckActive || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
 
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
             const hitRadius = e.size + 10;
@@ -367,6 +367,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 if (b.slowPercent) {
                     const duration = b.freezeDuration || 2.0;
                     e.slowUntil = now + duration;
+                    // User Request: "not stop movement, speed * 0.7".
+                    // Use Math.max to prevent stacking into a full freeze from mist.
                     e.slowPercentVal = Math.max(e.slowPercentVal || 0, b.slowPercent);
 
                     // Visual Frost Effect (Blue Particles)
@@ -467,11 +469,11 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                     const targets = state.spatialGrid.query(b.x, b.y, b.explodeRadius);
                     for (const t of targets) {
-                        if (t.dead || t.isFriendly) continue;
+                        if (t.dead || t.isFriendly || (t.wormPromotionTimer && t.wormPromotionTimer > state.gameTime)) continue;
                         const d = Math.hypot(t.x - b.x, t.y - b.y);
                         if (d <= b.explodeRadius) {
                             // Freeze!
-                            t.frozen = (t.frozen || 0) + (b.freezeDuration || 3.0) * 60; // 3s frame duration
+                            t.frozen = (t.frozen || 0) + (b.freezeDuration || 3.0);
                             spawnFloatingNumber(state, t.x, t.y, "FREEZE", '#ffffff', true, '#000000');
                         }
                     }
@@ -480,19 +482,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     continue; // Stop processing this bullet
                 }
 
-                if (b.slowPercent) {
-                    const duration = b.freezeDuration || 2.0;
-                    e.slowUntil = now + duration;
 
-                    // Additive Slow (capped at 100%, but no freeze from mist)
-                    const currentSlow = e.slowPercentVal || 0;
-                    let newSlow = Math.min(1.0, currentSlow + b.slowPercent); // Cap at 100%
-
-                    e.slowPercentVal = newSlow;
-
-                    // Visual Frost Effect (Blue Particles)
-                    spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 3);
-                }
                 if (b.isNanite) {
                     // Nanites apply infection without impact damage
                     damageAmount = 0;
@@ -617,6 +607,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         e.lastHitTime = state.gameTime;
                         owner.damageDealt += damageAmount;
                         b.hits.add(e.id);
+
+                        if (e.hp <= 0 && !e.dead) {
+                            handleEnemyDeath(state, e, onEvent);
+                        }
                     }
 
                     // Hyper-Pulse infinite pierce

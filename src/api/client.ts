@@ -1,4 +1,4 @@
-// API Client for Neon Survivor Backend
+// API Client for Void Nexus Backend
 
 const API_URL = '/api';
 

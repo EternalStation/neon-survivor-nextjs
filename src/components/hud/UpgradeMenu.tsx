@@ -7,10 +7,11 @@ import { UpgradeCard } from '../UpgradeCard';
 interface UpgradeMenuProps {
     upgradeChoices: UpgradeChoice[];
     onUpgradeSelect: (c: UpgradeChoice) => void;
+    onUpgradeReroll?: () => void;
     gameState: GameState;
 }
 
-export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgradeSelect, gameState }) => {
+export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgradeSelect, onUpgradeReroll, gameState }) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     // Initial Reset
@@ -62,7 +63,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
 
             <h2 style={{
                 position: 'absolute',
-                top: '40px',
+                top: '20px',
                 color: '#FFFFFF',
                 fontSize: 32,
                 fontFamily: 'Orbitron, sans-serif',
@@ -84,7 +85,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                 zIndex: 20,
                 perspective: '1000px',
                 gap: '60px',
-                marginTop: '-150px' // Shifted up from -40px
+                marginTop: '-40px' // Shifted down further
             }}>
 
                 {upgradeChoices.map((c, i) => (
@@ -104,6 +105,58 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                     </div>
                 ))}
             </div>
+
+            {gameState.player.rerolls > 0 && onUpgradeReroll && !upgradeChoices[0].isSpecial && (
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginTop: '50px',
+                    zIndex: 20,
+                    width: '100%'
+                }}>
+                    <button
+                        onClick={onUpgradeReroll}
+                        style={{
+                            padding: '8px 20px',
+                            background: 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))',
+                            border: '1px solid rgba(56, 189, 248, 0.5)',
+                            borderBottom: '2px solid #38bdf8',
+                            boxShadow: '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)',
+                            color: '#38bdf8',
+                            fontFamily: 'Orbitron, sans-serif',
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            textTransform: 'uppercase',
+                            letterSpacing: 3,
+                            borderRadius: '6px',
+                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'linear-gradient(45deg, rgba(30, 41, 59, 1), rgba(56, 189, 248, 0.2))';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.2)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.borderColor = '#38bdf8';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
+                        }}
+                        onMouseDown={(e) => {
+                            e.currentTarget.style.transform = 'translateY(2px)';
+                        }}
+                        onMouseUp={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
+                    >
+                        REROLL UPGRADES ({gameState.player.rerolls})
+                    </button>
+                </div>
+            )}
 
             {gameState.rareRewardActive && (
                 <div className="glitch-text" style={{

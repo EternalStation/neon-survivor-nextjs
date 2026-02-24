@@ -1435,13 +1435,22 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
         }
 
-        // ELITE HP BAR
-        if (e.isElite && e.maxHp > 0 && e.hp < e.maxHp) {
+        // ELITE / WORM HP BAR
+        if ((e.isElite || e.shape === 'worm') && e.maxHp > 0 && e.hp < e.maxHp) {
             ctx.save();
             ctx.rotate(-(e.rotationPhase || 0)); // Counter-rotate so bar is horizontal
-            const barWidth = e.size * 2.5;
-            const barHeight = 4;
-            const yOffset = -e.size * 1.8;
+            let barWidth = e.size * 2.5;
+            let barHeight = 4;
+            let yOffset = -e.size * 1.8;
+
+            if (e.shape === 'worm') {
+                if (e.wormRole === 'head') {
+                    barWidth = e.size * 3.0; // Larger for head
+                } else {
+                    barWidth = e.size * 1.5; // Smaller for segments
+                    barHeight = 2.5;
+                }
+            }
 
             // BG
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';

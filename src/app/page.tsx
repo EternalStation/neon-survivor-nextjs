@@ -8,7 +8,7 @@ import { SettingsMenu } from '@/components/SettingsMenu';
 import { MainMenu } from '@/components/MainMenu';
 import { DeathScreen } from '@/components/DeathScreen';
 import { MobileControls } from '@/components/MobileControls';
-import { AudioWidget } from '@/components/AudioWidget';
+
 import AuthScreen from '@/components/AuthScreen';
 import Leaderboard from '@/components/Leaderboard';
 import { ModuleMenu } from '@/components/ModuleMenu';
@@ -190,6 +190,7 @@ export default function Home() {
                     gameState={hook.gameState}
                     upgradeChoices={hook.upgradeChoices}
                     onUpgradeSelect={hook.handleUpgradeSelect}
+                    onUpgradeReroll={hook.handleUpgradeReroll}
                     gameOver={hook.gameOver}
                     onRestart={handleRestart}
                     bossWarning={hook.bossWarning}
@@ -234,7 +235,6 @@ export default function Home() {
             {hook.showSettings && (
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20000, pointerEvents: 'auto' }}>
                 <SettingsMenu onClose={() => hook.setShowSettings(false)} onRestart={handleRestart} onQuit={handleQuit} />
-                <AudioWidget />
               </div>
             )}
 
@@ -270,6 +270,7 @@ export default function Home() {
                 gameState={hook.gameState}
                 upgradeChoices={hook.upgradeChoices}
                 onUpgradeSelect={hook.handleUpgradeSelect}
+                onUpgradeReroll={hook.handleUpgradeReroll}
                 gameOver={hook.gameOver}
                 onRestart={handleRestart}
                 bossWarning={hook.bossWarning}

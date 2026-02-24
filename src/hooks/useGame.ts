@@ -70,6 +70,7 @@ export function useGameLoop(gameStarted: boolean) {
     const {
         restartGame,
         handleUpgradeSelect,
+        handleUpgradeReroll,
         handleLegendarySelect,
         handleModuleSocketUpdate,
         updateInventorySlot,
@@ -404,6 +405,7 @@ export function useGameLoop(gameStarted: boolean) {
         gameState: gameState.current,
         upgradeChoices,
         handleUpgradeSelect,
+        handleUpgradeReroll,
         gameOver,
         restartGame,
         bossWarning,

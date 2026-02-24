@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/types';
 import { createInitialGameState } from '../logic/core/GameState';
-import { applyUpgrade } from '../logic/upgrades/UpgradeLogic';
+import { applyUpgrade, spawnUpgrades } from '../logic/upgrades/UpgradeLogic';
 import { syncLegendaryHex, applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { calcStat } from '../logic/utils/MathUtils';
@@ -111,6 +111,17 @@ export function useGameUIHandlers({
     const handleUpgradeSelect = useCallback((choice: UpgradeChoice) => {
         applyUpgrade(gameState.current, choice);
         setUpgradeChoices(null);
+    }, [gameState, setUpgradeChoices]);
+
+    const handleUpgradeReroll = useCallback(() => {
+        if (gameState.current.player.rerolls > 0) {
+            gameState.current.player.rerolls--;
+            // Pass true to bypass standard tier logic if we just want a fresh roll
+            // Wait, spawnUpgrades second arg is isAnomaly. false is usually correct.
+            const choices = spawnUpgrades(gameState.current, false);
+            setUpgradeChoices(choices);
+            playSfx('reroll');
+        }
     }, [gameState, setUpgradeChoices]);
 
     const handleLegendarySelect = useCallback((selection: LegendaryHex) => {
@@ -248,6 +259,7 @@ export function useGameUIHandlers({
     return {
         restartGame,
         handleUpgradeSelect,
+        handleUpgradeReroll,
         handleLegendarySelect,
         handleModuleSocketUpdate,
         updateInventorySlot,

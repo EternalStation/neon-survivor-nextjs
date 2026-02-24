@@ -57,6 +57,10 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 if (gameState.current.showModuleMenu || gameState.current.showBossSkillDetail) {
                     return;
                 }
+                if (gameState.current.showStats) {
+                    setShowStats(false);
+                    return;
+                }
                 setShowSettings(prev => !prev);
                 return;
             }

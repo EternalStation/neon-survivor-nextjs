@@ -38,7 +38,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }: AuthScreenProps) {
         <div className="auth-screen">
             <div className="auth-container">
                 <div className="auth-header">
-                    <h1 className="auth-title">NEON SURVIVOR</h1>
+                    <h1 className="auth-title">VOID NEXUS</h1>
                     <p className="auth-subtitle">Join the Leaderboard</p>
                 </div>
 

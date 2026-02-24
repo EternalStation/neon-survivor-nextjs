@@ -1,4 +1,5 @@
 import type { GameState } from '../../core/types';
+import { calcStat } from '../../utils/MathUtils';
 
 export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameState) {
     state.areaEffects.forEach(effect => {
@@ -681,16 +682,64 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
         // Text removed as requested by user - just the slow motion and flash remain
     }
 
-    // Damage Red Screen Blink
+    // Damage Danger Vignette
+    // Only visible when player HP is at or below 50%.
+    // Fades in gently from 50% HP, reaches full intensity at 20% HP.
+    // On-hit flash has a 1.5s cooldown to prevent epileptic blinking.
+    const maxHp = calcStat(state.player.hp);
+    const hpRatio = Math.max(0, Math.min(1, state.player.curHp / Math.max(1, maxHp)));
+
+    if (hpRatio <= 0.5) {
+        // Ambient persistent danger overlay
+        // 0.5 -> 0.2 hp:  opacity ramps from 0.0 to 0.15
+        // 0.2 -> 0.0 hp:  opacity ramps from 0.15 to 0.30
+        let ambientAlpha: number;
+        if (hpRatio > 0.2) {
+            // 50% to 20%: light vignette, scales 0..0.15
+            ambientAlpha = (0.5 - hpRatio) / 0.3 * 0.15;
+        } else {
+            // 20% to 0%: strong vignette, scales 0.15..0.30
+            ambientAlpha = 0.15 + (0.2 - hpRatio) / 0.2 * 0.15;
+        }
+
+        // Slight slow pulse below 20% to signal critical danger (no fast flicker)
+        if (hpRatio <= 0.2) {
+            const pulseFreq = 1.2; // Hz - very slow
+            const pulse = 0.5 + 0.5 * Math.sin(state.gameTime * pulseFreq * Math.PI * 2);
+            ambientAlpha *= (0.7 + 0.3 * pulse);
+        }
+
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // Radial gradient: edges are red, center is clear
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.max(width, height) * 0.75;
+        const dangerGrad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+        dangerGrad.addColorStop(0, 'rgba(220, 20, 20, 0)');
+        dangerGrad.addColorStop(1, `rgba(220, 20, 20, ${ambientAlpha})`);
+        ctx.fillStyle = dangerGrad;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    // On-hit flash (rate-limited to max once per 1.5s to prevent epileptic blinking)
     if (state.player.lastDamageTime !== undefined) {
         const elapsedDamage = state.gameTime - state.player.lastDamageTime;
-        if (elapsedDamage < 0.2) { // 200 ms blink duration
-            const alpha = 1 - (elapsedDamage / 0.2);
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.25})`; // Max opacity of 0.25
-            ctx.fillRect(0, 0, width, height);
-            ctx.restore();
+        const FLASH_DURATION = 0.35; // seconds
+        if (elapsedDamage < FLASH_DURATION) {
+            // Only trigger visible flash if HP is at or below 50%
+            if (hpRatio <= 0.5) {
+                const flashProgress = 1 - (elapsedDamage / FLASH_DURATION);
+                // Max flash intensity scales up as HP drops
+                const maxFlash = hpRatio <= 0.2 ? 0.22 : 0.12;
+                const flashAlpha = flashProgress * maxFlash;
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.fillStyle = `rgba(255, 20, 20, ${flashAlpha})`;
+                ctx.fillRect(0, 0, width, height);
+                ctx.restore();
+            }
         }
     }
 }

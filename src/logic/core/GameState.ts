@@ -11,7 +11,7 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         x: ARENA_CENTERS[startingArenaId]?.x || 0,
         y: ARENA_CENTERS[startingArenaId]?.y || 0,
         size: 10,
-        speed: 5.3,
+        speed: 6.5,
         dust: 0,
         isotopes: 0,
         hp: { base: 150, flat: 0, mult: 0 },
@@ -45,7 +45,8 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         kineticShieldTimer: 0,
         aigisRings: {},
         spawnTimer: GAME_CONFIG.PLAYER.SPAWN_DURATION,
-        inventory: Array(30).fill(null)
+        inventory: Array(30).fill(null),
+        rerolls: 3
     };
 
     if (selectedClass) {
@@ -251,7 +252,8 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
             hasOpenedStats: false
         },
         firstMeteoriteSpawned: false,
-        lastPlacement: null
+        lastPlacement: null,
+        shownUpgradeIds: []
     };
 
     // User Request: Ensure turrets are in the arena the player entered (even at start)

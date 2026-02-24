@@ -23,7 +23,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         state.lastArena = state.currentArena;
         state.pois.forEach(poi => {
             if (poi.arenaId === state.currentArena && poi.type !== 'turret') {
-                poi.respawnTimer = 30;
+                poi.respawnTimer = 0;
                 poi.active = (poi.type === 'anomaly');
                 poi.progress = 0;
                 poi.activationProgress = 0;
@@ -373,7 +373,7 @@ export function handleLegionAndMerges(state: GameState, step: number) {
                 size: 20 * shapeDef.sizeMult,
                 hp: finalHp,
                 maxHp: finalHp,
-                spd: 2.4 * shapeDef.speedMult,
+                spd: state.player.speed * shapeDef.speedMult,
                 boss: false,
                 bossType: 0,
                 bossAttackPattern: 0,

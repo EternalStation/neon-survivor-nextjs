@@ -118,11 +118,13 @@ export function updateSingleEnemy(
 
     if (e.shape === 'worm') {
         updateVoidBurrower(e, state, step, onEvent);
+        if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
         return;
     }
 
     if (e.frozen && e.frozen > 0) {
         e.frozen -= 1 / 60;
+        if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
         return;
     }
 
@@ -287,7 +289,6 @@ export function updateSingleEnemy(
     let pushY = e.lastPushY || 0;
 
     let currentSpd = e.spd;
-    if (e.shape === 'circle') currentSpd *= 1.5;
     if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
     if (e.slowFactor) {
         currentSpd *= (1 - e.slowFactor);

@@ -243,10 +243,10 @@ export function updateTurrets(state: GameState, step: number) {
                         turret.rotation = angle;
                         turret.lastShot = now;
 
-                        const dmgPct = 0.10 + (level - 1) * 0.05; // 10% + 5% per level
+                        const dmgPct = 0.10 + (level - 1) * 0.05; // 10% base + 5% per level (including 7+)
                         const damage = Math.ceil(estBaseHP * dmgPct * delay); // Per shot
 
-                        const slowPct = 0.50 + (level - 1) * 0.05; // 50% + 5% per level (slow, not freeze)
+                        const slowPct = 0.70; // 70% Slow (Enemies move at 30% speed) as requested
 
                         // Cone check for Lvl 6
                         const coneAngle = level >= 6 ? (120 * Math.PI / 180) : (30 * Math.PI / 180);

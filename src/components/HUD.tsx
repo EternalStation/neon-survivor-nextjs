@@ -22,6 +22,7 @@ interface HUDProps {
     gameState: GameState;
     upgradeChoices: UpgradeChoice[] | null;
     onUpgradeSelect: (c: UpgradeChoice) => void;
+    onUpgradeReroll?: () => void;
     gameOver: boolean;
     onRestart: () => void;
     bossWarning: number | null;
@@ -39,7 +40,7 @@ interface HUDProps {
 }
 
 export const HUD: React.FC<HUDProps> = ({
-    gameState, upgradeChoices, onUpgradeSelect, gameOver, onRestart, bossWarning,
+    gameState, upgradeChoices, onUpgradeSelect, onUpgradeReroll, gameOver, onRestart, bossWarning,
     fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail,
     isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime, onTriggerPortal
 }) => {
@@ -230,6 +231,7 @@ export const HUD: React.FC<HUDProps> = ({
                 <UpgradeMenu
                     upgradeChoices={upgradeChoices}
                     onUpgradeSelect={onUpgradeSelect}
+                    onUpgradeReroll={onUpgradeReroll}
                     gameState={gameState}
                 />
             )}

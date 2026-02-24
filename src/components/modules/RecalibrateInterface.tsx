@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { GameState, Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS, matchesPerk } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
 
@@ -22,6 +22,8 @@ interface RecalibrateInterfaceProps {
     onToggleLock: (idx: number) => void;
     recalibrateFilters: Record<number, PerkFilter>;
     setRecalibrateFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
+    // Called from parent after each auto-reroll to let parent re-apply auto-lock logic
+    // (same as the normal onRerollType callback path)
 }
 
 export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
@@ -48,8 +50,43 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     const [isSpinningRange, setIsSpinningRange] = useState(false);
     const [spinningLevel, setSpinningLevel] = useState<number | null>(null); // null means all or none
 
+    // Auto-reroll state
+    const [isAutoRolling, setIsAutoRolling] = useState(false);
+    const autoRollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Track roll count for the pulsing display
+    const [autoRollCount, setAutoRollCount] = useState(0);
+
     // Local state for Accordion Behavior
     const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    /** True when at least one perk filter is active */
+    const hasActiveFilters = Object.values(recalibrateFilters).some(f => f?.active);
+
+    /** Check whether all currently-active filters are satisfied by the item's current perks */
+    const allFiltersSatisfied = useCallback(() => {
+        return item.perks.every((p, idx) => {
+            const lvl = idx + 1;
+            const filter = recalibrateFilters[lvl];
+            if (!filter || !filter.active) return true; // not required
+            return matchesPerk(p, lvl, filter);
+        });
+    }, [item.perks, recalibrateFilters]);
+
+    /** Stop the auto-roll loop */
+    const stopAutoRoll = useCallback(() => {
+        if (autoRollIntervalRef.current !== null) {
+            clearInterval(autoRollIntervalRef.current);
+            autoRollIntervalRef.current = null;
+        }
+        setIsAutoRolling(false);
+        setIsSpinningPerks(false);
+    }, []);
+
+    // Clean up interval on unmount
+    useEffect(() => {
+        return () => stopAutoRoll();
+    }, [stopAutoRoll]);
 
     const updateFilter = (lvl: number, updates: Partial<PerkFilter>) => {
         setRecalibrateFilters(prev => {
@@ -613,38 +650,103 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 <div style={{ marginTop: '-5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            disabled={!canAffordRerollType || isSpinningPerks || isSpinningRange}
+                            disabled={isSpinningRange || (!isAutoRolling && (!canAffordRerollType || isSpinningPerks))}
                             onClick={() => {
-                                setIsSpinningPerks(true);
-                                playSfx('reroll');
-                                setTimeout(() => {
-                                    onRerollType(lockedIndices);
-                                    setIsSpinningPerks(false);
-                                }, 1000);
+                                if (isAutoRolling) {
+                                    // ── STOP ──────────────────────────────────
+                                    stopAutoRoll();
+                                    return;
+                                }
+
+                                if (hasActiveFilters) {
+                                    // ── START AUTO-ROLL ───────────────────────
+                                    if (!canAffordRerollType) return;
+
+                                    setIsAutoRolling(true);
+                                    setIsSpinningPerks(true);
+                                    setAutoRollCount(0);
+
+                                    // Perform first roll immediately
+                                    const doRoll = () => {
+                                        // Re-check affordability inside the interval
+                                        const cost = getRerollTypeCost(item, lockedIndices.length);
+                                        if (gameState.player.isotopes < cost) {
+                                            stopAutoRoll();
+                                            return;
+                                        }
+                                        playSfx('reroll');
+                                        onRerollType(lockedIndices);
+                                        setAutoRollCount(c => c + 1);
+
+                                        // After parent updates perks, check if all filters match
+                                        // Use a small delay so React state has settled
+                                        setTimeout(() => {
+                                            if (allFiltersSatisfied()) {
+                                                stopAutoRoll();
+                                                playSfx('upgrade-confirm');
+                                            }
+                                        }, 50);
+                                    };
+
+                                    doRoll();
+                                    autoRollIntervalRef.current = setInterval(doRoll, 1000);
+                                } else {
+                                    // ── NORMAL SINGLE ROLL (no filters) ──────
+                                    setIsSpinningPerks(true);
+                                    playSfx('reroll');
+                                    setTimeout(() => {
+                                        onRerollType(lockedIndices);
+                                        setIsSpinningPerks(false);
+                                    }, 1000);
+                                }
                             }}
                             style={{
                                 flex: 1,
                                 height: '44px',
-                                background: canAffordRerollType ? 'rgba(168, 85, 247, 0.05)' : 'rgba(51, 65, 85, 0.05)',
-                                color: canAffordRerollType ? '#d8b4fe' : 'rgba(255,255,255,0.2)',
+                                background: isAutoRolling
+                                    ? 'rgba(239, 68, 68, 0.12)'
+                                    : canAffordRerollType ? 'rgba(168, 85, 247, 0.05)' : 'rgba(51, 65, 85, 0.05)',
+                                color: isAutoRolling
+                                    ? '#fca5a5'
+                                    : canAffordRerollType ? '#d8b4fe' : 'rgba(255,255,255,0.2)',
                                 borderWidth: '1px',
                                 borderStyle: 'solid',
-                                borderColor: canAffordRerollType ? '#a855f7' : 'rgba(255,255,255,0.1)',
+                                borderColor: isAutoRolling
+                                    ? '#ef4444'
+                                    : canAffordRerollType ? '#a855f7' : 'rgba(255,255,255,0.1)',
                                 borderRadius: '4px',
                                 fontSize: '11px', fontWeight: 900, letterSpacing: '1.5px',
-                                cursor: canAffordRerollType ? 'pointer' : 'not-allowed',
+                                cursor: (isAutoRolling || canAffordRerollType) ? 'pointer' : 'not-allowed',
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                 position: 'relative',
                                 overflow: 'hidden',
                                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px'
                             }}
-                            onMouseEnter={(e) => { if (canAffordRerollType) { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'; e.currentTarget.style.borderColor = '#c084fc'; } }}
-                            onMouseLeave={(e) => { if (canAffordRerollType) { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.05)'; e.currentTarget.style.borderColor = '#a855f7'; } }}
+                            onMouseEnter={(e) => {
+                                if (isAutoRolling) { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'; return; }
+                                if (canAffordRerollType) { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'; e.currentTarget.style.borderColor = '#c084fc'; }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (isAutoRolling) { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; return; }
+                                if (canAffordRerollType) { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.05)'; e.currentTarget.style.borderColor = '#a855f7'; }
+                            }}
                         >
-                            <span style={{ fontSize: '12px' }}>REROLL PERKS</span>
-                            <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX</span>
-                            {canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
-                            {isSpinningPerks && <div style={{ position: 'absolute', inset: 0, background: 'rgba(168, 85, 247, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
+                            {isAutoRolling ? (
+                                <>
+                                    <span style={{ fontSize: '11px' }}>⏹ STOP AUTO-ROLL</span>
+                                    <span style={{ fontSize: '7px', opacity: 0.7, fontFamily: 'monospace' }}>
+                                        ROLL #{autoRollCount} · {rerollTypeCost.toLocaleString()} FLUX/ea
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span style={{ fontSize: '12px' }}>{hasActiveFilters ? '⟳ AUTO-REROLL' : 'REROLL PERKS'}</span>
+                                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX{hasActiveFilters ? ' · SEEKS FILTER' : ''}</span>
+                                </>
+                            )}
+                            {!isAutoRolling && canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
+                            {isAutoRolling && <div style={{ position: 'absolute', inset: 0, background: 'rgba(239, 68, 68, 0.08)', animation: 'pulse-fast 0.5s infinite alternate' }} />}
+                            {isSpinningPerks && !isAutoRolling && <div style={{ position: 'absolute', inset: 0, background: 'rgba(168, 85, 247, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
 
                         <button

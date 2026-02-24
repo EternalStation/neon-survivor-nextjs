@@ -4,7 +4,6 @@
 export const GAME_CONFIG = {
     // --- PLAYER ---
     PLAYER: {
-        BASE_SPEED: 5.5, // Derived from PlayerLogic (implicit) but good to explicit if needed
         HITBOX_RADIUS: 64,
         WALL_BOUNCE_SPEED: 37.5,
         WALL_DAMAGE_PERCENT: 0.10, // 10% max HP
@@ -22,7 +21,7 @@ export const GAME_CONFIG = {
 
         // Rare / Special
         SNITCH_HP: 1,
-        SNITCH_SPEED_MULT: 0.8, // Relative to Player Speed (0.8x)
+        SNITCH_SPEED_MULT: 0.7, // Relative to Player Speed (0.7x)
 
         // Merge Logic
         MERGE_TIMER: 3, // Seconds
@@ -81,11 +80,11 @@ export const GAME_CONFIG = {
 
     // --- PROJECTILES ---
     PROJECTILE: {
-        PLAYER_BULLET_SPEED: 12,
+        PLAYER_BULLET_SPEED: 20,
         PLAYER_BULLET_LIFE: 140,
         PLAYER_BULLET_SIZE: 4,
 
-        ENEMY_BULLET_SPEED: 6,
+        ENEMY_BULLET_SPEED: 10,
         ENEMY_BULLET_LIFE: 300,
         ENEMY_BULLET_SIZE: 6,
     }

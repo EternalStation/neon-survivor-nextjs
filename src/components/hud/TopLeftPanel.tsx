@@ -55,9 +55,33 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
             <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 LVL {player.level}
             </div>
-            <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
+            <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 <span>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
-                {/* Time Skip Buttons Removed as per user request */}
+
+                {/* Next Boss Tracker */}
+                {gameState.nextBossSpawnTime && (
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        padding: '1px 6px',
+                        borderRadius: 4,
+                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.1)'
+                    }}>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="#ef4444" style={{ filter: 'drop-shadow(0 0 4px rgba(239,68,68,0.8))' }}>
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm-2.5 9c-.83 0-1.5-.67-1.5-1.5S8.67 8 9.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path>
+                            <path d="M9 19h6v2H9z"></path>
+                        </svg>
+                        <span style={{ color: '#ef4444', fontSize: 12, fontWeight: 900, textShadow: '0 0 8px rgba(239, 68, 68, 0.5)' }}>
+                            {(() => {
+                                const timeLeft = Math.max(0, Math.ceil(gameState.nextBossSpawnTime - gameTime));
+                                const m = Math.floor(timeLeft / 60);
+                                const s = Math.floor(timeLeft % 60).toString().padStart(2, '0');
+                                return `${m}:${s}`;
+                            })()}
+                        </span>
+                    </div>
+                )}
             </div>
 
             <style>{`

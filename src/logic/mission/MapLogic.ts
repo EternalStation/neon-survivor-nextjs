@@ -298,7 +298,7 @@ export function generateMapPOIs(): MapPOI[] {
             activationProgress: 0,
             activeDuration: 0,
             cooldown: 0,
-            respawnTimer: 30, // 30s initial delay
+            respawnTimer: 0, // No initial delay
             lastUsed: 0
         });
 
@@ -324,7 +324,7 @@ export function generateMapPOIs(): MapPOI[] {
             activationProgress: 0,
             activeDuration: 0,
             cooldown: 0,
-            respawnTimer: 30, // 30s initial delay
+            respawnTimer: 0, // No initial delay
             lastUsed: 0
         });
 
@@ -381,7 +381,7 @@ export function relocatePOI(poi: MapPOI) {
     poi.activationProgress = 0;
     poi.activeDuration = 0;
     poi.cooldown = 0;
-    poi.respawnTimer = 30; // 30s before it reappears
+    poi.respawnTimer = 0; // Reappear immediately
     poi.active = (poi.type === 'anomaly');
 }
 

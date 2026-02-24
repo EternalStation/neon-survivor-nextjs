@@ -109,28 +109,32 @@ export function spawnUpgrades(state: GameState, isBoss: boolean = false): Upgrad
             { type: { id: 'd', name: 'Orbit Sentry', desc: state.player.droneCount < 3 ? 'Deploy Automated Drone' : '2x Damage for all Drones', icon: 'special' }, rarity: { id: 'boss', label: 'Anomaly Tech', color: '#ef4444', mult: 0 }, isSpecial: true }
         );
     } else {
+        if (!state.shownUpgradeIds) state.shownUpgradeIds = [];
+
         // Guarantee Uniqueness: Track IDs and Names
         const selectedIds = new Set<string>();
-        const selectedNames = new Set<string>();
         const potentialTypes = [...UPGRADE_TYPES];
 
-        for (let i = 0; i < 3; i++) {
-            // Filter out already selected IDs or Names from the pool candidates
-            const available = potentialTypes.filter(t => !selectedIds.has(t.id) && !selectedNames.has(t.name));
+        // Check if we have enough options left in the cycle
+        let availableCheck = potentialTypes.filter(t => !state.shownUpgradeIds!.includes(t.id));
+        if (availableCheck.length < 3) {
+            state.shownUpgradeIds = []; // Reset cycle
+        }
 
-            if (available.length === 0) break;
+        for (let i = 0; i < 3; i++) {
+            // Filter out already selected IDs from the pool candidates, and also those shown in past rerolls
+            const available = potentialTypes.filter(t => !selectedIds.has(t.id) && !state.shownUpgradeIds!.includes(t.id));
+
+            if (available.length === 0) break; // Should not happen given the cycle reset above
 
             // Pick random
             const idx = Math.floor(Math.random() * available.length);
             const type = available[idx];
 
             selectedIds.add(type.id);
-            selectedNames.add(type.name);
+            state.shownUpgradeIds!.push(type.id); // Add to the cycle exclusion list
 
             // Pick Rarity based on Time
-            // Note: We might want slightly different rarities for each card?
-            // Currently it uses the same time seed, so Math.random() in getRarityForTime is key.
-            // getRarityForTime uses Math.random(), so it's fine.
             const rarityId = getRarityForTime(state, state.rareRewardActive || false);
             const rarity = RARITIES.find(r => r.id === rarityId) || RARITIES[0];
 
@@ -223,5 +227,6 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
         }
     }
 
+    state.shownUpgradeIds = []; // Reset cycle for next level up
     state.isPaused = false;
 }

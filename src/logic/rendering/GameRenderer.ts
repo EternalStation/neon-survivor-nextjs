@@ -9,11 +9,15 @@ import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
 
 export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1) {
-    // Universal damage detection for red blink effect
+    // Universal damage detection for red danger vignette
+    // Cooldown of 1.5s between flash triggers to prevent epileptic blinking
+    const DAMAGE_FLASH_CD = 1.5;
     if ((window as any)._lastRenderedPlayerHp !== undefined) {
         if (state.player.curHp < (window as any)._lastRenderedPlayerHp) {
-            // Check if damage actually happened (ignoring maxHp recalculation drops if any, but curHp drops usually mean damage)
-            state.player.lastDamageTime = state.gameTime;
+            const lastDmg = state.player.lastDamageTime ?? -999;
+            if (state.gameTime - lastDmg >= DAMAGE_FLASH_CD) {
+                state.player.lastDamageTime = state.gameTime;
+            }
         }
     }
     (window as any)._lastRenderedPlayerHp = state.player.curHp;

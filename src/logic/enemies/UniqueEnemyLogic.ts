@@ -469,7 +469,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         const dy = target.y - e.y;
         const angle = Math.atan2(dy, dx);
 
-        let spd = 1.92 * 1.5; // Base Speed
+        let spd = 10.0; // Base Speed increased to catch 7.0 speed enemies
         // Frenzy if near any player (Legacy logic kept for flavor)
         const players = state.players ? Object.values(state.players) : [state.player];
         let nearAnyPlayer = false;
