@@ -205,7 +205,8 @@ export function handleEnemyContact(
                     });
                     if (!e.boss) e.hp = 0;
                 } else if (e.shape === 'minion' && e.parentId !== undefined) {
-                    const mother = state.enemies.find(m => m.id === e.parentId);
+                    const mother = state.enemies.find(m => m.id === e.parentId && !m.dead);
+                    // Use current HP of mother (or minion itself) so damage scales with remaining health
                     rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
                 } else if (e.customCollisionDmg !== undefined) {
                     const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
@@ -217,12 +218,12 @@ export function handleEnemyContact(
                         rawDmg = playerMaxHp * 0.15;
                         e.wormTrueDamage = 15; // Flags for True Damage bypass below
                     } else {
-                        // New requested formula: 5% of enemy max HP
-                        rawDmg = e.maxHp * 0.05;
+                        // Collision damage based on CURRENT HP so weakened enemies/bosses hit less hard
+                        rawDmg = e.hp * 0.05;
                     }
                 }
 
-                // Bosses deal 7.5% of their max HP (1.5x of the base 5%)
+                // Bosses deal 7.5% of their current HP (1.5x of the base 5%)
                 if (e.boss && !e.isLevel4) rawDmg *= 1.5;
 
                 // Anomaly Bosses still get an extra kick
