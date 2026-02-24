@@ -141,7 +141,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         size,
         hp,
         maxHp: hp,
-        spd: isAnomaly ? player.speed * 0.81 : player.speed * SHAPE_DEFS[chosenShape].speedMult * (isBoss ? 0.9 : 1.0),
+        spd: isAnomaly ? player.speed * 0.84 : player.speed * SHAPE_DEFS[chosenShape].speedMult * (isBoss ? 0.9 : 1.0),
         boss: isBoss,
         bossType: isBoss ? Math.floor(Math.random() * 2) : 0,
         bossAttackPattern: 0,

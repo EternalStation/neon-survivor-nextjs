@@ -60,7 +60,7 @@ export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, 
     }
 
     // --- MOVEMENT ---
-    const effectiveSpd = currentSpd * 1.3;
+    const effectiveSpd = currentSpd;
     const angle = Math.atan2(dy, dx);
     const wobble = Math.sin(state.gameTime * 5) * 0.2;
     const vx = Math.cos(angle + wobble) * effectiveSpd + pushX;
