@@ -11,7 +11,7 @@ import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { getDefenseReduction } from '../utils/MathUtils';
 
-export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void) {
+export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void, triggerDeath?: () => void) {
     const { bullets, enemyBullets } = state;
     const now = state.gameTime;
 
@@ -651,7 +651,16 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 if (owner.playerClass === 'hivemother' && !b.isNanite) {
                     const resonance = getChassisResonance(state);
                     const multiplier = 1 + resonance;
-                    const swarmDmgPerSecPct = 5 * multiplier;
+
+                    // Apply Class Curse
+                    let classCurseMult = 1.0;
+                    const curses = state.assistant.history.classCurses || {};
+                    const curse = curses['hivemother'];
+                    if (curse && curse.expiry > Date.now()) {
+                        classCurseMult = curse.intensity;
+                    }
+
+                    const swarmDmgPerSecPct = 5 * multiplier * classCurseMult;
 
                     e.isInfected = true;
                     e.infectedUntil = 999999999; // Keep as fallback/legacy check
@@ -1011,6 +1020,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         state.gameOver = true;
                         p.deathCause = 'Died from Enemy Projectile';
                         if (onEvent) onEvent('game_over');
+                        triggerDeath?.();
                     }
                 }
                 spawnFloatingNumber(state, p.x, p.y, Math.round(dmg).toString(), '#ef4444', false);

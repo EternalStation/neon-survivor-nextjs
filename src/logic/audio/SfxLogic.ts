@@ -9,6 +9,7 @@ let iceBuffer: AudioBuffer | null = null;
 let ghostBuffer: AudioBuffer | null = null;
 let alertBuffer: AudioBuffer | null = null;
 let shipDepartureBuffer: AudioBuffer | null = null;
+let robotVoiceBuffer: AudioBuffer | null = null;
 
 export async function loadSfxAssets() {
     if (!audioCtx) return;
@@ -69,6 +70,16 @@ export async function loadSfxAssets() {
             shipDepartureBuffer = await audioCtx.decodeAudioData(arrayBuffer);
         } catch (e) {
             console.error(`Failed to load ship departure sfx:`, e);
+        }
+    }
+
+    if (!robotVoiceBuffer) {
+        try {
+            const response = await fetch('/audio/RobotVoice.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            robotVoiceBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch (e) {
+            console.error(`Failed to load robot voice sfx:`, e);
         }
     }
 }
@@ -217,7 +228,7 @@ export async function playUpgradeSfx(rarityId: string) {
     }
 }
 
-export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down' | 'ui-click' | 'upgrade' | 'upgrade-confirm' | 'reroll' | 'shatter' | 'turret-fire';
+export type SfxType = 'shoot' | 'laser' | 'ice-loop' | 'level' | 'rare-spawn' | 'rare-kill' | 'rare-despawn' | 'spawn' | 'smoke-puff' | 'wall-shock' | 'merge-start' | 'merge-complete' | 'stun-disrupt' | 'warning' | 'recycle' | 'socket-place' | 'impact' | 'sonic-wave' | 'zombie-rise' | 'lock-on' | 'ghost-horde' | 'zombie-consume' | 'alert' | 'ship-departure' | 'dash' | 'eruption' | 'power-up' | 'power-down' | 'ui-click' | 'upgrade' | 'upgrade-confirm' | 'reroll' | 'shatter' | 'turret-fire' | 'orbit-talk';
 
 export function playSfx(type: SfxType) {
     if (!audioCtx) return;
@@ -244,6 +255,19 @@ export function playSfx(type: SfxType) {
         g.gain.linearRampToValueAtTime(0, t + 0.05);
         osc.start(t);
         osc.stop(t + 0.05);
+        return;
+    }
+
+    if (type === 'orbit-talk') {
+        if (robotVoiceBuffer) {
+            const source = audioCtx.createBufferSource();
+            const voiceGain = audioCtx.createGain();
+            source.buffer = robotVoiceBuffer;
+            voiceGain.gain.setValueAtTime(sfxVolume * 0.6, t); // Quieter (60% volume)
+            source.connect(voiceGain);
+            voiceGain.connect(masterSfxGain as AudioNode);
+            source.start(t);
+        }
         return;
     }
 

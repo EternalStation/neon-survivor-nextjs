@@ -14,6 +14,7 @@ import { UpgradeMenu } from './hud/UpgradeMenu';
 import { TutorialOverlay } from './hud/TutorialOverlay';
 import { IncubatorMonitor } from './hud/IncubatorMonitor';
 import { SpotlightOverlay } from './common/SpotlightOverlay';
+import { AssistantOverlay } from './hud/AssistantOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import { TutorialStep } from '../logic/core/types';
 
@@ -48,7 +49,8 @@ export const HUD: React.FC<HUDProps> = ({
     const { player, activeEvent } = gameState;
 
     // Dynamic Max HP calculation for HUD
-    let maxHp = calcStat(player.hp);
+    const curseMult = gameState.assistant.history.curseIntensity || 1.0;
+    let maxHp = calcStat(player.hp, gameState.hpRegenBuffMult, curseMult);
     const arenaIdx = getArenaIndex(player.x, player.y);
     if (arenaIdx === 2 && (gameState.arenaLevels[2] || 0) >= 1) {
         maxHp *= 1.2; // +20% Max HP in Defence Hex

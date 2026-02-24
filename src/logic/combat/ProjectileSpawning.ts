@@ -186,8 +186,15 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
             // Apply Resonance to Radius
             const resonance = getChassisResonance(state);
             const baseRadius = 100;
+            // Apply Class Curse
+            let classCurseMult = 1.0;
+            const curses = state.assistant.history.classCurses || {};
+            const curse = curses['stormstrike'];
+            if (curse && curse.expiry > Date.now()) {
+                classCurseMult = curse.intensity;
+            }
             // 100% + Resonance% (e.g. 50% resonance -> 1.5 multiplier)
-            const radius = baseRadius * (1 + resonance);
+            const radius = baseRadius * (1 + resonance) * classCurseMult;
 
             state.areaEffects.push({
                 id: Date.now() + Math.random(),
@@ -214,6 +221,15 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     const resonance = getChassisResonance(state);
 
     const bulletId = Math.random();
+
+    // Apply Class Curse
+    let classCurseMult = 1.0;
+    const curses = state.assistant.history.classCurses || {};
+    const curse = curses[player.playerClass || ''];
+    if (curse && curse.expiry > Date.now()) {
+        classCurseMult = curse.intensity;
+    }
+
     const b: any = {
         id: bulletId,
         ownerId: player.id,
@@ -222,10 +238,10 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
         vy: Math.sin(angle + offsetAngle) * spd,
         dmg: finalDmg,
         pierce: bulletPierce,
-        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance)
-        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance),
-        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
-        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
+        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance) * Curse
+        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) * classCurseMult,
+        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance) * classCurseMult,
+        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance) * classCurseMult,
         isEnemy: false,
         hits: new Set(),
         size: bulletSize,
@@ -335,19 +351,26 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
         // Multi-Ring Logic
         // Ring II: 15% Base + Resonance
-        const chance2 = 0.15 * (1 + resonance);
+        let ringCurseMult = 1.0;
+        const curses = state.assistant.history.classCurses || {};
+        const curse = curses['aigis'];
+        if (curse && curse.expiry > Date.now()) {
+            ringCurseMult = curse.intensity;
+        }
+
+        const chance2 = 0.15 * (1 + resonance) * ringCurseMult;
         if (Math.random() < chance2) {
             handleRingSpawn(b, 190);
         }
 
         // Ring III: 10% Base + Resonance
-        const chance3 = 0.10 * (1 + resonance);
+        const chance3 = 0.10 * (1 + resonance) * ringCurseMult;
         if (Math.random() < chance3) {
             handleRingSpawn(b, 255);
         }
 
         // Ring IV: 5% Base + Resonance
-        const chance4 = 0.05 * (1 + resonance);
+        const chance4 = 0.05 * (1 + resonance) * ringCurseMult;
         if (Math.random() < chance4) {
             handleRingSpawn(b, 320);
         }

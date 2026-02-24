@@ -79,6 +79,9 @@ export function rerollPerkType(state: GameState, item: Meteorite, lockedIndices:
     state.player.isotopes -= cost;
     item.recalibrationCount = (item.recalibrationCount || 0) + 1;
     item.version = Math.round(((item.version || 1.0) + 0.1) * 10) / 10;
+    if (item.version >= 2.5) {
+        (state.assistant.history as any).pendingRerollSnark = true;
+    }
 
     const blueprintAdj = isBuffActive(state, 'PERK_RESONANCE') ? 2 : 0;
     const corruptionAdj = item.isCorrupted ? 3 : 0;
@@ -125,6 +128,9 @@ export function rerollPerkValue(state: GameState, item: Meteorite, lockedIndices
     state.player.isotopes -= cost;
     item.recalibrationCount = (item.recalibrationCount || 0) + 1;
     item.version = Math.round(((item.version || 1.0) + 0.1) * 10) / 10;
+    if (item.version >= 2.5) {
+        (state.assistant.history as any).pendingRerollSnark = true;
+    }
 
     item.perks = item.perks.map((p, idx) => {
         if (lockedIndices.includes(idx)) return p;

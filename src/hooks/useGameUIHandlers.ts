@@ -15,8 +15,13 @@ interface UseGameUIHandlersProps {
     setShowStats: (show: boolean) => void;
     setShowModuleMenu: (show: boolean | ((prev: boolean) => boolean)) => void;
     setShowLegendarySelection: (show: boolean) => void;
-    setUiState: (fn: (prev: number) => number) => void;
+    setUiState: React.Dispatch<React.SetStateAction<number>>;
     setPortalError: (error: boolean) => void;
+    triggerOneTrickPony: (upgradeId: string) => void;
+    triggerDamageTaken: (dmg: number) => void;
+    triggerDeath: () => void;
+    triggerWallIncompetence: () => void;
+    triggerZeroPercentSnark: () => void;
 }
 
 export function useGameUIHandlers({
@@ -29,7 +34,12 @@ export function useGameUIHandlers({
     setShowModuleMenu,
     setShowLegendarySelection,
     setUiState,
-    setPortalError
+    setPortalError,
+    triggerOneTrickPony,
+    triggerDamageTaken,
+    triggerDeath,
+    triggerWallIncompetence,
+    triggerZeroPercentSnark
 }: UseGameUIHandlersProps) {
 
     const triggerPortal = useCallback(() => {
@@ -110,8 +120,9 @@ export function useGameUIHandlers({
 
     const handleUpgradeSelect = useCallback((choice: UpgradeChoice) => {
         applyUpgrade(gameState.current, choice);
+        triggerOneTrickPony(choice.type.id); // Orbit trigger
         setUpgradeChoices(null);
-    }, [gameState, setUpgradeChoices]);
+    }, [gameState, setUpgradeChoices, triggerOneTrickPony]);
 
     const handleUpgradeReroll = useCallback(() => {
         if (gameState.current.player.rerolls > 0) {
@@ -171,8 +182,9 @@ export function useGameUIHandlers({
                 timestamp: Date.now()
             };
         }
+        triggerZeroPercentSnark();
         setUiState(prev => prev + 1);
-    }, [gameState, setUiState]);
+    }, [gameState, setUiState, triggerZeroPercentSnark]);
 
     const updateInventorySlot = useCallback((index: number, item: any) => {
         gameState.current.inventory[index] = item;
@@ -268,6 +280,7 @@ export function useGameUIHandlers({
         spendDust,
         onViewChassisDetail,
         triggerPortal,
+        triggerWallIncompetence,
         skipTime
     };
 }

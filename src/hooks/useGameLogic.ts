@@ -35,6 +35,11 @@ interface UseGameLogicProps {
     setGameOver: (over: boolean) => void;
     setBossWarning: (warning: number | null) => void;
     bossWarning: number | null;
+    triggerOneTrickPony: (upgradeId: string) => void;
+    triggerDamageTaken: (dmg: number) => void;
+    triggerDeath: () => void;
+    triggerWallIncompetence: () => void;
+    onViewChassisDetail: () => void;
 }
 
 export function useGameLogic({
@@ -48,7 +53,12 @@ export function useGameLogic({
     setShowLegendarySelection,
     setGameOver,
     setBossWarning,
-    bossWarning
+    bossWarning,
+    triggerOneTrickPony,
+    triggerDamageTaken,
+    triggerDeath,
+    triggerWallIncompetence,
+    onViewChassisDetail
 }: UseGameLogicProps) {
     const updateLogic = useCallback((state: GameState, step: number) => {
         const eventHandler = (event: string, _data?: any) => {
@@ -170,7 +180,7 @@ export function useGameLogic({
                             processedMouseOffset = { x: 0, y: 0 }; // Temporary limitation
                         }
 
-                        updatePlayer(state, pKeys, eventHandler, pVector, processedMouseOffset, p);
+                        updatePlayer(state, pKeys, eventHandler, pVector, processedMouseOffset, p, triggerDamageTaken, triggerDeath, triggerWallIncompetence);
                     }
                 }
             });
@@ -184,9 +194,9 @@ export function useGameLogic({
                     const logicalZoom = windowScaleFactor.current * 0.58;
                     const offsetX = (screenX - rect.width / 2) / logicalZoom;
                     const offsetY = (screenY - rect.height / 2) / logicalZoom;
-                    updatePlayer(state, keys.current, eventHandler, inputVector.current, { x: offsetX, y: offsetY });
+                    updatePlayer(state, keys.current, eventHandler, inputVector.current, { x: offsetX, y: offsetY }, state.player, triggerDamageTaken, triggerDeath, triggerWallIncompetence);
                 } else {
-                    updatePlayer(state, keys.current, eventHandler, inputVector.current);
+                    updatePlayer(state, keys.current, eventHandler, inputVector.current, undefined, state.player, triggerDamageTaken, triggerDeath, triggerWallIncompetence);
                 }
             }
         }
@@ -396,7 +406,7 @@ export function useGameLogic({
         updateLoot(state);
 
         // Projectiles update for everyone (Host handles damage, Client handles just movement)
-        updateProjectiles(state, eventHandler);
+        updateProjectiles(state, eventHandler, triggerDeath);
 
         // Common Updates (Particles, Timers - run on both for smoothness, or Host only? 
         // Particles should probably run on both for visuals, but we rely on Host for important state)

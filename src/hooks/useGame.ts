@@ -7,6 +7,7 @@ import { syncAllLegendaries } from '../logic/upgrades/LegendaryLogic';
 import { renderGame } from '../logic/rendering/GameRenderer';
 import { useGameInput } from './useGameInput';
 import { useGameLogic } from './useGameLogic';
+import { useOrbit } from './useOrbit';
 import { useGameUIHandlers } from './useGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
@@ -49,6 +50,18 @@ export function useGameLoop(gameStarted: boolean) {
     const [showBossSkillDetail, setShowBossSkillDetail] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showAdminConsole, setShowAdminConsole] = useState(false);
+
+    // Orbit Assistant Hook
+    const {
+        updateOrbit,
+        triggerOneTrickPony,
+        triggerDamageTaken,
+        triggerDeath,
+        triggerClassStreak,
+        triggerWallIncompetence,
+        triggerZeroPercentSnark,
+        triggerCheat
+    } = useOrbit(gameState, () => setUiState(p => p + 1));
 
     // Sync refs with state
     showStatsRef.current = showStats;
@@ -98,7 +111,12 @@ export function useGameLoop(gameStarted: boolean) {
         setShowModuleMenu,
         setShowLegendarySelection,
         setUiState,
-        setPortalError
+        setPortalError,
+        triggerOneTrickPony,
+        triggerDamageTaken,
+        triggerDeath,
+        triggerWallIncompetence,
+        triggerZeroPercentSnark
     });
 
     // Input Hook
@@ -127,7 +145,15 @@ export function useGameLoop(gameStarted: boolean) {
         setShowLegendarySelection,
         setGameOver,
         setBossWarning,
-        bossWarning
+        bossWarning,
+        triggerOneTrickPony,
+        triggerDamageTaken,
+        triggerDeath,
+        triggerWallIncompetence,
+        onViewChassisDetail: () => {
+            gameState.current.chassisDetailViewed = true;
+            setUiState(p => p + 1);
+        }
     });
 
     // Multiplayer Hook
@@ -288,12 +314,6 @@ export function useGameLoop(gameStarted: boolean) {
 
                         // Implementation: We effectively scale the accumulation.
                         // But accRef is already added above (accRef += safeDt).
-                        // Let's modify the loop condition or the timestep?
-                        // Correct approach for fixed timestep slowmo:
-                        // Only "consume" a fraction of the real time for game updates.
-
-                        // Reset accRef deduction for this frame to apply scale
-                        // We need to change how much we ADD to accRef, but we already added safeDt.
                         // Let's subtract the 'ignored' time from accRef so it doesn't build up a huge buffer to catch up later.
 
                         // Actually, simpler: 
@@ -348,6 +368,7 @@ export function useGameLoop(gameStarted: boolean) {
             }
 
             updateBGMPhase(state.gameTime);
+            updateOrbit(safeDt);
 
             if (!state.isPaused) {
                 const ctx = canvasRef.current?.getContext('2d');
@@ -450,6 +471,13 @@ export function useGameLoop(gameStarted: boolean) {
         setShowFeedbackModal,
         showAdminConsole,
         setShowAdminConsole,
-        skipTime
+        skipTime,
+        triggerOneTrickPony,
+        triggerDamageTaken,
+        triggerDeath,
+        triggerClassStreak,
+        triggerCheat,
+        triggerWallIncompetence,
+        triggerZeroPercentSnark
     };
 }

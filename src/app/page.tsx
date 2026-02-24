@@ -17,6 +17,7 @@ import { ModuleMenu } from '@/components/ModuleMenu';
 import { LegendarySelectionMenu } from '@/components/LegendarySelectionMenu';
 import { ClassSelection } from '@/components/ClassSelection';
 import { LobbyScreen } from '@/components/LobbyScreen';
+import { AssistantOverlay } from '@/components/hud/AssistantOverlay';
 import { type PlayerClass } from '@/logic/core/types';
 import { PLAYER_CLASSES } from '@/logic/core/classes';
 
@@ -40,6 +41,34 @@ export default function Home() {
   const appRef = useRef<HTMLDivElement>(null);
 
   const { scale, isMobile, isLandscape } = useWindowScale();
+
+  // Cheat Codes Listener
+  const [cheatBuffer, setCheatBuffer] = useState('');
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e || !e.key) return;
+      const char = e.key.toUpperCase();
+      if (char.length === 1 && /[A-Z0-9]/.test(char)) {
+        const newBuffer = (cheatBuffer + char).slice(-10);
+        setCheatBuffer(newBuffer);
+
+        if (newBuffer.endsWith('I1')) hook.triggerCheat('i1');
+        if (newBuffer.endsWith('I2')) hook.triggerCheat('i2');
+        if (newBuffer.endsWith('I3')) hook.triggerCheat('i3');
+        if (newBuffer.endsWith('I4')) hook.triggerCheat('i4');
+        if (newBuffer.endsWith('I5')) hook.triggerCheat('i5');
+        if (newBuffer.endsWith('I6')) hook.triggerCheat('i6');
+        if (newBuffer.endsWith('I7')) hook.triggerCheat('i7');
+        if (newBuffer.endsWith('I8')) hook.triggerCheat('i8');
+        if (newBuffer.endsWith('I9')) hook.triggerCheat('i9');
+        if (newBuffer.endsWith('I10')) hook.triggerCheat('i10');
+        if (newBuffer.endsWith('I11')) hook.triggerCheat('i11');
+        if (newBuffer.endsWith('I12')) hook.triggerCheat('clear');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cheatBuffer, hook]);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -91,6 +120,25 @@ export default function Home() {
   const handleClassSelect = (cls: PlayerClass, tutorialEnabled: boolean) => {
     setSelectedClass(cls);
     setSelectingClass(false);
+
+    // Track Class Streak for Orbit
+    const historyRaw = localStorage.getItem('orbit_class_history');
+    let history = historyRaw ? JSON.parse(historyRaw) : { lastClassId: '', streak: 0 };
+
+    if (history.lastClassId === cls.id) {
+      history.streak++;
+    } else {
+      history.streak = 1;
+      history.lastClassId = cls.id;
+    }
+    localStorage.setItem('orbit_class_history', JSON.stringify(history));
+
+    // Prepare streak trigger (will fire after game loop starts)
+    if (history.streak >= 3) {
+      setTimeout(() => {
+        hook.triggerClassStreak(history.streak, cls.name);
+      }, 3000);
+    }
 
     // Direct Start to Arena 0 (Economic Hex)
     const arenaId = 0;
@@ -239,6 +287,13 @@ export default function Home() {
                 />
               </div>
             </div>
+
+            {/* Global Orbit Assistant */}
+            <AssistantOverlay
+              isVisible={!!hook.gameState.assistant.message}
+              message={hook.gameState.assistant.message || ""}
+              emotion={hook.gameState.assistant.emotion}
+            />
 
             {/* Full-Screen Modals (Cover entire viewport) */}
             {hook.showSettings && (

@@ -219,11 +219,11 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
                                         )}
                                     </div>
                                     <span style={{
-                                        color: f.status === 'Fixed' || f.status === 'Implemented' ? '#00ff00' :
-                                            f.status === 'Rejected' ? '#ff4444' :
-                                                f.status === 'Considered' ? '#00f3ff' :
-                                                    f.status === 'Reviewed' ? '#ffaa00' : '#888',
-                                        fontSize: '14px', fontWeight: 'bold'
+                                        color: f.status === 'Fixed' || f.status === 'Implemented' ? '#4ade80' :
+                                            f.status === 'Rejected' ? '#ef4444' :
+                                                f.status === 'Considered' ? '#38bdf8' :
+                                                    f.status === 'Reviewed' ? '#fbbf24' : '#94a3b8',
+                                        fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px'
                                     }}>
                                         {f.status}
                                     </span>

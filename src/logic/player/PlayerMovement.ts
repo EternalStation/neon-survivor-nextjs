@@ -5,7 +5,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
-import { spawnFloatingNumber } from '../effects/ParticleLogic';
+import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
 export function handlePlayerMovement(
@@ -13,7 +13,9 @@ export function handlePlayerMovement(
     keys: Record<string, boolean>,
     inputVector?: { x: number, y: number },
     onEvent?: (type: string, data?: any) => void,
-    overridePlayer?: any
+    overridePlayer?: any,
+    triggerDeath?: () => void,
+    triggerWallIncompetence?: () => void
 ) {
     const player = overridePlayer || state.player;
 
@@ -102,7 +104,10 @@ export function handlePlayerMovement(
             player.x = nextX;
             player.y = nextY;
         } else {
-            // Mirror Reflection Logic
+            // Mirror Reflection Logic — guard against rapid repeated triggers
+            if (player.lastWallHitTime && state.gameTime - player.lastWallHitTime < 0.5) return;
+            player.lastWallHitTime = state.gameTime;
+
             let bestC = ARENA_CENTERS[0];
             let dMin = Infinity;
             ARENA_CENTERS.forEach((c) => {
@@ -131,9 +136,37 @@ export function handlePlayerMovement(
             player.knockback.x = Math.cos(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
             player.knockback.y = Math.sin(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
             player.wallsHit++;
+            triggerWallIncompetence?.();
+
+            // Wall Impact Damage to Enemies
+            const impactRange = 250;
+            const baseWallDmg = calcStat(player.dmg) * 3.0; // 300% weapon dmg
+            let dealtMult = 1.0;
+            if (player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil) {
+                dealtMult = 3.0;
+            }
+            const finalImpactDmg = baseWallDmg * dealtMult;
+
+            spawnParticles(state, player.x, player.y, dealtMult > 1 ? '#ef4444' : '#22d3ee', 12, 5, 40, 'shockwave');
+
+            state.enemies.forEach(enemy => {
+                if (enemy.dead) return;
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < impactRange * impactRange) {
+                    enemy.hp -= finalImpactDmg;
+                    spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), dealtMult > 1 ? '#ef4444' : '#fff');
+                    spawnParticles(state, enemy.x, enemy.y, dealtMult > 1 ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
+                }
+            });
 
             const maxHp = calcStat(player.hp);
-            const rawWallDmg = maxHp * GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
+            let wallDmgMult = GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
+            if (player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil) {
+                wallDmgMult *= 3.0; // Triple Damage Penalty
+            }
+            const rawWallDmg = maxHp * wallDmgMult;
             const armor = calcStat(player.arm);
             const drCap = 0.95;
             const armRedMult = 1 - getDefenseReduction(armor, drCap);
@@ -227,6 +260,7 @@ export function handlePlayerMovement(
                     state.gameOver = true;
                     player.deathCause = 'Died from Wall Impact';
                     if (onEvent) onEvent('game_over');
+                    triggerDeath?.();
                 }
             }
         }

@@ -14,7 +14,10 @@ export function updatePlayer(
     onEvent?: (type: string, data?: any) => void,
     inputVector?: { x: number, y: number },
     mouseOffset?: { x: number, y: number },
-    overridePlayer?: any // Type Player but avoid circular dep or import if possible
+    overridePlayer?: any,
+    triggerDamageTaken?: (dmg: number) => void,
+    triggerDeath?: () => void,
+    triggerWallIncompetence?: () => void
 ) {
     const player = overridePlayer || state.player;
     const now = state.gameTime;
@@ -64,7 +67,7 @@ export function updatePlayer(
     }
 
     // 1. Movement & Wall Collision
-    handlePlayerMovement(state, keys, inputVector, onEvent, player);
+    handlePlayerMovement(state, keys, inputVector, onEvent, player, triggerDeath, triggerWallIncompetence);
 
     // Camera is updated centrally in useGameLogic.ts
 
@@ -72,7 +75,7 @@ export function updatePlayer(
     updatePlayerStats(state, player);
 
     // 3. Combat & Aiming (Radiation Core, contact damage, death logic)
-    handlePlayerCombat(state, mouseOffset, onEvent, player);
+    handlePlayerCombat(state, mouseOffset, onEvent, player, triggerDamageTaken, triggerDeath);
 
     // Attach trigger function for other modules (Projectile/UniqueEnemy)
     if (!(state as any).triggerKineticBatteryZap) {

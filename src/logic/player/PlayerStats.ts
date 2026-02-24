@@ -8,6 +8,7 @@ import { playSfx } from '../audio/AudioLogic';
 
 export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     const player = overridePlayer || state.player;
+    const curseMult = state.assistant.history.curseIntensity || 1.0;
 
     // Calculate and assign Hex bonuses to player stats for this frame
     player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill', false, player);
@@ -60,8 +61,8 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     state.meteoriteRateBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? baseMult : 1.0;
 
     // Movement stat
-    const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
-    let regenAmount = (calcStat(player.reg, state.hpRegenBuffMult) / 60);
+    const maxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
+    let regenAmount = (calcStat(player.reg, state.hpRegenBuffMult, curseMult) / 60);
 
     if (player.buffs?.systemSurge && state.gameTime < player.buffs.systemSurge.end) {
         const surge = player.buffs.systemSurge;
@@ -74,7 +75,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         if (kinLvl >= 2) {
             // Updated Lvl 2: Shield = 100% Armor (from 500%)
             if (!player.kineticShieldTimer || state.gameTime >= player.kineticShieldTimer) {
-                const totalArmor = calcStat(player.arm);
+                const totalArmor = calcStat(player.arm, 1.0, curseMult);
                 const shieldAmount = totalArmor * 1.0;
                 if (!player.shieldChunks) player.shieldChunks = [];
 
@@ -121,7 +122,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
         if (index > player.lastChronoDoubleIndex) {
             player.lastChronoDoubleIndex = index;
-            const currentTotal = calcStat(player.arm);
+            const currentTotal = calcStat(player.arm, 1.0, curseMult);
             player.chronoArmorBonus = (player.chronoArmorBonus || 0) + currentTotal;
             spawnFloatingNumber(state, player.x, player.y, "ARMOR DOUBLED!", '#60a5fa', true);
             playSfx('level');
@@ -130,7 +131,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
     if (chronoLvl >= 4) {
         // Updated Lvl 4: HP Regen increased by 0.5% OF ARMOR
-        const totalArmor = calcStat(player.arm);
+        const totalArmor = calcStat(player.arm, 1.0, curseMult);
         const bonusRegen = totalArmor * 0.005;
         // Apply directly to regen calculation logic?
         // We need to add it to 'player.reg.flat' or similar for this frame.

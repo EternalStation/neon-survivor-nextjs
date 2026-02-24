@@ -33,11 +33,11 @@ const PulseLabel = ({ title, buff, color }: { title: string, buff: string, color
             }} />
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <span style={{
-                    color, fontSize: 10, fontWeight: 950, letterSpacing: 1,
+                    color, fontSize: 9, fontWeight: 950, letterSpacing: 1,
                     textTransform: 'uppercase', textShadow: `0 0 8px ${color}66`
                 }}>{title}:</span>
                 <span style={{
-                    color: '#fff', fontSize: 10, fontWeight: 800
+                    color: '#fff', fontSize: 9.5, fontWeight: 800
                 }}>{buff}</span>
             </div>
         </div>
@@ -55,32 +55,36 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
             <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 LVL {player.level}
             </div>
-            <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
-                <span>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
+            <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start', fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
+                <span style={{ minWidth: 55 }}>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
 
                 {/* Next Boss Tracker */}
                 {gameState.nextBossSpawnTime && (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.1)'
-                    }}>
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="#ef4444" style={{ filter: 'drop-shadow(0 0 4px rgba(239,68,68,0.8))' }}>
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm-2.5 9c-.83 0-1.5-.67-1.5-1.5S8.67 8 9.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path>
-                            <path d="M9 19h6v2H9z"></path>
-                        </svg>
-                        <span style={{ color: '#ef4444', fontSize: 12, fontWeight: 900, textShadow: '0 0 8px rgba(239, 68, 68, 0.5)' }}>
-                            {(() => {
-                                const timeLeft = Math.max(0, Math.ceil(gameState.nextBossSpawnTime - gameTime));
-                                const m = Math.floor(timeLeft / 60);
-                                const s = Math.floor(timeLeft % 60).toString().padStart(2, '0');
-                                return `${m}:${s}`;
-                            })()}
-                        </span>
-                    </div>
+                    <>
+                        <span style={{ color: '#64748b', opacity: 0.5 }}>|</span>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            padding: '1px 6px',
+                            borderRadius: 4,
+                            boxShadow: '0 0 10px rgba(239, 68, 68, 0.1)',
+                            flexShrink: 0
+                        }}>
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="#ef4444" style={{ filter: 'drop-shadow(0 0 4px rgba(239,68,68,0.8))', flexShrink: 0 }}>
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm-2.5 9c-.83 0-1.5-.67-1.5-1.5S8.67 8 9.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path>
+                                <path d="M9 19h6v2H9z"></path>
+                            </svg>
+                            <span style={{ color: '#ef4444', fontSize: 12, fontWeight: 900, textShadow: '0 0 8px rgba(239, 68, 68, 0.5)', whiteSpace: 'nowrap' }}>
+                                {(() => {
+                                    const timeLeft = Math.max(0, Math.ceil(gameState.nextBossSpawnTime - gameTime));
+                                    const m = Math.floor(timeLeft / 60);
+                                    const s = Math.floor(timeLeft % 60).toString().padStart(2, '0');
+                                    return `${m}:${s}`;
+                                })()}
+                            </span>
+                        </div>
+                    </>
                 )}
             </div>
 
@@ -187,6 +191,51 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                         });
                     }
                 });
+
+                // 3. CLASS CURSE (Priority 4 - TOP)
+                const curses = gameState.assistant.history.classCurses || {};
+                const currentCurse = curses[player.playerClass || ''];
+
+                if (currentCurse && currentCurse.expiry > Date.now()) {
+                    const realTimeLeft = currentCurse.expiry - Date.now();
+                    const hours = Math.floor(realTimeLeft / 3600000);
+                    const mins = Math.floor((realTimeLeft % 3600000) / 60000);
+                    const secs = Math.floor((realTimeLeft % 60000) / 1000);
+                    const timeStr = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                    const classIdMap: Record<string, string> = {
+                        'malware': 'MALWARE-PRIME',
+                        'eventhorizon': 'EVENT-HORIZON',
+                        'aigis': 'AIGIS-VORTEX',
+                        'stormstrike': 'COSMIC BEAM',
+                        'hivemother': 'HIVE-MOTHER'
+                    };
+                    const className = classIdMap[player.playerClass || ''] || player.playerClass;
+
+                    buffs.push({
+                        id: 'class_curse',
+                        title: `PENALTY: (${timeStr})`,
+                        buff: `-30% ${className} STRENGTH`,
+                        color: '#f87171',
+                        remaining: realTimeLeft,
+                        priority: 4
+                    });
+                }
+
+                // 4. TRIPLE WALL DAMAGE PENALTY (Priority 4 - TOP)
+                if (player.tripleWallDamageUntil && gameTime < player.tripleWallDamageUntil) {
+                    const wallTimeLeft = Math.max(0, Math.ceil(player.tripleWallDamageUntil - gameTime));
+                    const wm = Math.floor(wallTimeLeft / 60);
+                    const ws = Math.floor(wallTimeLeft % 60).toString().padStart(2, '0');
+                    buffs.push({
+                        id: 'wall_penalty',
+                        title: `PENALTY: WALL IMPACT (${wm}:${ws})`,
+                        buff: '3x WALL DAMAGE TAKEN',
+                        color: '#ef4444',
+                        remaining: wallTimeLeft,
+                        priority: 4
+                    });
+                }
 
                 // SORTING LOGIC
                 // 1. Priority Descending (Arena > Blueprints)

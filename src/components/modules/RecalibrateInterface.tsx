@@ -56,6 +56,13 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     // Track roll count for the pulsing display
     const [autoRollCount, setAutoRollCount] = useState(0);
 
+    const autoRollStateRef = useRef({ item, lockedIndices, gameState, allFiltersSatisfied: (): boolean => false, currentRolls: 0 });
+    useEffect(() => {
+        autoRollStateRef.current.item = item;
+        autoRollStateRef.current.lockedIndices = lockedIndices;
+        autoRollStateRef.current.gameState = gameState;
+    }); // Update ref with latest values on every render
+
     // Local state for Accordion Behavior
     const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
 
@@ -72,6 +79,10 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
             return matchesPerk(p, lvl, filter);
         });
     }, [item.perks, recalibrateFilters]);
+
+    useEffect(() => {
+        autoRollStateRef.current.allFiltersSatisfied = allFiltersSatisfied;
+    }, [allFiltersSatisfied]);
 
     /** Stop the auto-roll loop */
     const stopAutoRoll = useCallback(() => {
@@ -665,23 +676,29 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     setIsAutoRolling(true);
                                     setIsSpinningPerks(true);
                                     setAutoRollCount(0);
+                                    autoRollStateRef.current.currentRolls = 0;
 
                                     // Perform first roll immediately
                                     const doRoll = () => {
+                                        const { item: curItem, lockedIndices: curLocked, gameState: curGs, allFiltersSatisfied: curSat, currentRolls } = autoRollStateRef.current;
                                         // Re-check affordability inside the interval
-                                        const cost = getRerollTypeCost(item, lockedIndices.length);
-                                        if (gameState.player.isotopes < cost) {
+                                        const cost = getRerollTypeCost(curItem, curLocked.length);
+                                        if (curGs.player.isotopes < cost) {
+                                            if (currentRolls >= 7 && curLocked.length > 0) {
+                                                (curGs.assistant.history as any).pendingBrokeSnark = true;
+                                            }
                                             stopAutoRoll();
                                             return;
                                         }
                                         playSfx('reroll');
-                                        onRerollType(lockedIndices);
+                                        onRerollType(curLocked);
                                         setAutoRollCount(c => c + 1);
+                                        autoRollStateRef.current.currentRolls++;
 
                                         // After parent updates perks, check if all filters match
                                         // Use a small delay so React state has settled
                                         setTimeout(() => {
-                                            if (allFiltersSatisfied()) {
+                                            if (autoRollStateRef.current.allFiltersSatisfied()) {
                                                 stopAutoRoll();
                                                 playSfx('upgrade-confirm');
                                             }

@@ -42,15 +42,18 @@ export async function POST(request: NextRequest) {
 
 
         // Validation
-        if (
-            score === undefined ||
-            !survivalTime ||
-            kills === undefined ||
-            !classUsed ||
-            !patchVersion
-        ) {
+        // Validation
+        const missingFields = [];
+        if (score === undefined || score === null) missingFields.push('score');
+        if (survivalTime === undefined || survivalTime === null) missingFields.push('survivalTime');
+        if (kills === undefined || kills === null) missingFields.push('kills');
+        if (!classUsed) missingFields.push('classUsed');
+        if (!patchVersion) missingFields.push('patchVersion');
+
+        if (missingFields.length > 0) {
+            console.warn('[Leaderboard] Missing required fields:', missingFields, 'Body keys:', Object.keys(body));
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: `Missing required fields: ${missingFields.join(', ')}` },
                 { status: 400 }
             );
         }

@@ -1,11 +1,11 @@
 import type { PlayerStats } from '../core/types';
 
-export function calcStat(s: PlayerStats, arenaMult: number = 1): number {
+export function calcStat(s: PlayerStats, arenaMult: number = 1, curseMult: number = 1): number {
     const baseSum = s.base + s.flat + (s.hexFlat || 0);
     const upgradeMult = 1 + (s.mult || 0) / 100;
     const hexScaling = 1 + (s.hexMult || 0) / 100;
     const hexScaling2 = 1 + (s.hexMult2 || 0) / 100;
-    return baseSum * upgradeMult * hexScaling * hexScaling2 * arenaMult;
+    return baseSum * upgradeMult * hexScaling * hexScaling2 * arenaMult * curseMult;
 }
 
 export function getDefenseReduction(armor: number, cap: number = 0.95): number {

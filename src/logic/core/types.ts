@@ -139,6 +139,10 @@ export interface Player {
     deathCause?: string; // Reason for game over
     lastHitDamage?: number; // Final hit damage that killed the player
     lastDamageTime?: number; // Timestamp when player took damage
+    wallHitTimestamps?: number[];
+    lastWallWarningTime?: number;
+    tripleWallDamageUntil?: number;
+    lastWallHitTime?: number; // Cooldown for wall collisions
     killerHp?: number; // HP of the enemy that killed the player
     killerMaxHp?: number; // Max HP of the enemy that killed the player
 
@@ -824,6 +828,30 @@ export interface GameState {
     };
     readyStatus: Record<string, boolean>;
     sharedXp: number;
+
+    // AI Assistant (Orbit) Logic
+    assistant: {
+        message: string | null;
+        emotion: 'Normal' | 'Dissapointed' | 'Point' | 'Smile' | 'Thinks';
+        queue: string[];
+        timer: number;
+        history: {
+            upgradePicks: Record<string, number>; // upgradeId -> count
+            deaths: number;
+            totalDamageTaken: number;
+            totalSurvivalTime: number;
+            lastOneTrickWarningTime?: number;
+            lastWallWarningTime?: number;
+            isCursed?: boolean;
+            curseIntensity?: number;
+            classStreak?: number;
+            lastClassId?: string;
+            classCurses?: Record<string, {
+                expiry: number;
+                intensity: number;
+            }>;
+        };
+    };
 }
 
 export type MeteoriteRarity = 'anomalous' | 'radiant' | 'abyss' | 'eternal' | 'divine' | 'singularity';

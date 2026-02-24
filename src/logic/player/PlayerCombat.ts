@@ -15,9 +15,12 @@ export function handlePlayerCombat(
     state: GameState,
     mouseOffset?: { x: number, y: number },
     onEvent?: (type: string, data?: any) => void,
-    overridePlayer?: any
+    overridePlayer?: any,
+    triggerDamageTaken?: (dmg: number) => void,
+    triggerDeath?: () => void
 ) {
     const player: Player = overridePlayer || state.player;
+    const curseMult = state.assistant.history.curseIntensity || 1.0;
 
     // --- Kinetic Battery Skill Sync ---
     const kinSkill = player.activeSkills.find((s: any) => s.type === 'KineticBattery');
@@ -35,7 +38,7 @@ export function handlePlayerCombat(
         if (state.frameCount % 10 === 0) {
             const m = getHexMultiplier(state, 'RadiationCore');
             const range = 500;
-            const maxHp = calcStat(player.hp, state.hpRegenBuffMult);
+            const maxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             let dmgAmp = 1.0 * m;
             if (radLvl >= 3) {
                 const missing = 1 - (player.curHp / maxHp);
@@ -44,7 +47,7 @@ export function handlePlayerCombat(
 
             const maxDmgPct = 0.10 * dmgAmp;
             const minDmgPct = 0.05 * dmgAmp;
-            const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult);
+            const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
             state.enemies.forEach(e => {
@@ -151,16 +154,23 @@ export function handlePlayerCombat(
     }
 
     // Contact Damage
-    handleEnemyContact(state, onEvent, player);
+    handleEnemyContact(state, onEvent, player, triggerDamageTaken, triggerDeath);
 
     // Pending Zaps
     processPendingZaps(state, onEvent);
 }
 
-export function handleEnemyContact(state: GameState, onEvent?: (type: string, data?: any) => void, overridePlayer?: any) {
+export function handleEnemyContact(
+    state: GameState,
+    onEvent?: (type: string, data?: any) => void,
+    overridePlayer?: any,
+    triggerDamageTaken?: (dmg: number) => void,
+    triggerDeath?: () => void
+) {
     const player = overridePlayer || state.player;
     const now = state.gameTime;
     const kinLvl = getHexLevel(state, 'KineticBattery');
+    const curseMult = state.assistant.history.curseIntensity || 1.0;
 
     state.enemies.forEach(e => {
         if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
@@ -198,12 +208,12 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     const mother = state.enemies.find(m => m.id === e.parentId);
                     rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
                 } else if (e.customCollisionDmg !== undefined) {
-                    const playerMaxHp = calcStat(player.hp);
+                    const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                     rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
                 } else {
                     // Level 4 Triangle Boss: Dealing 15% Player Max HP as True Damage (Counter to high HP builds)
                     if (e.boss && e.shape === 'triangle' && e.isLevel4) {
-                        const playerMaxHp = calcStat(player.hp);
+                        const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                         rawDmg = playerMaxHp * 0.15;
                         e.wormTrueDamage = 15; // Flags for True Damage bypass below
                     } else {
@@ -220,7 +230,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
             }
 
 
-            const armorValue = calcStat(player.arm);
+            const armorValue = calcStat(player.arm, 1.0, curseMult);
             const drCap = 0.95;
             const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
 
@@ -261,7 +271,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
 
                 // --- SPECIAL: Worm Head or Level 4 Boss True Damage (Pierces Armor & Reduction) ---
                 if ((e.wormRole === 'head' || e.isLevel4) && e.wormTrueDamage) {
-                    const playerMaxHp = calcStat(player.hp);
+                    const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                     damageToApply = playerMaxHp * (e.wormTrueDamage / 100);
                 }
 
@@ -285,6 +295,7 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
                     player.curHp -= actualDmg;
                     player.damageTaken += actualDmg;
                     player.lastHitDamage = actualDmg;
+                    triggerDamageTaken?.(actualDmg);
                     if (state.gameTime - (player.lastDamageTime ?? -999) >= 1.5) {
                         player.lastDamageTime = state.gameTime;
                     }
@@ -323,13 +334,13 @@ export function handleEnemyContact(state: GameState, onEvent?: (type: string, da
             }
 
             if (player.curHp <= 0 && !state.gameOver) {
-                handlePlayerLethalHit(state, e, onEvent);
+                handlePlayerLethalHit(state, e, onEvent, triggerDeath);
             }
         }
     });
 }
 
-function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: string, data?: any) => void) {
+function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: string, data?: any) => void, triggerDeath?: () => void) {
     const { player } = state;
     if (isBuffActive(state, 'TEMPORAL_GUARD')) {
         player.curHp = calcStat(player.hp);
@@ -357,7 +368,8 @@ function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: stri
         playSfx('rare-spawn');
     } else {
         state.gameOver = true;
-        if (e.legionId) player.deathCause = 'Legion Swarm';
+        if (e.isAnomaly) player.deathCause = `Anomaly ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} (Summoned from Hell)`;
+        else if (e.legionId) player.deathCause = 'Legion Swarm';
         else if (e.isZombie) player.deathCause = 'Zombie Horde';
         else if (e.shape === 'minion') player.deathCause = 'Pentagon Minion';
         else if (e.boss) player.deathCause = `Boss ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} (Lvl ${e.bossTier || 1})`;
@@ -365,6 +377,7 @@ function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: stri
         else player.deathCause = `Collision with ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)}`;
 
         if (onEvent) onEvent('game_over');
+        triggerDeath?.();
         fadeOutMusic(7.0);
     }
 }
@@ -377,7 +390,7 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     if (player.lastKineticShockwave && now < player.lastKineticShockwave + (5.0 * cdMod)) return;
 
     player.lastKineticShockwave = now;
-    const shockDmg = calcStat(player.arm) * 1.0; // Updated to 100% Armor
+    const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 1.0; // Updated to 100% Armor
 
     // Default source to player if missing
     const sx = source ? source.x : player.x;

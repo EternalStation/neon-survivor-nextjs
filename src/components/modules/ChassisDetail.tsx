@@ -108,9 +108,18 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                         // Static metrics explicitly marked or non-percentage stay as is
                                         const isStatic = m.isStatic || !m.isPercentage;
 
+                                        // Apply Class Curse
+                                        let classCurseMult = 1.0;
+                                        const curses = gameState.assistant.history.classCurses || {};
+                                        const curse = curses[playerClass.id];
+                                        if (curse && curse.expiry > Date.now()) {
+                                            classCurseMult = curse.intensity;
+                                        }
+
                                         // Only multiply non-static percentage-based metrics
+                                        const finalMultiplier = multiplier * classCurseMult;
                                         const finalValue = (m.isPercentage && !m.isStatic)
-                                            ? m.value * multiplier
+                                            ? m.value * finalMultiplier
                                             : m.value;
 
                                         return (
@@ -123,9 +132,13 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                                     {!isStatic ? (
                                                         <div className="metric-calculation">
                                                             <span className="multiplier-sym">×</span>
-                                                            <span className="res-mult">{multiplier.toFixed(2)}</span>
+                                                            <span className="res-mult" style={classCurseMult < 1 ? { color: '#f87171' } : {}}>
+                                                                {finalMultiplier.toFixed(2)}
+                                                            </span>
                                                             <div className="metric-divider">|</div>
-                                                            <span className="final-val">{finalValue.toFixed(0)}{m.unit}</span>
+                                                            <span className="final-val" style={classCurseMult < 1 ? { color: '#f87171' } : {}}>
+                                                                {finalValue.toFixed(0)}{m.unit}
+                                                            </span>
                                                         </div>
                                                     ) : (
                                                         <div className="metric-calculation">

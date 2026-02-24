@@ -255,7 +255,42 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         },
         firstMeteoriteSpawned: false,
         lastPlacement: null,
-        shownUpgradeIds: []
+        shownUpgradeIds: [],
+
+        // AI Assistant (Orbit) Logic
+        assistant: {
+            message: null,
+            emotion: 'Normal',
+            queue: [],
+            timer: 0,
+            history: {
+                upgradePicks: {},
+                deaths: 0,
+                totalDamageTaken: 0,
+                totalSurvivalTime: 0,
+                isCursed: false,
+                curseIntensity: 1.0,
+                classCurses: typeof localStorage !== 'undefined' ? (function () {
+                    const raw = localStorage.getItem('orbit_class_curses');
+                    const curses: Record<string, { expiry: number, intensity: number }> = {};
+                    if (raw) {
+                        try {
+                            const data = JSON.parse(raw);
+                            Object.keys(data).forEach(id => {
+                                if (data[id].expiry > Date.now()) {
+                                    curses[id] = data[id];
+                                }
+                            });
+                            // Save cleaned version back to storage
+                            localStorage.setItem('orbit_class_curses', JSON.stringify(curses));
+                        } catch (e) {
+                            localStorage.removeItem('orbit_class_curses');
+                        }
+                    }
+                    return curses;
+                })() : {},
+            }
+        }
     };
 
     // User Request: Ensure turrets are in the arena the player entered (even at start)

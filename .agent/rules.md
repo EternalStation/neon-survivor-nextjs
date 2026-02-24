@@ -39,6 +39,7 @@ The following cheat codes must always be functional in the game:
     - `b51`-`b54`: Pentagon Boss (Lvl 1-4)
 - **Give 5100 Dust**: `ko`
 - **Give 1000 Flux**: `kp`
+- **Open Admin Console**: `bug`
 
 ---
 

@@ -14,7 +14,14 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
     let bhPullSpeed = 0;
     if (blackholes.length > 0) {
         const resonance = getChassisResonance(state);
-        bhPullSpeed = 0.66 + (resonance * 0.85);
+        // Apply Class Curse
+        let classCurseMult = 1.0;
+        const curses = state.assistant.history.classCurses || {};
+        const curse = curses['eventhorizon'];
+        if (curse && curse.expiry > Date.now()) {
+            classCurseMult = curse.intensity;
+        }
+        bhPullSpeed = (0.66 + (resonance * 0.85)) * classCurseMult;
     }
 
     // --- ARENA TRANSITION: POI RESET ---

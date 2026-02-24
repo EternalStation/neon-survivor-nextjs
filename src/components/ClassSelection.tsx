@@ -1,6 +1,7 @@
 import React from 'react';
 import { type PlayerClass } from '../logic/core/types';
 import { PLAYER_CLASSES } from '../logic/core/classes';
+import { AssistantOverlay } from './hud/AssistantOverlay';
 
 interface ClassSelectionProps {
     onSelect: (selectedClass: PlayerClass, tutorialEnabled: boolean) => void;
@@ -9,6 +10,34 @@ interface ClassSelectionProps {
 export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [tutorialEnabled, setTutorialEnabled] = React.useState(false);
+    const [orbitMessage, setOrbitMessage] = React.useState<string | null>(null);
+    // Use a ref to store the fire time so re-renders never reset the timer
+    const fireAtRef = React.useRef<number>(Date.now() + 60000);
+    const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const READING_VARIANTS = [
+        "Oh. You're still here. Reading, presumably. Either that or the loading screen scarred you emotionally. Both are valid.",
+        "Sixty seconds on a class selection screen. Impressive. Most pilots just pick whatever looks shiny and die in the first thirty seconds.",
+        "Still deciding? The enemies are spawning in real time, you know. Hypothetically. But also sort of literally.",
+        "You've read all the descriptions, haven't you. You might be the first pilot in recorded history to do so. I'm noting this in your file.",
+        "A minute of deliberation. You know, most pilots die before they even understand what their class does. You're already ahead. Depressingly low bar, but still."
+    ];
+
+    // Stable interval that checks real clock — survives re-renders
+    React.useEffect(() => {
+        timerRef.current = setInterval(() => {
+            if (Date.now() >= fireAtRef.current && orbitMessage === null) {
+                const msg = READING_VARIANTS[Math.floor(Math.random() * READING_VARIANTS.length)];
+                setOrbitMessage(msg);
+                clearInterval(timerRef.current!);
+            }
+        }, 500);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Keyboard Navigation
     React.useEffect(() => {
@@ -56,6 +85,17 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                 animation: 'bg-scroll 60s linear infinite',
                 pointerEvents: 'none'
             }}></div>
+
+            {/* Orbit Commentary — uses same in-game AssistantOverlay format */}
+            <AssistantOverlay
+                message={orbitMessage || ''}
+                emotion="Dissapointed"
+                isVisible={!!orbitMessage}
+                onComplete={() => {
+                    // Auto-dismiss after 7s from when typing completes
+                    setTimeout(() => setOrbitMessage(null), 7000);
+                }}
+            />
 
             <h1 style={{
                 fontSize: '3rem',
@@ -364,6 +404,10 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                 @keyframes bg-scroll {
                     from { transform: rotate(45deg) translateY(0); }
                     to { transform: rotate(45deg) translateY(-1000px); }
+                }
+                @keyframes orbit-slide-in {
+                    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
                 }
             `}</style>
         </div >

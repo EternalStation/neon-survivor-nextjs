@@ -353,6 +353,8 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     );
                 })()}
 
+
+
                 {/* PASSIVE SKILLS (Example: Sonic Wave Counter) */}
                 {(() => {
                     const waveLevel = getHexLevel(gameState, 'ComWave');
@@ -399,6 +401,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         </div>
                     );
                 })()}
+
             </div>
 
             <div style={{
