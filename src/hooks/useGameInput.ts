@@ -17,13 +17,14 @@ interface GameInputProps {
     setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
     setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowAdminConsole?: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
     triggerPortal: () => boolean;
     refreshUI: () => void;
     skipTime: (min: number) => void;
 }
 
-export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
+export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
     const keys = useRef<Record<string, boolean>>({});
     const inputVector = useRef({ x: 0, y: 0 });
     const mousePos = useRef({
@@ -70,7 +71,7 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 return;
             }
 
-            if (gameState.current.showSettings) return;
+            if (gameState.current.showSettings || gameState.current.showFeedbackModal || gameState.current.showAdminConsole) return;
 
             // Handle Stats toggle
             if (code === (keybinds.stats || '').toLowerCase()) {
@@ -177,6 +178,16 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 console.log('[CHEAT] Glitcher position:', glitcher.x, glitcher.y);
 
                 refreshUI();
+                cheatBuffer = '';
+            }
+
+            // BUG - Admin Console
+            if (cheatBuffer.endsWith('bug')) {
+                if (setShowAdminConsole) {
+                    setShowAdminConsole(true);
+                    gameState.current.showAdminConsole = true;
+                    console.log('[CHEAT] Admin Console Opened');
+                }
                 cheatBuffer = '';
             }
 

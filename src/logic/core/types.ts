@@ -752,6 +752,8 @@ export interface GameState {
     showSettings: boolean; // Synced from React State
     showLegendarySelection: boolean;
     showBossSkillDetail: boolean;
+    showAdminConsole: boolean;
+    showFeedbackModal: boolean;
     legendaryOptions: LegendaryHex[] | null;
     pendingLegendaryHex: LegendaryHex | null; // Hex waiting to be placed
     upgradingHexIndex: number | null; // For auto-upgrade animation

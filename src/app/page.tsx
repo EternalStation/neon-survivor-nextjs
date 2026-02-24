@@ -8,6 +8,8 @@ import { SettingsMenu } from '@/components/SettingsMenu';
 import { MainMenu } from '@/components/MainMenu';
 import { DeathScreen } from '@/components/DeathScreen';
 import { MobileControls } from '@/components/MobileControls';
+import { FeedbackModal } from '@/components/hud/FeedbackModal';
+import { AdminConsole } from '@/components/hud/AdminConsole';
 
 import AuthScreen from '@/components/AuthScreen';
 import Leaderboard from '@/components/Leaderboard';
@@ -50,12 +52,11 @@ export default function Home() {
     });
   }, []);
 
-  // Auto-focus logic
   useEffect(() => {
-    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !showLeaderboard) {
+    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !showLeaderboard && !hook.showFeedbackModal && !hook.showAdminConsole) {
       appRef.current?.focus();
     }
-  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, showLeaderboard, hook]);
+  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, showLeaderboard, hook.showFeedbackModal, hook.showAdminConsole, hook]);
 
   // Reset logic when quitting to main menu
   const handleQuit = () => {
@@ -135,7 +136,14 @@ export default function Home() {
       ref={appRef}
       style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', outline: 'none', background: '#000' }}
       tabIndex={0}
-      onClick={(e) => e.currentTarget.focus()}
+      onClick={(e) => {
+        // Don't steal focus if clicking an interactive element
+        const target = e.target as HTMLElement;
+        const isInteractive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.closest('button');
+        if (!isInteractive && !hook.showFeedbackModal && !hook.showAdminConsole) {
+          e.currentTarget.focus();
+        }
+      }}
     >
 
       {!gameStarted && !selectingClass && !showMultiplayerLobby && (
@@ -204,6 +212,7 @@ export default function Home() {
                     showUpgradeMenu={!!hook.upgradeChoices}
                     onSkipTime={hook.skipTime}
                     onTriggerPortal={hook.triggerPortal}
+                    onFeedback={() => hook.setShowFeedbackModal(true)}
                   />
 
                   {isMobile && !hook.gameOver && (
@@ -234,7 +243,15 @@ export default function Home() {
             {/* Full-Screen Modals (Cover entire viewport) */}
             {hook.showSettings && (
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20000, pointerEvents: 'auto' }}>
-                <SettingsMenu onClose={() => hook.setShowSettings(false)} onRestart={handleRestart} onQuit={handleQuit} />
+                <SettingsMenu
+                  onClose={() => hook.setShowSettings(false)}
+                  onRestart={handleRestart}
+                  onQuit={handleQuit}
+                  onFeedback={() => {
+                    hook.setShowSettings(false);
+                    hook.setShowFeedbackModal(true);
+                  }}
+                />
               </div>
             )}
 
@@ -264,6 +281,19 @@ export default function Home() {
               </div>
             )}
 
+            {hook.showFeedbackModal && (
+              <FeedbackModal
+                onClose={() => hook.setShowFeedbackModal(false)}
+                username={username}
+              />
+            )}
+
+            {hook.showAdminConsole && (
+              <AdminConsole
+                onClose={() => hook.setShowAdminConsole(false)}
+              />
+            )}
+
             {/* Global Tutorial Layer - Rendered last to be on top of EVERYTHING */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10000 }}>
               <HUD
@@ -285,6 +315,7 @@ export default function Home() {
                 showUpgradeMenu={!!hook.upgradeChoices}
                 onSkipTime={hook.skipTime}
                 onTriggerPortal={hook.triggerPortal}
+                onFeedback={() => { }} // No-op for tutorial layer
               />
             </div>
           </div>

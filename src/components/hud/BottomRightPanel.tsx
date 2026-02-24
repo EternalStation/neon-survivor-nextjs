@@ -14,6 +14,7 @@ interface BottomRightPanelProps {
     portalsUnlocked?: boolean;
     bossKills?: number;
     onTriggerPortal: () => void;
+    onFeedback: () => void;
 }
 
 export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
@@ -28,7 +29,8 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
     isFull,
     portalsUnlocked = false,
     bossKills = 0,
-    onTriggerPortal
+    onTriggerPortal,
+    onFeedback
 }) => {
     const isLocked = bossKills === 0 || !portalsUnlocked;
     const isPortalUnavailable = isLocked || portalState !== 'closed' || dust < portalCost;
@@ -42,6 +44,50 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
             alignItems: 'flex-end',
             gap: 12
         }}>
+            {/* BUG / FEEDBACK BUTTON */}
+            <div
+                onClick={onFeedback}
+                style={{
+                    position: 'relative',
+                    width: 52,
+                    height: 52,
+                    background: 'rgba(15, 23, 42, 0.7)',
+                    border: '2px solid rgba(239, 68, 68, 0.4)',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 10px rgba(239, 68, 68, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    pointerEvents: 'auto',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.1) translateY(-4px)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(239, 68, 68, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1) translateY(0)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 10px rgba(239, 68, 68, 0.1)';
+                }}
+            >
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 8px #ef4444)' }}>
+                    <path d="m8 2 1.88 1.88" />
+                    <path d="M14.12 3.88 16 2" />
+                    <path d="M9 7.13v-1a3 3 0 1 1 6 0v1" />
+                    <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                    <path d="m19 17-3-2" />
+                    <path d="m5 17 3-2" />
+                    <path d="m19 7-3 2" />
+                    <path d="m5 7 3 2" />
+                    <path d="m19 12-3 2" />
+                    <path d="m5 12 3 2" />
+                </svg>
+            </div>
+
             {/* PORTAL SKILL INDICATOR */}
             <div
                 onClick={onTriggerPortal}

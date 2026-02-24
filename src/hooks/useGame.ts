@@ -28,6 +28,8 @@ export function useGameLoop(gameStarted: boolean) {
     const showSettingsRef = useRef(false);
     const showModuleMenuRef = useRef(false);
     const showBossSkillDetailRef = useRef(false);
+    const showFeedbackModalRef = useRef(false);
+    const showAdminConsoleRef = useRef(false);
     const upgradeChoicesRef = useRef<UpgradeChoice[] | null>(null);
     const wasModuleMenuOpenRef = useRef(false); // Track if module menu was just open
     const wasPausedRef = useRef(false); // Track internal pause state for transition detection
@@ -45,12 +47,16 @@ export function useGameLoop(gameStarted: boolean) {
     const [portalError, setPortalError] = useState(false);
     const [showLegendarySelection, setShowLegendarySelection] = useState(false);
     const [showBossSkillDetail, setShowBossSkillDetail] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showAdminConsole, setShowAdminConsole] = useState(false);
 
     // Sync refs with state
     showStatsRef.current = showStats;
     showSettingsRef.current = showSettings;
     showModuleMenuRef.current = showModuleMenu;
     showBossSkillDetailRef.current = showBossSkillDetail;
+    showFeedbackModalRef.current = showFeedbackModal;
+    showAdminConsoleRef.current = showAdminConsole;
     upgradeChoicesRef.current = upgradeChoices;
 
     // Update washer ref while menu is open
@@ -63,8 +69,10 @@ export function useGameLoop(gameStarted: boolean) {
     gameState.current.showStats = showStats;
     gameState.current.showSettings = showSettings;
     gameState.current.showBossSkillDetail = showBossSkillDetail;
+    gameState.current.showFeedbackModal = showFeedbackModal;
+    gameState.current.showAdminConsole = showAdminConsole;
     gameState.current.isUpgradeMenuOpen = !!upgradeChoices;
-    gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail;
+    gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail || showFeedbackModal || showAdminConsole;
 
     // Connect UI Handlers
     const {
@@ -99,6 +107,7 @@ export function useGameLoop(gameStarted: boolean) {
         setShowSettings,
         setShowStats,
         setShowModuleMenu,
+        setShowAdminConsole,
         setGameOver,
         triggerPortal,
         refreshUI: () => setUiState(p => p + 1),
@@ -203,7 +212,7 @@ export function useGameLoop(gameStarted: boolean) {
                 return;
             }
 
-            const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current;
+            const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current || showFeedbackModalRef.current || showAdminConsoleRef.current;
 
             if (!isMenuOpen && wasPausedRef.current) {
                 // Determine unpause mode based on what was open
@@ -329,7 +338,7 @@ export function useGameLoop(gameStarted: boolean) {
 
             if (accRef.current > FIXED_STEP * 20) accRef.current = 0;
 
-            if (['requested', 'waiting'].includes(state.extractionStatus) || state.portalBlockedByWorms) {
+            if (!state.isPaused && (['requested', 'waiting'].includes(state.extractionStatus) || state.portalBlockedByWorms)) {
                 updateExtraction(state, safeDt);
                 setUiState(p => p + 1);
             }
@@ -361,6 +370,8 @@ export function useGameLoop(gameStarted: boolean) {
             }
 
             if (state.showLegendarySelection && !showLegendarySelection) setShowLegendarySelection(true);
+            if (state.showAdminConsole && !showAdminConsole) setShowAdminConsole(true);
+            if (state.showFeedbackModal && !showFeedbackModal) setShowFeedbackModal(true);
 
             frameCountRef.current++;
             if (!state.isPaused && frameCountRef.current % 4 === 0) {
@@ -435,6 +446,10 @@ export function useGameLoop(gameStarted: boolean) {
         onViewChassisDetail,
         showBossSkillDetail,
         setShowBossSkillDetail,
+        showFeedbackModal,
+        setShowFeedbackModal,
+        showAdminConsole,
+        setShowAdminConsole,
         skipTime
     };
 }

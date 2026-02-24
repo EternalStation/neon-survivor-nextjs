@@ -172,6 +172,29 @@ class ApiClient {
             method: 'DELETE',
         });
     }
+
+    // Feedback endpoints
+    async submitFeedback(type: 'bug' | 'suggestion', message: string) {
+        return this.request('/feedback', {
+            method: 'POST',
+            body: JSON.stringify({ type, message }),
+        });
+    }
+
+    async getMyFeedbacks(username: string) {
+        return this.request(`/feedback?username=${encodeURIComponent(username)}`);
+    }
+
+    async getAllFeedbacks() {
+        return this.request('/feedback');
+    }
+
+    async updateFeedbackStatus(id: number, status: string) {
+        return this.request('/feedback', {
+            method: 'PUT',
+            body: JSON.stringify({ id, status })
+        });
+    }
 }
 
 export const api = new ApiClient();

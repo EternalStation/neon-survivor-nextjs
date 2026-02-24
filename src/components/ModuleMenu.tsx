@@ -635,6 +635,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 userSelect: 'none'
             }}>
 
+
             {/* Tutorial Layer - REMOVED: Highlighting looks strange to user */}
 
 
