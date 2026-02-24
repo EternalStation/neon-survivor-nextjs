@@ -55,7 +55,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
 
     // Launch Trigger: Any player gets too close to Mother (Guard Mode)
     if (e.minionState === 0 && m) {
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearestDist = Infinity;
         players.forEach(p => {
             const d = Math.hypot(p.x - m.x, p.y - m.y);
@@ -69,7 +69,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
     }
 
     if (e.minionState === 0 && m) {
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearestPlayer: any = players[0];
         let minD = Infinity;
         players.forEach(p => {
@@ -102,7 +102,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         e.dead = true; state.rareSpawnActive = false;
         playSfx('rare-despawn'); return { vx: 0, vy: 0 };
     }
-    const players = state.players ? Object.values(state.players) : [state.player];
+    const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let nearestPlayer: any = players[0];
     let minD = Infinity;
     players.forEach(p => {
@@ -471,7 +471,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
         let spd = 10.0; // Base Speed increased to catch 7.0 speed enemies
         // Frenzy if near any player (Legacy logic kept for flavor)
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearAnyPlayer = false;
         players.forEach(p => {
             if (state.enemies.some(o => !o.dead && !o.isZombie && Math.hypot(o.x - p.x, o.y - p.y) < 300)) {
@@ -567,7 +567,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
     }
 
     // 1. BLINK (Teleport when any player is too close)
-    const players = state.players ? Object.values(state.players) : [state.player];
+    const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let nearestDist = Infinity;
     let nearestPlayer: any = players[0];
     players.forEach(p => {

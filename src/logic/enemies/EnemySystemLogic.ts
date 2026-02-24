@@ -53,10 +53,16 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
 
             if (poi.cooldown > 0) {
                 poi.cooldown -= step;
-                if (poi.cooldown < 0) poi.cooldown = 0;
+                if (poi.cooldown <= 0) {
+                    poi.cooldown = 0;
+                    // Relocate to a new random position after cooldown
+                    relocatePOI(poi);
+                    poi.active = false;
+                    poi.activationProgress = 0;
+                }
             }
 
-            const players = state.players ? Object.values(state.players) : [state.player];
+            const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
             let inRange = false;
             players.forEach(p => {
                 const d = Math.hypot(p.x - poi.x, p.y - poi.y);
@@ -69,7 +75,9 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 if (!inRange || poi.activeDuration >= 30) {
                     poi.active = false;
                     playSfx('power-down');
-                    relocatePOI(poi);
+                    poi.activeDuration = 0;
+                    poi.activationProgress = 0;
+                    poi.cooldown = 30;
                 }
             } else if (poi.cooldown === 0) {
                 if (inRange) {
@@ -102,10 +110,16 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
 
             if (poi.cooldown > 0) {
                 poi.cooldown -= step;
-                if (poi.cooldown < 0) poi.cooldown = 0;
+                if (poi.cooldown <= 0) {
+                    poi.cooldown = 0;
+                    // Relocate to new random position after cooldown
+                    relocatePOI(poi);
+                    poi.active = true; // Anomaly starts active after relocate
+                    poi.progress = 0;
+                }
             }
 
-            const players = state.players ? Object.values(state.players) : [state.player];
+            const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
             let inRange = false;
             let nearestPlayer: any = players[0];
             let nearestDist = Infinity;
@@ -131,7 +145,8 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                         boss.spawnGracePeriod = 0.5;
                         state.anomalyBossCount = (state.anomalyBossCount || 0) + 1;
                     }
-                    poi.active = false;
+                    poi.active = true;
+                    poi.cooldown = 30;
                     poi.progress = 0;
                 }
             }

@@ -39,6 +39,7 @@ interface UseGameLogicProps {
     triggerDamageTaken: (dmg: number) => void;
     triggerDeath: () => void;
     triggerWallIncompetence: () => void;
+    triggerIncubatorDestroyed: () => void;
     onViewChassisDetail: () => void;
 }
 
@@ -58,6 +59,7 @@ export function useGameLogic({
     triggerDamageTaken,
     triggerDeath,
     triggerWallIncompetence,
+    triggerIncubatorDestroyed,
     onViewChassisDetail
 }: UseGameLogicProps) {
     const updateLogic = useCallback((state: GameState, step: number) => {
@@ -81,6 +83,9 @@ export function useGameLogic({
                 state.isPaused = true;
                 setGameOver(true);
                 import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
+            }
+            if (event === 'incubator_destroyed') {
+                triggerIncubatorDestroyed();
             }
         };
         state.legionLeads = state.legionLeads || {};
@@ -251,7 +256,7 @@ export function useGameLogic({
 
             if (effect.type === 'glitch_cloud') {
                 const range = effect.radius;
-                const players = state.players ? Object.values(state.players) : [state.player].filter(p => !!p);
+                const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player].filter(p => !!p);
                 players.forEach(p => {
                     const dist = Math.hypot(p.x - effect.x, p.y - effect.y);
                     if (dist < range + p.size) {
@@ -412,7 +417,7 @@ export function useGameLogic({
         // Particles should probably run on both for visuals, but we rely on Host for important state)
         // For MVP: Run on both
         updateBlueprints(state, step);
-        updateIncubator(state, step);
+        updateIncubator(state, step, eventHandler);
         updateParticles(state);
         if (state.critShake > 0) state.critShake *= 0.85;
         if (state.timeInArena) {
@@ -588,7 +593,7 @@ export function useGameLogic({
 
         if (activeBoss) startBossAmbience();
         else stopBossAmbience();
-    }, [bossWarning, keys, inputVector, setUpgradeChoices, setShowLegendarySelection, setGameOver, setBossWarning, canvasRef, mousePos, windowScaleFactor]);
+    }, [bossWarning, keys, inputVector, setUpgradeChoices, setShowLegendarySelection, setGameOver, setBossWarning, canvasRef, mousePos, windowScaleFactor, triggerIncubatorDestroyed]);
 
     return { updateLogic };
 }

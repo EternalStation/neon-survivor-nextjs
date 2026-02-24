@@ -27,7 +27,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
         vx = 0; vy = 0; e.rotationPhase = (e.rotationPhase || 0) + 0.2;
         if (state.gameTime > (e.timer || 0)) {
             // Find nearest player for the charge lock
-            const players = state.players ? Object.values(state.players) : [state.player];
+            const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
             let nearestP: any = players[0];
             let minD = Infinity;
             players.forEach(p => {
@@ -173,7 +173,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
         const laserAngle = e.dashState || 0;
 
         // Massive 3000 Range
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         players.forEach(p => {
             const px = p.x - e.x;
             const py = p.y - e.y;
@@ -332,7 +332,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     }
 
     // Multiplayer-aware proximity check
-    const players = state.players ? Object.values(state.players) : [state.player];
+    const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let distToNearest = Infinity;
     players.forEach(p => {
         const d = Math.hypot(p.x - e.x, p.y - e.y);

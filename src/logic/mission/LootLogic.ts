@@ -365,7 +365,7 @@ export function updateLoot(state: GameState) {
         item.vy *= 0.95;
 
         // Check all players for magnetism
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearestPlayerWithSpace: any = null;
         let minPlayerDist = Infinity;
 

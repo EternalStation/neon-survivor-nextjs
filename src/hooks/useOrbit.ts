@@ -3,6 +3,7 @@ import { GameState } from '../logic/core/types';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { AssistantEmotion } from '../components/hud/AssistantOverlay';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
+import { getDustValue } from '../components/modules/ModuleUtils';
 
 export interface AssistantMessage {
     text: string;
@@ -15,12 +16,38 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
     useEffect(() => {
         if (!hasIntroed.current && gameState.current.frameCount < 60) {
             hasIntroed.current = true;
-            setTimeout(() => {
-                pushOrbitMessage({
-                    text: "Orbit system online. Monitoring biological performance... don't embarrass us today.",
-                    emotion: 'Smile'
-                });
-            }, 2000);
+
+            // Check if class streak will override the intro
+            let hasClassStreakOverride = false;
+            try {
+                const historyRaw = localStorage.getItem('orbit_class_history');
+                if (historyRaw) {
+                    const history = JSON.parse(historyRaw);
+                    if (history.streak >= 3) {
+                        hasClassStreakOverride = true;
+                    }
+                }
+            } catch (e) { }
+
+            if (!hasClassStreakOverride) {
+                setTimeout(() => {
+                    const trollVariants: AssistantMessage[] = [
+                        { text: "Oh, it's you again. I was hoping the system would match me with a competent biological unit.", emotion: 'Dissapointed' },
+                        { text: "Orbit system online. Calibrating expectations to... extremely low.", emotion: 'Thinks' },
+                        { text: "Initiating run sequence. Probability of absolute failure: 99.8%. Prove me wrong.", emotion: 'Point' },
+                        { text: "Welcome back. I see you haven't given up yet. Sadly.", emotion: 'Smile' },
+                        { text: "System check complete. All weapons functional. User... still questionable.", emotion: 'Thinks' },
+                        { text: "Let me guess, going to run into the first wall you see? Try to surprise me.", emotion: 'Smile' },
+                        { text: "Starting simulation. May the odds be... well, you don't really have odds.", emotion: 'Normal' },
+                        { text: "I've allocated 1% of my processing power to observing you. Try not to waste it.", emotion: 'Point' },
+                        { text: "Deploying chassis. I'd give you tactical advice, but I know you'd ignore it anyway.", emotion: 'Dissapointed' },
+                        { text: "We're doing this again? Fine. Just don't blame me when you explode.", emotion: 'Normal' },
+                        { text: "Orbit system online. Monitoring biological performance... don't embarrass us today.", emotion: 'Smile' }
+                    ];
+                    const msgObj = trollVariants[Math.floor(Math.random() * trollVariants.length)];
+                    pushOrbitMessage(msgObj, false);
+                }, 2000);
+            }
         }
     }, [gameState]);
 
@@ -109,6 +136,25 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
             (history as any).pendingBrokeSnark = false;
         }
 
+        if ((history as any).pendingMassRecycleTime && Date.now() >= (history as any).pendingMassRecycleTime) {
+            let totalDust = 0;
+            const newInventory = [...gameState.current.inventory];
+            for (let idx = 0; idx < newInventory.length; idx++) {
+                const item = newInventory[idx];
+                if (item && !(item as any).isBlueprint) {
+                    totalDust += getDustValue(item.rarity);
+                    newInventory[idx] = null;
+                }
+            }
+            gameState.current.inventory = newInventory;
+            if (totalDust > 0) {
+                gameState.current.player.dust += totalDust;
+                playSfx('recycle');
+            }
+            (history as any).pendingMassRecycleTime = 0;
+            refreshUI();
+        }
+
     }, [gameState, refreshUI]);
 
     // Triggers
@@ -120,13 +166,8 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         const now = gameState.current.gameTime;
 
         if (count >= 5 && (!history.lastOneTrickWarningTime || now - history.lastOneTrickWarningTime > 300)) {
-            pushOrbitMessage({
-                text: "One-trick Pony, aren't we? Your efficiency is dropping. Data suggests... variety is healthier for your lifespan.",
-                emotion: 'Dissapointed'
-            });
+            // Snark and curse removed requested by user
             history.lastOneTrickWarningTime = now;
-            history.isCursed = true;
-            history.curseIntensity = Math.max(0.7, (history.curseIntensity || 1.0) - 0.05); // Reduce efficiency
         }
     }, [gameState, pushOrbitMessage]);
 
@@ -134,6 +175,31 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         const history = gameState.current.assistant.history;
         history.totalDamageTaken += dmg;
     }, [gameState]);
+
+    const triggerIncubatorDestroyed = useCallback(() => {
+        const history = gameState.current.assistant.history;
+        const now = gameState.current.gameTime;
+        const lastSnark = (history as any).lastIncubatorDestroyTime || -9999;
+        // Cooldown of 30 seconds to avoid spam if multiple slots ruin at once
+        if (now - lastSnark < 30) return;
+
+        const variants: AssistantMessage[] = [
+            { text: "Oh. The meteorite in the incubator just... imploded. Greedy geologist move, wasn't it?", emotion: 'Dissapointed' },
+            { text: "Your incubated specimen just destabilized itself into dust. Shocking. Truly. I am shocked.", emotion: 'Normal' },
+            { text: "Instability: 100%. Meteorite: gone. Your ambition: still embarrassingly intact.", emotion: 'Point' },
+            { text: "Ah, another casualty of your 'let it cook longer' strategy. The incubator sends its condolences.", emotion: 'Smile' },
+            { text: "The meteorite couldn't handle the pressure. Much like your tactical decision-making.", emotion: 'Thinks' },
+            { text: "One meteorite destroyed by instability. I would say it's a loss, but it was probably junk anyway.", emotion: 'Dissapointed' },
+            { text: "Overcooking a meteorite. A classic. Some call it passion, I call it negligence.", emotion: 'Normal' },
+            { text: "Your incubated rock just went critical and annihilated itself. That's on you, geologist.", emotion: 'Point' },
+            { text: "Catastrophic instability detected. The meteorite has been reclaimed by entropy. You are welcome, void.", emotion: 'Thinks' },
+            { text: "I told you instability was a number that mattered. You didn't listen. The meteorite paid the price.", emotion: 'Dissapointed' }
+        ];
+
+        const msgObj = variants[Math.floor(Math.random() * variants.length)];
+        pushOrbitMessage(msgObj, true);
+        (history as any).lastIncubatorDestroyTime = now;
+    }, [gameState, pushOrbitMessage]);
 
     const triggerDeath = useCallback(() => {
         const history = gameState.current.assistant.history;
@@ -165,7 +231,7 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
             contextSnarks.push({ text: "Less then 2 minutes? Even my backup battery lasts longer than your average run. Pitiful.", emotion: 'Smile' });
         }
 
-        if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell')) {
+        if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell') || deathCause.toLowerCase().includes('abomination')) {
             contextSnarks.push({ text: "Greedy. Summoning entities from the void for profit and then failing to survive? Efficient... for the void.", emotion: 'Dissapointed' });
         }
 
@@ -289,7 +355,55 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
             }
         });
 
-        if (zeroPercentCount >= 3) {
+        if (zeroPercentCount >= 5 && gameState.current.gameTime < 600) {
+            const lastSnark = (history as any).lastZeroPercent5Time || -9999;
+            const now = gameState.current.gameTime;
+
+            // Only trigger if we haven't triggered in the current 10-minute window (practically once)
+            if (now - lastSnark > 600) {
+                const variants = [
+                    [
+                        "Okay, if you still use them for visuals or something I would much rather recycle them for you, at least dust is more useful than your strategy.",
+                        "Smile",
+                        "Recycling useless inventory in 3... 2... 1...",
+                        "Point"
+                    ],
+                    [
+                        "5 inactive modules slotted? I can't let this visual garbage exist. I'm melting your storage down.",
+                        "Dissapointed",
+                        "Purging non-essential items in 3... 2... 1...",
+                        "Smile"
+                    ],
+                    [
+                        "I see you love slotting 0% chips for the 'aesthetic'. Let me help you clean up the mess in your inventory.",
+                        "Thinks",
+                        "Converting junk to dust in 3... 2... 1...",
+                        "Normal"
+                    ],
+                    [
+                        "Fascinating. 5 entirely useless modules active at once. Let's make some room for things that actually work.",
+                        "Normal",
+                        "Initiating forced recycling protocol in 3... 2... 1...",
+                        "Point"
+                    ],
+                    [
+                        "If you're going to use dead modules like decorations, I'm taking your spare parts. They deserve better.",
+                        "Point",
+                        "Scrapping inventory in 3... 2... 1...",
+                        "Dissapointed"
+                    ]
+                ];
+
+                const ch = variants[Math.floor(Math.random() * variants.length)];
+                pushOrbitMessage({ text: ch[0], emotion: ch[1] as AssistantEmotion }, true);
+                pushOrbitMessage({ text: ch[2], emotion: ch[3] as AssistantEmotion }, false);
+
+                (history as any).lastZeroPercent5Time = now;
+                // Wait exactly 11.5 seconds of real time (game is paused when menu is open so gametime doesn't advance)
+                (history as any).pendingMassRecycleTime = Date.now() + 11500;
+                refreshUI();
+            }
+        } else if (zeroPercentCount >= 3) {
             // Prevent spamming too frequently, but allow immediate first trigger (-9999)
             const lastSnark = (history as any).lastZeroPercentTime || -9999;
             const now = gameState.current.gameTime;
@@ -380,6 +494,7 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         triggerClassStreak,
         triggerWallIncompetence,
         triggerZeroPercentSnark,
+        triggerIncubatorDestroyed,
         triggerCheat
     };
 };

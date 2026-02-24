@@ -60,6 +60,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerClassStreak,
         triggerWallIncompetence,
         triggerZeroPercentSnark,
+        triggerIncubatorDestroyed,
         triggerCheat
     } = useOrbit(gameState, () => setUiState(p => p + 1));
 
@@ -150,6 +151,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerDamageTaken,
         triggerDeath,
         triggerWallIncompetence,
+        triggerIncubatorDestroyed,
         onViewChassisDetail: () => {
             gameState.current.chassisDetailViewed = true;
             setUiState(p => p + 1);

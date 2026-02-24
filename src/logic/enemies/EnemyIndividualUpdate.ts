@@ -37,7 +37,7 @@ export function updateSingleEnemy(
     if (e.isAnomaly && !e.dead) {
         const gen = e.anomalyGeneration || 0;
         const burnRadius = 390 + (gen * 10) + (e.bonusBurnRadius || 0);
-        const players = state.players ? Object.values(state.players) : [state.player];
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         players.forEach(p => {
             const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
             if (distToPlayer < burnRadius) {

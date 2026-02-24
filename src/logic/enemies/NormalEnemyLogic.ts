@@ -153,7 +153,7 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
     }
 
     // Multiplayer-aware proximity check
-    const players = state.players ? Object.values(state.players) : [state.player];
+    const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let distToNearest = Infinity;
     players.forEach(p => {
         const d = Math.hypot(p.x - e.x, p.y - e.y);
