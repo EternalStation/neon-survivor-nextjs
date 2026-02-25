@@ -1,10 +1,14 @@
 import React from 'react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface FeedbackButtonProps {
     onClick: () => void;
 }
 
 export function FeedbackButton({ onClick }: FeedbackButtonProps) {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
     return (
         <button
             onClick={onClick}
@@ -37,7 +41,7 @@ export function FeedbackButton({ onClick }: FeedbackButtonProps) {
                 e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 243, 255, 0.2)';
             }}
         >
-            Feedback
+            {t.feedback}
         </button>
     );
 }

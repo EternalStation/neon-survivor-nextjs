@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import type { GameState, UpgradeChoice } from '../../logic/core/types';
 import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
 import { UpgradeCard } from '../UpgradeCard';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface UpgradeMenuProps {
     upgradeChoices: UpgradeChoice[];
@@ -13,6 +15,8 @@ interface UpgradeMenuProps {
 
 export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgradeSelect, onUpgradeReroll, gameState }) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
 
     // Initial Reset
     useEffect(() => {
@@ -74,7 +78,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                 textAlign: 'center',
                 width: '100%',
             }}>
-                {upgradeChoices[0].isSpecial ? "VOID TECHNOLOGY DETECTED" : "SELECT SYSTEM UPGRADE"}
+                {upgradeChoices[0].isSpecial ? t.voidTechDetected : t.selectSystemUpgrade}
             </h2>
 
             <div style={{
@@ -153,7 +157,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                             e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
                     >
-                        REROLL UPGRADES ({gameState.player.rerolls})
+                        {t.rerollUpgrades} ({gameState.player.rerolls})
                     </button>
                 </div>
             )}
@@ -172,7 +176,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                     marginBottom: 20,
                     animation: 'pulse 1s infinite'
                 }}>
-                    ANOMALY TERMINATED: RARITY CHANCE INCREASED
+                    {t.anomalyTerminated}
                 </div>
             )}
         </div>

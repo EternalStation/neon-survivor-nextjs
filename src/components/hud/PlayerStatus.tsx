@@ -7,6 +7,8 @@ import { PLAYER_CLASSES } from '../../logic/core/classes';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { calcStat } from '../../logic/utils/MathUtils';
 import { formatLargeNumber } from '../../utils/format';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 
 interface PlayerStatusProps {
@@ -16,6 +18,10 @@ interface PlayerStatusProps {
 
 export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) => {
     const { player } = gameState;
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
+
+    // Track previous HP for damage animation
     const [prevHp, setPrevHp] = useState(player.curHp);
 
     // HP Bar Animation Control
@@ -54,7 +60,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             fontSize: 6, fontWeight: 900, color: '#fff', letterSpacing: 1,
                             textShadow: '0 0 2px #000', lineHeight: '8px'
                         }}>
-                            CHANNELING
+                            {t.channeling}
                         </div>
                     </div>
                 );
@@ -165,7 +171,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     boxShadow: '0 0 5px #22d3ee',
                                     zIndex: 20,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }} title="Neural Overclock Active">
+                                }} title={t.neuralOverclockActive}>
                                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
                                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                     </svg>
@@ -199,7 +205,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: skill.cooldown > 0 ? 0.5 : 1 }} />
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
-                                        SKILL
+                                        {t.skill}
                                     </div>
                                 )}
 
@@ -246,7 +252,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 boxShadow: '0 0 5px #22d3ee',
                                 zIndex: 20,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }} title="Neural Overclock Active">
+                            }} title={t.neuralOverclockActive}>
                                 <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
                                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                 </svg>

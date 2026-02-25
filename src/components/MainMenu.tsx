@@ -3,6 +3,8 @@ import { startMenuMusic, preloadMusic } from '../logic/audio/AudioLogic';
 import { CURRENT_PATCH_VERSION } from '../utils/leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface MainMenuProps {
     onStart: () => void;
@@ -17,6 +19,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
     const [showBlueprint, setShowBlueprint] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [mouse, setMouse] = useState({ x: 0, y: 0 });
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).mainMenu;
 
     const mouseRef = React.useRef({ x: 0, y: 0 });
 
@@ -231,29 +235,29 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 {username && (
                     <div className="user-profile-tag" style={{ marginBottom: 20 }}>
                         <div className="user-status-dot" />
-                        PILOT NAME: {username.toUpperCase()}
+                        {t.pilotName}: {username.toUpperCase()}
                     </div>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', alignItems: 'center', pointerEvents: 'auto' }}>
                     <button className="btn-start" onClick={handleStart}>
-                        <span>ENTER VOID</span>
+                        <span>{t.enterVoid}</span>
                     </button>
                     <button className="btn-logic" style={{ border: '1px solid #a855f7', color: '#a855f7' }} onClick={handleMultiplayerStart}>
-                        MULTIPLAYER VOID
+                        {t.multiplayerVoid}
                     </button>
                     <button className="btn-logic" onClick={onShowLeaderboard}>
-                        LEADERBOARD
+                        {t.leaderboard}
                     </button>
                     <button className="btn-logic" onClick={() => setShowSettings(true)}>
-                        SETTINGS
+                        {t.settings}
                     </button>
                     <button className="btn-logic" onClick={() => setShowBlueprint(true)}>
-                        DATABASE
+                        {t.database}
                     </button>
                     {onLogout && (
                         <button className="btn-logout" onClick={onLogout}>
-                            DISCONNECT
+                            {t.disconnect}
                         </button>
                     )}
                 </div>
@@ -261,7 +265,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
 
             {/* Patch Version Overlay */}
             <div className="patch-version-overlay">
-                VER: {CURRENT_PATCH_VERSION}
+                {t.ver} {CURRENT_PATCH_VERSION}
             </div>
 
             <style>{`
@@ -334,8 +338,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 <div className="blueprint-modal" onClick={() => setShowBlueprint(false)}>
                     <div className="blueprint-container" onClick={(e) => e.stopPropagation()}>
                         <div className="blueprint-header">
-                            <div className="blueprint-title">VOID NEXUS - ARCHIVE</div>
-                            <button className="btn-close-blueprint" onClick={() => setShowBlueprint(false)}>CLOSE [ESC]</button>
+                            <div className="blueprint-title">{t.archiveTitle}</div>
+                            <button className="btn-close-blueprint" onClick={() => setShowBlueprint(false)}>{t.close}</button>
                         </div>
                         <iframe src="/blueprint.html" className="blueprint-iframe" title="Game Archive" />
                     </div>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GameState, TutorialStep } from '../../logic/core/types';
 import { TUTORIAL_HINTS } from '../../logic/core/TutorialLogic';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface TutorialOverlayProps {
     gameState: GameState;
@@ -12,6 +14,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ gameState }) =
     const [currentHint, setCurrentHint] = useState<{ text: string, subtext: string } | null>(null);
     const [displayedText, setDisplayedText] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
 
     useEffect(() => {
         if (!tutorial.isActive || tutorial.currentStep === TutorialStep.COMPLETE) {
@@ -185,7 +189,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ gameState }) =
                         }}>
                             <div style={{ width: '4px', height: '4px', background: '#0ff', borderRadius: '50%' }} />
                         </div>
-                        ORBIT SPEAKING
+                        {t.orbitSpeaking}
                     </div>
 
                     {/* Chat Text */}
@@ -284,7 +288,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ gameState }) =
                                 alignSelf: 'flex-end',
                                 paddingRight: '14px'
                             }}>
-                            PRESS [SPACE] TO CONTINUE ►
+                            {t.pressSpaceToContinue}
                         </div>
                     )}
                 </div>

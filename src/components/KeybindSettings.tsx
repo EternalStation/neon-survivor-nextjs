@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { getKeybinds, saveKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import type { Keybinds } from '../logic/utils/Keybinds';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface KeybindSettingsProps {
     onBack: () => void;
@@ -11,6 +13,8 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     const [keybinds, setKeybinds] = useState<Keybinds>(getKeybinds());
     const [listening, setListening] = useState<keyof Keybinds | null>(null);
     const [conflict, setConflict] = useState<keyof Keybinds | null>(null);
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).settings.keybinds;
 
     const RESERVED_KEYS: Record<string, string> = {
         'Move Up': 'W / ↑',
@@ -63,18 +67,18 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     }, [listening, keybinds]);
 
     const menuItems: { label: string; key: keyof Keybinds }[] = [
-        { label: 'Stats Menu', key: 'stats' },
-        { label: 'Matrix Module', key: 'matrix' },
-        { label: 'Activate Portal', key: 'portal' },
+        { label: t.statsMenu, key: 'stats' },
+        { label: t.matrixModule, key: 'matrix' },
+        { label: t.activatePortal, key: 'portal' },
     ];
 
     const skillItems: { label: string; key: keyof Keybinds }[] = [
-        { label: 'Skill 1', key: 'skill1' },
-        { label: 'Skill 2', key: 'skill2' },
-        { label: 'Skill 3', key: 'skill3' },
-        { label: 'Skill 4', key: 'skill4' },
-        { label: 'Skill 5', key: 'skill5' },
-        { label: 'Skill 6', key: 'skill6' },
+        { label: t.skill1, key: 'skill1' },
+        { label: t.skill2, key: 'skill2' },
+        { label: t.skill3, key: 'skill3' },
+        { label: t.skill4, key: 'skill4' },
+        { label: t.skill5, key: 'skill5' },
+        { label: t.skill6, key: 'skill6' },
     ];
 
     const renderBindItem = (item: { label: string; key: keyof Keybinds }) => (
@@ -106,13 +110,13 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
 
     return (
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 15 }}>
-            <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid #334155', paddingBottom: 10, marginBottom: 10 }}>CONTROLS</h3>
+            <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid #334155', paddingBottom: 10, marginBottom: 10 }}>{t.title}</h3>
 
             <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
                 {/* COLUMN 1: MOVEMENT */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#22d3ee', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>MOVEMENT</h4>
+                        <h4 style={{ color: '#22d3ee', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
                         {Object.entries(RESERVED_KEYS).map(([label, display]) => (
                             <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ color: '#64748b', fontSize: 13, fontWeight: 700, letterSpacing: '0.2px' }}>{label}</span>
@@ -140,7 +144,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                 {/* COLUMN 2: SKILLS 1-3 */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SKILLS</h4>
+                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.skills}</h4>
                         {skillItems.slice(0, 3).map(item => renderBindItem(item))}
                     </div>
                 </div>
@@ -159,7 +163,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             <div style={{ height: 1, background: 'rgba(51, 65, 85, 0.2)', margin: '0px 0' }} />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ color: '#6366f1', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>SYSTEM</h4>
+                <h4 style={{ color: '#6366f1', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.system}</h4>
                 <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
                     <div style={{ flex: 1 }}>{renderBindItem(menuItems[0])}</div>
                     <div style={{ width: 1, alignSelf: 'stretch' }} />
@@ -170,7 +174,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             </div>
 
             <div style={{ height: 10 }}>
-                {conflict && <p style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, textAlign: 'center', margin: 0, letterSpacing: 1 }}>⚠ KEY ALREADY ASSIGNED</p>}
+                {conflict && <p style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, textAlign: 'center', margin: 0, letterSpacing: 1 }}>{t.keyAssigned}</p>}
             </div>
             <style>{`
                 .listening-pulse {

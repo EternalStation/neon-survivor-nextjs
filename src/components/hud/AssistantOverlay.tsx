@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
+
 export type AssistantEmotion = 'Normal' | 'Dissapointed' | 'Point' | 'Smile' | 'Thinks';
 
 interface AssistantOverlayProps {
@@ -11,6 +14,8 @@ interface AssistantOverlayProps {
 export const AssistantOverlay: React.FC<AssistantOverlayProps> = ({ message, emotion = 'Normal', onComplete, isVisible }) => {
     const [displayedText, setDisplayedText] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
 
     useEffect(() => {
         if (!isVisible) {
@@ -111,7 +116,7 @@ export const AssistantOverlay: React.FC<AssistantOverlayProps> = ({ message, emo
                     gap: '8px'
                 }}>
                     <span style={{ width: '6px', height: '6px', background: '#00f3ff', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
-                    Orbit Assistant
+                    {t.orbitAssistant}
                 </div>
 
                 <div style={{

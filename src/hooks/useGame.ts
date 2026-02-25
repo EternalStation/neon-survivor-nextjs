@@ -60,8 +60,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerClassStreak,
         triggerWallIncompetence,
         triggerZeroPercentSnark,
-        triggerIncubatorDestroyed,
-        triggerCheat
+        triggerIncubatorDestroyed
     } = useOrbit(gameState, () => setUiState(p => p + 1));
 
     // Sync refs with state
@@ -478,7 +477,6 @@ export function useGameLoop(gameStarted: boolean) {
         triggerDamageTaken,
         triggerDeath,
         triggerClassStreak,
-        triggerCheat,
         triggerWallIncompetence,
         triggerZeroPercentSnark
     };

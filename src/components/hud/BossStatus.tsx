@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { GameState } from '../../logic/core/types';
 import { formatLargeNumber } from '../../utils/format';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 
 interface BossStatusProps {
@@ -136,12 +138,15 @@ const BOSS_SKILLS_L5: Record<string, { name: string; desc: string; color: string
 };
 
 export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDetail, setShowSkillDetail }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
+
     const activeBosses = gameState.enemies.filter(e => e.boss && !e.dead);
     // Sort by spawn time to keep order consistent with appearance
     activeBosses.sort((a, b) => (a.spawnedAt || 0) - (b.spawnedAt || 0));
 
     // Remove local state, use props
-    const [localSkillData, setLocalSkillData] = useState<{ name: string; desc: string; color: string } | null>(null);
+    const [localSkillData, setLocalSkillData] = useState<{ name: string; desc: string; color: string; iconLabel: string; iconUrl?: string } | null>(null);
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -182,9 +187,9 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                 color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase',
                                 letterSpacing: 2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)', marginBottom: 2
                             }}>
-                                <span>{BOSS_NAMES[boss.shape] || 'ANOMALY'}</span>
+                                <span>{(t.bossNames as any)[boss.shape] || t.bossWord}</span>
                                 <span style={{ color: '#ef4444' }}>
-                                    LVL {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
+                                    {t.bossLvl} {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
                                 </span>
                             </div>
 
@@ -204,7 +209,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                     color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
                                     letterSpacing: 2, lineHeight: '16px', textShadow: '0 0 4px #000'
                                 }}>
-                                    {formatLargeNumber(Math.round(boss.hp))} / {formatLargeNumber(Math.round(boss.maxHp))} HP
+                                    {formatLargeNumber(Math.round(boss.hp))} / {formatLargeNumber(Math.round(boss.maxHp))} {t.bossHp}
                                 </div>
                                 {boss.shape === 'abomination' && boss.stage && (
                                     <div style={{
@@ -214,7 +219,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                         letterSpacing: 1.5, lineHeight: '16px',
                                         textShadow: `0 0 8px ${boss.stage === 3 ? '#b91c1c' : (boss.stage === 2 ? '#ef4444' : '#f87171')}`
                                     }}>
-                                        STAGE {boss.stage}
+                                        {t.bossStage} {boss.stage}
                                     </div>
                                 )}
                             </div>
@@ -299,10 +304,10 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
                             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                         >
-                            [ DISMISS ]
+                            {t.bossDismiss}
                         </button>
                         <div style={{ position: 'absolute', bottom: -30, width: '100%', left: 0, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 1 }}>
-                            PRESS ESC OR CLICK ANYWHERE TO RESUME
+                            {t.bossResumePrompt}
                         </div>
                     </div>
                 </div>

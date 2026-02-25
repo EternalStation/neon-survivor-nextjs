@@ -26,6 +26,7 @@ import { useWindowScale } from '@/hooks/useWindowScale';
 import { startBGM } from '@/logic/audio/AudioLogic';
 import api from '@/api/client';
 import '@/styles/menu_additions.css';
+import { LanguageProvider } from '@/lib/LanguageContext';
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
@@ -42,33 +43,7 @@ export default function Home() {
 
   const { scale, isMobile, isLandscape } = useWindowScale();
 
-  // Cheat Codes Listener
-  const [cheatBuffer, setCheatBuffer] = useState('');
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!e || !e.key) return;
-      const char = e.key.toUpperCase();
-      if (char.length === 1 && /[A-Z0-9]/.test(char)) {
-        const newBuffer = (cheatBuffer + char).slice(-10);
-        setCheatBuffer(newBuffer);
 
-        if (newBuffer.endsWith('I1')) hook.triggerCheat('i1');
-        if (newBuffer.endsWith('I2')) hook.triggerCheat('i2');
-        if (newBuffer.endsWith('I3')) hook.triggerCheat('i3');
-        if (newBuffer.endsWith('I4')) hook.triggerCheat('i4');
-        if (newBuffer.endsWith('I5')) hook.triggerCheat('i5');
-        if (newBuffer.endsWith('I6')) hook.triggerCheat('i6');
-        if (newBuffer.endsWith('I7')) hook.triggerCheat('i7');
-        if (newBuffer.endsWith('I8')) hook.triggerCheat('i8');
-        if (newBuffer.endsWith('I9')) hook.triggerCheat('i9');
-        if (newBuffer.endsWith('I10')) hook.triggerCheat('i10');
-        if (newBuffer.endsWith('I11')) hook.triggerCheat('i11');
-        if (newBuffer.endsWith('I12')) hook.triggerCheat('clear');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cheatBuffer, hook]);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -180,226 +155,228 @@ export default function Home() {
   }
 
   return (
-    <div
-      ref={appRef}
-      style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', outline: 'none', background: '#000' }}
-      tabIndex={0}
-      onClick={(e) => {
-        // Don't steal focus if clicking an interactive element
-        const target = e.target as HTMLElement;
-        const isInteractive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.closest('button');
-        if (!isInteractive && !hook.showFeedbackModal && !hook.showAdminConsole) {
-          e.currentTarget.focus();
-        }
-      }}
-    >
+    <LanguageProvider>
+      <div
+        ref={appRef}
+        style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', outline: 'none', background: '#000' }}
+        tabIndex={0}
+        onClick={(e) => {
+          // Don't steal focus if clicking an interactive element
+          const target = e.target as HTMLElement;
+          const isInteractive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.closest('button');
+          if (!isInteractive && !hook.showFeedbackModal && !hook.showAdminConsole) {
+            e.currentTarget.focus();
+          }
+        }}
+      >
 
-      {!gameStarted && !selectingClass && !showMultiplayerLobby && (
-        <MainMenu
-          onStart={handleStart}
-          onStartMultiplayer={handleStartMultiplayer}
-          onShowLeaderboard={() => setShowLeaderboard(true)}
-          username={username}
-          onLogout={handleLogout}
-        />
-      )}
+        {!gameStarted && !selectingClass && !showMultiplayerLobby && (
+          <MainMenu
+            onStart={handleStart}
+            onStartMultiplayer={handleStartMultiplayer}
+            onShowLeaderboard={() => setShowLeaderboard(true)}
+            username={username}
+            onLogout={handleLogout}
+          />
+        )}
 
-      {showMultiplayerLobby && (
-        <LobbyScreen
-          onStartGame={handleMultiplayerGameStart}
-          onBack={() => setShowMultiplayerLobby(false)}
-        />
-      )}
+        {showMultiplayerLobby && (
+          <LobbyScreen
+            onStartGame={handleMultiplayerGameStart}
+            onBack={() => setShowMultiplayerLobby(false)}
+          />
+        )}
 
-      {selectingClass && <ClassSelection onSelect={handleClassSelect} />}
+        {selectingClass && <ClassSelection onSelect={handleClassSelect} />}
 
-      {gameStarted && (
-        <>
-          <GameCanvas hook={hook} />
+        {gameStarted && (
+          <>
+            <GameCanvas hook={hook} />
 
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: `${100 / (scale || 1)}%`,
-            height: `${100 / (scale || 1)}%`,
-            transform: `scale(${scale || 1})`,
-            transformOrigin: 'top left',
-            pointerEvents: 'none'
-          }}>
-
-            {/* UI Centering & Confinement Layer (For Ultra-Wide Screens) */}
             <div style={{
               position: 'absolute',
               top: 0,
-              left: '50%',
-              width: '100%',
-              height: '100%',
-              maxWidth: '1800px',
-              transform: 'translateX(-50%)',
+              left: 0,
+              width: `${100 / (scale || 1)}%`,
+              height: `${100 / (scale || 1)}%`,
+              transform: `scale(${scale || 1})`,
+              transformOrigin: 'top left',
               pointerEvents: 'none'
             }}>
 
-              {!hook.showModuleMenu && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
-                  <HUD
-                    gameState={hook.gameState}
-                    upgradeChoices={hook.upgradeChoices}
-                    onUpgradeSelect={hook.handleUpgradeSelect}
-                    onUpgradeReroll={hook.handleUpgradeReroll}
-                    gameOver={hook.gameOver}
-                    onRestart={handleRestart}
-                    bossWarning={hook.bossWarning}
-                    fps={hook.fps}
-                    onInventoryToggle={hook.toggleModuleMenu}
-                    portalError={hook.portalError}
-                    portalCost={hook.portalCost}
-                    showSkillDetail={hook.showBossSkillDetail}
-                    setShowSkillDetail={hook.setShowBossSkillDetail}
-                    showStats={hook.showStats}
-                    showUpgradeMenu={!!hook.upgradeChoices}
-                    onSkipTime={hook.skipTime}
-                    onTriggerPortal={hook.triggerPortal}
-                    onFeedback={() => hook.setShowFeedbackModal(true)}
-                  />
+              {/* UI Centering & Confinement Layer (For Ultra-Wide Screens) */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                width: '100%',
+                height: '100%',
+                maxWidth: '1800px',
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none'
+              }}>
 
-                  {isMobile && !hook.gameOver && (
-                    <MobileControls
-                      onInput={hook.handleJoystickInput}
-                      isInverted={!!(hook.gameState.player.invertedControlsUntil && hook.gameState.gameTime < hook.gameState.player.invertedControlsUntil)}
+                {!hook.showModuleMenu && (
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
+                    <HUD
+                      gameState={hook.gameState}
+                      upgradeChoices={hook.upgradeChoices}
+                      onUpgradeSelect={hook.handleUpgradeSelect}
+                      onUpgradeReroll={hook.handleUpgradeReroll}
+                      gameOver={hook.gameOver}
+                      onRestart={handleRestart}
+                      bossWarning={hook.bossWarning}
+                      fps={hook.fps}
+                      onInventoryToggle={hook.toggleModuleMenu}
+                      portalError={hook.portalError}
+                      portalCost={hook.portalCost}
+                      showSkillDetail={hook.showBossSkillDetail}
+                      setShowSkillDetail={hook.setShowBossSkillDetail}
+                      showStats={hook.showStats}
+                      showUpgradeMenu={!!hook.upgradeChoices}
+                      onSkipTime={hook.skipTime}
+                      onTriggerPortal={hook.triggerPortal}
+                      onFeedback={() => hook.setShowFeedbackModal(true)}
                     />
-                  )}
+
+                    {isMobile && !hook.gameOver && (
+                      <MobileControls
+                        onInput={hook.handleJoystickInput}
+                        isInverted={!!(hook.gameState.player.invertedControlsUntil && hook.gameState.gameTime < hook.gameState.player.invertedControlsUntil)}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {hook.showStats && <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}><div style={{ width: '100%', height: '100%', pointerEvents: 'auto', position: 'relative' }}><StatsMenu gameState={hook.gameState} /></div></div>}
+
+                <div style={{ pointerEvents: hook.showModuleMenu ? 'auto' : 'none' }}>
+                  <ModuleMenu
+                    gameState={hook.gameState}
+                    isOpen={hook.showModuleMenu}
+                    onClose={() => hook.setShowModuleMenu(false)}
+                    onSocketUpdate={hook.handleModuleSocketUpdate}
+                    onInventoryUpdate={hook.updateInventorySlot}
+                    onRecycle={hook.recycleMeteorite}
+                    spendDust={hook.spendDust}
+                    onViewChassisDetail={hook.onViewChassisDetail}
+                  />
+                </div>
+              </div>
+
+              {/* Global Orbit Assistant */}
+              <AssistantOverlay
+                isVisible={!!hook.gameState.assistant.message}
+                message={hook.gameState.assistant.message || ""}
+                emotion={hook.gameState.assistant.emotion}
+              />
+
+              {/* Full-Screen Modals (Cover entire viewport) */}
+              {hook.showSettings && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20000, pointerEvents: 'auto' }}>
+                  <SettingsMenu
+                    onClose={() => hook.setShowSettings(false)}
+                    onRestart={handleRestart}
+                    onQuit={handleQuit}
+                    onFeedback={() => {
+                      hook.setShowSettings(false);
+                      hook.setShowFeedbackModal(true);
+                    }}
+                  />
                 </div>
               )}
 
-              {hook.showStats && <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}><div style={{ width: '100%', height: '100%', pointerEvents: 'auto', position: 'relative' }}><StatsMenu gameState={hook.gameState} /></div></div>}
+              {hook.showLegendarySelection && hook.gameState.legendaryOptions && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 3000 }}>
+                  <LegendarySelectionMenu
+                    options={hook.gameState.legendaryOptions}
+                    onSelect={hook.handleLegendarySelect}
+                  />
+                </div>
+              )}
 
-              <div style={{ pointerEvents: hook.showModuleMenu ? 'auto' : 'none' }}>
-                <ModuleMenu
+              {hook.gameOver && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15000 }}>
+                  <DeathScreen
+                    stats={{
+                      time: hook.gameState.gameTime,
+                      kills: hook.gameState.killCount,
+                      bosses: hook.gameState.bossKills,
+                      level: hook.gameState.player.level
+                    }}
+                    gameState={hook.gameState}
+                    onRestart={handleRestart}
+                    onQuit={handleQuit}
+                    onShowLeaderboard={() => setShowLeaderboard(true)}
+                  />
+                </div>
+              )}
+
+              {hook.showFeedbackModal && (
+                <FeedbackModal
+                  onClose={() => hook.setShowFeedbackModal(false)}
+                  username={username}
+                />
+              )}
+
+              {hook.showAdminConsole && (
+                <AdminConsole
+                  onClose={() => hook.setShowAdminConsole(false)}
+                />
+              )}
+
+              {/* Global Tutorial Layer - Rendered last to be on top of EVERYTHING */}
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10000 }}>
+                <HUD
                   gameState={hook.gameState}
-                  isOpen={hook.showModuleMenu}
-                  onClose={() => hook.setShowModuleMenu(false)}
-                  onSocketUpdate={hook.handleModuleSocketUpdate}
-                  onInventoryUpdate={hook.updateInventorySlot}
-                  onRecycle={hook.recycleMeteorite}
-                  spendDust={hook.spendDust}
-                  onViewChassisDetail={hook.onViewChassisDetail}
+                  upgradeChoices={hook.upgradeChoices}
+                  onUpgradeSelect={hook.handleUpgradeSelect}
+                  onUpgradeReroll={hook.handleUpgradeReroll}
+                  gameOver={hook.gameOver}
+                  onRestart={handleRestart}
+                  bossWarning={hook.bossWarning}
+                  fps={hook.fps}
+                  onInventoryToggle={hook.toggleModuleMenu}
+                  portalError={hook.portalError}
+                  portalCost={hook.portalCost}
+                  showSkillDetail={hook.showBossSkillDetail}
+                  setShowSkillDetail={hook.setShowBossSkillDetail}
+                  isTutorialLayerOnly={true}
+                  showStats={hook.showStats}
+                  showUpgradeMenu={!!hook.upgradeChoices}
+                  onSkipTime={hook.skipTime}
+                  onTriggerPortal={hook.triggerPortal}
+                  onFeedback={() => { }} // No-op for tutorial layer
                 />
               </div>
             </div>
+          </>
+        )}
 
-            {/* Global Orbit Assistant */}
-            <AssistantOverlay
-              isVisible={!!hook.gameState.assistant.message}
-              message={hook.gameState.assistant.message || ""}
-              emotion={hook.gameState.assistant.emotion}
-            />
-
-            {/* Full-Screen Modals (Cover entire viewport) */}
-            {hook.showSettings && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20000, pointerEvents: 'auto' }}>
-                <SettingsMenu
-                  onClose={() => hook.setShowSettings(false)}
-                  onRestart={handleRestart}
-                  onQuit={handleQuit}
-                  onFeedback={() => {
-                    hook.setShowSettings(false);
-                    hook.setShowFeedbackModal(true);
-                  }}
-                />
-              </div>
-            )}
-
-            {hook.showLegendarySelection && hook.gameState.legendaryOptions && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 3000 }}>
-                <LegendarySelectionMenu
-                  options={hook.gameState.legendaryOptions}
-                  onSelect={hook.handleLegendarySelect}
-                />
-              </div>
-            )}
-
-            {hook.gameOver && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15000 }}>
-                <DeathScreen
-                  stats={{
-                    time: hook.gameState.gameTime,
-                    kills: hook.gameState.killCount,
-                    bosses: hook.gameState.bossKills,
-                    level: hook.gameState.player.level
-                  }}
-                  gameState={hook.gameState}
-                  onRestart={handleRestart}
-                  onQuit={handleQuit}
-                  onShowLeaderboard={() => setShowLeaderboard(true)}
-                />
-              </div>
-            )}
-
-            {hook.showFeedbackModal && (
-              <FeedbackModal
-                onClose={() => hook.setShowFeedbackModal(false)}
-                username={username}
-              />
-            )}
-
-            {hook.showAdminConsole && (
-              <AdminConsole
-                onClose={() => hook.setShowAdminConsole(false)}
-              />
-            )}
-
-            {/* Global Tutorial Layer - Rendered last to be on top of EVERYTHING */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10000 }}>
-              <HUD
-                gameState={hook.gameState}
-                upgradeChoices={hook.upgradeChoices}
-                onUpgradeSelect={hook.handleUpgradeSelect}
-                onUpgradeReroll={hook.handleUpgradeReroll}
-                gameOver={hook.gameOver}
-                onRestart={handleRestart}
-                bossWarning={hook.bossWarning}
-                fps={hook.fps}
-                onInventoryToggle={hook.toggleModuleMenu}
-                portalError={hook.portalError}
-                portalCost={hook.portalCost}
-                showSkillDetail={hook.showBossSkillDetail}
-                setShowSkillDetail={hook.setShowBossSkillDetail}
-                isTutorialLayerOnly={true}
-                showStats={hook.showStats}
-                showUpgradeMenu={!!hook.upgradeChoices}
-                onSkipTime={hook.skipTime}
-                onTriggerPortal={hook.triggerPortal}
-                onFeedback={() => { }} // No-op for tutorial layer
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      {isMobile && !isLandscape && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh',
-          background: '#020617', zIndex: 9999,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', textAlign: 'center', padding: 20
-        }}>
-          <h2 style={{ color: '#ef4444', marginBottom: 20 }}>NO SIGNAL</h2>
-          <p>INITIATE LANDSCAPE MODE TO ESTABLISH LINK</p>
-          <div style={{ width: 60, height: 100, border: '4px solid #3b82f6', borderRadius: 8, marginTop: 40, animation: 'rotate-phone 2s infinite' }}></div>
-          <style>{`
+        {isMobile && !isLandscape && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: '#020617', zIndex: 9999,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', textAlign: 'center', padding: 20
+          }}>
+            <h2 style={{ color: '#ef4444', marginBottom: 20 }}>NO SIGNAL</h2>
+            <p>INITIATE LANDSCAPE MODE TO ESTABLISH LINK</p>
+            <div style={{ width: 60, height: 100, border: '4px solid #3b82f6', borderRadius: 8, marginTop: 40, animation: 'rotate-phone 2s infinite' }}></div>
+            <style>{`
                  @keyframes rotate-phone {
                    0% { transform: rotate(0deg); }
                    50% { transform: rotate(90deg); }
                    100% { transform: rotate(90deg); }
                  }
                `}</style>
-        </div>
-      )}
+          </div>
+        )}
 
-      {showLeaderboard && (
-        <Leaderboard onClose={() => setShowLeaderboard(false)} currentUsername={username} />
-      )}
-    </div>
+        {showLeaderboard && (
+          <Leaderboard onClose={() => setShowLeaderboard(false)} currentUsername={username} />
+        )}
+      </div>
+    </LanguageProvider>
   );
 }

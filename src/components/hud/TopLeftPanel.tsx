@@ -2,6 +2,8 @@
 import React from 'react';
 import type { GameState } from '../../logic/core/types';
 import { getArenaIndex } from '../../logic/mission/MapLogic';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface TopLeftPanelProps {
     gameState: GameState;
@@ -46,6 +48,8 @@ const PulseLabel = ({ title, buff, color }: { title: string, buff: string, color
 
 export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTime }) => {
     const { player, score, gameTime } = gameState;
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
 
     return (
         <div style={{ position: 'absolute', top: 15, left: 15, pointerEvents: 'auto', zIndex: 10 }}>
@@ -53,7 +57,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 {(gameState.rawKillCount || gameState.killCount || 0).toString().padStart(4, '0')}
             </div>
             <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
-                LVL {player.level}
+                {t.lvl} {player.level}
             </div>
             <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start', fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 <span style={{ minWidth: 55 }}>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
@@ -122,8 +126,8 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     const pct = Math.round((gameState.extractionPowerMult || 1.0) * 100 - 100);
                     buffs.push({
                         id: 'extraction_rage',
-                        title: 'EVACUATION RAGE',
-                        buff: `HOSTILES: +${pct}% HP/QTY`,
+                        title: t.evacuationRage,
+                        buff: `${t.hostiles}: +${pct}% HP/QTY`,
                         color: '#f87171',
                         remaining: 100000,
                         priority: 3
@@ -133,12 +137,12 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 // 1. ARENA BUFFS (Priority 2 - TOP)
                 // Duration is effectively infinite for sorting purposes relative to decaying buffs
                 if (arenaIdx === 0 && (gameState.arenaLevels[0] || 0) >= 1) {
-                    buffs.push({ id: 'eco1', title: 'Economic Arena', buff: `+${30 * surgeMult}% XP & Soul Yield`, color: '#22d3ee', remaining: 99999, priority: 2 });
-                    buffs.push({ id: 'eco2', title: 'Economic Arena', buff: `+30% Meteorite rate`, color: '#22d3ee', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'eco1', title: t.ecoArena, buff: `+${30 * surgeMult}% ${t.ecoBuff1}`, color: '#22d3ee', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'eco2', title: t.ecoArena, buff: t.ecoBuff2, color: '#22d3ee', remaining: 99999, priority: 2 });
                 } else if (arenaIdx === 1 && (gameState.arenaLevels[1] || 0) >= 1) {
-                    buffs.push({ id: 'com1', title: 'Combat Arena', buff: `+${30 * surgeMult}% DMG & Atk Spd`, color: '#ef4444', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'com1', title: t.comArena, buff: `+${30 * surgeMult}% ${t.comBuff}`, color: '#ef4444', remaining: 99999, priority: 2 });
                 } else if (arenaIdx === 2 && (gameState.arenaLevels[2] || 0) >= 1) {
-                    buffs.push({ id: 'def1', title: 'Defence Arena', buff: `+${30 * surgeMult}% Max HP & Regen`, color: '#3b82f6', remaining: 99999, priority: 2 });
+                    buffs.push({ id: 'def1', title: t.defArena, buff: `+${30 * surgeMult}% ${t.defBuff}`, color: '#3b82f6', remaining: 99999, priority: 2 });
                 }
 
                 // 2. BLUEPRINT BUFFS (Priority 1 - Sorted by Duration)
@@ -157,20 +161,20 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     }
                 };
 
-                addBp('METEOR_SHOWER', 'ORB-01', 'Meteorite drop increased by 50%', '#f59e0b');
-                addBp('STASIS_FIELD', 'STA-X2', '-20% Enemy Speed', '#8b5cf6');
-                addBp('ARENA_SURGE', 'SURG-0', 'Arena modifiers increased by 100%', '#22d3ee');
-                addBp('PERK_RESONANCE', 'HARM-V', '+2% for each perk on found meteorites', '#a855f7');
-                addBp('NEURAL_OVERCLOCK', 'NEU-77', 'Cooldown reduced by 30%', '#ec4899');
-                addBp('TEMPORAL_GUARD', 'GUAR-D', 'Block lethal hit', '#10b981');
-                addBp('MATRIX_OVERDRIVE', 'MATR-X', 'Socketed meteorites efficiency +15%', '#f97316');
+                addBp('METEOR_SHOWER', 'ORB-01', t.meteorShowerSuffix, '#f59e0b');
+                addBp('STASIS_FIELD', 'STA-X2', t.stasisFieldSuffix, '#8b5cf6');
+                addBp('ARENA_SURGE', 'SURG-0', t.arenaSurgeSuffix, '#22d3ee');
+                addBp('PERK_RESONANCE', 'HARM-V', t.perkResonanceSuffix, '#a855f7');
+                addBp('NEURAL_OVERCLOCK', 'NEU-77', t.neuralOverclockSuffix, '#ec4899');
+                addBp('TEMPORAL_GUARD', 'GUAR-D', t.temporalGuardSuffix, '#10b981');
+                addBp('MATRIX_OVERDRIVE', 'MATR-X', t.matrixOverdriveSuffix, '#f97316');
 
                 // QUANTUM SCRAPPER (Charge Based) - Treat as high priority/duration within blueprints
                 if (gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] !== undefined) {
                     buffs.push({
                         id: 'QUANTUM_SCRAPPER',
                         title: `SCRP-Q (${gameState.activeBlueprintCharges['QUANTUM_SCRAPPER']} Uses)`,
-                        buff: '25% chance to double dust on recycle',
+                        buff: t.quantumScrapperBuff,
                         color: '#facc15',
                         remaining: 88888, // Sorts above time-based blueprints
                         priority: 1
@@ -183,8 +187,8 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                         const timeLeft = Math.max(0, Math.ceil(30 - poi.activeDuration));
                         buffs.push({
                             id: 'overclock_' + poi.id,
-                            title: `OVERCLOCK (${timeLeft}s)`,
-                            buff: 'XP +100% | SPAWN +100%',
+                            title: `${t.overclockTitle} (${timeLeft}s)`,
+                            buff: t.overclockBuff,
                             color: '#22d3ee',
                             remaining: timeLeft,
                             priority: 1.5
@@ -214,8 +218,8 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
 
                     buffs.push({
                         id: 'class_curse',
-                        title: `PENALTY: (${timeStr})`,
-                        buff: `-30% ${className} STRENGTH`,
+                        title: `${t.penalty}: (${timeStr})`,
+                        buff: `-30% ${className} ${t.strengthPenalty}`,
                         color: '#f87171',
                         remaining: realTimeLeft,
                         priority: 4
@@ -229,8 +233,8 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     const ws = Math.floor(wallTimeLeft % 60).toString().padStart(2, '0');
                     buffs.push({
                         id: 'wall_penalty',
-                        title: `PENALTY: WALL IMPACT (${wm}:${ws})`,
-                        buff: '3x WALL DAMAGE TAKEN',
+                        title: `${t.penalty}: ${t.wallImpact} (${wm}:${ws})`,
+                        buff: t.wallDamageTaken,
                         color: '#ef4444',
                         remaining: wallTimeLeft,
                         priority: 4
@@ -283,7 +287,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                                 <span style={{
                                     color: '#fbbf24', fontSize: 10, fontWeight: 950, letterSpacing: 1,
                                     textTransform: 'uppercase', textShadow: '0 0 8px rgba(251, 191, 36, 0.5)'
-                                }}>DECRYPTION:</span>
+                                }}>{t.decryption}</span>
                                 <span style={{
                                     color: '#fff', fontSize: 10, fontWeight: 800, fontFamily: 'monospace'
                                 }}>{timeLeft}s</span>
@@ -314,7 +318,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                         borderRadius: '50%', boxShadow: '0 0 8px #EF4444'
                     }} />
                     <span style={{ color: '#EF4444', fontSize: 10, fontWeight: 900, letterSpacing: 1 }}>
-                        ENGINE DISABLED ({Math.ceil(player.stunnedUntil - gameState.gameTime)}s)
+                        {t.engineDisabled} ({Math.ceil(player.stunnedUntil - gameState.gameTime)}s)
                     </span>
                 </div>
             )}

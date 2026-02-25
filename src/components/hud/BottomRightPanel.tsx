@@ -1,5 +1,6 @@
-
 import React from 'react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface BottomRightPanelProps {
     onInventoryToggle: () => void;
@@ -32,6 +33,9 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
     onTriggerPortal,
     onFeedback
 }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
+
     const isLocked = bossKills === 0 || !portalsUnlocked;
     const isPortalUnavailable = isLocked || portalState !== 'closed' || dust < portalCost;
 
@@ -160,7 +164,7 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
                         fontWeight: 900,
                         textAlign: 'center'
                     }}>
-                        ACTIVE
+                        {t.active}
                     </div>
                 )}
                 {(portalError || isLocked || (portalState === 'closed' && dust < portalCost)) && (
@@ -176,7 +180,7 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
                         textShadow: portalError ? '0 0 5px #000' : 'none',
                         textTransform: 'uppercase'
                     }}>
-                        {portalError && portalState === 'closed' && (dust >= portalCost) ? 'BLOCKED' : (isLocked ? 'LOCKED' : `${Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} DUST`)}
+                        {portalError && portalState === 'closed' && (dust >= portalCost) ? t.blocked : (isLocked ? t.locked : `${Number(portalCost).toFixed(portalCost % 1 === 0 ? 0 : 1)} ${t.dust}`)}
                     </div>
                 )}
             </div>
@@ -248,7 +252,7 @@ export const BottomRightPanel: React.FC<BottomRightPanelProps> = ({
                         letterSpacing: '1px',
                         zIndex: 10
                     }}>
-                        FULL
+                        {t.full}
                     </div>
                 )}
 

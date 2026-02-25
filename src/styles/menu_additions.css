@@ -232,8 +232,9 @@ body {
 
 /* Start Button - Simple & Premium */
 .btn-start {
-    width: 340px;
-    /* Slightly wider to accommodate letter spacing */
+    width: max-content;
+    min-width: 340px;
+    padding: 0 40px;
     height: 80px;
     background: rgba(15, 23, 42, 0.6);
     border: 2px solid rgba(6, 182, 212, 0.3);
@@ -250,7 +251,6 @@ body {
     overflow: hidden;
     pointer-events: auto;
     white-space: nowrap;
-    /* PREVENT WRAPPING */
 }
 
 .btn-start::before {

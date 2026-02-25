@@ -17,6 +17,8 @@ import { SpotlightOverlay } from './common/SpotlightOverlay';
 import { AssistantOverlay } from './hud/AssistantOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import { TutorialStep } from '../logic/core/types';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 
 interface HUDProps {
@@ -47,6 +49,8 @@ export const HUD: React.FC<HUDProps> = ({
     isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime, onTriggerPortal, onFeedback
 }) => {
     const { player, activeEvent } = gameState;
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
 
     // Dynamic Max HP calculation for HUD
     const curseMult = gameState.assistant.history.curseIntensity || 1.0;
@@ -99,11 +103,11 @@ export const HUD: React.FC<HUDProps> = ({
                         animation: activeEvent.type === 'necrotic_surge' ? 'glitchText 0.5s ease-in-out infinite' : 'none'
                     }}>
 
-                        {activeEvent.type === 'necrotic_surge' && 'GHOST HORDE'}
+                        {activeEvent.type === 'necrotic_surge' && t.ghostHorde}
                         {activeEvent.type === 'legion_formation' && (
                             <div style={{ animation: 'glitchText 0.2s ease-in-out infinite' }}>
                                 <div style={{ fontSize: 32, color: '#ff0000', fontWeight: 900, textShadow: '0 0 15px #ff0000, 0 0 30px #ff0000' }}>
-                                    LEGION INCOMING
+                                    {t.legionIncoming}
                                 </div>
                             </div>
                         )}
@@ -144,7 +148,7 @@ export const HUD: React.FC<HUDProps> = ({
                     letterSpacing: 2, lineHeight: '9px', textShadow: '0 0 4px #000',
                     pointerEvents: 'none'
                 }}>
-                    XP: {Math.round(player.xp.current).toLocaleString()} / {Math.round(player.xp.needed).toLocaleString()}
+                    {t.xp}: {Math.round(player.xp.current).toLocaleString()} / {Math.round(player.xp.needed).toLocaleString()}
                 </div>
             </div>
 
@@ -211,15 +215,15 @@ export const HUD: React.FC<HUDProps> = ({
                             fontWeight: 900,
                             letterSpacing: '2px'
                         }}>
-                            EXTRACTION POINT IDENTIFIED
+                            {t.extractionPointIdentified}
                         </div>
                         <div style={{ color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px', textShadow: '0 0 10px #ef4444' }}>
-                            {SECTOR_NAMES[gameState.extractionTargetArena] || 'UNKNOWN'}
+                            {SECTOR_NAMES[gameState.extractionTargetArena] || t.unknown}
                         </div>
                         <div style={{ color: '#60a5fa', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
                             {gameState.extractionShipPos ?
-                                `COORD: [${Math.round(gameState.extractionShipPos.x)} : ${Math.round(gameState.extractionShipPos.y)}]` :
-                                'Exact coordinates: pending...'}
+                                `${t.coord}: [${Math.round(gameState.extractionShipPos.x)} : ${Math.round(gameState.extractionShipPos.y)}]` :
+                                t.exactCoordPending}
                         </div>
                     </div>
                     <style>{`

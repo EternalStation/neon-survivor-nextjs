@@ -1,6 +1,7 @@
-
 import React from 'react';
 import type { GameState } from '../../logic/core/types';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface AlertPanelProps {
     gameState: GameState;
@@ -8,6 +9,9 @@ interface AlertPanelProps {
 }
 
 export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).hud;
+
     // Snitch Alert Logic: Show only if Snitch exists AND is in Phase 0 (Passive/Hidden)
     const activeSnitch = gameState.enemies.find(e => e.isRare);
     const showSnitchAlert = activeSnitch && activeSnitch.rarePhase === 0;
@@ -19,7 +23,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     position: 'absolute', top: 15, right: 15, textAlign: 'right',
                     color: '#ef4444', fontWeight: 900, letterSpacing: 1, fontSize: 24
                 }}>
-                    ANOMALY DETECTED: {Math.ceil(bossWarning)}s
+                    {t.anomalyDetected} {Math.ceil(bossWarning)}s
                 </div>
             )}
 
@@ -29,10 +33,10 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     animation: 'pulse 0.5s infinite alternate'
                 }}>
                     <div style={{ color: '#facc15', fontWeight: 900, letterSpacing: 1, fontSize: 24 }}>
-                        INTRUDER ALERT
+                        {t.intruderAlert}
                     </div>
                     <div style={{ color: '#fef08a', fontWeight: 700, letterSpacing: 2, fontSize: 16, marginTop: 4 }}>
-                        SEARCH SURROUNDINGS
+                        {t.searchSurroundings}
                     </div>
                 </div>
             )}
@@ -43,10 +47,10 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     animation: 'pulse 0.5s infinite alternate'
                 }}>
                     <div style={{ color: '#00FFFF', fontWeight: 900, letterSpacing: 1, fontSize: 20 }}>
-                        DIMENSIONAL RIFT OPENING
+                        {t.riftOpening}
                     </div>
                     <div style={{ color: '#fff', fontWeight: 700, letterSpacing: 2, fontSize: 14, marginTop: 2 }}>
-                        T-MINUS {Math.ceil(gameState.portalTimer)}s
+                        {t.tMinus} {Math.ceil(gameState.portalTimer)}s
                     </div>
                 </div>
             )}
@@ -56,10 +60,10 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     animation: gameState.portalTimer <= 5 ? 'pulse 0.2s infinite' : 'pulse 1s infinite'
                 }}>
                     <div style={{ color: gameState.portalTimer <= 5 ? '#FF0000' : '#00FF00', fontWeight: 900, letterSpacing: 1, fontSize: 20 }}>
-                        {gameState.portalTimer <= 5 ? "PORTAL CLOSING" : "PORTAL ACTIVE"}
+                        {gameState.portalTimer <= 5 ? t.portalClosing : t.portalActive}
                     </div>
                     <div style={{ color: '#fff', fontWeight: 700, letterSpacing: 2, fontSize: 14, marginTop: 2 }}>
-                        CLOSING IN {Math.ceil(gameState.portalTimer)}s
+                        {t.closingIn} {Math.ceil(gameState.portalTimer)}s
                     </div>
                 </div>
             )}
@@ -70,7 +74,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     animation: 'pulse 0.2s infinite'
                 }}>
                     <div style={{ color: '#ef4444', fontWeight: 900, letterSpacing: 1, fontSize: 20, textShadow: '0 0 20px #ff0000' }}>
-                        PORTALS BLOCKED BY WORMS
+                        {t.portalsBlocked}
                     </div>
                 </div>
             )}

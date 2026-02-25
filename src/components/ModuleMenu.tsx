@@ -476,7 +476,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             if (!matchA && matchB) return 1;
 
             // Priority 2: Rarity within the same group
-            return rarityMap[b.rarity] - rarityMap[a.rarity];
+            const rankA = a.rarity ? (rarityMap[a.rarity] ?? -1) : -1;
+            const rankB = b.rarity ? (rarityMap[b.rarity] ?? -1) : -1;
+            return rankB - rankA;
         });
 
         // 3. Reconstruct Inventory
