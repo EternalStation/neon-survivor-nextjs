@@ -3,32 +3,12 @@ import type { GameState } from '../core/types';
 import { ARENA_DATA, ARENA_CENTERS, ARENA_RADIUS, getRandomPositionInArena } from './MapLogic';
 import { playSfx, switchBGM, fadeOutMusic } from '../audio/AudioLogic';
 import { playTypewriterClick } from '../audio/SfxLogic';
+import { getStoredLanguage } from '../../lib/LanguageContext';
+import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
 
 
-export interface ExtractionMessage {
-    speaker: string;
-    text: string;
-    pause: number;
-    triggerPortals?: boolean;
-    isAlert?: boolean;
-    isPause?: boolean;
-}
 
 
-export const EXTRACTION_MESSAGES: ExtractionMessage[] = [
-    { speaker: 'you', text: "ORBIT, THIS IS HEX-01-[PLAYER_NAME], REQUESTING EXTRACTION", pause: 7.0 },
-    { speaker: 'orbit', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 6.0 },
-    { speaker: 'orbit', text: "We're sending a ship.", pause: 6.0 },
-    { speaker: 'orbit', text: "PORTALS ARE OPEN NOW.", pause: 6.0, triggerPortals: true },
-    { speaker: 'orbit', text: "But you have only ONE transition, be careful!", pause: 6.0 },
-    { speaker: 'you', text: "UNDERSTOOD.", pause: 6.0 },
-    { speaker: 'orbit', text: "Extraction point follows:SECTOR: [ARENA_NAME] ", pause: 5.0 },
-    { speaker: 'orbit', text: "ETA 65 SECONDS.", pause: 7.0 },
-    { speaker: 'orbit', text: "... ... ...", pause: 7.0 },
-    { speaker: 'orbit', text: "WE DETECTED HIGH ENEMY ACTIVITY", pause: 5.0, isAlert: true },
-    { speaker: 'orbit', text: "YOU HAVE NO MORE TIME LEFT", pause: 5.0, isAlert: true },
-    { speaker: 'orbit', text: "EVACUATE NOW! TRANSMISSION ENDS.", pause: 5.0, isAlert: true },
-];
 
 export function updateExtraction(state: GameState, step: number) {
     if (state.extractionStatus === 'none') return;
@@ -46,10 +26,16 @@ export function updateExtraction(state: GameState, step: number) {
 
         state.extractionDialogTime = (state.extractionDialogTime || 0) + step;
         state.extractionTimer -= step;
+
+        const lang = getStoredLanguage();
+        const playerName = state.playerName || "PILOT";
+        const arenaName = state.extractionTargetArena !== undefined ? ARENA_DATA[state.extractionTargetArena]?.name || "UNKNOWN" : "UNKNOWN";
+        const messages = getExtractionMessages(lang, playerName, arenaName);
+
         if (state.extractionTimer <= 0) {
             state.extractionMessageIndex++;
 
-            if (state.extractionMessageIndex >= EXTRACTION_MESSAGES.length) {
+            if (state.extractionMessageIndex >= messages.length) {
                 // Done with text, now wait 5 seconds before closing terminal and starting rage
                 state.extractionStatus = 'waiting';
                 state.extractionTimer = 5.0;
@@ -59,7 +45,7 @@ export function updateExtraction(state: GameState, step: number) {
             if (!state.extractionMessageTimes) state.extractionMessageTimes = [];
             state.extractionMessageTimes[state.extractionMessageIndex] = state.extractionDialogTime || 0;
 
-            const msg = EXTRACTION_MESSAGES[state.extractionMessageIndex];
+            const msg = messages[state.extractionMessageIndex];
             if (!msg.isPause) {
                 playTypewriterClick();
             }

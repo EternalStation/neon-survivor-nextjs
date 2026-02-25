@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { GameState, IncubatedMeteorite } from '../../logic/core/types';
 import { getMeteoriteImage } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface IncubatorPanelProps {
     gameState: GameState;
@@ -15,6 +17,9 @@ interface IncubatorPanelProps {
 export const IncubatorPanel: React.FC<IncubatorPanelProps> = ({
     gameState, movedItem, setMovedItem, onIncubatorUpdate, onInventoryUpdate, onUpdate
 }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+
     const handleMouseUp = (idx: number) => {
         if (!movedItem || !movedItem.item) return;
 
@@ -74,8 +79,8 @@ export const IncubatorPanel: React.FC<IncubatorPanelProps> = ({
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ margin: 0, color: '#e9d5ff', fontSize: '13px', letterSpacing: '2px', fontWeight: 900 }}>VOID FORGE (INCUBATOR)</h3>
-                <div style={{ fontSize: '10px', color: '#a855f7' }}>GROWTH +5% / MIN</div>
+                <h3 style={{ margin: 0, color: '#e9d5ff', fontSize: '13px', letterSpacing: '2px', fontWeight: 900 }}>{t.incubator.title}</h3>
+                <div style={{ fontSize: '10px', color: '#a855f7' }}>{t.incubator.growth} +5% / MIN</div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-around' }}>
@@ -114,22 +119,20 @@ export const IncubatorPanel: React.FC<IncubatorPanelProps> = ({
                                     }}
                                 />
                                 {met.isRuined ? (
-                                    <div style={{ position: 'absolute', color: '#ef4444', fontWeight: 900, fontSize: '11px', textShadow: '0 0 4px black', zIndex: 2 }}>RUINED</div>
+                                    <div style={{ position: 'absolute', color: '#ef4444', fontWeight: 900, fontSize: '11px', textShadow: '0 0 4px black', zIndex: 2 }}>{t.incubator.ruined}</div>
                                 ) : (
                                     <div style={{ position: 'absolute', bottom: '2px', width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
                                         <span style={{ fontSize: '10px', color: '#2dd4bf', fontWeight: 900, textShadow: '0 0 4px #000' }}>
                                             +{met.incubatorBoost || 0}
                                         </span>
-                                        {met.growthTicks > 3 && (
-                                            <div style={{ width: '80%', height: '3px', background: '#333', margin: '2px auto 0', borderRadius: '2px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${met.instability}%`, height: '100%', background: '#ef4444' }} />
-                                            </div>
-                                        )}
+                                        <div style={{ width: '80%', height: '3px', background: '#333', margin: '2px auto 0', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${met.instability}%`, height: '100%', background: '#ef4444' }} />
+                                        </div>
                                     </div>
                                 )}
                             </>
                         ) : (
-                            <div style={{ color: '#475569', fontSize: '10px', fontWeight: 700 }}>EMPTY</div>
+                            <div style={{ color: '#475569', fontSize: '10px', fontWeight: 700 }}>{t.incubator.empty}</div>
                         )}
 
                         {/* Hover Overlay */}

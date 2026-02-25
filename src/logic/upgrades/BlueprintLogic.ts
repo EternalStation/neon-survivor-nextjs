@@ -164,6 +164,7 @@ export function researchBlueprint(state: GameState, inventoryIndex: number): boo
     blueprint.status = 'researching';
     // Random duration between 30 and 60 seconds
     const randomDuration = 30 + Math.random() * 30;
+    blueprint.researchDuration = randomDuration;
     blueprint.researchFinishTime = state.gameTime + randomDuration;
 
     // Try to move to a Safe Slot (0-9) if not already in one

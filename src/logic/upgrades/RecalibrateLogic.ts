@@ -17,7 +17,8 @@ export function getUpgradeQualityCost(item: Meteorite): number {
 export function getRerollTypeCost(item: Meteorite, lockedCount: number): number {
     const rarityIdx = RARITY_ORDER.indexOf(item.rarity);
     const versionBonus = Math.floor(Math.max(0, (item.version || 1.0) - 1.0) * 10);
-    const base = 5 + (rarityIdx * 3) + versionBonus;
+    const incubatorBonus = item.incubatorBoost || 0;
+    const base = 5 + (rarityIdx * 3) + versionBonus + incubatorBonus;
     let cost = base * Math.pow(1.5, lockedCount);
     if (item.isCorrupted) cost *= 1.5;
     return Math.ceil(cost);
@@ -26,7 +27,8 @@ export function getRerollTypeCost(item: Meteorite, lockedCount: number): number 
 export function getRerollValueCost(item: Meteorite, lockedCount: number): number {
     const rarityIdx = RARITY_ORDER.indexOf(item.rarity);
     const versionBonus = Math.floor(Math.max(0, (item.version || 1.0) - 1.0) * 10);
-    const base = 5 + (rarityIdx * 3) + versionBonus;
+    const incubatorBonus = item.incubatorBoost || 0;
+    const base = 5 + (rarityIdx * 3) + versionBonus + incubatorBonus;
     let cost = base * Math.pow(1.5, lockedCount);
     if (item.isCorrupted) cost *= 1.5;
     return Math.ceil(cost);

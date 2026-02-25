@@ -12,8 +12,10 @@ import { useGameUIHandlers } from './useGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
 import { useMultiplayerGame } from './useMultiplayerGame';
+import { useLanguage } from '../lib/LanguageContext';
 
 export function useGameLoop(gameStarted: boolean) {
+    const { language } = useLanguage();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameState = useRef<GameState>(createInitialGameState());
     const requestRef = useRef<number>(0);
@@ -375,7 +377,7 @@ export function useGameLoop(gameStarted: boolean) {
                 const ctx = canvasRef.current?.getContext('2d');
                 if (ctx) {
                     try {
-                        renderGame(ctx, state, meteoriteImagesRef.current, windowScaleFactor.current);
+                        renderGame(ctx, state, meteoriteImagesRef.current, windowScaleFactor.current, language);
                     } catch (e) {
                         console.error("Render Error:", e);
                     }

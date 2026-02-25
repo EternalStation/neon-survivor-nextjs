@@ -5,11 +5,13 @@ import { AssistantEmotion } from '../components/hud/AssistantOverlay';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 import { getDustValue } from '../components/modules/ModuleUtils';
 import { getStoredLanguage } from '../lib/LanguageContext';
+import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import {
     getIntroVariants,
     getRerollSnarks,
     getBrokeSnarks,
     getIncubatorSnarks,
+    getIncubatorRerollLostSnarks,
     getGenericDeathSnarks,
     getProjectileDeathLine,
     getFastDeathLine,
@@ -20,7 +22,9 @@ import {
     getWallEscalationLines,
     getZeroPercentWarningVariants,
     getZeroPercent5Variants,
+    getFluxGrantLine,
 } from '../lib/orbitTranslations';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 export interface AssistantMessage {
     text: string;
@@ -29,33 +33,14 @@ export interface AssistantMessage {
 
 export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI: () => void) => {
     const hasIntroed = useRef(false);
+    const lastGameStateRef = useRef<GameState | null>(null);
 
+    // Simplified intro logic: we handle this in updateOrbit now to support restarts
     useEffect(() => {
-        if (!hasIntroed.current && gameState.current.frameCount < 60) {
-            hasIntroed.current = true;
-
-            // Check if class streak will override the intro
-            let hasClassStreakOverride = false;
-            try {
-                const historyRaw = localStorage.getItem('orbit_class_history');
-                if (historyRaw) {
-                    const history = JSON.parse(historyRaw);
-                    if (history.streak >= 3) {
-                        hasClassStreakOverride = true;
-                    }
-                }
-            } catch (e) { }
-
-            if (!hasClassStreakOverride) {
-                setTimeout(() => {
-                    const lang = getStoredLanguage();
-                    const trollVariants = getIntroVariants(lang);
-                    const msgObj = trollVariants[Math.floor(Math.random() * trollVariants.length)];
-                    pushOrbitMessage(msgObj, false);
-                }, 2000);
-            }
-        }
-    }, [gameState]);
+        // Just reset the flag on mount
+        hasIntroed.current = false;
+        lastGameStateRef.current = null;
+    }, []);
 
     const pushOrbitMessage = useCallback((msg: string | AssistantMessage, priority: boolean = false) => {
         const state = gameState.current.assistant;
@@ -74,6 +59,39 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
 
     const updateOrbit = useCallback((dt: number) => {
         const state = gameState.current.assistant;
+
+        // Detect Game Restart
+        if (lastGameStateRef.current !== gameState.current) {
+            hasIntroed.current = false;
+            lastGameStateRef.current = gameState.current;
+        }
+
+        // --- INTRO TRIGGER (30% chance at start of each game) ---
+        if (!hasIntroed.current && gameState.current.frameCount >= 120) { // ~2 seconds in
+            hasIntroed.current = true;
+
+            // Roll for 30% chance
+            if (Math.random() < 0.3) {
+                // Check if class streak will override the intro
+                let hasClassStreakOverride = false;
+                try {
+                    const historyRaw = localStorage.getItem('orbit_class_history');
+                    if (historyRaw) {
+                        const history = JSON.parse(historyRaw);
+                        if (history.streak >= 3) {
+                            hasClassStreakOverride = true;
+                        }
+                    }
+                } catch (e) { }
+
+                if (!hasClassStreakOverride) {
+                    const lang = getStoredLanguage();
+                    const variants = getIntroVariants(lang);
+                    const msgObj = variants[Math.floor(Math.random() * variants.length)];
+                    pushOrbitMessage(msgObj, false);
+                }
+            }
+        }
 
         if (state.message) {
             state.timer -= dt;
@@ -120,9 +138,11 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         if ((history as any).pendingBrokeSnark) {
             const now = gameState.current.gameTime;
             const lastSnark = (history as any).lastBrokeVersionTime || -9999;
-            // 5 second cooldown
-            if (now - lastSnark > 5) {
-                gameState.current.player.isotopes += 100;
+            // 4 minute cooldown (240 seconds)
+            if (now - lastSnark > 240) {
+                // Delay the grant by 5 seconds so player doesn't miss it during the menu panic
+                (history as any).pendingBrokeIsotopeTime = Date.now() + 5000;
+
                 const lang = getStoredLanguage();
                 const variants = getBrokeSnarks(lang);
                 const msgObj = variants[Math.floor(Math.random() * variants.length)];
@@ -130,6 +150,21 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
                 (history as any).lastBrokeVersionTime = now;
             }
             (history as any).pendingBrokeSnark = false;
+        }
+
+        // Handle Delayed Isotope Grant
+        if ((history as any).pendingBrokeIsotopeTime && Date.now() >= (history as any).pendingBrokeIsotopeTime) {
+            gameState.current.player.isotopes += 100;
+            // Bright noticeable animation
+            const px = gameState.current.player.x;
+            const py = gameState.current.player.y;
+            const lang = getStoredLanguage();
+            const fluxLine = getFluxGrantLine(lang);
+            spawnFloatingNumber(gameState.current, px, py - 30, fluxLine, "#00d9ff", true);
+            playSfx('upgrade-confirm');
+
+            (history as any).pendingBrokeIsotopeTime = 0;
+            refreshUI();
         }
 
         if ((history as any).pendingMassRecycleTime && Date.now() >= (history as any).pendingMassRecycleTime) {
@@ -172,7 +207,7 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         history.totalDamageTaken += dmg;
     }, [gameState]);
 
-    const triggerIncubatorDestroyed = useCallback(() => {
+    const triggerIncubatorDestroyed = useCallback((met?: any) => {
         const history = gameState.current.assistant.history;
         const now = gameState.current.gameTime;
         const lastSnark = (history as any).lastIncubatorDestroyTime || -9999;
@@ -180,7 +215,15 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         if (now - lastSnark < 30) return;
 
         const lang = getStoredLanguage();
-        const variants = getIncubatorSnarks(lang);
+        let variants;
+
+        // Check if it's a high version meteorite (V1.7+)
+        if (met && met.version >= 1.7) {
+            variants = getIncubatorRerollLostSnarks(lang);
+        } else {
+            variants = getIncubatorSnarks(lang);
+        }
+
         const msgObj = variants[Math.floor(Math.random() * variants.length)];
         pushOrbitMessage(msgObj, true);
         (history as any).lastIncubatorDestroyTime = now;
@@ -221,16 +264,18 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
     const triggerClassStreak = useCallback((streak: number, classId: string) => {
         const history = gameState.current.assistant.history;
         const lang = getStoredLanguage();
+        const t = getUiTranslation(lang);
+        const className = (t.classSelection.classes as any)[classId]?.name || classId;
 
         if (streak === 3) {
             const variants = getClassStreak3Variants(lang);
             const choice = variants[Math.floor(Math.random() * variants.length)];
-            pushOrbitMessage({ text: choice[0].replace(/{class}/g, classId).toUpperCase(), emotion: 'Normal' });
+            pushOrbitMessage({ text: choice[0].replace(/{class}/g, className).toUpperCase(), emotion: 'Normal' });
             pushOrbitMessage({ text: choice[1], emotion: 'Thinks' });
         } else if (streak >= 4) {
             const variants = getClassStreak4Variants(lang);
             const choice = variants[Math.floor(Math.random() * variants.length)];
-            pushOrbitMessage({ text: choice[0].replace(/{class}/g, classId).toUpperCase(), emotion: 'Thinks' });
+            pushOrbitMessage({ text: choice[0].replace(/{class}/g, className).toUpperCase(), emotion: 'Thinks' });
             pushOrbitMessage({ text: choice[1], emotion: 'Dissapointed' });
         }
     }, [pushOrbitMessage, gameState]);

@@ -11,135 +11,42 @@ interface BossStatusProps {
     setShowSkillDetail: (v: boolean) => void;
 }
 
-const BOSS_NAMES: Record<string, string> = {
-    square: 'THE FORTRESS',
-    circle: 'THE JUGGERNAUT',
-    triangle: 'THE BLADE',
-    diamond: 'THE MARKSMAN',
-    pentagon: 'THE OVERMIND'
-};
-
-const BOSS_SKILLS: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
-    square: {
-        name: 'THORNS',
-        desc: 'Hardened shell reflects 3% of incoming damage back to the player. Reduced by Armor.',
-        color: '#94a3b8',
-        iconLabel: 'T',
-        iconUrl: '/assets/BossSkills/ThornsLVL2.JPG'
-    },
-    pentagon: {
-        name: 'SOUL LINK',
-        desc: 'Links minions to the hive mind. Contact with linked targets deals 30% HP damage but destroys the target and damages the Boss. Shared HP pool.',
-        color: '#bf00ff',
-        iconLabel: 'L',
-        iconUrl: '/assets/BossSkills/LinkLVL2.JPG'
-    },
-    circle: {
-        name: 'BERSERK RUSH',
-        desc: 'Initiates a high-velocity dash towards the player, dealing 30% Max HP damage on impact.',
-        color: '#ef4444',
-        iconLabel: 'R',
-        iconUrl: '/assets/BossSkills/RushLVL2.JPG'
-    },
-    triangle: {
-        name: 'BLADE SPIN',
-        desc: 'Spins violently during dash phases, increasing movement speed and generating a jagged yellow aura.',
-        color: '#eab308',
-        iconLabel: 'S',
-        iconUrl: '/assets/BossSkills/DushLVL2.JPG'
-    },
-    diamond: {
-        name: 'HYPER BEAM',
-        desc: 'Fires a high-intensity laser burst. LVL 1 is reduced by Armor. LVL 2 PIERCES ALL ARMOR.',
-        color: '#f87171',
-        iconLabel: '⚡',
-        iconUrl: '/assets/BossSkills/LaserLVL2.JPG'
-    }
-};
-
-const BOSS_SKILLS_L3: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
-    square: {
-        name: 'ORBITAL PLATING',
-        desc: 'Deploys 3 localized shield generators that grant invulnerability. Shields must be destroyed to damage the boss. Regenerates every 15s.',
-        color: '#cbd5e1',
-        iconLabel: 'B',
-        iconUrl: '/assets/BossSkills/ShieldLVL3.JPG'
-    },
-    pentagon: {
-        name: 'PARASITIC LINK',
-        desc: ' Tethers to the player if close, draining 3% Max HP per second to heal the boss. moved > 800px away to break.',
-        color: '#a855f7',
-        iconLabel: 'L',
-        iconUrl: '/assets/BossSkills/ParasiticLinkLVL3.JPG'
-    },
-    circle: {
-        name: 'CYCLONE PULL',
-        desc: 'Generates a massive vacuum that pulls the player and projectiles towards the boss. 10s Cooldown.',
-        color: '#d1d5db', // windy grey
-        iconLabel: 'V',
-        iconUrl: '/assets/BossSkills/CycloneLVL3.JPG'
-    },
-    triangle: {
-        name: 'DEFLECTION FIELD',
-        desc: 'While spinning, deflects 50% of incoming projectiles in random directions.',
-        color: '#fde047',
-        iconLabel: 'D',
-        iconUrl: '/assets/BossSkills/BladeLVL3.JPG'
-    },
-    diamond: {
-        name: 'SATELLITE STRIKE',
-        desc: 'Marks 3 zones around the player and strikes them with orbital beams after a short delay. Deals 3% Boss HP damage.',
-        color: '#ef4444',
-        iconLabel: 'S',
-        iconUrl: '/assets/BossSkills/SateliteLVL3.JPG'
-    }
-};
-
-const BOSS_SKILLS_L4: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
-    square: {
-        name: 'TITAN PLATING',
-        desc: 'Reinforced spikes reflect 5% of incoming damage back to the player. REPEL DAMAGE IGNORES ALL ARMOR.',
-        color: '#f8fafc',
-        iconLabel: 'T'
-    },
-    circle: {
-        name: 'SOUL DEVOURER',
-        desc: 'Freezes in place to "Suck" your souls. Impact scales from 0 to 50% suppression over 5 seconds while boss is invincible. Stolen power only returns when the boss is destroyed.',
-        color: '#eab308', // Yellow/Gold
-        iconLabel: 'S'
-    },
-    triangle: {
-        name: 'MORTALITY CURSE',
-        desc: 'Extinguishes the spark of life. DISABLES ALL REGENERATION AND LIFESTEAL globally while the boss is alive.',
-        color: '#7f1d1d',
-        iconLabel: 'M'
-    },
-    diamond: {
-        name: 'CONVERGENCE ZONE',
-        desc: 'Fires dual sweeping lasers that close in from 45 degrees. Stay in the center to survive.',
-        color: '#a855f7',
-        iconLabel: 'Q'
-    },
-    pentagon: {
-        name: 'HIVEMIND PHALANX',
-        desc: 'Tactical Command: Summons a wall of invincible drones to sweep the arena. Blast the drones to transfer damage back to the Boss.',
-        color: '#eab308',
-        iconLabel: 'H'
-    }
-};
-
-const BOSS_SKILLS_L5: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
-    diamond: {
-        name: 'CRYSTAL FENCE',
-        desc: 'Places 5 resonance crystals around the player that form a deadly electric fence. Touching the fence deals 1% Boss HP damage every 5 frames.',
-        color: '#06b6d4',
-        iconLabel: '⚡'
-    }
-};
-
 export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDetail, setShowSkillDetail }) => {
     const { language } = useLanguage();
-    const t = getUiTranslation(language).hud;
+    const t = getUiTranslation(language);
+    const tb = t.bosses;
+
+    const BOSS_NAMES: Record<string, string> = tb.names;
+
+    const BOSS_SKILLS: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
+        square: { ...tb.skills.thorns, color: '#94a3b8', iconLabel: 'T', iconUrl: '/assets/BossSkills/ThornsLVL2.JPG' },
+        pentagon: { ...tb.skills.soulLink, color: '#bf00ff', iconLabel: 'L', iconUrl: '/assets/BossSkills/LinkLVL2.JPG' },
+        circle: { ...tb.skills.berserkRush, color: '#ef4444', iconLabel: 'R', iconUrl: '/assets/BossSkills/RushLVL2.JPG' },
+        triangle: { ...tb.skills.bladeSpin, color: '#eab308', iconLabel: 'S', iconUrl: '/assets/BossSkills/DushLVL2.JPG' },
+        diamond: { ...tb.skills.hyperBeam, color: '#f87171', iconLabel: '⚡', iconUrl: '/assets/BossSkills/LaserLVL2.JPG' }
+    };
+
+    const BOSS_SKILLS_L3: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
+        square: { ...tb.skills.orbitalPlating, color: '#cbd5e1', iconLabel: 'B', iconUrl: '/assets/BossSkills/ShieldLVL3.JPG' },
+        pentagon: { ...tb.skills.parasiticLink, color: '#a855f7', iconLabel: 'L', iconUrl: '/assets/BossSkills/ParasiticLinkLVL3.JPG' },
+        circle: { ...tb.skills.cyclonePull, color: '#d1d5db', iconLabel: 'V', iconUrl: '/assets/BossSkills/CycloneLVL3.JPG' },
+        triangle: { ...tb.skills.deflectionField, color: '#fde047', iconLabel: 'D', iconUrl: '/assets/BossSkills/BladeLVL3.JPG' },
+        diamond: { ...tb.skills.satelliteStrike, color: '#ef4444', iconLabel: 'S', iconUrl: '/assets/BossSkills/SateliteLVL3.JPG' }
+    };
+
+    const BOSS_SKILLS_L4: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
+        square: { ...tb.skills.titanPlating, color: '#ef4444', iconLabel: 'T', iconUrl: '/assets/BossSkills/ThornsLVL4.JPG' },
+        circle: { ...tb.skills.soulDevourer, color: '#bf00ff', iconLabel: 'D', iconUrl: '/assets/BossSkills/SuckLVL4.JPG' },
+        triangle: { ...tb.skills.mortalityCurse, color: '#991b1b', iconLabel: 'C', iconUrl: '/assets/BossSkills/CurseLVL4.JPG' },
+        diamond: { ...tb.skills.convergenceZone, color: '#f59e0b', iconLabel: 'Z', iconUrl: '/assets/BossSkills/LaserLVL4.JPG' },
+        pentagon: { ...tb.skills.hivemindPhalanx, color: '#6366f1', iconLabel: 'P', iconUrl: '/assets/BossSkills/PhalanxLVL4.JPG' }
+    };
+
+    const BOSS_SKILLS_L5: Record<string, { name: string; desc: string; color: string; iconLabel: string; iconUrl?: string }> = {
+        diamond: { ...tb.skills.crystalFence, color: '#00ffff', iconLabel: 'F', iconUrl: '/assets/BossSkills/CrystalFenceLVL5.JPG' }
+    };
+
+    const hudT = t.hud;
 
     const activeBosses = gameState.enemies.filter(e => e.boss && !e.dead);
     // Sort by spawn time to keep order consistent with appearance
@@ -187,9 +94,9 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                 color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase',
                                 letterSpacing: 2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)', marginBottom: 2
                             }}>
-                                <span>{(t.bossNames as any)[boss.shape] || t.bossWord}</span>
+                                <span>{BOSS_NAMES[boss.shape] || hudT.bossWord}</span>
                                 <span style={{ color: '#ef4444' }}>
-                                    {t.bossLvl} {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
+                                    {hudT.bossLvl} {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
                                 </span>
                             </div>
 
@@ -209,7 +116,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                     color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
                                     letterSpacing: 2, lineHeight: '16px', textShadow: '0 0 4px #000'
                                 }}>
-                                    {formatLargeNumber(Math.round(boss.hp))} / {formatLargeNumber(Math.round(boss.maxHp))} {t.bossHp}
+                                    {formatLargeNumber(Math.round(boss.hp))} / {formatLargeNumber(Math.round(boss.maxHp))} {hudT.bossHp}
                                 </div>
                                 {boss.shape === 'abomination' && boss.stage && (
                                     <div style={{
@@ -219,7 +126,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                         letterSpacing: 1.5, lineHeight: '16px',
                                         textShadow: `0 0 8px ${boss.stage === 3 ? '#b91c1c' : (boss.stage === 2 ? '#ef4444' : '#f87171')}`
                                     }}>
-                                        {t.bossStage} {boss.stage}
+                                        {hudT.bossStage} {boss.stage}
                                     </div>
                                 )}
                             </div>
@@ -304,10 +211,10 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
                             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                         >
-                            {t.bossDismiss}
+                            {hudT.bossDismiss}
                         </button>
                         <div style={{ position: 'absolute', bottom: -30, width: '100%', left: 0, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 1 }}>
-                            {t.bossResumePrompt}
+                            {hudT.bossResumePrompt}
                         </div>
                     </div>
                 </div>

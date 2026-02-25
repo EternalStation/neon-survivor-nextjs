@@ -1,6 +1,9 @@
 import type { GameState, MapPOI } from '../../core/types';
+import type { Language } from '../../../lib/LanguageContext';
+import { getUiTranslation } from '../../../lib/uiTranslations';
 
-export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState) {
+export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState, language: Language = 'en') {
+    const t = getUiTranslation(language).render;
     state.pois.forEach(poi => {
         if (poi.arenaId !== state.currentArena) return; // Only render current arena POIs
         if (poi.respawnTimer > 0) return; // Skip if in the 30s relocation phase
@@ -9,18 +12,18 @@ export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.translate(poi.x, poi.y);
 
         if (poi.type === 'overclock') {
-            renderOverclock(ctx, state, poi);
+            renderOverclock(ctx, state, poi, t);
         } else if (poi.type === 'anomaly') {
-            renderAnomaly(ctx, state, poi);
+            renderAnomaly(ctx, state, poi, t);
         } else if (poi.type === 'turret') {
-            renderTurret(ctx, state, poi);
+            renderTurret(ctx, state, poi, t);
         }
 
         ctx.restore();
     });
 }
 
-function renderOverclock(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI) {
+function renderOverclock(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI, t: any) {
     const time = state.gameTime;
     const color = poi.cooldown > 0 ? '#475569' : '#22d3ee'; // Grey if cooldown, Cyan if ready
 
@@ -55,7 +58,7 @@ function renderOverclock(ctx: CanvasRenderingContext2D, state: GameState, poi: M
         ctx.font = 'bold 16px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText("SYNCING...", 0, -80);
+        ctx.fillText(`${t.syncing}...`, 0, -80);
     }
 
     // 3. Active Zone Fill
@@ -126,17 +129,17 @@ function renderOverclock(ctx: CanvasRenderingContext2D, state: GameState, poi: M
         ctx.font = 'bold 14px Orbitron';
         ctx.fillStyle = '#94a3b8';
         ctx.textAlign = 'center';
-        ctx.fillText(`RECHARGING: ${Math.ceil(poi.cooldown)}s`, 0, 60);
+        ctx.fillText(`${t.recharging}: ${Math.ceil(poi.cooldown)}${t.sec}`, 0, 60);
     } else if (poi.active) {
         const timeLeft = Math.ceil(30 - poi.activeDuration);
         ctx.font = 'bold 14px Orbitron';
         ctx.fillStyle = '#22d3ee';
         ctx.textAlign = 'center';
-        ctx.fillText(`ACTIVE: ${timeLeft}s`, 0, 80);
+        ctx.fillText(`${t.active}: ${timeLeft}${t.sec}`, 0, 80);
     }
 }
 
-function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI) {
+function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI, t: any) {
     const time = state.gameTime;
     const color = poi.cooldown > 0 ? '#475569' : '#ef4444';
     const hellColor = '#b91c1c'; // Dark red for ground
@@ -264,7 +267,7 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
         ctx.shadowBlur = 5;
         ctx.shadowColor = '#dc2626';
         ctx.textAlign = 'center';
-        ctx.fillText("RITUAL...", 0, yOffset - 10);
+        ctx.fillText(t.ritual, 0, yOffset - 10);
     }
 
     // 5. Cooldown Indicator
@@ -272,11 +275,11 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
         ctx.font = 'bold 14px Orbitron';
         ctx.fillStyle = '#94a3b8';
         ctx.textAlign = 'center';
-        ctx.fillText(`DORMANT: ${Math.ceil(poi.cooldown)}s`, 0, 80);
+        ctx.fillText(`${t.dormant}: ${Math.ceil(poi.cooldown)}${t.sec}`, 0, 80);
     }
 }
 
-function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI) {
+function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapPOI, t: any) {
     const time = state.gameTime;
     const isOverheated = poi.cooldown > 0;
     const isActive = poi.active;
@@ -517,7 +520,7 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(`REPAIR: ${cost} DUST`, 0, yOffset - 10);
+        ctx.fillText(`${t.repair}: ${cost} ${t.dust}`, 0, yOffset - 10);
     }
 
     // 5. Level Indicator (LVL X)
@@ -525,7 +528,7 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.globalAlpha = 1.0;
-    ctx.fillText(`LVL ${level}`, 0, 52);
+    ctx.fillText(`${t.level} ${level}`, 0, 52);
 
     // 6. Status Text
     if (isActive) {
@@ -533,18 +536,18 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#F59E0B';
         ctx.textAlign = 'center';
-        ctx.fillText(`${timeLeft}s`, 0, 68);
+        ctx.fillText(`${timeLeft}${t.sec}`, 0, 68);
     } else if (isOverheated) {
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#EF4444';
         ctx.textAlign = 'center';
-        ctx.fillText(`OVERHEAT: ${Math.ceil(poi.cooldown)}s`, 0, 68);
+        ctx.fillText(`${t.overheat}: ${Math.ceil(poi.cooldown)}${t.sec}`, 0, 68);
     } else if (dToPlayer < poi.radius) {
         const cost = poi.turretCost || (10 * Math.pow(2, poi.turretUses || 0));
         ctx.font = 'bold 12px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(`REPAIR [${cost} DUST]`, 0, 68);
+        ctx.fillText(`${t.repair} [${cost} ${t.dust}]`, 0, 68);
     }
 }
 

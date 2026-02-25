@@ -339,9 +339,10 @@
 
 .hex-icon-wrapper {
     position: relative;
-    width: 44px;
+    width: 38px;
     height: 44px;
     flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 .hex-icon-wrapper img {
@@ -441,8 +442,9 @@
 }
 
 .hex-icon-wrapper-small {
-    width: 48px;
+    width: 42px;
     height: 48px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 .hex-icon-wrapper-small img {
@@ -530,7 +532,7 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    width: 42px;
+    width: 36.5px;
     height: 42px;
     opacity: 0.4;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -565,7 +567,7 @@
 
 /* "ALL" Button Styling */
 .hex-icon-placeholder {
-    width: 36px;
+    width: 31px;
     height: 36px;
     /* Slightly smaller to match visual weight of hex images */
     display: flex;

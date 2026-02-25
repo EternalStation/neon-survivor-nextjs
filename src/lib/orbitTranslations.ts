@@ -46,7 +46,7 @@ export const getRerollSnarks = (lang: Language): DialogLine[] =>
         ? [
             { text: 'Да... удача действительно нужна. Не волнуйся, эту функцию мы добавим позже. Пока — страдай.', emotion: 'Smile' },
             { text: 'Всё ещё рероллишь? Твоя уверенность в том, что сдедующий раз получится, — поразительна.', emotion: 'Smile' },
-            { text: '15 рероллов? Ты буквально сжигаешь Флюкс ради иллюзии прогресса. Жалко выглядит.', emotion: 'Dissapointed' },
+            { text: '15 рероллов? Ты буквально сжигаешь Поток Пустоты ради иллюзии прогресса. Жалко выглядит.', emotion: 'Dissapointed' },
             { text: 'Версия 2.5. Впечатляет. Жаль, я не заложил в систему сострадания к ужасному рандому. Реролль дальше, мясной мешок.', emotion: 'Smile' },
             { text: 'Я бы сказал тебе прекратить транжирить ресурсы, но наблюдать за твоей бесполезной азартной игрой — лучшее в моей жизни.', emotion: 'Point' },
         ]
@@ -106,6 +106,19 @@ export const getIncubatorSnarks = (lang: Language): DialogLine[] =>
             { text: "Your incubated rock just went critical and annihilated itself. That's on you, geologist.", emotion: 'Point' },
             { text: 'Catastrophic instability detected. The meteorite has been reclaimed by entropy. You are welcome, void.', emotion: 'Thinks' },
             { text: "Did I mention that the instability number mattered? Whatever. The meteorite paid the price.", emotion: 'Dissapointed' },
+        ];
+
+export const getIncubatorRerollLostSnarks = (lang: Language): DialogLine[] =>
+    lang === 'ru'
+        ? [
+            { text: 'Ты реролльнул этот метеорит до V1.7+ и потом потерял его в инкубаторе? Это... оригинально. В следующий раз попробуй СНАЧАЛА инкубировать, а потом рероллить. Это называется логика.', emotion: 'Dissapointed' },
+            { text: 'Наблюдать, как ты теряешь высокоуровневый метеорит после того, как потратил Флюкс на его реролл — мой новый любимый набор данных. Настоящий мастер-класс по неэффективности.', emotion: 'Smile' },
+            { text: 'Образец V1.7+, потрачен впустую. Ты ведь понимаешь, что реролл перед стабилизацией — это как ставить телегу перед лошадью? Или, в твоем случае, пыль перед метеоритом.', emotion: 'Point' },
+        ]
+        : [
+            { text: "You rerolled this meteorite to V1.7+ and then lost it in the incubator? That's... special. Next time, try incubating FIRST, then rerolling. It's called logic.", emotion: 'Dissapointed' },
+            { text: "Watching you lose a high-version meteorite after spending flux to reroll it is my new favorite data point. Truly a masterclass in inefficiency.", emotion: 'Smile' },
+            { text: "A V1.7+ specimen, wasted. You do realize that rerolling before stabilizing is the definition of putting the cart before the horse? Or in your case, the dust before the meteorite.", emotion: 'Point' },
         ];
 export const getGenericDeathSnarks = (lang: Language): DialogLine[] =>
     lang === 'ru'
@@ -231,9 +244,9 @@ export const getZeroPercentWarningVariants = (lang: Language): string[] =>
         ? [
             'Серьёзно? Метеориты с 0% эффективности? Думаешь, он что-то даёт? Это скорее похоже на твои шансы на победу, если ты продолжишь игнорировать руководство.',
             'Ноль процентов. Впечатляет. Тебе удалось превратить тактическую матрицу в коллекцию дорогих камней',
-            'Обрабатываю установленные метеориты... результат: абсолютный ноль. Это умысел или просто некомпетентность?',
+            'Обрабатываю установленные метеориты... результат: Абсолютный ноль. Это умысел или просто некомпетентность?',
             'Ты снова устанавливаешь метеориты с 0%. Интересная стратегия - заморить проитников скукой, но это может и сработать.',
-            'Вижу, ты решил резвиться по гайду «Полный 0%». Это наверное новая мета, для которой я просто слишком туп, чтобы понять.',
+            "Вижу, ты решил играть по гайду «Полный 0%». Это, наверное, новая мета, для которой я слишком тупа, чтобы понять.",
         ]
         : [
             "Really? A 0% efficiency meteorite? You think it gives you something? It's more likely similar to your chances of winning if you continue ignoring the manual.",
@@ -312,3 +325,180 @@ export const getZeroPercent5Variants = (lang: Language): [string, string, string
                 'Dissapointed',
             ],
         ];
+
+// ─────────────────────────────────────────────────────────────
+//  EXTRACTION MESSAGES
+// ─────────────────────────────────────────────────────────────
+export interface ExtractionMessage {
+    speaker: 'orbit' | 'you';
+    text: string;
+    pause: number;
+    triggerPortals?: boolean;
+    isAlert?: boolean;
+    isPause?: boolean;
+}
+
+export const getExtractionMessages = (lang: Language, playerName: string, arenaName: string): ExtractionMessage[] =>
+    lang === 'ru'
+        ? [
+            { speaker: 'you', text: `ORBIT, ЭТО HEX-01-${playerName.toUpperCase()}, ПРОШУ ЭВАКУАЦИЮ`, pause: 7.0 },
+            { speaker: 'orbit', text: "ПРИНЯТО. ВАШ СИГНАЛ ПОЛУЧЕН.", pause: 6.0 },
+            { speaker: 'orbit', text: "Мы отправляем корабль.", pause: 6.0 },
+            { speaker: 'orbit', text: "ПОРТАЛЫ ОТКРЫТЫ.", pause: 6.0, triggerPortals: true },
+            { speaker: 'orbit', text: "Но у вас есть только ОДИН переход, будьте осторожны!", pause: 6.0 },
+            { speaker: 'you', text: "ВАС ПОНЯЛ.", pause: 6.0 },
+            { speaker: 'orbit', text: `Точка эвакуации: СЕКТОР: ${arenaName} `, pause: 5.0 },
+            { speaker: 'orbit', text: "ПРИБЫТИЕ ЧЕРЕЗ 65 СЕКУНД.", pause: 7.0 },
+            { speaker: 'orbit', text: "... ... ...", pause: 7.0, isPause: true },
+            { speaker: 'orbit', text: "МЫ ФИКСИРУЕМ ВЫСОКУЮ АКТИВНОСТЬ ВРАГА", pause: 5.0, isAlert: true },
+            { speaker: 'orbit', text: "ВАШЕ ВРЕМЯ ИСТЕКЛО", pause: 5.0, isAlert: true },
+            { speaker: 'orbit', text: "ЭВАКУИРУЙТЕСЬ НЕМЕДЛЕННО! КОНЕЦ СВЯЗИ.", pause: 5.0, isAlert: true },
+        ]
+        : [
+            { speaker: 'you', text: `ORBIT, THIS IS HEX-01-${playerName.toUpperCase()}, REQUESTING EXTRACTION`, pause: 7.0 },
+            { speaker: 'orbit', text: "RECEIVED. WE HAVE YOUR SIGNAL.", pause: 6.0 },
+            { speaker: 'orbit', text: "We're sending a ship.", pause: 6.0 },
+            { speaker: 'orbit', text: "PORTALS ARE OPEN NOW.", pause: 6.0, triggerPortals: true },
+            { speaker: 'orbit', text: "But you have only ONE transition, be careful!", pause: 6.0 },
+            { speaker: 'you', text: "UNDERSTOOD.", pause: 6.0 },
+            { speaker: 'orbit', text: `Extraction point follows: SECTOR: ${arenaName} `, pause: 5.0 },
+            { speaker: 'orbit', text: "ETA 65 SECONDS.", pause: 7.0 },
+            { speaker: 'orbit', text: "... ... ...", pause: 7.0, isPause: true },
+            { speaker: 'orbit', text: "WE DETECTED HIGH ENEMY ACTIVITY", pause: 5.0, isAlert: true },
+            { speaker: 'orbit', text: "YOU HAVE NO MORE TIME LEFT", pause: 5.0, isAlert: true },
+            { speaker: 'orbit', text: "EVACUATE NOW! TRANSMISSION ENDS.", pause: 5.0, isAlert: true },
+        ];
+
+export const getFluxGrantLine = (lang: Language): string =>
+    lang === 'ru' ? "+100 ФЛЮКС" : "+100 FLUX";
+// ─────────────────────────────────────────────────────────────
+//  TUTORIAL HINTS
+// ─────────────────────────────────────────────────────────────
+import { TutorialStep } from '../logic/core/types';
+
+export const getTutorialHints = (lang: Language): Partial<Record<TutorialStep, { text: string; subtext: string }>> =>
+    lang === 'ru'
+        ? {
+            [TutorialStep.MOVEMENT]: {
+                text: "ORBIT",
+                subtext: "Используйте [WASD] или [Стрелки] для передвижения."
+            },
+            [TutorialStep.LEVEL_UP_MENU]: {
+                text: "ORBIT",
+                subtext: "Выбирайте одно из 3 улучшений при каждом новом уровне. Красные ячейки ниже отображают редкость — чем их больше, тем мощнее улучшение."
+            },
+            [TutorialStep.UPGRADE_SELECTED_CHECK_STATS]: {
+                text: "ORBIT",
+                subtext: "Проверьте свои характеристики [C]."
+            },
+            [TutorialStep.OPEN_MODULE_MENU]: {
+                text: "ORBIT",
+                subtext: "Метеорит собран. Перейдите в Матрицу Модулей для осмотра [X]."
+            },
+            [TutorialStep.MATRIX_WELCOME]: {
+                text: "ORBIT",
+                subtext: "Добро пожаловать в Матрицу Модулей."
+            },
+            [TutorialStep.MATRIX_INVENTORY]: {
+                text: "ORBIT",
+                subtext: "Все метеориты хранятся здесь. Вы можете просканировать метеорит, наведя на него курсор."
+            },
+            [TutorialStep.MATRIX_SOCKETS]: {
+                text: "ORBIT",
+                subtext: "Каждый метеорит обладает перками, которые повышают эффективность соседних ячеек и метеоритов, если его поместить в слот слева."
+            },
+            [TutorialStep.MATRIX_TYPES]: {
+                text: "ORBIT",
+                subtext: "Метеориты бывают 4 типов: Разбитые, Поврежденные, Новые и Коррумпированные. Каждый тип имеет разный диапазон эффективности перков."
+            },
+            [TutorialStep.MATRIX_ORIGIN]: {
+                text: "ORBIT",
+                subtext: "Также ниже в сканере вы можете увидеть, в какой области был собран метеорит."
+            },
+            [TutorialStep.MATRIX_RECYCLE_ACTION]: {
+                text: "ORBIT",
+                subtext: "Вы можете перерабатывать ненужные метеориты и получать из них метеоритную пыль."
+            },
+            [TutorialStep.MATRIX_DUST_USAGE]: {
+                text: "ORBIT",
+                subtext: "Замена метеоритов в меню Матрицы, активация чертежей — всё это требует метеоритной пыли."
+            },
+            [TutorialStep.MATRIX_QUOTA_MISSION]: {
+                text: "ORBIT",
+                subtext: "Ваша задача — достичь квоты в 10 000 ед. пыли."
+            },
+            [TutorialStep.MATRIX_CLASS_DETAIL]: {
+                text: "ORBIT",
+                subtext: "Если нажать на центральную ячейку в матрице модулей, представляющую ваш класс, вы сможете узнать о нём всё."
+            },
+            [TutorialStep.MATRIX_NON_STATIC_METRICS]: {
+                text: "ORBIT",
+                subtext: "Нестатические показатели можно улучшить, размещая метеориты рядом с ячейкой."
+            },
+            [TutorialStep.MATRIX_FILTERS]: {
+                text: "ORBIT",
+                subtext: "Когда метеоритов станет слишком много, вы сможете использовать фильтры для поиска нужных."
+            }
+        }
+        : {
+            [TutorialStep.MOVEMENT]: {
+                text: "ORBIT",
+                subtext: "Use [WASD] / [Arrows] to move."
+            },
+            [TutorialStep.LEVEL_UP_MENU]: {
+                text: "ORBIT",
+                subtext: "Choose one of 3 upgrades every level up. Red sockets below represent rarity — the more the better."
+            },
+            [TutorialStep.UPGRADE_SELECTED_CHECK_STATS]: {
+                text: "ORBIT",
+                subtext: "Check your system [C]."
+            },
+            [TutorialStep.OPEN_MODULE_MENU]: {
+                text: "ORBIT",
+                subtext: "Meteorite collected. Enter Module Matrix to inspect [X]."
+            },
+            [TutorialStep.MATRIX_WELCOME]: {
+                text: "ORBIT",
+                subtext: "Welcome to Module Matrix."
+            },
+            [TutorialStep.MATRIX_INVENTORY]: {
+                text: "ORBIT",
+                subtext: "All meteorites will be stored here. You can scan meteorite by hovering over it."
+            },
+            [TutorialStep.MATRIX_SOCKETS]: {
+                text: "ORBIT",
+                subtext: "Every meteorite has its perks that increase efficiency of neighboring hexes and meteorites if placed in a socket on your left."
+            },
+            [TutorialStep.MATRIX_TYPES]: {
+                text: "ORBIT",
+                subtext: "Meteorites can be 4 types: Broken, Damaged, New and Corrupted. Every type has different perk efficiency range that you might get."
+            },
+            [TutorialStep.MATRIX_ORIGIN]: {
+                text: "ORBIT",
+                subtext: "Also you can see in which area you collected the meteorite below in the scanner."
+            },
+            [TutorialStep.MATRIX_RECYCLE_ACTION]: {
+                text: "ORBIT",
+                subtext: "You can recycle meteorites you don't need and get meteorite dust from it."
+            },
+            [TutorialStep.MATRIX_DUST_USAGE]: {
+                text: "ORBIT",
+                subtext: "Replacing meteorites in Matrix menu, activating blueprints, all this requires meteorite dust."
+            },
+            [TutorialStep.MATRIX_QUOTA_MISSION]: {
+                text: "ORBIT",
+                subtext: "Your mission is to reach quota of 10,000 dust."
+            },
+            [TutorialStep.MATRIX_CLASS_DETAIL]: {
+                text: "ORBIT",
+                subtext: "If you click on the central hex in module matrix which represents your class, you can see all about it."
+            },
+            [TutorialStep.MATRIX_NON_STATIC_METRICS]: {
+                text: "ORBIT",
+                subtext: "Non-Static Metrics can be improved by placing meteorites near the hex."
+            },
+            [TutorialStep.MATRIX_FILTERS]: {
+                text: "ORBIT",
+                subtext: "When you will have too much meteorites you can use filters to filter the one you want."
+            }
+        };

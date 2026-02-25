@@ -21,7 +21,7 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         reg: { base: 1, flat: 0, mult: 0 },
         arm: { base: 0, flat: 0, mult: 0 },
         xp_per_kill: { base: 25, flat: 0, mult: 0 },
-        xp: { current: 0, needed: 250 },
+        xp: { current: 0, needed: 369 },
         level: 1,
         damageDealt: 0,
         damageTaken: 0,

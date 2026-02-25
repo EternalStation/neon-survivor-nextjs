@@ -170,7 +170,7 @@ export const HUD: React.FC<HUDProps> = ({
                         color: '#94a3b8', fontFamily: 'monospace', fontSize: 11,
                         fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase'
                     }}>
-                        {SECTOR_NAMES[getArenaIndex(player.x, player.y)]}
+                        {([t.ecoArena, t.comArena, t.defArena][getArenaIndex(player.x, player.y)] || SECTOR_NAMES[getArenaIndex(player.x, player.y)])}
                     </span>
                 </div>
             </div>
@@ -218,7 +218,7 @@ export const HUD: React.FC<HUDProps> = ({
                             {t.extractionPointIdentified}
                         </div>
                         <div style={{ color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px', textShadow: '0 0 10px #ef4444' }}>
-                            {SECTOR_NAMES[gameState.extractionTargetArena] || t.unknown}
+                            {([t.ecoArena, t.comArena, t.defArena][gameState.extractionTargetArena] || SECTOR_NAMES[gameState.extractionTargetArena] || t.unknown)}
                         </div>
                         <div style={{ color: '#60a5fa', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
                             {gameState.extractionShipPos ?

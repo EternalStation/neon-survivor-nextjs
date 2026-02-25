@@ -1,6 +1,8 @@
 import type { GameState } from '../core/types';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { triggerShockwave } from '../combat/ProjectileSpawning';
+import { GAME_CONFIG } from '../core/GameConfig';
 
 export function castSkill(state: GameState, skillIndex: number) {
     // 0-indexed skill slot
@@ -73,5 +75,15 @@ export function castSkill(state: GameState, skillIndex: number) {
             skill.cooldownMax = 5 * cdMod;
             skill.cooldown = skill.cooldownMax;
         }
+    }
+
+    if (skill.type === 'ComWave') {
+        const level = getHexLevel(state, 'ComWave');
+        triggerShockwave(state, state.player, level);
+
+        // Cooldown: 30s base, 20s if Level 4
+        const baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
+        skill.cooldownMax = baseCD * cdMod;
+        skill.cooldown = skill.cooldownMax;
     }
 }

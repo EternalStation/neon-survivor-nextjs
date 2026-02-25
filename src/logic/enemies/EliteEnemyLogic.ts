@@ -402,7 +402,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
 
     // Normal State / Spawning Logic (Only if age <= 60 and not in aggro)
     // --- SPAWNING LOGIC (Elite - Independent of movement state) ---
-    if (!e.lastAttack) e.lastAttack = state.gameTime;
+    if (e.lastAttack === undefined) e.lastAttack = state.gameTime;
 
     if (e.summonState === 1) {
         if (state.gameTime > (e.timer || 0)) {

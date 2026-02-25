@@ -17,9 +17,10 @@ import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { RemovalConfirmationModal } from './modules/RemovalConfirmationModal';
 import { CorruptionWarningModal } from './modules/CorruptionWarningModal';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
-import { EXTRACTION_MESSAGES } from '../logic/mission/ExtractionLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import './modules/ModuleMenu.css';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 
 interface ModuleMenuProps {
@@ -69,6 +70,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         );
         playSfx('ui-click');
     };
+
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
 
     // Recalibration Filters
     const [recalibrateFilters, setRecalibrateFilters] = useState<Record<number, PerkFilter>>({
@@ -831,7 +835,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                             filter: 'drop-shadow(0 0 5px #22d3ee)',
                                         }} />
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '9px', color: '#94a3b8', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>DUST</span>
+                                            <span style={{ fontSize: '9px', color: '#94a3b8', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>{t.matrix.dust}</span>
                                             <span style={{ fontSize: '16px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', lineHeight: 1.2 }}>{Number(meteoriteDust.toFixed(1)).toLocaleString()}</span>
                                         </div>
 
@@ -883,7 +887,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                                             filter: 'drop-shadow(0 0 5px #a855f7)',
                                         }} />
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '9px', color: '#e9d5ff', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>VOID FLUX</span>
+                                            <span style={{ fontSize: '9px', color: '#e9d5ff', letterSpacing: '0.5px', fontWeight: 700, lineHeight: 1 }}>{t.matrix.flux}</span>
                                             <span style={{ fontSize: '16px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)', lineHeight: 1.2 }}>{gameState.player.isotopes.toLocaleString()}</span>
                                         </div>
                                     </div>

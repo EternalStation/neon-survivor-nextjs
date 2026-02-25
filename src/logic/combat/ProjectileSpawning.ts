@@ -12,92 +12,71 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { networkManager } from '../networking/NetworkManager';
 
 // Helper: Trigger Shockwave
-export function triggerShockwave(state: GameState, player: Player, angle: number, level: number) {
-    // ...
+export function triggerShockwave(state: GameState, player: Player, level: number) {
     const range = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_RANGE.LVL3 : GAME_CONFIG.SKILLS.WAVE_RANGE.LVL1;
     const damageMult = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL3 : GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL1;
-    const coneHalfAngle = 0.7; // ~80 degrees total
     const themeColor = getPlayerThemeColor(state, player);
 
     const playerDmg = calcStat(player.dmg);
     const waveDmg = playerDmg * damageMult;
 
-    const castWave = (waveAngle: number) => {
-        // Visuals: Echolocation Wave (Single clean arc)
-        // We use a special 'shockwave' particle type that the renderer draws as a bent line
-        const speed = GAME_CONFIG.SKILLS.WAVE_SPEED;
-        const waveLife = (range / speed) * 1.5; // Lingers slightly longer for visual overlap
+    // Visuals: Circular Shockwave Particle
+    const waveLife = 2.0 * 60; // 2.0 seconds total (120 frames at 60fps)
 
-        state.particles.push({
-            x: player.x,
-            y: player.y,
-            vx: Math.cos(waveAngle) * speed,
-            vy: Math.sin(waveAngle) * speed,
-            life: waveLife,
-            color: themeColor,
-            size: 300,
-            type: 'shockwave',
-            alpha: 1.0,
-            decay: 0.03 // Slower decay
-        });
+    state.particles.push({
+        x: player.x,
+        y: player.y,
+        vx: 0,
+        vy: 0,
+        life: waveLife,
+        maxLife: waveLife,
+        color: '#ef4444', // Blood Pulse Red
+        size: range,
+        type: 'shockwave_circle',
+        alpha: 1.0,
+        decay: 1.0 / waveLife
+    });
 
-        playSfx('sonic-wave');
+    playSfx('sonic-wave');
 
-        // Damage Logic (Instant Hitscan for gameplay feel, visualization catches up)
-        state.enemies.forEach(e => {
-            if (e.dead || e.isFriendly || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-            const dx = e.x - player.x;
-            const dy = e.y - player.y;
-            const dist = Math.hypot(dx, dy);
+    // Damage Logic (Instant circular hitscan)
+    state.enemies.forEach(e => {
+        if (e.dead || e.isFriendly || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
+        const dx = e.x - player.x;
+        const dy = e.y - player.y;
+        const dist = Math.hypot(dx, dy);
 
-            if (dist < range) {
-                const angleToEnemy = Math.atan2(dy, dx);
-                const diff = Math.abs(angleToEnemy - waveAngle);
-                // Normalized diff
-                const normDiff = Math.min(diff, Math.abs(diff - Math.PI * 2));
+        if (dist < range) {
+            let dmgDealt = waveDmg;
 
-                if (normDiff < coneHalfAngle) {
-                    // Hit!
-                    let dmgDealt = waveDmg;
+            // --- LEGION SHIELD LOGIC ---
+            if (e.legionId) {
+                const lead = state.legionLeads?.[e.legionId];
+                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                    const shieldAbsorp = Math.min(dmgDealt, lead.legionShield || 0);
+                    lead.legionShield = (lead.legionShield || 0) - shieldAbsorp;
+                    dmgDealt -= shieldAbsorp;
 
-                    // --- LEGION SHIELD LOGIC ---
-                    if (e.legionId) {
-                        const lead = state.legionLeads?.[e.legionId];
-                        if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
-                            const shieldAbsorp = Math.min(dmgDealt, lead.legionShield || 0);
-                            lead.legionShield = (lead.legionShield || 0) - shieldAbsorp;
-                            dmgDealt -= shieldAbsorp;
-
-                            if (shieldAbsorp > 0) {
-                                spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
-                                spawnParticles(state, e.x, e.y, '#60a5fa', 1);
-                            }
-                        }
-                    }
-
-                    if (dmgDealt > 0) {
-                        e.hp -= dmgDealt;
-                        player.damageDealt += dmgDealt;
-                        spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
-                        // Flash hit effect
-                        spawnParticles(state, e.x, e.y, '#EF4444', 3);
-                    }
-
-
-                    // Lvl 2: Fear
-                    if (level >= 2) {
-                        e.fearedUntil = state.gameTime + 1.5; // 1.5s
+                    if (shieldAbsorp > 0) {
+                        spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
+                        spawnParticles(state, e.x, e.y, '#60a5fa', 1);
                     }
                 }
             }
-        });
-    };
 
-    castWave(angle);
+            if (dmgDealt > 0) {
+                e.hp -= dmgDealt;
+                player.damageDealt += dmgDealt;
+                spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
+                spawnParticles(state, e.x, e.y, '#EF4444', 3);
+            }
 
-    if (level >= 4) {
-        castWave(angle + Math.PI);
-    }
+            // Lvl 2: Fear
+            if (level >= 2) {
+                e.fearedUntil = state.gameTime + 1.5; // 1.5s
+            }
+        }
+    });
 }
 
 export function spawnBullet(state: GameState, player: Player, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
@@ -133,14 +112,6 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     let bulletPierce = pierce;
     // Malware pierce logic is now handled in player.pierce initialization in GameState.ts
 
-    // --- ComWave Logic ---
-    const waveLevel = getHexLevel(state, 'ComWave');
-    if (waveLevel > 0) {
-        player.shotsFired = (player.shotsFired || 0) + 1;
-        if (player.shotsFired % GAME_CONFIG.SKILLS.WAVE_SHOTS_REQUIRED === 0) {
-            triggerShockwave(state, player, angle + offsetAngle, waveLevel);
-        }
-    }
 
     // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
     if (player.playerClass === 'stormstrike') {

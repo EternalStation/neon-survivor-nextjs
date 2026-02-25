@@ -1,5 +1,6 @@
 
 import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/core/types';
+import { getUiTranslation } from '../../lib/uiTranslations';
 import { RARITY_ORDER } from '../../logic/core/types';
 
 export type PerkFilter = {
@@ -45,16 +46,18 @@ export const getPerkIcon = (id: string) => {
     return '◈';
 };
 
-export const getPerkName = (id: string | number) => {
+export const getPerkName = (id: string | number, language: string = 'en') => {
     const sId = String(id);
-    if (sId.startsWith('lvl1')) return '1st Perk';
-    if (sId.startsWith('lvl2')) return '2nd Perk';
-    if (sId.startsWith('lvl3')) return '3rd Perk';
-    if (sId.startsWith('lvl4')) return '4th Perk';
-    if (sId.startsWith('lvl5')) return '5th Perk';
-    if (sId.startsWith('lvl6')) return '6th Perk';
-    if (id === 'base_efficiency') return '1st Perk';
-    return '1st Perk';
+    const t = getUiTranslation(language as any).meteorites.perkNames;
+
+    if (sId.startsWith('lvl1')) return t.lvl1;
+    if (sId.startsWith('lvl2')) return t.lvl2;
+    if (sId.startsWith('lvl3')) return t.lvl3;
+    if (sId.startsWith('lvl4')) return t.lvl4;
+    if (sId.startsWith('lvl5')) return t.lvl5;
+    if (sId.startsWith('lvl6')) return t.lvl6;
+    if (id === 'base_efficiency') return t.lvl1;
+    return t.lvl1;
 };
 
 export const getHexPoints = (x: number, y: number, r: number) => {
@@ -179,12 +182,18 @@ export const matchesFilter = (
     }
 
     // Perk Checks (Cumulative/AND logic)
+    // Skip blueprints, non-meteorite items (dust/flux), and items with no perks array.
+    // An empty array [] is truthy in JS, so we must also check .length > 0.
+    if (item.isBlueprint || !item.perks || !Array.isArray(item.perks) || item.perks.length === 0) return true;
+
     for (let lvl = 1; lvl <= 6; lvl++) {
         const f = perkFilters[lvl];
         if (!f || !f.active) continue;
 
         const perks = item.perks;
-        // Find the perk matching this level's tier (indices 0 to 5 map to tiers 1 to 6)
+        // Find the perk matching this level's tier (indices 0 to 5 map to tiers 1 to 6).
+        // Meteorites only have perks up to their rarity level (e.g. anomalous has 1, singularity has 6).
+        // If the item doesn't have this perk level, it doesn't match the filter.
         const p = perks[lvl - 1];
         if (!p) return false;
 
@@ -275,46 +284,45 @@ export const SPIN_POOLS = {
  * Extracts the "spinny parts" from a perk ID for the casino animation.
  * Returns an array of strings that should be animated.
  */
-export const getPerkParts = (id: string | number): string[] => {
-    const sId = String(id);
-    if (!sId.includes('_')) return [];
+export const getPerkParts = (id: string, language: string = 'en') => {
+    const pts = id.split('_');
+    if (pts.length < 2) return [];
 
-    const pts = sId.split('_');
-    // pts[0] is lvlX
+    const t = getUiTranslation(language as any).recalibrate;
     const parts: string[] = [];
 
     const mapSector = (s: string) => {
-        if (s === 'eco') return 'Sector-01';
-        if (s === 'com') return 'Sector-02';
-        if (s === 'def') return 'Sector-03';
+        if (s === 'eco') return t.sectors.s1;
+        if (s === 'com') return t.sectors.s2;
+        if (s === 'def') return t.sectors.s3;
         return s;
     };
 
     const mapArena = (s: string) => {
-        if (s === 'eco') return 'Economic Arena';
-        if (s === 'com') return 'Combat Arena';
-        if (s === 'def') return 'Defence Arena';
+        if (s === 'eco') return t.arenas.eco;
+        if (s === 'com') return t.arenas.com;
+        if (s === 'def') return t.arenas.def;
         return s;
     };
 
     const mapLegendary = (s: string) => {
-        if (s === 'eco') return 'Eco';
-        if (s === 'com') return 'Com';
-        if (s === 'def') return 'Def';
+        if (s === 'eco') return t.legendary.eco;
+        if (s === 'com') return t.legendary.com;
+        if (s === 'def') return t.legendary.def;
         return s;
     };
 
     const mapLegendarySuffix = (s: string) => {
-        if (s === 'eco') return 'Eco ⬢';
-        if (s === 'com') return 'Com ⬢';
-        if (s === 'def') return 'Def ⬢';
+        if (s === 'eco') return `${t.legendary.eco} ⬢`;
+        if (s === 'com') return `${t.legendary.com} ⬢`;
+        if (s === 'def') return `${t.legendary.def} ⬢`;
         return s;
     };
 
     const mapQuality = (s: string) => {
-        if (s === 'bro') return 'Broken';
-        if (s === 'dam') return 'Damaged';
-        if (s === 'new') return 'New';
+        if (s === 'bro') return t.qualities.bro;
+        if (s === 'dam') return t.qualities.dam;
+        if (s === 'new') return t.qualities.new;
         return s;
     };
 

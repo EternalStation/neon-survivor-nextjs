@@ -4,7 +4,7 @@ import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
 import { isBuffActive, activateBlueprint, scrapBlueprint } from '../../logic/upgrades/BlueprintLogic';
 import { ARENA_DATA, SECTOR_NAMES } from '../../logic/mission/MapLogic';
-import { EXTRACTION_MESSAGES } from '../../logic/mission/ExtractionLogic';
+import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
 import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
@@ -13,6 +13,9 @@ import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
 import { getMeteoriteImage, matchesPerk, PerkFilter } from './ModuleUtils';
 import { PLAYER_CLASSES } from '../../logic/core/classes';
+
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface ModuleDetailPanelProps {
     gameState: GameState;
@@ -34,6 +37,7 @@ interface ModuleDetailPanelProps {
     recalibrateFilters: Record<number, PerkFilter>;
     setRecalibrateFilters: React.Dispatch<React.SetStateAction<Record<number, PerkFilter>>>;
     setLockedRecalibrateIndices: React.Dispatch<React.SetStateAction<number[]>>;
+    onAttemptRemove?: (index: number, item: any, replaceWith?: any) => void;
 }
 
 export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
@@ -55,13 +59,20 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     onToggleRecalibrateLock,
     recalibrateFilters,
     setRecalibrateFilters,
-    setLockedRecalibrateIndices
+    setLockedRecalibrateIndices,
+    onAttemptRemove
 }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     const terminalRef = React.useRef<HTMLDivElement>(null);
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
     const lastCharIndexRef = React.useRef(0);
     const extractionDialogActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
-    const alertIdx = EXTRACTION_MESSAGES.findIndex(m => m.isAlert);
+    const playerName = gameState.playerName || PLAYER_CLASSES.find(c => c.id === gameState.player.playerClass)?.name || "PILOT";
+    const arenaName = gameState.extractionTargetArena !== undefined ? ARENA_DATA[gameState.extractionTargetArena]?.name || "UNKNOWN" : "UNKNOWN";
+    const extractionMessages = getExtractionMessages(language, playerName, arenaName);
+
+    const alertIdx = extractionMessages.findIndex(m => m.isAlert);
     const isAlertActive = extractionDialogActive && alertIdx !== -1 && gameState.extractionMessageIndex >= alertIdx;
     const themeColor = isAlertActive ? '#ef4444' : '#3b82f6';
     const themeColorSecondary = isAlertActive ? '#f87171' : '#60a5fa';
@@ -78,11 +89,10 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
         }
     }, [gameState.extractionMessageIndex, gameState.extractionStatus]);
 
-    // Audio Effect / Sound per Letter
     React.useEffect(() => {
         if (!extractionDialogActive) return;
 
-        const msg = EXTRACTION_MESSAGES[gameState.extractionMessageIndex];
+        const msg = extractionMessages[gameState.extractionMessageIndex];
         if (!msg || msg.isPause) return;
 
         const start = gameState.extractionMessageTimes?.[gameState.extractionMessageIndex] || 0;
@@ -197,13 +207,25 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     {/* LOCKED — needs decryption */}
                     {status === 'locked' && (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-                            <div style={{ border: '2px solid #3b82f6', borderRadius: '12px', padding: '20px', background: 'rgba(59,130,246,0.08)', boxShadow: '0 0 30px rgba(59,130,246,0.3)', position: 'relative', overflow: 'hidden' }}>
-                                <img src="/assets/Icons/Blueprint.png" style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 16px #3b82f6)' }} />
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(transparent, rgba(59,130,246,0.3), transparent)', animation: 'scan-vertical 2s infinite linear' }} />
+                            <div style={{
+                                width: '104px', height: '120px',
+                                background: 'rgba(59,130,246,0.2)',
+                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 0 30px rgba(59,130,246,0.3)', position: 'relative', overflow: 'hidden'
+                            }}>
+                                <div style={{
+                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
+                                    backgroundColor: '#0f172a',
+                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 16px #3b82f6)', objectFit: 'contain' }} />
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(transparent, rgba(59,130,246,0.3), transparent)', animation: 'scan-vertical 2s infinite linear' }} />
+                                </div>
                             </div>
                             <div style={{ textAlign: 'center', color: '#f59e0b', fontWeight: 900, fontSize: '13px', letterSpacing: '2px', animation: 'pulse-text 2s infinite' }}>
                                 RIGHT-CLICK TO BEGIN DECRYPTION
-                                <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', letterSpacing: '1px', opacity: 0.8 }}>(OR RECYCLE FOR +5 DUST)</div>
                             </div>
                         </div>
                     )}
@@ -214,7 +236,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             <div style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 900, letterSpacing: '2px' }}>DECRYPTION IN PROGRESS</div>
                             <div style={{ fontSize: '52px', color: '#fbbf24', fontWeight: 900, fontFamily: 'monospace', textShadow: '0 0 15px #fbbf24' }}>{timeLeft.toFixed(1)}s</div>
                             <div style={{ width: '100%', maxWidth: '240px', height: '6px', background: 'rgba(251,191,36,0.1)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(251,191,36,0.2)' }}>
-                                <div style={{ height: '100%', background: '#fbbf24', width: `${Math.max(5, (1 - (timeLeft / 60)) * 100)}%`, boxShadow: '0 0 10px #fbbf24' }} />
+                                <div style={{ height: '100%', background: '#fbbf24', width: `${Math.max(5, (1 - (timeLeft / (bp.researchDuration || 60))) * 100)}%`, boxShadow: '0 0 10px #fbbf24' }} />
                             </div>
                         </div>
                     )}
@@ -291,26 +313,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         </div>
                     )}
 
-                    {/* RECYCLE button — always visible except active */}
-                    {status !== 'active' && (
-                        <button
-                            onClick={handleScrap}
-                            style={{
-                                padding: '10px', fontSize: '11px', fontWeight: 900, letterSpacing: '1px',
-                                background: 'rgba(30,41,59,0.8)', border: '1px solid #334155',
-                                color: '#94a3b8', borderRadius: '4px', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                transition: 'all 0.2s', fontFamily: 'Orbitron, sans-serif'
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.color = '#94a3b8'; }}
-                        >
-                            RECYCLE
-                            <span style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                +5 <img src="/assets/Icons/MeteoriteDust.png" style={{ width: '12px', height: '12px' }} />
-                            </span>
-                        </button>
-                    )}
+
                 </div>
             </div>
         );
@@ -383,25 +386,32 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                         </div>
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '30px' }}>
                                             <div style={{
-                                                width: '120px', height: '120px',
-                                                border: '2px solid #fbbf24', borderRadius: '12px',
-                                                background: 'rgba(251, 191, 36, 0.05)',
+                                                width: '104px', height: '120px',
+                                                background: 'rgba(251, 191, 36, 0.2)',
+                                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 boxShadow: '0 0 40px rgba(251, 191, 36, 0.2)',
                                                 position: 'relative', overflow: 'hidden'
                                             }}>
-                                                <img src="/assets/Icons/Blueprint.png" style={{
-                                                    width: '60%', height: '60%',
-                                                    filter: 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(-10deg) saturate(3)',
-                                                    opacity: 0.4
-                                                }} />
                                                 <div style={{
-                                                    position: 'absolute', inset: 0,
-                                                    background: 'linear-gradient(transparent, #fbbf24, transparent)',
-                                                    height: '200%', width: '100%',
-                                                    opacity: 0.3,
-                                                    animation: 'scanning-bar 1.5s infinite linear'
-                                                }} />
+                                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
+                                                    backgroundColor: '#0f172a',
+                                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <img src="/assets/Icons/Blueprint.png" style={{
+                                                        width: '60%', height: '60%',
+                                                        filter: 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(-10deg) saturate(3)',
+                                                        opacity: 0.4
+                                                    }} />
+                                                    <div style={{
+                                                        position: 'absolute', inset: 0,
+                                                        background: 'linear-gradient(transparent, #fbbf24, transparent)',
+                                                        height: '200%', width: '100%',
+                                                        opacity: 0.3,
+                                                        animation: 'scanning-bar 1.5s infinite linear'
+                                                    }} />
+                                                </div>
                                             </div>
 
                                             <div style={{ textAlign: 'center' }}>
@@ -411,13 +421,12 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '2px', textTransform: 'uppercase' }}>
                                                     PARSING SYSTEM PACKETS...
                                                 </div>
-                                                <div style={{ fontSize: '8px', color: '#64748b', marginTop: '8px', letterSpacing: '1px' }}>(OR CLICK TO RECYCLE FOR +5 DUST)</div>
                                             </div>
 
                                             <div style={{ width: '100%', maxWidth: '300px', height: '8px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
                                                 <div style={{
                                                     height: '100%', background: '#fbbf24',
-                                                    width: `${Math.max(5, (1 - (timeLeft / 60)) * 100)}%`,
+                                                    width: `${Math.max(5, (1 - (timeLeft / (hoveredBlueprint.researchDuration || 60))) * 100)}%`,
                                                     boxShadow: '0 0 15px #fbbf24'
                                                 }} />
                                             </div>
@@ -532,10 +541,10 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
                                             }}>
                                                 <div>
-                                                    <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, marginBottom: '6px', letterSpacing: '2px' }}>ACTIVATION SEQUENCE</div>
+                                                    <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, marginBottom: '6px', letterSpacing: '2px' }}>{t.activation.title}</div>
                                                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                                         <span style={{ fontSize: '28px', fontWeight: 900, color: '#fff', textShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}>{hoveredBlueprint.cost.toLocaleString()}</span>
-                                                        <span style={{ fontSize: '12px', fontWeight: 900, color: '#94a3b8' }}>DUST REQUIRED</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 900, color: '#94a3b8' }}>{t.activation.dustRequired}</span>
                                                     </div>
                                                 </div>
                                                 <div style={{
@@ -660,19 +669,11 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             .typewriter-cursor::after { content: '▋'; animation: blink 1s step-start infinite; color: currentColor; margin-left: 2px; }
                             @keyframes blink { 50% { opacity: 0; } }
                         `}</style>
-                            {EXTRACTION_MESSAGES.slice(0, gameState.extractionMessageIndex + 1).map((msg, i) => {
+                            {extractionMessages.slice(0, gameState.extractionMessageIndex + 1).map((msg, i) => {
                                 const isCurrent = i === gameState.extractionMessageIndex;
 
-                                // Dynamic Placeholder Replacement
-                                let fullText = msg.text;
-                                if (fullText.includes('[PLAYER_NAME]')) {
-                                    const actualName = gameState.playerName || PLAYER_CLASSES.find(c => c.id === gameState.player.playerClass)?.name || "RECRUIT";
-                                    fullText = fullText.replace('[PLAYER_NAME]', actualName.toUpperCase());
-                                }
-                                if (fullText.includes('[ARENA_NAME]')) {
-                                    const sectorName = SECTOR_NAMES[gameState.extractionTargetArena] || "UNKNOWN";
-                                    fullText = fullText.replace('[ARENA_NAME]', sectorName.toUpperCase());
-                                }
+                                // Dynamic Placeholder Replacement (Now handled by getExtractionMessages)
+                                const fullText = msg.text;
 
                                 // Typewriter Logic: Constant Speed Calculation
                                 let displayedText = fullText;
@@ -726,32 +727,32 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             <div style={{ textAlign: 'center', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                 {gameState.extractionStatus === 'active' ? (
                                     <>
-                                        <div style={{ fontSize: '10px', color: '#ef4444', fontWeight: 900, letterSpacing: '2px', animation: 'pulse-text 1s infinite' }}>ARRIVAL IN</div>
+                                        <div style={{ fontSize: '10px', color: '#ef4444', fontWeight: 900, letterSpacing: '2px', animation: 'pulse-text 1s infinite' }}>{t.matrix.arrivalIn}</div>
                                         <div style={{ fontSize: '48px', color: '#fff', fontWeight: 900, lineHeight: 1, textShadow: '0 0 20px #ef4444' }}>
                                             {Math.ceil(gameState.extractionTimer)}s
                                         </div>
-                                        <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px' }}>SECURE THE LZ</div>
+                                        <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px' }}>{t.matrix.secureLZ}</div>
                                     </>
                                 ) : gameState.extractionStatus === 'arrived' ? (
                                     <>
-                                        <div style={{ fontSize: '12px', color: '#22c55e', fontWeight: 900, letterSpacing: '2px', animation: 'pulse-text 0.5s infinite' }}>SHIP LANDED</div>
+                                        <div style={{ fontSize: '12px', color: '#22c55e', fontWeight: 900, letterSpacing: '2px', animation: 'pulse-text 0.5s infinite' }}>{t.matrix.shipLanded}</div>
                                         <div style={{ fontSize: '14px', color: '#fff', maxWidth: '160px' }}>
-                                            GO TO <span style={{ color: '#22c55e', fontWeight: 900 }}>{gameState.extractionSectorLabel || "LANDING ZONE"}</span>
+                                            {t.matrix.goTo} <span style={{ color: '#22c55e', fontWeight: 900 }}>{gameState.extractionSectorLabel || t.matrix.landingZone}</span>
                                         </div>
                                     </>
                                 ) : gameState.extractionStatus === 'departing' ? (
-                                    <div style={{ fontSize: '14px', color: '#fbbf24', fontWeight: 900, letterSpacing: '2px' }}>DEPARTING...</div>
+                                    <div style={{ fontSize: '14px', color: '#fbbf24', fontWeight: 900, letterSpacing: '2px' }}>{t.matrix.departing}</div>
                                 ) : (
-                                    <div style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 900, letterSpacing: '6px', opacity: 1, animation: 'pulse-text 2s infinite ease-in-out' }}>WAITING SIGNAL</div>
+                                    <div style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 900, letterSpacing: '6px', opacity: 1, animation: 'pulse-text 2s infinite ease-in-out' }}>{t.matrix.waitingSignalShort}</div>
                                 )}
                             </div>
                         </div>
 
                         {gameState.extractionStatus === 'none' && (
                             <div style={{ marginTop: '30px', textAlign: 'center', opacity: gameState.player.dust >= 10000 ? 1 : 0.6 }}>
-                                <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', marginBottom: '6px' }}>REQUIRED FOR EVACUATION</div>
+                                <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', marginBottom: '6px' }}>{t.activation.waitingSignal}</div>
                                 <div style={{ fontSize: '18px', fontWeight: 900, color: gameState.player.dust >= 10000 ? '#22c55e' : '#fff', textShadow: gameState.player.dust >= 10000 ? '0 0 10px #22c55e' : 'none' }}>
-                                    {Math.floor(gameState.player.dust).toLocaleString()} / 10,000 DUST
+                                    {t.matrix.evacuationGoal.replace('{amount}', Math.floor(gameState.player.dust).toLocaleString())}
                                 </div>
 
                                 {gameState.player.dust >= 10000 && (
@@ -788,7 +789,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                             e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.4)';
                                         }}
                                     >
-                                        INITIATE EVACUATION
+                                        {t.matrix.initiateEvacuation}
                                     </button>
                                 )}
                             </div>

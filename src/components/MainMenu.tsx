@@ -218,7 +218,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
     }, []);
 
     return (
-        <div className="main-menu" style={{ transition: 'opacity 1s', opacity: fading ? 0 : 1 }}>
+        <div className={`main-menu ${language === 'ru' ? 'ru-menu' : ''}`} style={{ transition: 'opacity 1s', opacity: fading ? 0 : 1 }}>
             <canvas id="menu-particles" style={{ position: 'absolute', top: 0, left: 0 }} />
 
             {/* Post-Processing Overlays */}

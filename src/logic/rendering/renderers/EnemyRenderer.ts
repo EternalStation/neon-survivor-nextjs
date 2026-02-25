@@ -767,49 +767,8 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // ELITE AURA - High Fidelity Digital Halo
-        if (e.isElite && !e.dead) {
-            ctx.save();
-            const time = state.gameTime;
-            const auraColor = e.eraPalette?.[0] || e.palette[0];
-            const pulse = 0.8 + Math.sin(time * 3) * 0.2;
+        // ELITE AURA REMOVED FOR PERFORMANCE (User Request)
 
-            ctx.strokeStyle = auraColor;
-            ctx.lineWidth = 2.5;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = auraColor;
-            ctx.globalAlpha = 0.4 * pulse;
-
-            // Draw rotating hexagonal aura
-            ctx.save();
-            ctx.rotate(time * 0.5);
-            ctx.beginPath();
-            for (let i = 0; i < 6; i++) {
-                const ang = (Math.PI / 3) * i;
-                const r = e.size * 1.8;
-                const px = Math.cos(ang) * r;
-                const py = Math.sin(ang) * r;
-                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.stroke();
-
-            // Subtle inner glow
-            ctx.globalAlpha = 0.1 * pulse;
-            ctx.fillStyle = auraColor;
-            ctx.fill();
-            ctx.restore();
-
-            // Decorative bits
-            for (let i = 0; i < 3; i++) {
-                const ang = (time * 2) + (i * Math.PI * 2 / 3);
-                const r = e.size * 2.2;
-                ctx.beginPath();
-                ctx.arc(Math.cos(ang) * r, Math.sin(ang) * r, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
 
         const pulse = 1.0 + (Math.sin(e.pulsePhase || 0) * 0.05);
         ctx.scale(pulse, pulse);
@@ -1325,90 +1284,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        if (e.isElite) {
-            // ELITE REACTOR CORE
-            ctx.save();
-            const corePulse = 1.0 + Math.sin(state.gameTime * 8) * 0.2;
-            const coreRot = state.gameTime * 2;
-            ctx.scale(corePulse, corePulse);
-
-            // Core Color - Pulsing White to Era Color
-            const pulseMix = (Math.sin(state.gameTime * 10) + 1) / 2; // 0 to 1
-            // Simple approach for mixing colors isn't easy in 2D canvas without parsing hex
-            // So we overlay white with varying opacity
-
-            // Base Core Color
-            ctx.fillStyle = coreColor;
-
-            const coreSize = e.size * 0.5;
-
-            ctx.beginPath();
-            if (e.shape === 'square') {
-                // Spinning Diamond
-                ctx.rotate(coreRot);
-                ctx.moveTo(0, -coreSize);
-                ctx.lineTo(coreSize, 0);
-                ctx.lineTo(0, coreSize);
-                ctx.lineTo(-coreSize, 0);
-            } else if (e.shape === 'triangle') {
-                // Inverted Triangle
-                ctx.rotate(Math.PI); // Flip 180
-                // Standard triangle path but flipped due to rotation
-                const h = coreSize * 0.866;
-                ctx.moveTo(0, -coreSize);
-                ctx.lineTo(h, coreSize * 0.5);
-                ctx.lineTo(-h, coreSize * 0.5);
-            } else if (e.shape === 'circle') {
-                // Spinning Hexagon
-                ctx.rotate(-coreRot);
-                for (let i = 0; i < 6; i++) {
-                    const ang = (i * Math.PI * 2) / 6;
-                    const px = Math.cos(ang) * coreSize;
-                    const py = Math.sin(ang) * coreSize;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
-                }
-            } else if (e.shape === 'diamond') {
-                // Spinning "X" or Cross
-                ctx.rotate(coreRot * 1.5);
-                const w = coreSize * 0.4;
-                const l = coreSize * 1.2;
-                // Draw X using 2 rects? Or polygon. Let's do polygon for fill.
-                // 4 points? No, "X" implies 4 arms. 
-                // Let's do a 4-pointed star (hypocycloid-ish)
-                for (let i = 0; i < 8; i++) {
-                    const r = i % 2 === 0 ? l : w;
-                    const ang = (i * Math.PI * 2) / 8;
-                    if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
-                    else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
-                }
-            } else if (e.shape === 'pentagon') {
-                // Pentagonal Gear (5 Teeth) - "Mechanical/Heavy" feel
-                ctx.rotate(coreRot);
-                const outer = coreSize;
-                const inner = coreSize * 0.6;
-                const teeth = 5;
-                for (let i = 0; i < teeth * 2; i++) {
-                    const r = i % 2 === 0 ? outer : inner;
-                    // Stepped gear teeth
-                    const ang = (i * Math.PI * 2) / (teeth * 2) - Math.PI / 2;
-                    if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
-                    else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
-                }
-            } else {
-                // Fallback for others
-                ctx.arc(0, 0, coreSize, 0, Math.PI * 2);
-            }
-            ctx.closePath();
-            ctx.fill();
-
-            // White Flash Overlay
-            ctx.fillStyle = '#FFFFFF';
-            ctx.globalAlpha = 0.3 + pulseMix * 0.4; // 0.3 to 0.7
-            ctx.fill();
-
-            ctx.restore();
-
+        if (false) { // ELITE REACTOR CORE REMOVED FOR PERFORMANCE
         } else {
             // Existing Logic
             ctx.fillStyle = coreColor; ctx.globalAlpha = 1.0;

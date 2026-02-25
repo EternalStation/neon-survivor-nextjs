@@ -13,6 +13,8 @@ import { DROP_TABLE } from '../logic/mission/LootLogic';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/constants';
 import { getCycleHpMult } from '../logic/enemies/EnemySpawnLogic';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 import { formatLargeNumber } from '../utils/format';
 
@@ -107,6 +109,8 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
  * Fixed Pierce display for non-Malware classes.
  */
 export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     const [activeTab, setActiveTab] = useState<'system' | 'threat'>('system');
     const { player } = gameState;
 
@@ -130,7 +134,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                         transition: 'all 0.2s'
                     }}
                 >
-                    SYSTEM
+                    {t.statsMenu.tabs.system}
                 </button>
                 <button
                     onClick={() => setActiveTab('threat')}
@@ -148,7 +152,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                         transition: 'all 0.2s'
                     }}
                 >
-                    THREAT
+                    {t.statsMenu.tabs.threat}
                 </button>
             </div>
 
@@ -164,7 +168,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 fontSize: 14,
                 textTransform: 'uppercase'
             }}>
-                {activeTab === 'system' ? 'System Diagnostics' : 'Threat Progression'}
+                {activeTab === 'system' ? t.statsMenu.headers.system : t.statsMenu.headers.threat}
             </div>
 
             {/* CONTENT */}
@@ -182,11 +186,11 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                         {(() => {
                             return (
                                 <>
-                                    <StatRow label="Health" stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
-                                    <StatRow label="Regeneration" stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
-                                    <StatRow label="Damage" stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
+                                    <StatRow label={t.statsMenu.labels.health} stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
+                                    <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
                                     <StatRow
-                                        label="Attack Speed"
+                                        label={t.statsMenu.labels.attackSpeed}
                                         stat={player.atk}
                                         legendaryBonusFlat={player.atk.hexFlat || 0}
                                         legendaryBonusPct={player.atk.hexMult || 0}
@@ -195,24 +199,24 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             // Updated formula: 300 atk = 1.65/s, 500 atk = 3/s, 20000 atk = ~10/s
                                             const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
                                             const sps = 2.64 * Math.log(score / 100) - 1.25;
-                                            return `(${sps.toFixed(2)}/s)`;
+                                            return `(${sps.toFixed(2)} ${t.units.sps})`;
                                         })()}
                                     />
                                     <StatRow
-                                        label="Armor"
+                                        label={t.statsMenu.labels.armor}
                                         stat={player.arm}
                                         legendaryBonusFlat={player.arm.hexFlat || 0}
                                         legendaryBonusPct={player.arm.hexMult || 0}
                                         extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
                                     />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Movement Speed</span>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
                                         <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
                                             {player.speed.toFixed(1)}
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Cooldown Reduction</span>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {((player.cooldownReduction || 0) * 100).toFixed(1)}%
                                         </span>
@@ -221,7 +225,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         const colRed = calculateLegendaryBonus(gameState, 'col_red_per_kill');
                                         return (
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Collision Reduction</span>
+                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.collisionReduction}</span>
                                                 <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                                     {Math.min(80, colRed).toFixed(1)}%
                                                 </span>
@@ -232,7 +236,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         const projRed = calculateLegendaryBonus(gameState, 'proj_red_per_kill');
                                         return (
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Projectile Reduction</span>
+                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.projectileReduction}</span>
                                                 <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                                     {Math.min(80, projRed).toFixed(1)}%
                                                 </span>
@@ -244,7 +248,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         if (lifesteal <= 0) return null;
                                         return (
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Lifesteal</span>
+                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.lifesteal}</span>
                                                 <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                                     {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
                                                 </span>
@@ -253,7 +257,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     })()}
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>XP Gain per kill</span>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.xpGain}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
                                                 const flatBase = 40 + (player.level * 3) + player.xp_per_kill.flat;
@@ -292,7 +296,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Meteorite Drop Chance</span>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.meteoriteChance}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
                                                 const baseChance = 5.0; // Static 5% Base Chance
@@ -338,7 +342,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>Pierce</span>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {player.pierce}
                                         </span>
@@ -352,11 +356,11 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
 
             {/* THREAT CONTENT */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: activeTab === 'threat' ? 'flex' : 'none', flexDirection: 'column', gap: 20 }}>
-                <ThreatProgression gameState={gameState} />
+                <ThreatProgression gameState={gameState} t={t} />
             </div>
 
             <div style={{ marginTop: 'auto', paddingTop: 20, color: '#475569', fontSize: 10, textAlign: 'center' }}>
-                PRESS [{getKeyDisplay(getKeybinds().stats)}] TO CLOSE
+                {t.statsMenu.footer.replace('{key}', getKeyDisplay(getKeybinds().stats))}
             </div>
         </div>
     );
@@ -364,7 +368,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
 
 // --- THREAT PROGRESSION UI ---
 
-const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) => {
+const ThreatProgression: React.FC<{ gameState: GameState, t: any }> = ({ gameState, t }) => {
     // Generate data for 0-60 minutes
     const minutes = Array.from({ length: 61 }, (_, i) => i);
 
@@ -453,7 +457,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
             {/* HEALTH SECTION */}
             <div style={{ paddingLeft: 10, marginTop: 10, width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ color: '#94a3b8', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12 }}>
-                    Enemy Health Growth
+                    {t.statsMenu.threat.hpGrowth}
                 </div>
                 <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -469,7 +473,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
                     </div>
                     <div style={{ width: 70, flexShrink: 0, position: 'relative', left: -40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'rgba(74, 222, 128, 0.05)', height: 170, borderRadius: 8, border: '1px solid rgba(74, 222, 128, 0.1)', zIndex: 5, boxSizing: 'border-box' }}>
                         <div style={{ color: '#4ade80', fontSize: 14, fontWeight: 900 }}>{formatLargeNumber(currentBaseHp)}</div>
-                        <div style={{ color: '#475569', fontSize: 8, fontWeight: 800, textAlign: 'center' }}>CURRENT<br />HP</div>
+                        <div style={{ color: '#475569', fontSize: 8, fontWeight: 800, textAlign: 'center' }}>{t.statsMenu.threat.currentHp}</div>
                     </div>
                 </div>
             </div>
@@ -477,7 +481,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
             {/* SPAWN RATE SECTION */}
             <div style={{ paddingLeft: 10, marginTop: 20, width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ color: '#94a3b8', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12 }}>
-                    Enemy Spawn Rate Growth
+                    {t.statsMenu.threat.spawnRateGrowth}
                 </div>
                 <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -493,7 +497,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
                     </div>
                     <div style={{ width: 70, flexShrink: 0, position: 'relative', left: -40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'rgba(34, 211, 238, 0.05)', height: 170, borderRadius: 8, border: '1px solid rgba(34, 211, 238, 0.1)', zIndex: 5, boxSizing: 'border-box' }}>
                         <div style={{ color: '#22d3ee', fontSize: 16, fontWeight: 900 }}>{currentSpawnRate.toFixed(1)}</div>
-                        <div style={{ color: '#475569', fontSize: 8, fontWeight: 800, textAlign: 'center' }}>UNITS<br />/ SEC</div>
+                        <div style={{ color: '#475569', fontSize: 8, fontWeight: 800, textAlign: 'center' }}>{t.statsMenu.threat.unitsSec}</div>
                     </div>
                 </div>
             </div>
@@ -512,7 +516,7 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
                     background: 'rgba(239, 68, 68, 0.1)',
                     textTransform: 'uppercase'
                 }}>
-                    Real-time Threat Analysis
+                    {t.statsMenu.threat.analysis}
                 </div>
 
                 <div style={{
@@ -525,31 +529,44 @@ const ThreatProgression: React.FC<{ gameState: GameState }> = ({ gameState }) =>
                     flexDirection: 'column',
                     gap: 12
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>Next Boss Max HP</span>
-                        <span style={{ color: '#f87171', fontSize: 16, fontWeight: 900, position: 'relative', left: -30 }}>
-                            {(() => {
-                                const t_next = gameState.nextBossSpawnTime || 105;
-                                const minutes = t_next / 60;
-                                const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-                                const shapeIndex = Math.floor(minutes) % 5;
-                                const shapeId = SHAPE_CYCLE_ORDER[shapeIndex];
-                                const hpMult = getCycleHpMult(t_next) * SHAPE_DEFS[shapeId].hpMult;
-                                const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
+                    {(() => {
+                        const t_next = gameState.nextBossSpawnTime || 105;
+                        const minutes = t_next / 60;
+                        const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
+                        const shapeIndex = Math.floor(minutes) % 5;
+                        const shapeId = SHAPE_CYCLE_ORDER[shapeIndex];
+                        const hpMult = getCycleHpMult(t_next) * SHAPE_DEFS[shapeId].hpMult;
+                        const baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
 
-                                const mTotal = Math.floor(minutes);
-                                let progressiveBonus = 0;
-                                const fullIntervals = Math.floor(mTotal / 5);
-                                for (let i = 0; i < fullIntervals; i++) {
-                                    progressiveBonus += 5 * (i + 1);
-                                }
-                                progressiveBonus += (mTotal % 5) * (fullIntervals + 1);
-                                const bossHpMult = 25 + progressiveBonus;
+                        const mTotal = Math.floor(minutes);
+                        let progressiveBonus = 0;
+                        const fullIntervals = Math.floor(mTotal / 5);
+                        for (let i = 0; i < fullIntervals; i++) {
+                            progressiveBonus += 5 * (i + 1);
+                        }
+                        progressiveBonus += (mTotal % 5) * (fullIntervals + 1);
+                        const bossHpMult = 25 + progressiveBonus;
+                        const nextBossHp = baseHp * bossHpMult * hpMult;
+                        const collisionDmg = nextBossHp * 0.075;
 
-                                return formatLargeNumber(Math.round(baseHp * bossHpMult * hpMult));
-                            })()}
-                        </span>
-                    </div>
+                        return (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>{t.statsMenu.threat.nextBossHp}</span>
+                                    <span style={{ color: '#f87171', fontSize: 16, fontWeight: 900, position: 'relative', left: -30 }}>
+                                        {formatLargeNumber(Math.round(nextBossHp))}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>{t.statsMenu.threat.collisionDmg}</span>
+                                    <span style={{ color: '#f87171', fontSize: 16, fontWeight: 900, position: 'relative', left: -30 }}>
+                                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginRight: 8 }}>7.5% /</span>
+                                        {formatLargeNumber(Math.round(collisionDmg))}
+                                    </span>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
         </>

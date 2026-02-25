@@ -86,17 +86,25 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                     marginBottom: '15px', position: 'relative'
                 }}>
                     <div style={{
-                        width: '60px', height: '60px',
-                        border: `2px solid ${color}`, borderRadius: '12px',
+                        width: '52px', height: '60px',
+                        backgroundColor: color,
+                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'rgba(0,0,0,0.3)',
+                        position: 'relative',
                         boxShadow: `0 0 20px ${color}33`
                     }}>
-                        {hex.customIcon ? (
-                            <img src={hex.customIcon} alt="hex" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-                        ) : (
-                            <span style={{ fontSize: '32px', color: color }}>★</span>
-                        )}
+                        <div style={{
+                            width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
+                            backgroundColor: '#0f172a',
+                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                            {hex.customIcon ? (
+                                <img src={hex.customIcon} alt="hex" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                            ) : (
+                                <span style={{ fontSize: '32px', color: color }}>★</span>
+                            )}
+                        </div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', letterSpacing: '1px', textShadow: `0 0 10px ${color}66` }}>

@@ -8,7 +8,7 @@ export interface Particle {
     life: number;
     color: string;
     size: number;
-    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void';
+    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle';
     alpha?: number;
     decay?: number;
     maxLife?: number;
@@ -559,6 +559,7 @@ export interface Enemy {
     // Level 5 Boss Mechanics
     crystalPositions?: Vector[];
     crystalState?: number;
+    nextAttackCD?: number;
 }
 
 export interface Upgrade {
@@ -902,6 +903,7 @@ export interface Meteorite {
     researched?: boolean;
     researchFinishTime?: number;
     researchRemainingTime?: number;
+    researchDuration?: number;
     targetPlayer?: import('./types').Player | null;
     isCorrupted?: boolean;
     version?: number;
@@ -941,6 +943,7 @@ export interface Blueprint {
     status: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
     researchRemainingTime?: number;
     researchFinishTime?: number;
+    researchDuration?: number;
 }
 
 export enum TutorialStep {

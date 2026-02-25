@@ -3,7 +3,7 @@ import type { PlayerClass } from './types';
 export const PLAYER_CLASSES: PlayerClass[] = [
     {
         id: 'malware',
-        name: 'Malware-Prime',
+        name: 'Malware',
         title: 'THE GLITCHED SOVEREIGN',
         lore: 'A flickering phantom in the machine. Reconstructed from corrupted sector data, this chassis exists in a state of constant quantum instability, allowing it to bypass standard ballistic limitations.',
         description: 'A glitched, unstable frame reconstructed from corrupted sector data.',
@@ -12,7 +12,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Quantum Ricochet Rounds'
         ],
         capabilityName: 'QUANTUM FRAGMENTATION',
-        capabilityDesc: 'Manual Targeting. Projectiles have 150% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage, 5% Speed, and intense Heat Trail.',
+        capabilityDesc: 'Manual Targeting. Projectiles have 150% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage and 5% Speed.',
         capabilityMetrics: [
             { label: 'RANGE', value: 150, unit: '%', isPercentage: true, description: 'Base projectile range multiplier' },
             { label: 'DMG/WALL', value: 20, unit: '%', isPercentage: true, description: 'Damage gain per bounce' },
@@ -31,7 +31,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'eventhorizon',
-        name: 'Event-Horizon',
+        name: 'Void',
         title: 'THE VOID WEAVER',
         lore: 'The Singularity made manifest. This chassis warps the fabric of reality around it, turning every impact into a gravitational catastrophe.',
         description: 'Built around a contained singularity, this chassis manipulates local gravity.',
@@ -41,7 +41,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'AoE vacuum effect on hit'
         ],
         capabilityName: 'Void Singularity',
-        capabilityDesc: 'Spawns a 400px void for 3s with 10s CD. Instantly consumes normal enemies at core, while Elites take 25% and Bosses take 10% Max HP per second.',
+        capabilityDesc: 'Spawns a 400px void for 3s with 10s CD. Slowly absorbs enemies in the center. Elites take 25% and Bosses take 10% Max HP per second.',
         capabilityMetrics: [
             { label: 'Singularity Radius', value: 400, unit: 'px', isPercentage: false, description: 'Static radius' },
             { label: 'Pull Strength', value: 5, unit: '%', isPercentage: true, description: 'Base pull force' },
@@ -59,7 +59,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'stormstrike',
-        name: 'Cosmic Beam',
+        name: 'Ray',
         title: 'THE THUNDER ENGINE',
         lore: 'A walking capacitor bank. Channels ionized atmosphere to call down devastating orbital strikes from satellite weapons platforms.',
         description: 'A heavy artillery frame with orbital strike capabilities.',
@@ -68,11 +68,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Massive AOE orbital strikes'
         ],
         capabilityName: 'Orbital Strike',
-        capabilityDesc: 'Every 8 seconds, a massive vertical laser beam strikes a random enemy, dealing AOE damage.',
+        capabilityDesc: 'Every 8 seconds, a massive vertical laser beam strikes a random enemy, dealing 150% AOE damage in a 100px radius.',
         capabilityMetrics: [
             { label: 'Frequency', value: 8, unit: 's', isPercentage: false, description: 'Static cooldown (Every 8s)' },
             { label: 'Strike DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage multiplier' },
-            { label: 'AOE', value: 100, unit: 'px', isPercentage: true, description: 'Strike radius' }
+            { label: 'AOE', value: 100, unit: 'px', isPercentage: false, description: 'Strike radius' }
         ],
         stats: {
             dmgMult: 0.40,
@@ -84,7 +84,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'aigis',
-        name: 'Aigis-Vortex',
+        name: 'Vortex',
         title: 'THE GOLDEN BASTION',
         lore: 'The ultimate deterrent. By weaving a web of magnetic flux, Aigis creates a rotating perimeter of death that protects its pilot while devastating anything that enters its orbit.',
         description: 'An experimental defensive unit maintaining an intense electromagnetic flux.',
@@ -94,7 +94,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Enhanced vitality systems'
         ],
         capabilityName: 'Magnetic Vortex',
-        capabilityDesc: 'Projectiles orbit the player in a tight ring indefinitely until they hit an enemy. Chance to spawn additional layers on additional orbits.',
+        capabilityDesc: 'Projectiles orbit the player in a ring until they hit an enemy. Chance to create up to 4 orbits.',
         capabilityMetrics: [
             { label: 'Ring II', value: 15, unit: '%', isPercentage: true, description: 'Chance for 2nd Layer' },
             { label: 'Ring III', value: 10, unit: '%', isPercentage: true, description: 'Chance for 3rd Layer' },
@@ -120,7 +120,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Viral spread mechanics'
         ],
         capabilityName: 'Nanite Swarm',
-        capabilityDesc: 'On hit, bullets dissolve into nanites that deal continuous damage until death. On death, the swarm jumps to the next host within 400px.',
+        capabilityDesc: 'On hit, bullets dissolve into nanites that deal continuous damage until death. On death, the nanite jumps to the next host within 400px.',
         capabilityMetrics: [
             { label: 'Infection Rate', value: 30, unit: '%', isPercentage: true, description: '' },
             { label: 'Swarm DMG / sec', value: 5, unit: '%', isPercentage: true, description: '' },

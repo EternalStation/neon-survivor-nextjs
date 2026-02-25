@@ -66,8 +66,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     ComWave: {
         id: 'com_wave',
         name: 'TERROR PULSE',
-        desc: 'Sonic Wave on every 15th shot',
-        description: 'High-frequency sonic resonators that discharge a wave of psychological interference and physical force.',
+        desc: 'Active: Sonic Shockwave',
+        description: 'High-frequency sonic resonators that discharge a circular wave of psychological interference and physical force.',
         lore: 'The pulse doesn\'t just break hulls; it shatters morale. The oscillating waves resonate at frequencies that disrupt neural patterns, leaving enemies paralyzed with fear.',
         category: 'Combat',
         type: 'ComWave',
@@ -201,10 +201,10 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             ["MAX LEVEL"]
         ],
         ComWave: [
-            ["75% Wave DMG", "450 Wave Range"],
+            ["Active: 200% Wave DMG", "1500 Wave Range", "30s CD"],
             ["1.5s Wave Fear"],
-            ["125% Wave DMG", "600 Wave Range"],
-            ["Twin Front/Back Wave"],
+            ["350% Wave DMG", "1500 Wave Range"],
+            ["CD reduced to 20s"],
             ["MAX LEVEL"]
         ],
         DefPuddle: [
@@ -333,7 +333,7 @@ export function syncAllLegendaries(state: GameState) {
     });
 }
 
-const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'KineticBattery'];
+const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'KineticBattery', 'ComWave'];
 
 export function applyLegendarySelection(state: GameState, selection: LegendaryHex) {
     // Check if we already have this hex type
@@ -384,9 +384,15 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                 const key = availableKeys.find(k => !usedKeys.includes(k));
 
                 if (key) {
+                    let cd = 30000;
+                    if (selection.type === 'DefPuddle') cd = 25000;
+                    if (selection.type === 'DefEpi') cd = 30000;
+                    if (selection.type === 'KineticBattery') cd = 5000;
+                    if (selection.type === 'ComWave') cd = (selection.level >= 4 ? 20000 : 30000);
+
                     state.player.activeSkills.push({
                         type: selection.type,
-                        cooldownMax: selection.type === 'DefPuddle' ? 25000 : (selection.type === 'DefEpi' ? 30000 : 5000), // 25s, 30s, or 5s for Zap
+                        cooldownMax: cd,
                         cooldown: 0,
                         inUse: false,
                         keyBind: key,

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GameState, TutorialStep } from '../../logic/core/types';
-import { TUTORIAL_HINTS } from '../../logic/core/TutorialLogic';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
+import { getTutorialHints } from '../../lib/orbitTranslations';
 
 interface TutorialOverlayProps {
     gameState: GameState;
@@ -23,16 +23,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ gameState }) =
             return;
         }
 
-        let hint: { text: string; subtext: string } | null | undefined = TUTORIAL_HINTS[tutorial.currentStep];
+        const hints = getTutorialHints(language);
+        let hint: { text: string; subtext: string } | null | undefined = hints[tutorial.currentStep];
 
         // Dynamic Overrides for specific steps
         if (tutorial.currentStep === TutorialStep.UPGRADE_SELECTED_CHECK_STATS) {
             if (gameState.showStats) {
-                hint = { text: "ORBIT", subtext: "Here you can see the effect of all upgrades on your system." };
+                hint = language === 'ru'
+                    ? { text: "ORBIT", subtext: "Здесь вы можете увидеть влияние всех улучшений на вашу систему." }
+                    : { text: "ORBIT", subtext: "Here you can see the effect of all upgrades on your system." };
             } else {
-                hint = { text: "ORBIT", subtext: "Check your system [C]." };
+                hint = hints[TutorialStep.UPGRADE_SELECTED_CHECK_STATS];
             }
-
         }
 
 

@@ -118,7 +118,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const iconUrl = pClass.iconUrl || '';
 
                     return (
-                        <div style={{ position: 'relative', width: 48, height: 48 }}>
+                        <div style={{ position: 'relative', width: 42, height: 48 }}>
                             {/* Hexagon Border Container */}
                             <div style={{
                                 width: '100%', height: '100%',
@@ -183,7 +183,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                 {/* ACTIVE SKILLS - Manual */}
                 {player.activeSkills && player.activeSkills.map((skill, idx) => (
-                    <div key={idx} style={{ position: 'relative', width: 48, height: 48 }}>
+                    <div key={idx} style={{ position: 'relative', width: 42, height: 48 }}>
                         {/* Hexagon Border Container */}
                         <div style={{
                             width: '100%', height: '100%',
@@ -275,7 +275,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     return (
                         <div style={{ display: 'flex', gap: 8 }}>
                             {/* BOLT TIMER */}
-                            <div style={{ position: 'relative', width: 44, height: 44 }}>
+                            <div style={{ position: 'relative', width: 38, height: 44 }}>
                                 <div style={{
                                     width: '100%', height: '100%',
                                     backgroundColor: boltCD <= 0 ? '#3b82f6' : '#475569',
@@ -316,7 +316,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                             {/* SHIELD TIMER (Lvl 2+) */}
                             {kinLvl >= 2 && (
-                                <div style={{ position: 'relative', width: 44, height: 44 }}>
+                                <div style={{ position: 'relative', width: 38, height: 44 }}>
                                     <div style={{
                                         width: '100%', height: '100%',
                                         backgroundColor: shieldTimeLeft <= 0 ? '#60a5fa' : '#475569',
@@ -361,52 +361,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
 
 
-                {/* PASSIVE SKILLS (Example: Sonic Wave Counter) */}
-                {(() => {
-                    const waveLevel = getHexLevel(gameState, 'ComWave');
-                    if (waveLevel <= 0) return null;
 
-                    const shots = player.shotsFired || 0;
-                    const required = 15;
-                    const progress = (shots % required);
-                    const remaining = required - progress;
-
-                    return (
-                        <div style={{ position: 'relative', width: 48, height: 48 }}>
-                            <div style={{
-                                width: '100%', height: '100%',
-                                backgroundColor: 'rgba(56, 189, 248, 0.5)',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}>
-                                <div style={{
-                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
-                                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                    position: 'relative'
-                                }}>
-                                    <img src="/assets/hexes/ComWave.png" alt="Sonic Wave" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-
-                                    {/* Progress Overlay */}
-                                    <div style={{
-                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                        height: `${(progress / required) * 100}%`,
-                                        background: 'rgba(56, 189, 248, 0.3)',
-                                        transition: 'height 0.1s'
-                                    }} />
-
-                                    <div style={{
-                                        position: 'absolute', bottom: 2, right: 14,
-                                        color: '#38BDF8', fontSize: 10, fontWeight: 900,
-                                        textShadow: '0 0 4px #000'
-                                    }}>
-                                        {remaining}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })()}
 
             </div>
 

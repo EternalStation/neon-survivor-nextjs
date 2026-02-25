@@ -1,5 +1,7 @@
 import React from 'react';
 import type { Player } from '../logic/core/types';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface RadarCounts {
     DPS: number;
@@ -17,6 +19,9 @@ interface RadarChartProps {
 }
 
 export const RadarChart: React.FC<RadarChartProps> = ({ player, counts: propCounts, size = 150, showLabels = true }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+
     // Logic: Visualize Build Focus based on upgrade counts
     const counts = propCounts || {
         DPS: 0,
@@ -27,7 +32,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ player, counts: propCoun
     };
 
     if (player && !propCounts) {
-        player.upgradesCollected.forEach(u => {
+        player.upgradesCollected.forEach((u: any) => {
             const id = u.type.id;
             if (id.startsWith('dmg') || id === 'atk_s') counts.DPS++;
             else if (id.startsWith('arm')) counts.ARM++;
@@ -42,11 +47,11 @@ export const RadarChart: React.FC<RadarChartProps> = ({ player, counts: propCoun
     const getPct = (val: number) => (val / maxCount) * 100;
 
     const pts = [
-        { label: 'DPS', val: getPct(counts.DPS), a: -90 }, // Top
-        { label: 'ARM', val: getPct(counts.ARM), a: -18 }, // Top Right
-        { label: 'EXP', val: getPct(counts.EXP), a: 54 },  // Bottom Right
-        { label: 'HP', val: getPct(counts.HP), a: 126 },   // Bottom Left
-        { label: 'REG', val: getPct(counts.REG), a: 198 }  // Top Left
+        { label: t.statsMenu.radar.dps, val: getPct(counts.DPS), a: -90 }, // Top
+        { label: t.statsMenu.radar.arm, val: getPct(counts.ARM), a: -18 }, // Top Right
+        { label: t.statsMenu.radar.exp, val: getPct(counts.EXP), a: 54 },  // Bottom Right
+        { label: t.statsMenu.radar.hp, val: getPct(counts.HP), a: 126 },   // Bottom Left
+        { label: t.statsMenu.radar.reg, val: getPct(counts.REG), a: 198 }  // Top Left
     ];
 
     const radius = size * 0.28; // slightly smaller than half to fit labels

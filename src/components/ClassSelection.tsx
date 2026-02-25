@@ -2,6 +2,8 @@ import React from 'react';
 import { type PlayerClass } from '../logic/core/types';
 import { PLAYER_CLASSES } from '../logic/core/classes';
 import { AssistantOverlay } from './hud/AssistantOverlay';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface ClassSelectionProps {
     onSelect: (selectedClass: PlayerClass, tutorialEnabled: boolean) => void;
@@ -15,12 +17,15 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
     const fireAtRef = React.useRef<number>(Date.now() + 60000);
     const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).classSelection;
+
     const READING_VARIANTS = [
-        "Oh. You're still here. Reading, presumably. Either that or the loading screen scarred you emotionally. Both are valid.",
-        "Sixty seconds on a class selection screen. Impressive. Most pilots just pick whatever looks shiny and die in the first thirty seconds.",
-        "Still deciding? The enemies are spawning in real time, you know. Hypothetically. But also sort of literally.",
-        "You've read all the descriptions, haven't you. You might be the first pilot in recorded history to do so. I'm noting this in your file.",
-        "A minute of deliberation. You know, most pilots die before they even understand what their class does. You're already ahead. Depressingly low bar, but still."
+        t.reading1,
+        t.reading2,
+        t.reading3,
+        t.reading4,
+        t.reading5
     ];
 
     // Stable interval that checks real clock — survives re-renders
@@ -103,7 +108,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                 letterSpacing: '0.5rem',
                 textShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
                 fontWeight: 900
-            }}>SELECT CLASS</h1>
+            }}>{t.selectClass}</h1>
 
             {/* Tutorial Toggle */}
             <div
@@ -149,7 +154,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                     color: tutorialEnabled ? '#fff' : '#94a3b8',
                     textShadow: tutorialEnabled ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
                 }}>
-                    ENABLE TUTORIAL HINTS
+                    {t.enableTutorialHints}
                 </span>
             </div>
 
@@ -220,8 +225,9 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                             fontWeight: 900,
                             marginBottom: '20px',
                             color: '#fff',
-                            zIndex: 1
-                        }}>{cls.name.toUpperCase()}</h2>
+                            zIndex: 1,
+                            textAlign: 'center'
+                        }}>{((t.classes as any)[cls.id]?.name || cls.name).toUpperCase()}</h2>
 
                         <div style={{
                             width: '100%',
@@ -231,11 +237,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                             zIndex: 1,
                             flex: 1,
                             display: 'flex',
-                            flexDirection: 'column'
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: cls.themeColor || cls.icon, fontWeight: 900, marginBottom: '5px', letterSpacing: '1px' }}>CORE CAPABILITY</div>
-                            <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '8px', color: '#f8fafc' }}>{cls.capabilityName}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4', marginBottom: '24px' }}>{cls.capabilityDesc}</div>
+                            <div style={{ fontSize: '0.7rem', color: cls.themeColor || cls.icon, fontWeight: 900, marginBottom: '5px', letterSpacing: '1px' }}>{t.coreCapability}</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '8px', color: '#f8fafc' }}>{(t.classes as any)[cls.id]?.capabilityName || cls.capabilityName}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4', marginBottom: '24px' }}>{(t.classes as any)[cls.id]?.capabilityDesc || cls.capabilityDesc}</div>
 
                             {/* Stat Badge Container - Pushed to bottom and centered */}
                             <div style={{
@@ -259,7 +267,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>HP</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'ХП' : 'HP'}</span>
                                         <span>{cls.stats.hpMult > 0 ? '+' : ''}{Math.round(cls.stats.hpMult * 100)}%</span>
                                     </div>
                                 )}
@@ -276,7 +284,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>SPD</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'СКОР' : 'SPD'}</span>
                                         <span>{cls.stats.spdMult > 0 ? '+' : ''}{Math.round(cls.stats.spdMult * 100)}%</span>
                                     </div>
                                 )}
@@ -293,7 +301,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>DMG</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'УРОН' : 'DMG'}</span>
                                         <span>{cls.stats.dmgMult > 0 ? '+' : ''}{Math.round(cls.stats.dmgMult * 100)}%</span>
                                     </div>
                                 )}
@@ -310,7 +318,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>ATK</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'АТК' : 'ATK'}</span>
                                         <span>{cls.stats.atkMult > 0 ? '+' : ''}{Math.round(cls.stats.atkMult * 100)}%</span>
                                     </div>
                                 )}
@@ -327,7 +335,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>ARM</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'БРН' : 'ARM'}</span>
                                         <span>{cls.stats.armMult > 0 ? '+' : ''}{Math.round(cls.stats.armMult * 100)}%</span>
                                     </div>
                                 )}
@@ -344,7 +352,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>XP</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'ОПЫТ' : 'XP'}</span>
                                         <span>{cls.stats.xpMult > 0 ? '+' : ''}{Math.round(cls.stats.xpMult * 100)}%</span>
                                     </div>
                                 )}
@@ -361,7 +369,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>REG</span>
+                                        <span style={{ opacity: 0.6 }}>{language === 'ru' ? 'РЕГ' : 'REG'}</span>
                                         <span>{cls.stats.regMult > 0 ? '+' : ''}{Math.round(cls.stats.regMult * 100)}%</span>
                                     </div>
                                 )}
@@ -378,7 +386,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                         alignItems: 'center',
                                         gap: '4px'
                                     }}>
-                                        <span style={{ opacity: 0.6 }}>PIERCE</span>
+                                        <span style={{ opacity: 0.6 }}>{t.pierce}</span>
                                         <span>+1</span>
                                     </div>
                                 )}

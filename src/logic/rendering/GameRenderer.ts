@@ -1,4 +1,5 @@
 import type { GameState } from '../core/types';
+import type { Language } from '../../lib/LanguageContext';
 import { getPulseIntensity } from '../effects/PulseSystem';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';
 import { renderPOIs } from './renderers/PoiRenderer';
@@ -8,7 +9,7 @@ import { renderDrones, renderAllies, renderMeteorites, renderBossIndicator, rend
 import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
 
-export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1) {
+export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1, language: Language = 'en') {
     // Universal damage detection for red danger vignette
     // Cooldown of 1.5s between flash triggers to prevent epileptic blinking
     const DAMAGE_FLASH_CD = 1.5;
@@ -72,7 +73,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
 
         // 2.2 Interactive POIs (Towers, Beacons)
-        renderPOIs(ctx, state);
+        renderPOIs(ctx, state, language);
 
 
         // 2.5 Arena Fog (Vignette for Arena) - Draws ON TOP of background but BELOW entities if we want entities to pop? 

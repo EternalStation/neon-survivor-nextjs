@@ -398,6 +398,68 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.globalAlpha = alpha * 0.6;
             ctx.beginPath(); ctx.arc(cx, cy, radius * 0.85, angle - 0.6, angle + 0.6); ctx.stroke();
             ctx.restore();
+        } else if (p.type === 'shockwave_circle') {
+            const maxLife = p.maxLife || 1.0;
+            const progress = 1 - (p.life / maxLife);
+            const alpha = (p.alpha || 1.0) * (p.life / maxLife);
+
+            // Phase 1: 0.5s hold (25% of 2s duration)
+            // Phase 2: 1.5s expansion (75% of 2s duration)
+            let radius = 200;
+            if (progress > 0.25) {
+                const expansionProgress = (progress - 0.25) / 0.75;
+                radius = 200 + (p.size - 200) * expansionProgress;
+            } else {
+                // Micro-animation: grow to 200 in the first 0.1s
+                const microProgress = Math.min(1, progress / 0.05); // 0.1s is 5% of 2s
+                radius = 200 * microProgress;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+
+            // 1. Core Wave Line (Pulse Red)
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = p.color || '#ef4444';
+
+            // Thick Neon Glow (Red)
+            ctx.globalAlpha = alpha * 0.3;
+            ctx.lineWidth = 40 * (1 - progress * 0.7);
+            ctx.stroke();
+
+            // Sharp Wave Edge
+            ctx.globalAlpha = alpha;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 2. Trailing Background (Blood mist effect)
+            if (progress > 0.1) {
+                const trailSize = radius * 0.2;
+                const grad = ctx.createRadialGradient(0, 0, radius - trailSize, 0, 0, radius);
+                grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                grad.addColorStop(0.7, `rgba(239, 68, 68, ${alpha * 0.15})`);
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, Math.max(0, radius - trailSize), 0, Math.PI * 2, true);
+                ctx.fill();
+            }
+
+            // 3. Inner Echo (Blood splatter ripples)
+            if (progress > 0.4) {
+                const echoProgress = (progress - 0.4) / 0.6;
+                const echoRadius = radius * 0.8;
+                ctx.beginPath();
+                ctx.arc(0, 0, echoRadius, 0, Math.PI * 2);
+                ctx.globalAlpha = alpha * 0.2 * (1 - echoProgress);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            ctx.restore();
         } else if (p.type === 'bubble') {
             const maxLife = p.maxLife || 60;
             const progress = 1 - (p.life / maxLife);

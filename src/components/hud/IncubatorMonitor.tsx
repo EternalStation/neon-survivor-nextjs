@@ -1,12 +1,16 @@
 
 import React from 'react';
 import type { GameState } from '../../logic/core/types';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface IncubatorMonitorProps {
     gameState: GameState;
 }
 
 export const IncubatorMonitor: React.FC<IncubatorMonitorProps> = ({ gameState }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     const activeMeteorite = gameState.incubator?.[0];
 
     if (!activeMeteorite || activeMeteorite.isRuined) return null;
@@ -22,14 +26,14 @@ export const IncubatorMonitor: React.FC<IncubatorMonitorProps> = ({ gameState })
     return (
         <div className="incubator-monitor">
             <div className="monitor-header">
-                <span className="monitor-title">INCUBATOR MONITOR</span>
+                <span className="monitor-title">{t.incubator.title}</span>
                 <div className="monitor-led" style={{ backgroundColor: statusColor, boxShadow: `0 0 8px ${statusColor}` }} />
             </div>
 
             <div className="monitor-body">
                 <div className="tube-section-row">
                     <div className="tube-section">
-                        <div className="tube-label-mini">INST</div>
+                        <div className="tube-label-mini">{t.incubator.inst}</div>
                         <div className="tube-container">
                             <div className="tube-fill-red" style={{ height: `${instability}%` }}>
                                 <div className="plasma-core" />
@@ -40,7 +44,7 @@ export const IncubatorMonitor: React.FC<IncubatorMonitorProps> = ({ gameState })
                     </div>
 
                     <div className="tube-section">
-                        <div className="tube-label-mini">FUEL</div>
+                        <div className="tube-label-mini">{t.incubator.fuel}</div>
                         <div className="tube-container">
                             <div className="tube-fill-blue" style={{ height: `${(gameState.incubatorFuel / gameState.incubatorFuelMax) * 100}%` }}>
                                 <div className="plasma-core" />
@@ -53,24 +57,24 @@ export const IncubatorMonitor: React.FC<IncubatorMonitorProps> = ({ gameState })
 
                 <div className="data-section">
                     <div className="stat-row">
-                        <span className="stat-label">FUEL:</span>
+                        <span className="stat-label">{t.incubator.fuel}:</span>
                         <span className="stat-value" style={{ color: '#0ea5e9' }}>{gameState.incubatorFuel}/{gameState.incubatorFuelMax}</span>
                     </div>
                     <div className="stat-row">
-                        <span className="stat-label">INSTABILITY:</span>
+                        <span className="stat-label">{t.incubator.instability}:</span>
                         <span className="stat-value" style={{ color: statusColor }}>{instability}%</span>
                     </div>
                     <div className="stat-row">
-                        <span className="stat-label">BOOST:</span>
+                        <span className="stat-label">{t.incubator.boost}:</span>
                         <span className="stat-value" style={{ color: '#10b981' }}>+{boost}%</span>
                     </div>
                     {gameState.incubatorFuel <= 0 ? (
                         <div className="status-badge" style={{ borderColor: '#ef4444', color: '#ef4444', background: 'rgba(239, 68, 68, 0.2)' }}>
-                            OFFLINE: NO FUEL
+                            {t.incubator.offline}
                         </div>
                     ) : (
                         <div className="status-badge" style={{ borderColor: `${statusColor}44`, color: statusColor }}>
-                            {isCritical ? '!!! CRITICAL !!!' : isWarning ? 'WARNING' : 'STABLE'}
+                            {isCritical ? `!!! ${t.incubator.critical} !!!` : isWarning ? t.incubator.warning : t.incubator.stable}
                         </div>
                     )}
                 </div>

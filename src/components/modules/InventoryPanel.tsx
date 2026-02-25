@@ -3,6 +3,8 @@ import type { Meteorite } from '../../logic/core/types';
 import { RARITY_ORDER } from '../../logic/core/types';
 import { getMeteoriteImage, RARITY_COLORS, PerkFilter, matchesFilter } from './ModuleUtils';
 import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface InventoryPanelProps {
     inventory: (Meteorite | null)[];
@@ -65,7 +67,16 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     setLockedItem,
 
 }) => {
-    // State lifted to ModuleMenu for persistence
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+
+    // Localized filter option arrays (values stay English for logic matching)
+    const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
+    const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
+    const ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
+    const SECTOR_OPTS = ['All', 'Sector 01', 'Sector 02', 'Sector 03'];
+    const LEGENDARY_OPTS = ['All', 'Eco Legendary Hex', 'Com Legendary Hex', 'Def Legendary Hex'];
+
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [massRecycleCandidate, setMassRecycleCandidate] = useState<{ type: 'SELECTED' | 'GHOSTS', indices: number[] } | null>(null);
     const [tick, setTick] = useState(0);
@@ -292,60 +303,25 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 zIndex: 10,
                                 pointerEvents: 'none'
                             }}>
-                                {/* Hover overlay: action hint */}
-                                {hoveredSlotIdx === idx && !movedItem ? (
-                                    <div style={{
-                                        position: 'absolute', inset: 0,
-                                        background: 'rgba(0,0,0,0.82)',
-                                        backdropFilter: 'blur(2px)',
-                                        display: 'flex', flexDirection: 'column',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        borderRadius: '5px', gap: '2px'
-                                    }}>
-                                        {item.status === 'ready' && (
-                                            <>
-                                                <span style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>RIGHT-CLICK</span>
-                                                <span style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>TO DEPLOY</span>
-                                                <span style={{ fontSize: '5px', color: '#94a3b8', marginTop: '2px' }}>{(item as any).cost} DUST</span>
-                                            </>
-                                        )}
-                                        {item.status === 'locked' && (
-                                            <>
-                                                <span style={{ fontSize: '6px', color: '#f59e0b', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>RIGHT-CLICK</span>
-                                                <span style={{ fontSize: '6px', color: '#f59e0b', fontWeight: 900, letterSpacing: '0.5px', textAlign: 'center' }}>TO DECRYPT</span>
-                                            </>
-                                        )}
-                                        {item.status === 'researching' && (
-                                            <span style={{ fontSize: '6px', color: '#fbbf24', fontWeight: 900, textAlign: 'center' }}>DECRYPTING...</span>
-                                        )}
-                                        {item.status === 'active' && (
-                                            <span style={{ fontSize: '6px', color: '#60a5fa', fontWeight: 900, textAlign: 'center' }}>ACTIVE</span>
-                                        )}
-                                        {item.status === 'broken' && (
-                                            <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900, textAlign: 'center' }}>EXHAUSTED</span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    /* Normal status badge */
-                                    <span style={{
-                                        fontSize: '5px',
-                                        color: item.status === 'researching' ? '#facc15'
-                                            : item.status === 'ready' ? '#2dd4bf'
-                                                : item.status === 'locked' ? '#ef4444'
-                                                    : item.status === 'active' ? '#60a5fa'
-                                                        : '#64748b',
-                                        fontWeight: 900,
-                                        textShadow: '0 0 4px rgba(0,0,0,0.8)',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {item.status === 'researching' ? 'DECRYPTING'
-                                            : item.status === 'ready' ? 'READY'
-                                                : item.status === 'locked' ? 'ENCRYPTED'
-                                                    : item.status === 'active' ? 'ACTIVE'
-                                                        : 'BROKEN'}
-                                    </span>
-                                )}
-                                {item.status === 'researching' && hoveredSlotIdx !== idx && (item as any).researchFinishTime && (
+                                {/* Normal status badge */}
+                                <span style={{
+                                    fontSize: '5px',
+                                    color: item.status === 'researching' ? '#facc15'
+                                        : item.status === 'ready' ? '#2dd4bf'
+                                            : item.status === 'locked' ? '#ef4444'
+                                                : item.status === 'active' ? '#60a5fa'
+                                                    : '#64748b',
+                                    fontWeight: 900,
+                                    textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {item.status === 'researching' ? t.matrix.bpDecrypting
+                                        : item.status === 'ready' ? t.matrix.bpReady
+                                            : item.status === 'locked' ? t.matrix.bpEncrypted
+                                                : item.status === 'active' ? t.matrix.bpActive
+                                                    : t.matrix.bpBroken}
+                                </span>
+                                {item.status === 'researching' && (item as any).researchFinishTime && (
                                     <span style={{
                                         fontSize: '7px', color: '#facc15', fontWeight: 900,
                                         fontFamily: 'monospace', textShadow: '0 0 5px #000'
@@ -423,7 +399,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     style={{ ...selectStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: isAll ? '#fff' : '#3b82f6' }}
                 >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {isAll ? 'ALL' : (selected.length === 1 ? (getLabel ? getLabel(selected[0]) : selected[0]) : `${count} SEL`)}
+                        {isAll ? t.matrix.all : (selected.length === 1 ? (getLabel ? getLabel(selected[0]) : selected[0]) : `${count} ${t.matrix.sel}`)}
                     </span>
                     <span style={{ fontSize: '7px', opacity: 0.7 }}>▼</span>
                 </div>
@@ -447,7 +423,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 display: 'flex', alignItems: 'center'
                             }}
                         >
-                            ALL
+                            {t.matrix.all}
                         </div>
                         {options.map(opt => {
                             if (opt === 'All') return null;
@@ -523,18 +499,23 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     <div className="filter-controls" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end', position: 'relative', zIndex: 200 }}>
                         {/* TYPE */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            {renderMultiSelect('quality', QUALITIES, 'TYPE', {
+                            {renderMultiSelect('quality', QUALITIES, t.matrix.filterType, {
                                 'NEW': '#3b82f6', 'DAM': '#f59e0b', 'BRO': '#94a3b8', 'COR': '#a855f7', 'BLUEPRINTS': '#60a5fa'
                             }, (opt) => opt === 'BLUEPRINTS' ? 'BP' : opt)}
                         </div>
                         {/* RARITY */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            {renderMultiSelect('rarity', RARITY_ORDER, 'RARITY', RARITY_COLORS as any, (r) => r.substring(0, 3).toUpperCase())}
+                            {renderMultiSelect('rarity', RARITY_ORDER, t.matrix.filterRarity, RARITY_COLORS as any, (r) => r.substring(0, 3).toUpperCase())}
                         </div>
                         {/* FOUND IN */}
                         <div style={{ gridColumn: 'span 3' }}>
-                            {renderMultiSelect('arena', ARENAS, 'FOUND IN', {
+                            {renderMultiSelect('arena', ARENAS, t.matrix.filterFoundIn, {
                                 'Eco Arena': '#fbbf24', 'Defence Arena': '#60a5fa', 'Combat Arena': '#f87171'
+                            }, (opt) => {
+                                if (opt === 'Eco Arena') return t.matrix.ecoArena;
+                                if (opt === 'Combat Arena') return t.matrix.comArena;
+                                if (opt === 'Defence Arena') return t.matrix.defArena;
+                                return opt;
                             })}
                         </div>
                         {/* ACTION CONTROLS GROUP (RESET, SORT) */}
@@ -611,21 +592,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             const rarityKey = RARITY_ORDER[lvl - 1];
                             const rarityColor = RARITY_COLORS[rarityKey];
 
-                            const suffix = lvl === 1 ? 'ST' : lvl === 2 ? 'ND' : lvl === 3 ? 'RD' : 'TH';
-                            const label = `${lvl}${suffix} PERK`;
-
                             const isActive = perkFilters[lvl].active;
 
-                            const SECTOR_OPTS = ['All', 'Sector 01', 'Sector 02', 'Sector 03'];
-                            const LEGENDARY_OPTS = ['All', 'Eco Legendary Hex', 'Com Legendary Hex', 'Def Legendary Hex'];
-
                             const config = {
-                                1: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'CONNECTED', t2Opts: LEGENDARY_OPTS },
-                                2: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
-                                3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
-                                4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'ARENA', t2Opts: ARENAS },
-                                5: { t1Label: 'SECTOR', t1Opts: SECTOR_OPTS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
-                                6: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'PAIR', t2Opts: PAIR_COMBOS }
+                                1: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterConnected, t2Opts: LEGENDARY_OPTS },
+                                2: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterNeighbor, t2Opts: QUALITIES.slice(0, 4) },
+                                3: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterArena, t2Opts: ARENAS },
+                                4: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterArena, t2Opts: ARENAS },
+                                5: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterPair, t2Opts: PAIR_COMBOS },
+                                6: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterPair, t2Opts: PAIR_COMBOS }
                             }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
 
                             return (
@@ -655,7 +630,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                             opacity: isActive ? 1 : 0.8,
                                             textTransform: 'uppercase'
                                         }}>
-                                            {label}
+                                            {(t.matrix as any)[`perk${lvl}`]}
                                         </span>
                                     </div>
 
@@ -667,7 +642,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                             {/* Value Row (Universal for L1-L9) */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>THRESHOLD</span>
+                                                    <span style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>{t.matrix.filterThreshold}</span>
                                                     <span style={{ fontSize: '8px', fontWeight: 900, color: rarityColor }}>
                                                         {perkFilters[lvl].val}%
                                                     </span>
@@ -698,7 +673,21 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                                     value={perkFilters[lvl].thing1}
                                                     onChange={e => updatePerk(lvl, { thing1: e.target.value })}
                                                 >
-                                                    {config.t1Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                    {config.t1Opts.map(opt => (
+                                                        <option key={opt} value={opt}>
+                                                            {opt === 'Sector 01' ? t.matrix.sector01 :
+                                                                opt === 'Sector 02' ? t.matrix.sector02 :
+                                                                    opt === 'Sector 03' ? t.matrix.sector03 :
+                                                                        opt === 'Broken' ? t.meteorites.stats.broken :
+                                                                            opt === 'Damaged' ? t.meteorites.stats.damaged :
+                                                                                opt === 'New' ? t.meteorites.stats.new :
+                                                                                    opt === 'Corrupted' ? t.meteorites.stats.corrupted || 'Corrupted' :
+                                                                                        opt === 'Eco Arena' ? t.matrix.ecoArena :
+                                                                                            opt === 'Combat Arena' ? t.matrix.comArena :
+                                                                                                opt === 'Defence Arena' ? t.matrix.defArena :
+                                                                                                    opt === 'All' ? t.matrix.all : opt}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
 
@@ -710,7 +699,27 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                                     value={perkFilters[lvl].thing2}
                                                     onChange={e => updatePerk(lvl, { thing2: e.target.value })}
                                                 >
-                                                    {config.t2Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                    {config.t2Opts.map(opt => (
+                                                        <option key={opt} value={opt}>
+                                                            {opt === 'Eco Legendary Hex' ? t.matrix.ecoLeg :
+                                                                opt === 'Com Legendary Hex' ? t.matrix.comLeg :
+                                                                    opt === 'Def Legendary Hex' ? t.matrix.defLeg :
+                                                                        opt === 'Eco-Eco' ? t.matrix.comboEcoEco :
+                                                                            opt === 'Eco-Com' ? t.matrix.comboEcoCom :
+                                                                                opt === 'Eco-Def' ? t.matrix.comboEcoDef :
+                                                                                    opt === 'Com-Com' ? t.matrix.comboComCom :
+                                                                                        opt === 'Com-Def' ? t.matrix.comboComDef :
+                                                                                            opt === 'Def-Def' ? t.matrix.comboDefDef :
+                                                                                                opt === 'Eco Arena' ? t.matrix.ecoArena :
+                                                                                                    opt === 'Combat Arena' ? t.matrix.comArena :
+                                                                                                        opt === 'Defence Arena' ? t.matrix.defArena :
+                                                                                                            opt === 'Broken' ? t.meteorites.stats.broken :
+                                                                                                                opt === 'Damaged' ? t.meteorites.stats.damaged :
+                                                                                                                    opt === 'New' ? t.meteorites.stats.new :
+                                                                                                                        opt === 'Corrupted' ? t.meteorites.stats.corrupted :
+                                                                                                                            opt === 'All' ? t.matrix.all : opt}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -729,8 +738,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         gap: '10px',
                         marginBottom: '4px'
                     }}>
-                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>SAFE SLOTS</span>
-                        <span style={{ fontSize: '7px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(PROTECTED FROM BULK RECYCLING)</span>
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#a855f7', letterSpacing: '2px' }}>{t.matrix.safeSlots}</span>
+                        <span style={{ fontSize: '7px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>{t.matrix.safeSlotsSub}</span>
                     </div>
                     <div style={{
                         display: 'grid',
@@ -755,8 +764,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     gap: '10px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>STORAGE</span>
-                        <span style={{ fontSize: '8px', color: '#94a3b8', fontStyle: 'italic', opacity: 0.8 }}>(300 SLOTS)</span>
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#3b82f6', letterSpacing: '2px' }}>{t.matrix.storage}</span>
                     </div>
 
                     <div className="recycle-btn" style={{
@@ -792,7 +800,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 <line x1="10" y1="11" x2="10" y2="17"></line>
                                 <line x1="14" y1="11" x2="14" y2="17"></line>
                             </svg>
-                            RECYCLE
+                            {t.matrix.recycle}
                         </button>
 
                         <button
@@ -823,7 +831,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 transition: 'all 0.2s',
                             }}
                         >
-                            SELECTED
+                            {t.matrix.selected}
                         </button>
 
                         <button
@@ -854,7 +862,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 transition: 'all 0.2s',
                             }}
                         >
-                            GHOSTS
+                            {t.matrix.ghosts}
                         </button>
                     </div>
                 </div>

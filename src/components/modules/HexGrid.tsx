@@ -5,6 +5,8 @@ import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices,
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { BestiaryView } from './BestiaryView';
 import { useEffect, useRef } from 'react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 import type { BestiaryEntry } from '../../data/BestiaryData';
 
@@ -163,6 +165,8 @@ export const HexGrid: React.FC<HexGridProps> = ({
 }) => {
     const [view, setView] = useState<'matrix' | 'bestiary'>('matrix');
     const [levitatingDiamonds, setLevitatingDiamonds] = useState<Record<number, boolean>>({});
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     const { moduleSockets } = gameState;
     const centerX = 432; // Centered in 45% of 1920 (864px wide)
     const centerY = 540; // True Vertical Centering
@@ -301,7 +305,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         e.currentTarget.style.background = 'rgba(5, 5, 15, 0.9)';
                     }}
                 >
-                    ◄ BACK TO MATRIX
+                    {t.matrix.backToMatrix}
                 </div>
             </div>
         );
@@ -339,19 +343,19 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.2)';
                 }}
             >
-                VIEW BESTIARY ►
+                {t.matrix.viewBestiary}
             </button>
             <svg width="100%" height="100%" viewBox="0 0 864 1080">
-                <text x={centerX} y={centerY - 485} textAnchor="middle" fill="#22d3ee" fontSize="38" fontWeight="900" style={{ letterSpacing: '10px', opacity: 0.9 }}>MODULE MATRIX</text>
-                <text x={centerX} y={centerY - 455} textAnchor="middle" fill="#94a3b8" fontSize="11" style={{ letterSpacing: '1.5px', opacity: 0.6 }}>CONSTRUCT SYNERGIES BY SLOTTING METEORITES AND RECOVERED LEGENDARY HEXES</text>
+                <text x={centerX} y={centerY - 485} textAnchor="middle" fill="#22d3ee" fontSize="38" fontWeight="900" style={{ letterSpacing: '10px', opacity: 0.9 }}>{t.matrix.title}</text>
+                <text x={centerX} y={centerY - 455} textAnchor="middle" fill="#94a3b8" fontSize="11" style={{ letterSpacing: '1.5px', opacity: 0.6 }}>{t.matrix.synergyText}</text>
                 <line x1={centerX - 300} y1={centerY - 445} x2={centerX + 300} y2={centerY - 445} stroke="#22d3ee" strokeWidth="1" opacity="0.2" />
 
                 {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: 'SECTOR-02', code: 'SEC-02', color: '#f87171', indices: [0, 1] }, // Was Combat
-                        { name: 'SECTOR-03', code: 'SEC-03', color: '#60a5fa', indices: [2, 3] }, // Was Defense
-                        { name: 'SECTOR-01', code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Was Economic
+                        { name: t.matrix.sector02, code: 'SEC-02', color: '#f87171', indices: [0, 1] }, // Was Combat
+                        { name: t.matrix.sector03, code: 'SEC-03', color: '#60a5fa', indices: [2, 3] }, // Was Defense
+                        { name: t.matrix.sector01, code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Was Economic
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];
@@ -792,6 +796,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     }
 
                                     // Handle Drop on Empty Socket
+                                    // BLOCK BLUEPRINTS from meteorite sockets
+                                    if (movedItem.item.isBlueprint) return;
+
                                     if (movedItem.item.isCorrupted) {
                                         // Intercept for corruption warning
                                         onAttemptPlace(i, movedItem.item, movedItem.source, movedItem.index);
@@ -817,7 +824,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 }
                             }}
                         >
-                            {(movedItem || (gameState.tutorial.isActive && gameState.tutorial.currentStep === 12)) && !moduleSockets.diamonds[i] && (
+                            {((movedItem && !movedItem.item.isBlueprint) || (gameState.tutorial.isActive && gameState.tutorial.currentStep === 12)) && !moduleSockets.diamonds[i] && (
                                 <circle
                                     cx={pos.x} cy={pos.y} r="50"
                                     fill="none"

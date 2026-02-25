@@ -93,12 +93,14 @@ export function updateNormalDiamond(e: Enemy, state: GameState, dist: number, dx
         vy = Math.sin(strafeAngle) * currentSpd + Math.sin(angleToPlayerD) * distFactor * currentSpd + pushY;
     }
 
-    // Standard shot (every 6s)
-    if (Date.now() - (e.lastAttack || 0) > 6000) {
-        const dmg = Math.floor(e.maxHp * 0.10); // 10% of max HP
+    // Standard shot (10-12s interval)
+    if (!e.nextAttackCD) e.nextAttackCD = 10 + Math.random() * 2;
+    if (state.gameTime - (e.lastAttack || 0) > e.nextAttackCD) {
+        const dmg = Math.floor(e.maxHp * 0.20); // 20% of max HP (doubled)
         const bulletColor = e.baseColor || (e.originalPalette ? e.originalPalette[0] : e.palette[0]);
         spawnEnemyBullet(state, e.x, e.y, angleToPlayerD, dmg, bulletColor);
-        e.lastAttack = Date.now();
+        e.lastAttack = state.gameTime;
+        e.nextAttackCD = 10 + Math.random() * 2;
     }
 
     return { vx, vy };
@@ -196,7 +198,7 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
     if (age > 60) {
         if ((e.minionCount || 0) > 0) {
             // RELEASE ONE BY ONE
-            if (!e.lastAttack) e.lastAttack = state.gameTime;
+            if (e.lastAttack === undefined) e.lastAttack = state.gameTime;
             if (state.gameTime - (e.lastAttack || 0) > 2.0) {
                 // Find one to launch
                 const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
@@ -223,7 +225,7 @@ export function updateNormalPentagon(e: Enemy, state: GameState, dist: number, d
 
     // --- SPAWNING LOGIC (Independent of movement state) ---
     // Ensure lastAttack is initialized if not already (safeguard)
-    if (!e.lastAttack) e.lastAttack = state.gameTime;
+    if (e.lastAttack === undefined) e.lastAttack = state.gameTime;
 
     if (e.summonState === 1) {
         if (state.gameTime > (e.timer || 0)) {

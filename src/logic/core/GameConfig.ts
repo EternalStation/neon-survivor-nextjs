@@ -49,14 +49,17 @@ export const GAME_CONFIG = {
         // ComWave (Sonic Wave)
         WAVE_SHOTS_REQUIRED: 15,
         WAVE_RANGE: {
-            LVL1: 450,
-            LVL3: 600
+            LVL1: 1500,
+            LVL3: 1500
         },
         WAVE_DAMAGE_MULT: {
-            LVL1: 0.75,
-            LVL3: 1.25
+            LVL1: 2.0,
+            LVL3: 3.5
         },
-        WAVE_SPEED: 25,
+        WAVE_SPEED: 45,
+        WAVE_COOLDOWN: 30, // Seconds
+        WAVE_COOLDOWN_LVL4: 20, // Seconds
+
 
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,
@@ -84,7 +87,7 @@ export const GAME_CONFIG = {
         PLAYER_BULLET_LIFE: 140,
         PLAYER_BULLET_SIZE: 4,
 
-        ENEMY_BULLET_SPEED: 10,
+        ENEMY_BULLET_SPEED: 6,
         ENEMY_BULLET_LIFE: 300,
         ENEMY_BULLET_SIZE: 6,
     }

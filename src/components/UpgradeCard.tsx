@@ -4,6 +4,8 @@ import { BASE_UPGRADE_VALUES } from '../logic/core/constants';
 import { calcStat } from '../logic/utils/MathUtils';
 import { formatLargeNumber } from '../utils/format';
 import { getIcon } from './UpgradeIcons';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 import '../styles/UpgradeMenu.css';
 
 interface UpgradeCardProps {
@@ -32,6 +34,8 @@ const RARITY_COLORS: Record<string, string> = {
 const RARITY_ORDER = ['scrap', 'anomalous', 'quantum', 'astral', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
 
 export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSelected, onSelect, onHover, gameState }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     // Fallback to 'quantum' (common equivalent) if ID is missing or unknown
     let rId = c.rarity?.id || 'quantum';
     // Remove legacy mapping or map old IDs if necessary for safety?
@@ -40,9 +44,10 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
 
     let baseColor = RARITY_COLORS[rId] || '#00FFFF';
 
-    const rawName = c.type?.name || 'UNKNOWN';
+    const id = c.type?.id || 'unknown';
+    const rawName = t.upgradeTypes[id as keyof typeof t.upgradeTypes] || c.type?.name || 'UNKNOWN';
     const displayName = rawName.replace('Multiplier', 'MULTP');
-    const label = c.rarity?.label || 'QUANTUM'; // Default to uppercase in case
+    const label = t.upgradeRarities[rId as keyof typeof t.upgradeRarities] || c.rarity?.label || 'QUANTUM'; // Default to uppercase in case
 
     // Calculate filled sockets
     const rarityIndex = RARITY_ORDER.indexOf(rId);
@@ -66,12 +71,12 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
         let arenaMult = 1;
         let unit = '';
 
-        if (id.startsWith('hp_')) { stat = p.hp; arenaMult = gameState.hpRegenBuffMult || 1; unit = 'HP'; }
-        else if (id.startsWith('dmg_')) { stat = p.dmg; arenaMult = gameState.dmgAtkBuffMult || 1; unit = 'DMG'; }
-        else if (id.startsWith('reg_')) { stat = p.reg; arenaMult = gameState.hpRegenBuffMult || 1; unit = 'REG'; }
-        else if (id.startsWith('arm_')) { stat = p.arm; arenaMult = 1; unit = 'ARM'; }
-        else if (id.startsWith('xp_')) { stat = p.xp_per_kill as unknown as PlayerStats; arenaMult = gameState.xpSoulBuffMult || 1; unit = 'XP'; }
-        else if (id === 'atk_s') { stat = p.atk; arenaMult = gameState.dmgAtkBuffMult || 1; unit = 'ATK'; }
+        if (id.startsWith('hp_')) { stat = p.hp; arenaMult = gameState.hpRegenBuffMult || 1; unit = t.units.hp; }
+        else if (id.startsWith('dmg_')) { stat = p.dmg; arenaMult = gameState.dmgAtkBuffMult || 1; unit = t.units.dmg; }
+        else if (id.startsWith('reg_')) { stat = p.reg; arenaMult = gameState.hpRegenBuffMult || 1; unit = t.units.reg; }
+        else if (id.startsWith('arm_')) { stat = p.arm; arenaMult = 1; unit = t.units.arm; }
+        else if (id.startsWith('xp_')) { stat = p.xp_per_kill as unknown as PlayerStats; arenaMult = gameState.xpSoulBuffMult || 1; unit = t.units.xp; }
+        else if (id === 'atk_s') { stat = p.atk; arenaMult = gameState.dmgAtkBuffMult || 1; unit = t.units.atk; }
 
         if (stat) {
             const currentVal = calcStat(stat, arenaMult);
@@ -88,7 +93,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                     const currentSPS = Math.max(0.1, (2.64 * Math.log(currentVal / 100) - 1.25));
                     const newSPS = Math.max(0.1, (2.64 * Math.log(newVal / 100) - 1.25));
                     const spsDiff = newSPS - currentSPS;
-                    finalIncreaseStr = `(+${spsDiff.toFixed(2)} S/S)`;
+                    finalIncreaseStr = `(+${spsDiff.toFixed(2)} ${t.units.sps})`;
                 } else {
                     // Formatting for readability using standard project formatter
                     const formattedDiff = formatLargeNumber(diff);

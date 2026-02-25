@@ -4,6 +4,8 @@ import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, c
 import { TICK_INTERVAL } from '../logic/upgrades/IncubatorLogic';
 import { getMeteoriteImage, RARITY_COLORS } from './modules/ModuleUtils';
 import { playSfx } from '../logic/audio/AudioLogic';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface BlueprintBayProps {
     gameState: GameState;
@@ -37,11 +39,12 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
     onInsufficientDust,
     onRegisterBlueprintClick
 }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
     const [isHoveringForge, setHoveringForge] = useState(false);
     const [fuelError, setFuelError] = useState(false);
     const [, setTick] = useState(0);
-    const INSTABILITY_THRESHOLD = 5; // 5 ticks before instability kicks in (testing)
     // Shutter stays OPEN if: hovering, dragging, OR meteorite is inside
     const isForgeShieldOpen = !!movedItem || isHoveringForge || !!gameState.incubator[0];
 
@@ -102,7 +105,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
             <div className="lab-main-layout">
                 {/* LEFT: RECALIBRATION MODULE FRAME */}
                 <div className="lab-section recalibration-zone">
-                    <div className="section-header">RECALIBRATION MODULE</div>
+                    <div className="section-header">{t.recalibrate.moduleTitle}</div>
                     <div
                         className={`scanner-socket recalibration-dock ${recalibrateSlot ? 'active' : ''} ${movedItem ? 'highlight' : ''}`}
                         onMouseUp={(e) => {
@@ -164,7 +167,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                 {/* RIGHT: METEORITE INCUBATOR FRAME */}
                 <div className="lab-section forge-complex">
                     <div className="section-header">
-                        <span>INCUBATOR</span>
+                        <span>{t.incubator.title}</span>
                         <div className="fuel-header-wrap">
                             <span className="fuel-text">{gameState.incubatorFuel}/30</span>
                             <div className="tube-container horizontal" style={{ width: '80px' }}>
@@ -193,7 +196,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                 }}
                                 disabled={gameState.incubatorFuel >= gameState.incubatorFuelMax}
                             >
-                                LOAD
+                                {t.incubator.loadFuel}
                             </button>
                             {fuelError && (
                                 <span style={{
@@ -209,7 +212,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     pointerEvents: 'none',
                                     zIndex: 9999
                                 }}>
-                                    NOT ENOUGH DUST
+                                    {t.incubator.notEnoughDust}
                                 </span>
                             )}
                         </div>
@@ -298,10 +301,10 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                         zIndex: 5
                                     }}>
                                         {gameState.incubator[0].isRuined
-                                            ? 'CRITICAL FAILURE'
+                                            ? t.incubator.criticalFailure
                                             : gameState.incubatorFuel <= 0
-                                                ? 'OFFLINE: NO FUEL'
-                                                : `INCUB: +${gameState.incubator[0].incubatorBoost || 0}%`}
+                                                ? t.incubator.offline
+                                                : `${t.meteorites.stats.incubLabel || 'INCUB'}: +${gameState.incubator[0].incubatorBoost || 0}%`}
                                     </div>
 
                                     <div className="socket-item-wrap floating-forge" style={{ width: '64px', height: '88px', zIndex: 1 }}>
@@ -323,7 +326,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                                 boxShadow: '0 0 20px #ef4444', zIndex: 10, pointerEvents: 'none',
                                                 whiteSpace: 'nowrap'
                                             }}>
-                                                DESTRUCTED
+                                                {t.incubator.destructed}
                                             </div>
                                         )}
                                         <div className="item-drag-layer" onMouseDown={(e) => {
@@ -434,11 +437,11 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                             {/* Tube 1: Instability */}
                             <div className="hub-module" style={{ position: 'relative', paddingTop: '10px' }}>
                                 <div className="tube-label" style={{
-                                    position: 'absolute', top: '-7px', left: '50%', transform: 'translateX(-50%)',
+                                    position: 'absolute', top: '-2px', left: '50%', transform: 'translateX(-50%)',
                                     whiteSpace: 'nowrap', color: '#94a3b8', letterSpacing: '1px'
                                 }}>INSTABILITY</div>
 
-                                <div className="tube-container" style={{ marginTop: '16px' }}>
+                                <div className="tube-container" style={{ marginTop: '11px' }}>
                                     <div className="tube-fill red" style={{ height: `${gameState.incubator[0]?.instability || 0}%` }}>
                                         <div className="plasma-core" />
                                         <div className="plasma-bubbles" />
@@ -461,36 +464,36 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     <div className="lab-modal-overlay" onClick={() => setPromptBlueprint(null)}>
                         <div className="lab-modal" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
-                                <span className="modal-tag">INITIATING_PROTOCOL</span>
+                                <span className="modal-tag">{t.activation.initProtocol}</span>
                                 <div className="modal-title">{promptBlueprint.serial || promptBlueprint.name}</div>
                             </div>
 
                             <div className="modal-actions">
-                                <button className="btn-cancel" onClick={() => setPromptBlueprint(null)}>CLOSE</button>
+                                <button className="btn-cancel" onClick={() => setPromptBlueprint(null)}>{t.activation.close}</button>
 
                                 {promptBlueprint.status === 'active' && (
-                                    <div className="status-label active">DEPLOYED</div>
+                                    <div className="status-label active">{t.activation.deployed}</div>
                                 )}
 
                                 {promptBlueprint.status === 'locked' && (
-                                    <div className="status-label" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid currentColor' }}>ENCRYPTED</div>
+                                    <div className="status-label" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid currentColor' }}>{t.activation.encrypted}</div>
                                 )}
 
                                 {promptBlueprint.status === 'researching' && (
-                                    <div className="status-label researching">DECRYPTING...</div>
+                                    <div className="status-label researching">{t.matrix.bpDecrypting}...</div>
                                 )}
 
                                 {promptBlueprint.status === 'ready' && (
                                     <>
                                         {isBuffActive(gameState, promptBlueprint.type) ? (
-                                            <button disabled className="btn-inactive">ALREADY ACTIVE</button>
+                                            <button disabled className="btn-inactive">{t.activation.alreadyActive}</button>
                                         ) : (
                                             <button
                                                 onClick={handleConfirmActivate}
                                                 disabled={gameState.player.dust < promptBlueprint.cost}
                                                 className={`btn-deploy ${gameState.player.dust < promptBlueprint.cost ? 'locked' : ''}`}
                                             >
-                                                <span>DEPLOY</span>
+                                                <span>{t.activation.deploy}</span>
                                                 <div className="price-tag">
                                                     <span>{promptBlueprint.cost}</span>
                                                     <img src="/assets/Icons/MeteoriteDust.png" />
@@ -502,7 +505,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
 
                                 {(promptBlueprint.status === 'locked' || promptBlueprint.status === 'researching' || promptBlueprint.status === 'ready' || promptBlueprint.status === 'broken') && (
                                     <button className="btn-recycle" onClick={handleScrap}>
-                                        <span>RECYCLE</span>
+                                        <span>{t.matrix.recycle}</span>
                                         <div className="price-tag">
                                             <span>+5</span>
                                             <img src="/assets/Icons/MeteoriteDust.png" />

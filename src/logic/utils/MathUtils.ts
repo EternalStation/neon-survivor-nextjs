@@ -2,10 +2,17 @@ import type { PlayerStats } from '../core/types';
 
 export function calcStat(s: PlayerStats, arenaMult: number = 1, curseMult: number = 1): number {
     const baseSum = s.base + s.flat + (s.hexFlat || 0);
-    const upgradeMult = 1 + (s.mult || 0) / 100;
-    const hexScaling = 1 + (s.hexMult || 0) / 100;
-    const hexScaling2 = 1 + (s.hexMult2 || 0) / 100;
-    return baseSum * upgradeMult * hexScaling * hexScaling2 * arenaMult * curseMult;
+
+    // Tier 1: Normal Multiplier (Additive within tier)
+    const normalMult = 1 + (s.mult || 0) / 100;
+
+    // Tier 2: Legendary Multiplier (Additive within tier)
+    // Joined sum of all legendary percentage sources
+    const legendaryBonus = (s.hexMult || 0) + (s.hexMult2 || 0);
+    const legendaryMult = 1 + legendaryBonus / 100;
+
+    // Final Calculation: (Base + Flats) * NormalMult * LegendaryMult * GlobalEffects
+    return baseSum * normalMult * legendaryMult * arenaMult * curseMult;
 }
 
 export function getDefenseReduction(armor: number, cap: number = 0.95): number {

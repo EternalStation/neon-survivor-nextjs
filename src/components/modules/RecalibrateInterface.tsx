@@ -4,11 +4,9 @@ import type { GameState, Meteorite } from '../../logic/core/types';
 import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS, matchesPerk } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
-const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
-const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR'];
-const ARENAS = ['All', 'Sector-01', 'Sector-02', 'Sector-03'];
-const FOUND_IN_ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
 const LEGENDARY_TYPES = ['All', 'Eco Legendary', 'Com Legendary', 'Def Legendary'];
 
 interface RecalibrateInterfaceProps {
@@ -30,6 +28,16 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     item, gameState, onClose, onUpgradeQuality, onRerollType, onRerollValue,
     lockedIndices, onToggleLock, recalibrateFilters, setRecalibrateFilters
 }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+    const tr = t.recalibrate;
+
+    const PAIR_COMBOS = [tr.all, tr.combos.eco_eco, tr.combos.eco_com, tr.combos.eco_def, tr.combos.com_com, tr.combos.com_def, tr.combos.def_def];
+    const QUALITIES = [tr.all, tr.qualities.new.toUpperCase().slice(0, 3), tr.qualities.dam.toUpperCase().slice(0, 3), tr.qualities.bro.toUpperCase().slice(0, 3), tr.qualities.cor?.toUpperCase().slice(0, 3) || 'COR'];
+    const ARENAS = [tr.all, tr.sectors.s1, tr.sectors.s2, tr.sectors.s3];
+    const FOUND_IN_ARENAS = [tr.all, tr.arenas.eco, tr.arenas.com, tr.arenas.def];
+    const LEGENDARY_TYPES = [tr.all, tr.legendary.eco, tr.legendary.com, tr.legendary.def];
+
     // Local state removed - lifted to parent
 
 
@@ -52,6 +60,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
 
     // Auto-reroll state
     const [isAutoRolling, setIsAutoRolling] = useState(false);
+    const [isErrorFlashing, setIsErrorFlashing] = useState(false);
     const autoRollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     // Track roll count for the pulsing display
     const [autoRollCount, setAutoRollCount] = useState(0);
@@ -179,9 +188,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px', color: '#fff', textShadow: `0 0 10px ${rarityColor}66` }}>
-                            ENHANCEMENT STATION
+                            {tr.enhancementStation}
                         </span>
-                        <span style={{ fontSize: '7px', color: rarityColor, fontWeight: 700, letterSpacing: '1px', opacity: 0.8 }}>SYSTEM READY // LOADED UNIT: {item.rarity.toUpperCase()}</span>
+                        <span style={{ fontSize: '7px', color: rarityColor, fontWeight: 700, letterSpacing: '1px', opacity: 0.8 }}>{tr.systemReady} {item.rarity.toUpperCase()}</span>
                     </div>
                 </div>
                 <button
@@ -196,7 +205,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'; }}
                 >
-                    EJECT
+                    {tr.eject}
                 </button>
             </div>
 
@@ -307,7 +316,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             textShadow: `0 0 15px ${rarityColor}66`,
                             textTransform: 'uppercase'
                         }}>
-                            {item.rarity} UNIT
+                            {item.rarity} {tr.unit}
                         </div>
                     </div>
 
@@ -338,10 +347,10 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         whiteSpace: 'nowrap'
                                     }}
                                 >
-                                    REPAIR ({qualityCost} F)
+                                    {tr.repair} ({qualityCost} F)
                                 </button>
                             ) : (
-                                <span style={{ fontSize: '8px', color: '#22c55e', fontWeight: 900, letterSpacing: '1.5px', textShadow: '0 0 5px rgba(34, 197, 94, 0.5)', whiteSpace: 'nowrap' }}>✓ INTEGRITY MAX</span>
+                                <span style={{ fontSize: '8px', color: '#22c55e', fontWeight: 900, letterSpacing: '1.5px', textShadow: '0 0 5px rgba(34, 197, 94, 0.5)', whiteSpace: 'nowrap' }}>✓ {tr.integrityMax}</span>
                             )}
                         </div>
 
@@ -356,7 +365,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     boxShadow: `0 0 10px ${quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e'}66`
                                 }} />
                             </div>
-                            <span style={{ fontSize: '7px', fontWeight: 900, color: quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e', textTransform: 'uppercase' }}>{quality}</span>
+                            <span style={{ fontSize: '7px', fontWeight: 900, color: quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e', textTransform: 'uppercase' }}>
+                                {quality === 'Broken' ? tr.qualities.bro : quality === 'Damaged' ? tr.qualities.dam : tr.qualities.new}
+                            </span>
                         </div>
 
                         {/* VERSION & CORRUPTION STATUS (Bottom Right) */}
@@ -366,18 +377,23 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 fontWeight: 900, fontFamily: 'monospace',
                                 opacity: 0.8
                             }}>
-                                V {item.version?.toFixed(1) || '1.0'}
+                                {tr.version} {item.version?.toFixed(1) || '1.0'}
                             </span>
                             {item.incubatorBoost && item.incubatorBoost > 0 && (
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                    background: 'rgba(0, 217, 255, 0.1)', padding: '1px 6px', borderRadius: '4px',
-                                    border: '1px solid rgba(0, 217, 255, 0.3)',
-                                    boxShadow: '0 0 10px rgba(0, 217, 255, 0.2)',
-                                    marginTop: '2px'
-                                }}>
-                                    <span style={{ fontSize: '7px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
-                                        INCUB: <span style={{ color: '#00d9ff' }}>+{item.incubatorBoost}%</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        background: 'rgba(0, 217, 255, 0.1)', padding: '1px 6px', borderRadius: '4px',
+                                        border: '1px solid rgba(0, 217, 255, 0.3)',
+                                        boxShadow: '0 0 10px rgba(0, 217, 255, 0.2)',
+                                        marginTop: '2px'
+                                    }}>
+                                        <span style={{ fontSize: '7px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
+                                            {tr.incubLabel} <span style={{ color: '#00d9ff' }}>+{item.incubatorBoost}%</span>
+                                        </span>
+                                    </div>
+                                    <span style={{ fontSize: '6px', color: 'rgba(0, 217, 255, 0.6)', fontWeight: 700, marginTop: '1px', textTransform: 'uppercase' }}>
+                                        {tr.incubCostNote}
                                     </span>
                                 </div>
                             )}
@@ -387,7 +403,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     background: 'rgba(239, 68, 68, 0.1)', padding: '1px 4px', borderRadius: '2px',
                                     border: '1px solid rgba(239, 68, 68, 0.3)'
                                 }}>
-                                    <span style={{ fontSize: '7px', fontWeight: 900, color: '#ef4444', letterSpacing: '0.5px' }}>CORRUPTED UNIT // COST +50%</span>
+                                    <span style={{ fontSize: '7px', fontWeight: 900, color: '#ef4444', letterSpacing: '0.5px' }}>{tr.corruptedUnit.toUpperCase()} // {tr.costPlus50}</span>
                                 </div>
                             )}
                         </div>
@@ -399,7 +415,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
                         <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: 900, letterSpacing: '4px', textTransform: 'uppercase' }}>
-                            HARDWARE ARRAY
+                            {tr.hardwareArray}
                         </div>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(270deg, rgba(255,255,255,0.1), transparent)' }} />
                     </div>
@@ -417,12 +433,12 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             const isExpanded = expandedLevel === lvl;
 
                             const config = {
-                                1: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'CONNECTED', t2Opts: LEGENDARY_TYPES },
-                                2: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'NEIGHBOR', t2Opts: QUALITIES.slice(0, 4) },
-                                3: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'FOUND IN', t2Opts: FOUND_IN_ARENAS },
-                                4: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'FOUND IN', t2Opts: FOUND_IN_ARENAS },
-                                5: { t1Label: 'SECTOR', t1Opts: ARENAS, t2Label: 'PAIR', t2Opts: PAIR_COMBOS },
-                                6: { t1Label: 'NEIGHBOR', t1Opts: QUALITIES.slice(0, 4), t2Label: 'PAIR', t2Opts: PAIR_COMBOS }
+                                1: { t1Label: tr.filterLabels.sector, t1Opts: ARENAS, t2Label: tr.filterLabels.connected, t2Opts: LEGENDARY_TYPES },
+                                2: { t1Label: tr.filterLabels.sector, t1Opts: ARENAS, t2Label: tr.filterLabels.neighbor, t2Opts: QUALITIES.slice(0, 4) },
+                                3: { t1Label: tr.filterLabels.neighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: tr.filterLabels.foundIn, t2Opts: FOUND_IN_ARENAS },
+                                4: { t1Label: tr.filterLabels.neighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: tr.filterLabels.foundIn, t2Opts: FOUND_IN_ARENAS },
+                                5: { t1Label: tr.filterLabels.sector, t1Opts: ARENAS, t2Label: tr.filterLabels.pair, t2Opts: PAIR_COMBOS },
+                                6: { t1Label: tr.filterLabels.neighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: tr.filterLabels.pair, t2Opts: PAIR_COMBOS }
                             }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
 
                             const handleToggleFilter = (e: React.MouseEvent) => {
@@ -446,16 +462,76 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 }
                             };
 
+                            const formatPerkDescription = (text: string) => {
+                                if (language === 'ru') {
+                                    const mTrans = t.meteorites;
+                                    text = text
+                                        .replace(/neighboring a (Damaged|Broken|New) Meteorite/gi, (match, p1) => {
+                                            const status = p1.toLowerCase() === 'damaged' ? mTrans.stats.damaged : p1.toLowerCase() === 'broken' ? mTrans.stats.broken : mTrans.stats.new;
+                                            return `соседствует с ${status}`;
+                                        })
+                                        .replace(/neighboring/gi, 'соседствует с')
+                                        .replace(/Secondary neighboring/gi, 'Вторичное соседство с')
+                                        .replace(/Located in Sector-(\d+)/gi, (match, p1) => {
+                                            const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
+                                            return `Находится в ${sector}`;
+                                        })
+                                        .replace(/located in Sector-(\d+)/gi, (match, p1) => {
+                                            const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
+                                            return `найден в ${sector}`;
+                                        })
+                                        .replace(/located in/gi, 'найден в')
+                                        .replace(/found in (ECO|COM|DEF) HEX/gi, (match, p1) => {
+                                            const arena = p1 === 'ECO' ? mTrans.stats.economicArena : p1 === 'COM' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
+                                            return `найден в ${arena}`;
+                                        })
+                                        .replace(/found in (Economic|Combat|Defence) Arena/gi, (match, p1) => {
+                                            const arena = p1.toLowerCase() === 'economic' ? mTrans.stats.economicArena : p1.toLowerCase() === 'combat' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
+                                            return `найден в ${arena}`;
+                                        })
+                                        .replace(/connected to (Eco|Com|Def) Hexes/gi, (match, p1) => {
+                                            const arenaShort = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
+                                            return `соседствует с ${arenaShort} Легендарный ⬢`;
+                                        })
+                                        .replace(/Connects (Eco|Com|Def) & (Eco|Com|Def) Hexes/gi, (match, p1, p2) => {
+                                            const s1 = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
+                                            const s2 = p2 === 'Eco' ? 'Эко' : p2 === 'Com' ? 'Бой' : 'Защ';
+                                            return `Соседствует с ${s1} и ${s2} Легендарный ⬢`;
+                                        })
+                                        .replace(/connected to/gi, 'соседствует с')
+                                        .replace(/connects/gi, 'соседствует с')
+                                        .replace(/Connects/gi, 'Соседствует с')
+                                        .replace(/\band\b/gi, 'и')
+                                        .replace(/&/g, 'и')
+                                        .replace(/Eco ⬢/g, 'Эко ⬢')
+                                        .replace(/Com ⬢/g, 'Бой ⬢')
+                                        .replace(/Def ⬢/g, 'Защ ⬢')
+                                        .replace(/\bEco\b/gi, 'Эко')
+                                        .replace(/\bCom\b/gi, 'Бой')
+                                        .replace(/\bDef\b/gi, 'Защ')
+                                        .replace(/Broken Meteorite/gi, mTrans.stats.broken)
+                                        .replace(/Damaged Meteorite/gi, mTrans.stats.damaged)
+                                        .replace(/New Meteorite/gi, mTrans.stats.new);
+
+                                    text = text.trim();
+                                    if (text.length > 0) {
+                                        text = text.charAt(0).toUpperCase() + text.slice(1);
+                                    }
+                                }
+                                return text;
+                            };
+
                             const renderDescription = () => {
-                                const parts = getPerkParts(p.id);
+                                const translatedDesc = formatPerkDescription(p.description);
+                                const parts = getPerkParts(p.id, language);
                                 if (parts.length === 0) {
-                                    return p.description;
+                                    return applyHighlighting(translatedDesc);
                                 }
 
                                 const isActuallySpinning = isSpinningPerks && !lockedIndices.includes(idx);
 
                                 // Replace keywords with spinning components
-                                let res: (string | React.ReactNode)[] = [p.description];
+                                let res: (string | React.ReactNode)[] = [translatedDesc];
                                 parts.forEach(part => {
                                     const nextRes: (string | React.ReactNode)[] = [];
                                     res.forEach(item => {
@@ -473,7 +549,33 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     });
                                     res = nextRes;
                                 });
-                                return <span>{res}</span>;
+                                return <span>{res.map((chunk, i) => typeof chunk === 'string' ? applyHighlighting(chunk) : chunk)}</span>;
+                            };
+
+                            const applyHighlighting = (text: string) => {
+                                const highlightColor = '#60a5fa';
+                                const mTrans = t.meteorites;
+                                const keywords = [
+                                    mTrans.stats.sector01, mTrans.stats.sector02, mTrans.stats.sector03,
+                                    mTrans.stats.economicArena, mTrans.stats.combatArena, mTrans.stats.defenceArena,
+                                    'Economic Arena', 'Combat Arena', 'Defence Arena',
+                                    'Экономическая Арена', 'Боевая Арена', 'Защитная Арена',
+                                    'Эко ⬢', 'Бой ⬢', 'Защ ⬢',
+                                    'Эко и Бой ⬢', 'Эко и Защ ⬢', 'Бой и Защ ⬢',
+                                    'Бой и Эко ⬢', 'Защ и Эко ⬢', 'Защ и Бой ⬢',
+                                    'Эко и Эко ⬢', 'Бой и Бой ⬢', 'Защ и Защ ⬢',
+                                    'НОВЫЙ', 'ПОВРЕЖДЕН', 'СЛОМАН', 'ИСКАЖЕН',
+                                    'Sector-01', 'Sector-02', 'Sector-03'
+                                ];
+
+                                const regex = new RegExp(`(${keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+                                return text.split(regex).filter(Boolean).map((part, i) => {
+                                    const isKeyword = keywords.some(k => new RegExp(`^${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i').test(part));
+                                    if (isKeyword) {
+                                        return <span key={i} style={{ color: highlightColor, fontWeight: 'bold' }}>{part.toUpperCase()}</span>;
+                                    }
+                                    return <span key={i}>{part}</span>;
+                                });
                             };
 
                             return (
@@ -519,7 +621,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         </div>
 
                                         <span style={{ fontSize: '11px', fontWeight: 900, color: isLocked ? '#fff' : 'rgba(255,255,255,0.7)', letterSpacing: '0.5px' }}>
-                                            {getPerkName(p.id).toUpperCase()}
+                                            {getPerkName(p.id, language).toUpperCase()}
                                         </span>
 
                                         <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', letterSpacing: '1px' }}>
@@ -606,7 +708,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                                     borderRadius: '50%',
                                                     boxShadow: '0 0 10px #3b82f6'
                                                 }} />
-                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>AUTO-LOCK ACTIVE</span>
+                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>{tr.autoLockActive}</span>
                                             </div>
 
                                             {/* DROPDOWNS */}
@@ -687,6 +789,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                             if (currentRolls >= 7 && curLocked.length > 0) {
                                                 (curGs.assistant.history as any).pendingBrokeSnark = true;
                                             }
+                                            playSfx('warning');
+                                            setIsErrorFlashing(true);
+                                            setTimeout(() => setIsErrorFlashing(false), 1000);
                                             stopAutoRoll();
                                             return;
                                         }
@@ -750,15 +855,15 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                         >
                             {isAutoRolling ? (
                                 <>
-                                    <span style={{ fontSize: '11px' }}>⏹ STOP AUTO-ROLL</span>
+                                    <span style={{ fontSize: '11px' }}>⏹ {tr.stopAutoRoll.toUpperCase()}</span>
                                     <span style={{ fontSize: '7px', opacity: 0.7, fontFamily: 'monospace' }}>
-                                        ROLL #{autoRollCount} · {rerollTypeCost.toLocaleString()} FLUX/ea
+                                        {tr.roll.toUpperCase()} #{autoRollCount} · {rerollTypeCost.toLocaleString()} FLUX/ea
                                     </span>
                                 </>
                             ) : (
                                 <>
-                                    <span style={{ fontSize: '12px' }}>{hasActiveFilters ? '⟳ AUTO-REROLL' : 'REROLL PERKS'}</span>
-                                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX{hasActiveFilters ? ' · SEEKS FILTER' : ''}</span>
+                                    <span style={{ fontSize: '12px' }}>{hasActiveFilters ? `⟳ ${tr.autoReroll.toUpperCase()}` : tr.rerollPerks.toUpperCase()}</span>
+                                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX{hasActiveFilters ? ` · ${tr.seeksFilter.toUpperCase()}` : ''}</span>
                                 </>
                             )}
                             {!isAutoRolling && canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
@@ -795,13 +900,25 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             onMouseEnter={(e) => { if (canAffordRerollValue) { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'; e.currentTarget.style.borderColor = '#34d399'; } }}
                             onMouseLeave={(e) => { if (canAffordRerollValue) { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.05)'; e.currentTarget.style.borderColor = '#10b981'; } }}
                         >
-                            <span style={{ fontSize: '12px' }}>REROLL RANGE</span>
+                            <span style={{ fontSize: '12px' }}>{tr.rerollRange.toUpperCase()}</span>
                             <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollValueCost.toLocaleString()} FLUX</span>
                             {canAffordRerollValue && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />}
                             {isSpinningRange && <div style={{ position: 'absolute', inset: 0, background: 'rgba(16, 185, 129, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
                     </div>
                 </div>
+
+                {/* ERROR FLASH OVERLAY */}
+                {isErrorFlashing && (
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        boxShadow: 'inset 0 0 100px rgba(239, 68, 68, 0.5)',
+                        animation: 'flash-red 0.5s infinite',
+                        pointerEvents: 'none',
+                        zIndex: 100
+                    }} />
+                )}
             </div>
 
             <style jsx>{`
@@ -833,6 +950,16 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 @keyframes pulse-fast {
                     from { opacity: 0.5; filter: blur(0px); }
                     to { opacity: 1; filter: blur(1px); }
+                }
+
+                @keyframes flash-red {
+                    0%, 100% { opacity: 0; }
+                    50% { opacity: 1; }
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-5px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
         </div >

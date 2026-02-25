@@ -1,7 +1,6 @@
 import type { GameState } from '../core/types';
 
 export const TICK_INTERVAL = 20; // 20 seconds per growth tick
-const INSTABILITY_THRESHOLD = 3; // 3 ticks (1 minute) before instability kicks in
 
 export function updateIncubator(state: GameState, step: number, onEvent?: (type: string, data?: any) => void) {
     if (!state.incubator) return;
@@ -30,7 +29,7 @@ export function updateIncubator(state: GameState, step: number, onEvent?: (type:
                 const breakChance = met.instability / 100;
                 if (Math.random() < breakChance) {
                     met.isRuined = true;
-                    if (onEvent) onEvent('incubator_destroyed');
+                    if (onEvent) onEvent('incubator_destroyed', met);
                     continue;
                 }
             }
@@ -39,11 +38,9 @@ export function updateIncubator(state: GameState, step: number, onEvent?: (type:
             const boost = Math.floor(Math.random() * 2) + 1;
             met.incubatorBoost = (met.incubatorBoost || 0) + boost;
 
-            // Update instability if we are past the 1 minute threshold
-            if (expectedTicks >= INSTABILITY_THRESHOLD) {
-                const instabilityAdd = Math.floor(Math.random() * 3) + 3; // 3% to 5%
-                met.instability = (met.instability || 0) + instabilityAdd;
-            }
+            // Update instability (always grow from start)
+            const instabilityAdd = Math.floor(Math.random() * 3) + 3; // 3% to 5%
+            met.instability = (met.instability || 0) + instabilityAdd;
 
             // Mark tick as processed
             met.growthTicks = expectedTicks;

@@ -39,7 +39,7 @@ interface UseGameLogicProps {
     triggerDamageTaken: (dmg: number) => void;
     triggerDeath: () => void;
     triggerWallIncompetence: () => void;
-    triggerIncubatorDestroyed: () => void;
+    triggerIncubatorDestroyed: (met?: any) => void;
     onViewChassisDetail: () => void;
 }
 
@@ -85,7 +85,7 @@ export function useGameLogic({
                 import('../logic/audio/AudioLogic').then(mod => mod.stopAllLoops());
             }
             if (event === 'incubator_destroyed') {
-                triggerIncubatorDestroyed();
+                triggerIncubatorDestroyed(_data);
             }
         };
         state.legionLeads = state.legionLeads || {};
