@@ -112,7 +112,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 const angleToTarget = Math.atan2(target.y - b.y, target.x - b.x);
                 // Smooth turn? Or just swarm behavior?
                 // Let's do simple easing for "liquid" feel
-                const speed = 12; // Fast
+                const speed = 12 * (state.gameSpeedMult ?? 1); // Fast
 
                 // Lerp angle? No, just velocity steering is easier for swarm look
                 const tx = Math.cos(angleToTarget) * speed;
@@ -130,7 +130,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
         // --- CLASS MODIFIERS: Aigis-Vortex Orbtial Movement ---
         if (b.vortexState === 'orbiting') {
-            b.orbitAngle = (b.orbitAngle || 0) + 0.05;
+            b.orbitAngle = (b.orbitAngle || 0) + 0.05 * (state.gameSpeedMult ?? 1);
             const dist = b.orbitDist || 125;
             b.x = owner.x + Math.cos(b.orbitAngle) * dist;
             b.y = owner.y + Math.sin(b.orbitAngle) * dist;
@@ -644,34 +644,6 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     // Hyper-Pulse infinite pierce
                     if (!b.isHyperPulse && !b.isShockwaveCircle) {
                         b.pierce--;
-                    }
-                }
-
-                // --- CLASS MODIFIER: Event-Horizon Gravimetric Pull ---
-                if (owner.playerClass === 'eventhorizon') {
-                    const now = state.gameTime;
-                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
-                    const cooldownDuration = 10 * cdMod; // 10 seconds * reduction
-                    const blackholeDuration = 3; // 3 seconds
-
-                    // Check if blackhole is off cooldown
-                    if (!owner.blackholeCooldown || now >= owner.blackholeCooldown) {
-                        // Create persistent blackhole area effect
-                        state.areaEffects.push({
-                            id: Date.now(),
-                            type: 'blackhole',
-                            x: b.x,
-                            y: b.y,
-                            radius: 400, // User Request: Fixed 400px range
-                            duration: blackholeDuration,
-                            creationTime: now,
-                            level: 1
-                        });
-
-                        playSfx('impact'); // Heavier feedback
-
-                        // Set cooldown
-                        owner.blackholeCooldown = now + cooldownDuration;
                     }
                 }
 

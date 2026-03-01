@@ -3,7 +3,7 @@ import type { Language } from '../../lib/LanguageContext';
 import { getPulseIntensity } from '../effects/PulseSystem';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';
 import { renderPOIs } from './renderers/PoiRenderer';
-import { renderPlayer } from './renderers/PlayerRenderer';
+import { renderPlayer, renderVoidMarker } from './renderers/PlayerRenderer';
 import { renderEnemies } from './renderers/EnemyRenderer';
 import { renderDrones, renderAllies, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
 import { renderProjectiles } from './renderers/ProjectileRenderer';
@@ -88,6 +88,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
 
         // 3. Ground Effects (Area Effects)
         renderAreaEffects(ctx, state);
+        renderVoidMarker(ctx, state);
 
         // 4. Portals
         renderPortals(ctx, state);

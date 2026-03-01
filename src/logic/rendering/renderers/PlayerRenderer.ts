@@ -382,3 +382,59 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
 
     ctx.restore(); // Final restore for line 10
 }
+
+export function renderVoidMarker(ctx: CanvasRenderingContext2D, state: GameState) {
+    const { player } = state;
+    if (!player.voidMarkerActive || player.voidMarkerX === undefined || player.voidMarkerY === undefined) return;
+
+    const x = player.voidMarkerX;
+    const y = player.voidMarkerY;
+    const t = state.gameTime;
+    const age = t - (player.voidMarkerSpawnTime ?? t);
+    const alpha = Math.min(1, age * 4);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha = alpha;
+
+    const rotation = (t * 18) % (Math.PI * 2);
+    ctx.rotate(rotation);
+
+    const coreRadius = 12;
+    const outerRadius = 24;
+
+    for (let i = 0; i < 3; i++) {
+        const layerR = coreRadius + (outerRadius - coreRadius) * (i / 2);
+        ctx.beginPath();
+        ctx.arc(0, 0, layerR, 0, Math.PI * 2);
+        const opacity = (0.5 - i * 0.12) * (0.7 + Math.sin(t * 20 + i) * 0.3);
+        ctx.strokeStyle = `rgba(139, 92, 246, ${Math.max(0, opacity)})`;
+        ctx.lineWidth = 2 - i * 0.5;
+        ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius + 2, 0, Math.PI * 2);
+    ctx.globalAlpha = alpha * 0.4;
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.stroke();
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#f8fafc';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    const pulseR = outerRadius * (0.5 + (t % 0.15) / 0.15);
+    ctx.beginPath();
+    ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(139, 92, 246, ${Math.max(0, 1 - (t % 0.15) / 0.15) * 0.6})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.restore();
+}

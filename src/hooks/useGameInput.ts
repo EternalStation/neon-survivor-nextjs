@@ -3,9 +3,9 @@ import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/types';
 import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
-import { calcStat } from '../logic/utils/MathUtils';
+import { triggerDash } from '../logic/player/PlayerMovement';
 import { getKeybinds } from '../logic/utils/Keybinds';
-import { dropBlueprint } from '../logic/upgrades/BlueprintLogic';
+import { dropBlueprint, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
@@ -20,13 +20,14 @@ interface GameInputProps {
     setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
     setShowAdminConsole?: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowCheatPanel?: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
     triggerPortal: () => boolean;
     refreshUI: () => void;
     skipTime: (min: number) => void;
 }
 
-export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
+export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
     const localKeys = useRef<Record<string, boolean>>({});
     const keys = providedKeys || localKeys;
     const inputVector = useRef({ x: 0, y: 0 });
@@ -116,6 +117,54 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 }
             });
 
+            // DASH TRIGGER
+            if (code === (keybinds.dash || 'space').toLowerCase()) {
+                if (!gameState.current.isPaused && !gameState.current.gameOver) {
+                    triggerDash(gameState.current, keys.current, inputVector.current);
+                }
+                e.preventDefault();
+            }
+
+            // CLASS ABILITY TRIGGER (Event Horizon: Void Marker)
+            if (code === (keybinds.classAbility || 'keye').toLowerCase()) {
+                const state = gameState.current;
+                const player = state.player;
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'eventhorizon') {
+                    const now = state.gameTime;
+                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+
+                    if (player.voidMarkerActive) {
+                        const bx = player.voidMarkerX ?? player.x;
+                        const by = player.voidMarkerY ?? player.y;
+                        state.areaEffects.push({
+                            id: Date.now(),
+                            type: 'blackhole',
+                            x: bx,
+                            y: by,
+                            radius: 400,
+                            duration: 3,
+                            creationTime: now,
+                            level: 1
+                        });
+                        player.voidMarkerActive = false;
+                        player.blackholeCooldown = now + 10 * cdMod;
+                        playSfx('impact');
+                    } else if (!player.blackholeCooldown || now >= player.blackholeCooldown) {
+                        const dx = mousePos.current.x - window.innerWidth / 2;
+                        const dy = mousePos.current.y - window.innerHeight / 2;
+                        const angle = Math.atan2(dy, dx);
+                        const MARKER_SPEED = 500;
+                        player.voidMarkerActive = true;
+                        player.voidMarkerX = player.x;
+                        player.voidMarkerY = player.y;
+                        player.voidMarkerVx = Math.cos(angle) * MARKER_SPEED;
+                        player.voidMarkerVy = Math.sin(angle) * MARKER_SPEED;
+                        player.voidMarkerSpawnTime = now;
+                        playSfx('spawn');
+                    }
+                }
+            }
+
             // PORTAL TRIGGER
             if (code === (keybinds.portal || '').toLowerCase()) {
                 triggerPortal();
@@ -194,8 +243,18 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 cheatBuffer = '';
             }
 
-            // YY / KO - 5100 Dust
-            if (cheatBuffer.endsWith('yy') || cheatBuffer.endsWith('ko')) {
+            // KKK - Cheat Panel
+            if (cheatBuffer.endsWith('kkk')) {
+                if (setShowCheatPanel) {
+                    setShowCheatPanel(true);
+                    gameState.current.showCheatPanel = true;
+                    console.log('[CHEAT] Cheat Panel Opened');
+                }
+                cheatBuffer = '';
+            }
+
+            // KO - 5100 Dust
+            if (cheatBuffer.endsWith('ko')) {
                 gameState.current.player.dust += 5100;
                 console.log('[CHEAT] Added 5100 Dust');
                 refreshUI();
@@ -231,8 +290,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 cheatBuffer = '';
             }
 
-            // L1 / LVL - Level Up + Unlock Portals
-            if (cheatBuffer.endsWith('l1') || cheatBuffer.endsWith('lvl') || cheatBuffer.endsWith('lp')) {
+            // LVL - Level Up + Unlock Portals
+            if (cheatBuffer.endsWith('lvl')) {
                 // Level Up logic
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;
 
@@ -249,26 +308,6 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 cheatBuffer = '';
             }
 
-            // O20 - Give Researched Dimensional Gate Blueprint
-            if (cheatBuffer.endsWith('o20')) {
-                import('../logic/upgrades/BlueprintLogic').then(({ createBlueprint }) => {
-                    const blueprint = createBlueprint('DIMENSIONAL_GATE');
-                    blueprint.researched = true;
-                    blueprint.status = 'ready';
-
-                    // Find a slot
-                    const slot = gameState.current.inventory.findIndex(s => s === null);
-                    if (slot !== -1) {
-                        gameState.current.inventory[slot] = blueprint as any;
-                        spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "DIMENSIONAL GATE ADDED", '#00ffff', true);
-                        playSfx('rare-spawn');
-                        console.log('[CHEAT] Researched Dimensional Gate Blueprint added via O20');
-                        refreshUI();
-                    }
-                });
-                cheatBuffer = '';
-            }
-
             // E1-E5 - Spawn 5 Enemies
             const shapes: Record<string, any> = { '1': 'circle', '2': 'triangle', '3': 'square', '4': 'diamond', '5': 'pentagon' };
             for (const [num, shape] of Object.entries(shapes)) {
@@ -282,7 +321,6 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 }
             }
 
-            // --- BOSS SUMMONING CHEATS ---
             // --- BOSS SUMMONING CHEATS ---
             const bossForms: Record<number, string> = {
                 1: 'circle',
@@ -319,26 +357,10 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     }
                 }
 
-                // Legacy v-pattern
-                for (let level = 1; level <= 5; level++) {
-                    const code = `v${shapeNum}-${level}`; // e.g. v1-1 for Circle Lvl 1
-
-                    if (cheatBuffer.endsWith(code)) {
-                        const p = gameState.current.player;
-                        const angle = Math.random() * Math.PI * 2;
-                        const dist = 500;
-                        spawnEnemy(gameState.current, p.x + Math.cos(angle) * dist, p.y + Math.sin(angle) * dist, form as any, true, level);
-
-                        spawnFloatingNumber(gameState.current, p.x, p.y, `SUMMONED LVL ${level} ${form.toUpperCase()}`, '#ef4444', true);
-                        playSfx('rare-spawn');
-                        console.log(`[CHEAT] Summoned Level ${level} ${form} Boss (MAPPED)`);
-                        cheatBuffer = '';
-                    }
-                }
             });
 
-            // E6 / SNI - Snitch
-            if (cheatBuffer.endsWith('e6') || cheatBuffer.endsWith('sni')) {
+            // SNI - Snitch
+            if (cheatBuffer.endsWith('sni')) {
                 spawnRareEnemy(gameState.current);
                 cheatBuffer = '';
             }
@@ -432,7 +454,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             for (const [keyChar, variant] of Object.entries(turretVariants)) {
                 if (turretSpawned) break;
                 for (let level = 1; level <= 6; level++) {
-                    if (cheatBuffer.endsWith(`tur${keyChar}${level}`) || cheatBuffer.endsWith(`t${keyChar}${level}`)) {
+                    if (cheatBuffer.endsWith(`t${keyChar}${level}`)) {
                         const p = gameState.current.player;
                         const angle = Math.random() * Math.PI * 2;
                         const dist = 100;
@@ -512,6 +534,18 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     }
                     cheatBuffer = '';
                 }
+            }
+
+
+            // CS2 - Boost Chassis Resonance (x2 from current per press)
+            if (cheatBuffer.endsWith('cs2')) {
+                const state = gameState.current;
+                const cur = state.chassisResonanceBonus || 0;
+                state.chassisResonanceBonus = cur === 0 ? 0.5 : cur * 2;
+                spawnFloatingNumber(state, state.player.x, state.player.y, `RESONANCE ${state.chassisResonanceBonus.toFixed(1)}`, '#a855f7', true);
+                playSfx('power-up');
+                refreshUI();
+                cheatBuffer = '';
             }
         };
 

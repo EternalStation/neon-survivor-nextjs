@@ -227,6 +227,16 @@ export function useGameLogic({
         state.camera.x = localPlayer.x;
         state.camera.y = localPlayer.y;
 
+        // --- VOID MARKER UPDATE (Event Horizon Active Ability) ---
+        if (state.player.voidMarkerActive) {
+            state.player.voidMarkerX = (state.player.voidMarkerX ?? state.player.x) + (state.player.voidMarkerVx ?? 0) * step;
+            state.player.voidMarkerY = (state.player.voidMarkerY ?? state.player.y) + (state.player.voidMarkerVy ?? 0) * step;
+            const markerAge = state.gameTime - (state.player.voidMarkerSpawnTime ?? 0);
+            if (markerAge > 6) {
+                state.player.voidMarkerActive = false;
+            }
+        }
+
         // --- AREA EFFECTS UPDATE LOOP ---
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player].filter(p => !!p);
         players.forEach(p => { if (p.buffs) p.buffs.puddleRegen = false; });

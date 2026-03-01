@@ -46,7 +46,6 @@ export function updatePlayer(
             // Kinetic Battery handles its own cooldown dynamically based on timestamps
             if (skill.type === 'KineticBattery') return;
 
-            // Cooldown Logic
             if (skill.cooldown > 0) {
                 skill.cooldown -= 1 / 60;
                 if (skill.cooldown < 0) skill.cooldown = 0;

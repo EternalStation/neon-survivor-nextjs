@@ -8,6 +8,53 @@ import { getHexLevel } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
+export function triggerDash(state: GameState, keys: Record<string, boolean>, inputVector?: { x: number, y: number }, overridePlayer?: any) {
+    const player = overridePlayer || state.player;
+
+    const isStunned = player.stunnedUntil && state.gameTime < player.stunnedUntil;
+    if (isStunned || player.immobilized) return;
+
+    const dashCd = player.dashCooldown ?? 0;
+    if (dashCd > 0) return;
+
+    let vx = 0, vy = 0;
+
+    if (keys['keyw'] || keys['arrowup']) vy--;
+    if (keys['keys'] || keys['arrowdown']) vy++;
+    if (keys['keya'] || keys['arrowleft']) vx--;
+    if (keys['keyd'] || keys['arrowright']) vx++;
+
+    if (inputVector) {
+        vx += inputVector.x;
+        vy += inputVector.y;
+    }
+
+    if (vx === 0 && vy === 0) {
+        const angle = player.lastAngle || 0;
+        vx = Math.cos(angle);
+        vy = Math.sin(angle);
+    }
+
+    const mag = Math.hypot(vx, vy);
+    const nx = vx / mag;
+    const ny = vy / mag;
+
+    const duration = GAME_CONFIG.DASH.DURATION;
+    const framesPerSecond = 60;
+    const totalFrames = duration * framesPerSecond;
+    const speedPerFrame = GAME_CONFIG.DASH.DISTANCE / totalFrames;
+
+    player.dashVx = nx * speedPerFrame;
+    player.dashVy = ny * speedPerFrame;
+    player.dashUntil = state.gameTime + duration;
+    player.dashCooldown = GAME_CONFIG.DASH.COOLDOWN;
+    player.dashCooldownMax = GAME_CONFIG.DASH.COOLDOWN;
+    player.invincibleUntil = state.gameTime + GAME_CONFIG.DASH.INVINCIBLE_DURATION;
+
+    spawnParticles(state, player.x, player.y, '#22d3ee', 8, 3, 30, 'spark');
+    playSfx('dash');
+}
+
 export function handlePlayerMovement(
     state: GameState,
     keys: Record<string, boolean>,
@@ -18,6 +65,27 @@ export function handlePlayerMovement(
     triggerWallIncompetence?: () => void
 ) {
     const player = overridePlayer || state.player;
+
+    // Dash Cooldown Tick
+    if (player.dashCooldown && player.dashCooldown > 0) {
+        player.dashCooldown -= 1 / 60;
+        if (player.dashCooldown < 0) player.dashCooldown = 0;
+    }
+
+    // Active Dash Movement
+    const isDashing = player.dashUntil && state.gameTime < player.dashUntil;
+    if (isDashing && player.dashVx !== undefined && player.dashVy !== undefined) {
+        const nx = player.x + player.dashVx;
+        const ny = player.y + player.dashVy;
+        if (isInMap(nx, ny)) {
+            player.x = nx;
+            player.y = ny;
+        } else {
+            player.dashUntil = 0;
+        }
+        spawnParticles(state, player.x, player.y, '#0ea5e9', 2, 2, 15, 'spark');
+        return;
+    }
 
     // Movement
     let vx = 0, vy = 0;
@@ -73,8 +141,9 @@ export function handlePlayerMovement(
     if (vx !== 0 || vy !== 0) {
         // Normalize
         const mag = Math.hypot(vx, vy);
-        const dx = (vx / mag) * player.speed;
-        const dy = (vy / mag) * player.speed;
+        const spd = player.speed * (state.gameSpeedMult ?? 1);
+        const dx = (vx / mag) * spd;
+        const dy = (vy / mag) * spd;
 
         player.lastAngle = Math.atan2(dy, dx);
         const nextX = player.x + dx;
@@ -133,8 +202,9 @@ export function handlePlayerMovement(
             const ry = dy - 2 * dot * ny;
             const reflectDir = Math.atan2(ry, rx);
 
-            player.knockback.x = Math.cos(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
-            player.knockback.y = Math.sin(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
+            const wallBounceSpd = GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED * (state.gameSpeedMult ?? 1);
+            player.knockback.x = Math.cos(reflectDir) * wallBounceSpd;
+            player.knockback.y = Math.sin(reflectDir) * wallBounceSpd;
             player.wallsHit++;
             triggerWallIncompetence?.();
 

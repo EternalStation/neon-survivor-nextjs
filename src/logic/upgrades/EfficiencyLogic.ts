@@ -252,7 +252,7 @@ export function getChassisResonance(state: GameState): number {
             totalBoost += calculateMeteoriteEfficiency(state, dIdx).totalBoost;
         }
     }
-    return totalBoost;
+    return totalBoost + (state.chassisResonanceBonus || 0);
 }
 
 function calculatePairBonus(hexes: LegendaryHex[], perkId: string, value: number, checkLevel: boolean): number {

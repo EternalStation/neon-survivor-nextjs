@@ -70,6 +70,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         { label: t.statsMenu, key: 'stats' },
         { label: t.matrixModule, key: 'matrix' },
         { label: t.activatePortal, key: 'portal' },
+        { label: t.dash, key: 'dash' },
     ];
 
     const skillItems: { label: string; key: keyof Keybinds }[] = [

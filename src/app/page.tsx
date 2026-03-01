@@ -10,6 +10,7 @@ import { DeathScreen } from '@/components/DeathScreen';
 import { MobileControls } from '@/components/MobileControls';
 import { FeedbackModal } from '@/components/hud/FeedbackModal';
 import { AdminConsole } from '@/components/hud/AdminConsole';
+import { CheatPanel } from '@/components/hud/CheatPanel';
 
 import AuthScreen from '@/components/AuthScreen';
 import Leaderboard from '@/components/Leaderboard';
@@ -57,10 +58,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !showLeaderboard && !hook.showFeedbackModal && !hook.showAdminConsole) {
+    if (gameStarted && !hook.showStats && !hook.showSettings && !hook.showModuleMenu && !selectingClass && !showLeaderboard && !hook.showFeedbackModal && !hook.showAdminConsole && !hook.showCheatPanel) {
       appRef.current?.focus();
     }
-  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, showLeaderboard, hook.showFeedbackModal, hook.showAdminConsole, hook]);
+  }, [gameStarted, hook.showStats, hook.showSettings, hook.showModuleMenu, selectingClass, showLeaderboard, hook.showFeedbackModal, hook.showAdminConsole, hook.showCheatPanel, hook]);
 
   // Reset logic when quitting to main menu
   const handleQuit = () => {
@@ -164,7 +165,7 @@ export default function Home() {
           // Don't steal focus if clicking an interactive element
           const target = e.target as HTMLElement;
           const isInteractive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.closest('button');
-          if (!isInteractive && !hook.showFeedbackModal && !hook.showAdminConsole) {
+          if (!isInteractive && !hook.showFeedbackModal && !hook.showAdminConsole && !hook.showCheatPanel) {
             e.currentTarget.focus();
           }
         }}
@@ -283,6 +284,8 @@ export default function Home() {
                       hook.setShowSettings(false);
                       hook.setShowFeedbackModal(true);
                     }}
+                    gameSpeedMult={hook.gameSpeedMult}
+                    onGameSpeedChange={hook.setGameSpeedMult}
                   />
                 </div>
               )}
@@ -323,6 +326,12 @@ export default function Home() {
               {hook.showAdminConsole && (
                 <AdminConsole
                   onClose={() => hook.setShowAdminConsole(false)}
+                />
+              )}
+
+              {hook.showCheatPanel && (
+                <CheatPanel
+                  onClose={() => hook.setShowCheatPanel(false)}
                 />
               )}
 

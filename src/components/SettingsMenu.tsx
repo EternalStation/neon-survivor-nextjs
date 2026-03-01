@@ -10,11 +10,14 @@ interface SettingsMenuProps {
     onQuit?: () => void;
     onFeedback?: () => void;
     mode?: 'game' | 'menu';
+    gameSpeedMult?: number;
+    onGameSpeedChange?: (mult: number) => void;
 }
 
-export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'game' }: SettingsMenuProps) => {
+export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'game', gameSpeedMult = 1.0, onGameSpeedChange }: SettingsMenuProps) => {
     const [musVol, setMusVol] = useState(getMusicVolume());
     const [sfxVol, setSfxVol] = useState(getSfxVolume());
+    const [speedPct, setSpeedPct] = useState(Math.round((gameSpeedMult ?? 1.0) * 100));
     const [activeTab, setActiveTab] = useState<'general' | 'controls' | 'language'>('general');
     const { language, setLanguage } = useLanguage();
     const t = getUiTranslation(language).settings;
@@ -29,6 +32,12 @@ export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'g
         const v = parseFloat(e.target.value);
         setSfxVol(v);
         setSfxVolume(v);
+    };
+
+    const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const pct = parseInt(e.target.value);
+        setSpeedPct(pct);
+        onGameSpeedChange?.(pct / 100);
     };
 
     const LANGS: { code: Language; label: string; flag: string; native: string }[] = [
@@ -95,6 +104,24 @@ export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'g
                                     value={sfxVol} onChange={handleSfxChange}
                                     className="settings-input-range"
                                 />
+                            </div>
+
+                            {/* Game Speed */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <div className="settings-slider-label">
+                                    <span>{t.gameSpeed}</span>
+                                    <span className="settings-slider-val" style={{ color: speedPct !== 100 ? '#f59e0b' : undefined }}>
+                                        {speedPct}%
+                                    </span>
+                                </div>
+                                <input
+                                    type="range" min="10" max="500" step="5"
+                                    value={speedPct} onChange={handleSpeedChange}
+                                    className="settings-input-range"
+                                />
+                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 1, fontFamily: "'Orbitron', monospace" }}>
+                                    {t.gameSpeedNote}
+                                </div>
                             </div>
                         </div>
                     )}

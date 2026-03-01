@@ -150,6 +150,21 @@ export interface Player {
     killerHp?: number; // HP of the enemy that killed the player
     killerMaxHp?: number; // Max HP of the enemy that killed the player
 
+    // Dash Ability
+    dashCooldown?: number;
+    dashCooldownMax?: number;
+    dashUntil?: number;
+    dashVx?: number;
+    dashVy?: number;
+
+    // Void Marker (Event Horizon Active Ability)
+    voidMarkerActive?: boolean;
+    voidMarkerX?: number;
+    voidMarkerY?: number;
+    voidMarkerVx?: number;
+    voidMarkerVy?: number;
+    voidMarkerSpawnTime?: number;
+
     // Level 4 Boss Debuffs
     soulDrainMult?: number;
     healingDisabled?: boolean;
@@ -773,6 +788,7 @@ export interface GameState {
     showLegendarySelection: boolean;
     showBossSkillDetail: boolean;
     showAdminConsole: boolean;
+    showCheatPanel: boolean;
     showFeedbackModal: boolean;
     legendaryOptions: LegendaryHex[] | null;
     pendingLegendaryHex: LegendaryHex | null; // Hex waiting to be placed
@@ -799,6 +815,8 @@ export interface GameState {
     dmgAtkBuffMult: number; // For Combat Arena
     xpSoulBuffMult: number; // For Economic Arena
     meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
+    gameSpeedMult: number; // Global speed multiplier (0.1 - 5.0, default 1.0)
+    chassisResonanceBonus?: number;
 
     // Extraction System
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';
