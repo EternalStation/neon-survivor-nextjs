@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface CheatEntry {
     code: string;
@@ -133,12 +133,41 @@ interface CheatPanelProps {
 }
 
 export function CheatPanel({ onClose }: CheatPanelProps) {
-    const handleApply = (code: string) => {
-        code.split('').forEach(char =>
+    const [searchTerm, setSearchTerm] = useState('');
+    const [recentCheats, setRecentCheats] = useState<CheatEntry[]>([]);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('neon_survivor_recent_cheats');
+        if (stored) {
+            try {
+                setRecentCheats(JSON.parse(stored));
+            } catch (e) {
+            }
+        }
+    }, []);
+
+    const handleApply = (entry: CheatEntry) => {
+        const newRecent = [entry, ...recentCheats.filter(c => c.code !== entry.code)].slice(0, 3);
+        setRecentCheats(newRecent);
+        localStorage.setItem('neon_survivor_recent_cheats', JSON.stringify(newRecent));
+
+        entry.code.split('').forEach(char =>
             window.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }))
         );
         onClose();
     };
+
+    const filteredCategories = useMemo(() => {
+        if (!searchTerm) return CHEAT_CATEGORIES;
+        const lowerSearch = searchTerm.toLowerCase();
+        return CHEAT_CATEGORIES.map(cat => ({
+            ...cat,
+            entries: cat.entries.filter(e =>
+                e.description.toLowerCase().includes(lowerSearch) ||
+                e.code.toLowerCase().includes(lowerSearch)
+            )
+        })).filter(cat => cat.entries.length > 0);
+    }, [searchTerm]);
 
     return (
         <div
@@ -170,8 +199,51 @@ export function CheatPanel({ onClose }: CheatPanelProps) {
                     {'>'} CHEAT_PANEL :: DEBUG_CODES
                 </h2>
 
+                <input
+                    type="text"
+                    placeholder="SEARCH CODES..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: '1px solid #00ff00',
+                        color: '#00ff00',
+                        padding: '8px',
+                        marginBottom: '16px',
+                        fontFamily: 'inherit',
+                        fontSize: '16px',
+                        outline: 'none'
+                    }}
+                />
+
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
-                    {CHEAT_CATEGORIES.map(cat => (
+                    {!searchTerm && recentCheats.length > 0 && (
+                        <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '12px', color: '#00aa00', letterSpacing: '2px', marginBottom: '6px', borderLeft: '2px solid #00ff00', paddingLeft: '8px' }}>
+                                [RECENTLY USED]
+                            </div>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <tbody>
+                                    {recentCheats.map(entry => (
+                                        <tr
+                                            key={'recent-' + entry.code}
+                                            onClick={() => handleApply(entry)}
+                                            style={{ borderBottom: '1px solid #001a00', cursor: 'pointer' }}
+                                            onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '#003300'; }}
+                                            onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}
+                                        >
+                                            <td style={{ padding: '5px 8px', fontSize: '13px', color: '#88ff88' }}>
+                                                {entry.description}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {filteredCategories.map(cat => (
                         <div key={cat.name} style={{ marginBottom: '20px' }}>
                             <div style={{ fontSize: '12px', color: '#00aa00', letterSpacing: '2px', marginBottom: '6px', borderLeft: '2px solid #00ff00', paddingLeft: '8px' }}>
                                 [{cat.name}]
@@ -179,28 +251,15 @@ export function CheatPanel({ onClose }: CheatPanelProps) {
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <tbody>
                                     {cat.entries.map(entry => (
-                                        <tr key={entry.code} style={{ borderBottom: '1px solid #001a00' }}>
+                                        <tr
+                                            key={entry.code}
+                                            onClick={() => handleApply(entry)}
+                                            style={{ borderBottom: '1px solid #001a00', cursor: 'pointer' }}
+                                            onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '#003300'; }}
+                                            onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}
+                                        >
                                             <td style={{ padding: '5px 8px', fontSize: '13px', color: '#88ff88' }}>
                                                 {entry.description}
-                                            </td>
-                                            <td style={{ padding: '5px 8px', textAlign: 'right', width: '90px' }}>
-                                                <button
-                                                    onClick={() => handleApply(entry.code)}
-                                                    style={{
-                                                        background: 'transparent', border: '1px solid #00ff00',
-                                                        color: '#00ff00', padding: '2px 10px',
-                                                        cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px',
-                                                        letterSpacing: '1px'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        (e.currentTarget as HTMLButtonElement).style.background = '#003300';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                                                    }}
-                                                >
-                                                    [APPLY]
-                                                </button>
                                             </td>
                                         </tr>
                                     ))}
