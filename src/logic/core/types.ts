@@ -150,6 +150,13 @@ export interface Player {
     killerHp?: number; // HP of the enemy that killed the player
     killerMaxHp?: number; // Max HP of the enemy that killed the player
 
+    // Dash Ability
+    dashCooldown?: number;
+    dashCooldownMax?: number;
+    dashUntil?: number;
+    dashVx?: number;
+    dashVy?: number;
+
     // Level 4 Boss Debuffs
     soulDrainMult?: number;
     healingDisabled?: boolean;

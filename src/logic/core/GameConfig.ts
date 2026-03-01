@@ -81,6 +81,14 @@ export const GAME_CONFIG = {
         REFLECT_DAMAGE_PERCENT: 0.002, // 0.2% Max HP
     },
 
+    // --- DASH ---
+    DASH: {
+        DISTANCE: 240,
+        DURATION: 0.18,
+        COOLDOWN: 4.0,
+        INVINCIBLE_DURATION: 0.15,
+    },
+
     // --- PROJECTILES ---
     PROJECTILE: {
         PLAYER_BULLET_SPEED: 20,

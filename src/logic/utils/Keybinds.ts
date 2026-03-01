@@ -2,6 +2,7 @@ export interface Keybinds {
     stats: string;
     matrix: string;
     portal: string;
+    dash: string;
     skill1: string;
     skill2: string;
     skill3: string;
@@ -14,6 +15,7 @@ const DEFAULT_KEYBINDS: Keybinds = {
     stats: 'KeyC',
     matrix: 'KeyX',
     portal: 'KeyP',
+    dash: 'Space',
     skill1: 'Digit1',
     skill2: 'Digit2',
     skill3: 'Digit3',
@@ -54,7 +56,7 @@ export const resetKeybinds = () => {
 
 export const getKeyDisplay = (key: string): string => {
     if (!key) return 'NONE';
-    if (key === ' ') return 'SPACE';
+    if (key === ' ' || key === 'Space') return 'SPACE';
 
     // Convert common codes to friendly names
     let display = key;

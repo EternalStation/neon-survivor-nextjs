@@ -67,6 +67,64 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
             })()}
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 8, justifyContent: 'center', alignItems: 'center' }}>
+                {/* DASH INDICATOR */}
+                {(() => {
+                    const dashCd = player.dashCooldown ?? 0;
+                    const dashCdMax = player.dashCooldownMax || 4.0;
+                    const isDashing = player.dashUntil && player.dashUntil > gameState.gameTime;
+                    const isReady = dashCd <= 0;
+                    const cdPct = isReady ? 0 : dashCd / dashCdMax;
+
+                    return (
+                        <div style={{ position: 'relative', width: 42, height: 48 }}>
+                            <div style={{
+                                width: '100%', height: '100%',
+                                backgroundColor: isDashing ? '#0ea5e9' : isReady ? '#22d3ee' : '#475569',
+                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: isReady ? '0 0 12px #22d3ee' : 'none',
+                                transition: 'all 0.2s'
+                            }}>
+                                <div style={{
+                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
+                                    backgroundColor: '#0f172a',
+                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                    position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <div style={{ fontSize: 16, filter: isReady ? 'drop-shadow(0 0 5px #22d3ee)' : 'none' }}>
+                                        ⚡
+                                    </div>
+                                    {cdPct > 0 && (
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                            height: `${cdPct * 100}%`,
+                                            background: 'rgba(0, 0, 0, 0.7)',
+                                            transition: 'height 0.1s linear'
+                                        }} />
+                                    )}
+                                    {cdPct > 0 && (
+                                        <div style={{
+                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                            color: '#fff', fontSize: 11, fontWeight: 900, textShadow: '0 0 2px #000', zIndex: 1
+                                        }}>
+                                            {Math.ceil(dashCd)}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div style={{
+                                position: 'absolute', top: -4, right: -4,
+                                background: '#0f172a', border: '1px solid #475569',
+                                color: '#94a3b8', fontSize: 8, fontWeight: 900,
+                                padding: '1px 3px', borderRadius: 3,
+                                boxShadow: '0 0 4px #000', zIndex: 10,
+                                whiteSpace: 'nowrap'
+                            }}>
+                                SPC
+                            </div>
+                        </div>
+                    );
+                })()}
                 {/* CLASS CAPABILITY (Skill 0) - Automatic */}
                 {(() => {
                     const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);

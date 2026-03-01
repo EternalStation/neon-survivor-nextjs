@@ -3,6 +3,7 @@ import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/types';
 import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
+import { triggerDash } from '../logic/player/PlayerMovement';
 import { calcStat } from '../logic/utils/MathUtils';
 import { getKeybinds } from '../logic/utils/Keybinds';
 import { dropBlueprint } from '../logic/upgrades/BlueprintLogic';
@@ -116,6 +117,14 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     }
                 }
             });
+
+            // DASH TRIGGER
+            if (code === (keybinds.dash || 'space').toLowerCase()) {
+                if (!gameState.current.isPaused && !gameState.current.gameOver) {
+                    triggerDash(gameState.current, keys.current, inputVector.current);
+                }
+                e.preventDefault();
+            }
 
             // PORTAL TRIGGER
             if (code === (keybinds.portal || '').toLowerCase()) {
