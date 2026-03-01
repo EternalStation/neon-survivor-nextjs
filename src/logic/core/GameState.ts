@@ -205,6 +205,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         showLegendarySelection: false,
         showBossSkillDetail: false,
         showAdminConsole: false,
+        showCheatPanel: false,
         showFeedbackModal: false,
         legendaryOptions: null,
         pendingLegendaryHex: null,

@@ -53,6 +53,7 @@ export function useGameLoop(gameStarted: boolean) {
     const [showBossSkillDetail, setShowBossSkillDetail] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showAdminConsole, setShowAdminConsole] = useState(false);
+    const [showCheatPanel, setShowCheatPanel] = useState(false);
 
     // Orbit Assistant Hook
     const {
@@ -87,8 +88,9 @@ export function useGameLoop(gameStarted: boolean) {
     gameState.current.showBossSkillDetail = showBossSkillDetail;
     gameState.current.showFeedbackModal = showFeedbackModal;
     gameState.current.showAdminConsole = showAdminConsole;
+    gameState.current.showCheatPanel = showCheatPanel;
     gameState.current.isUpgradeMenuOpen = !!upgradeChoices;
-    gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail || showFeedbackModal || showAdminConsole;
+    gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail || showFeedbackModal || showAdminConsole || showCheatPanel;
 
     // Connect UI Handlers
     const {
@@ -131,6 +133,7 @@ export function useGameLoop(gameStarted: boolean) {
         setShowStats,
         setShowModuleMenu,
         setShowAdminConsole,
+        setShowCheatPanel,
         setGameOver,
         triggerPortal,
         refreshUI: () => setUiState(p => p + 1),
@@ -248,7 +251,7 @@ export function useGameLoop(gameStarted: boolean) {
                 return;
             }
 
-            const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current || showFeedbackModalRef.current || showAdminConsoleRef.current;
+            const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current || showFeedbackModalRef.current || showAdminConsoleRef.current || state.showCheatPanel;
 
             if (!isMenuOpen && wasPausedRef.current) {
                 // Determine unpause mode based on what was open
@@ -482,6 +485,8 @@ export function useGameLoop(gameStarted: boolean) {
         setShowFeedbackModal,
         showAdminConsole,
         setShowAdminConsole,
+        showCheatPanel,
+        setShowCheatPanel,
         skipTime,
         triggerOneTrickPony,
         triggerDamageTaken,

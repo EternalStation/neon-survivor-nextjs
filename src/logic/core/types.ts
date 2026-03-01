@@ -773,6 +773,7 @@ export interface GameState {
     showLegendarySelection: boolean;
     showBossSkillDetail: boolean;
     showAdminConsole: boolean;
+    showCheatPanel: boolean;
     showFeedbackModal: boolean;
     legendaryOptions: LegendaryHex[] | null;
     pendingLegendaryHex: LegendaryHex | null; // Hex waiting to be placed
