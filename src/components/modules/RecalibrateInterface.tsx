@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { GameState, Meteorite } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS, matchesPerk } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS, matchesPerk, getSpinPools, getMeteoriteColor } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
+import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
+import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 
-const LEGENDARY_TYPES = ['All', 'Eco Legendary', 'Com Legendary', 'Def Legendary'];
+const LEGENDARY_TYPES = ['All', 'Exis Forge', 'Apex Forge', 'Bastion Forge'];
 
 interface RecalibrateInterfaceProps {
     item: Meteorite;
@@ -33,7 +35,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     const tr = t.recalibrate;
 
     const PAIR_COMBOS = [tr.all, tr.combos.eco_eco, tr.combos.eco_com, tr.combos.eco_def, tr.combos.com_com, tr.combos.com_def, tr.combos.def_def];
-    const QUALITIES = [tr.all, tr.qualities.new.toUpperCase().slice(0, 3), tr.qualities.dam.toUpperCase().slice(0, 3), tr.qualities.bro.toUpperCase().slice(0, 3), tr.qualities.cor?.toUpperCase().slice(0, 3) || 'COR'];
+    const QUALITIES = [tr.all, tr.qualities.new.toUpperCase(), tr.qualities.dam.toUpperCase(), tr.qualities.bro.toUpperCase(), tr.qualities.cor?.toUpperCase() || 'COR'];
     const ARENAS = [tr.all, tr.sectors.s1, tr.sectors.s2, tr.sectors.s3];
     const FOUND_IN_ARENAS = [tr.all, tr.arenas.eco, tr.arenas.com, tr.arenas.def];
     const LEGENDARY_TYPES = [tr.all, tr.legendary.eco, tr.legendary.com, tr.legendary.def];
@@ -47,6 +49,9 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
     const qualityCost = getUpgradeQualityCost(item);
     const canUpgradeQuality = quality === 'Broken' || quality === 'Damaged';
     const canAffordQuality = gameState.player.isotopes >= qualityCost;
+
+    const diamondIdx = gameState.moduleSockets.diamonds.indexOf(item);
+    const efficiency = calculateMeteoriteEfficiency(gameState, diamondIdx);
 
     const rerollTypeCost = getRerollTypeCost(item, lockedIndices.length);
     const rerollValueCost = getRerollValueCost(item, lockedIndices.length);
@@ -161,257 +166,220 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 zIndex: 0
             }} />
 
-            {/* TOP HEADER: ENHANCEMENT ARRAY */}
-            <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                borderBottom: `1px solid ${rarityColor}44`,
-                padding: '8px 16px',
-                background: 'rgba(15, 23, 42, 0.8)',
-                backdropFilter: 'blur(10px)',
-                position: 'relative',
-                zIndex: 10
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                        position: 'relative',
-                        width: '24px', height: '24px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        <div style={{
-                            position: 'absolute', inset: 0,
-                            border: `2px solid ${rarityColor}`,
-                            borderRadius: '4px',
-                            transform: 'rotate(45deg)',
-                            animation: 'pulse-glow 2s infinite'
-                        }} />
-                        <span style={{ fontSize: '10px', fontWeight: 900, color: rarityColor }}>☢</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px', color: '#fff', textShadow: `0 0 10px ${rarityColor}66` }}>
-                            {tr.enhancementStation}
-                        </span>
-                        <span style={{ fontSize: '7px', color: rarityColor, fontWeight: 700, letterSpacing: '1px', opacity: 0.8 }}>{tr.systemReady} {item.rarity.toUpperCase()}</span>
-                    </div>
-                </div>
-                <button
-                    onClick={onClose}
-                    style={{
-                        background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444',
-                        padding: '4px 12px', borderRadius: '4px', cursor: 'pointer',
-                        fontWeight: 900, fontSize: '10px', transition: 'all 0.2s', textTransform: 'uppercase',
-                        letterSpacing: '1px',
-                        clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0 100%)'
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'; }}
-                >
-                    {tr.eject}
-                </button>
-            </div>
+            <div style={{ flex: 1, padding: '0px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', zIndex: 5, overflow: 'hidden' }}>
 
-            <div className="custom-scrollbar" style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', zIndex: 5 }}>
-
-                {/* CENTRAL UNIT HUD */}
+                {/* CENTRAL UNIT HUD - COMPACT HORIZONTAL LAYOUT */}
                 <div style={{
-                    padding: '12px 24px',
-                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.85) 100%)',
+                    borderRadius: '0px',
+                    borderBottom: '1px solid rgba(255,255,255,0.12)',
+                    boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 0 25px ${rarityColor}15`,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '24px',
+                    gap: '12px',
                     position: 'relative',
                     overflow: 'hidden',
-                    minHeight: '86px'
+                    minHeight: '97px',
+                    flexShrink: 0
                 }}>
-                    {/* Scanner Lines Animated Background */}
                     <div style={{
                         position: 'absolute', inset: 0,
-                        background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(59, 130, 246, 0.03) 1px, rgba(59, 130, 246, 0.03) 2px)',
+                        background: `linear-gradient(to right, ${rarityColor}15, transparent)`,
                         pointerEvents: 'none'
                     }} />
 
-                    {/* LEFT: ICON */}
-                    <div style={{ position: 'relative', zIndex: 1 }}>
+                    {/* LEFT: ICON SECTION */}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <div style={{
                             position: 'relative',
-                            width: '44px', height: '44px',
+                            width: '70px', height: '70px',
                             background: 'rgba(0,0,0,0.6)',
                             borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             border: `2px solid ${rarityColor}aa`,
-                            boxShadow: `0 0 20px ${rarityColor}44, inset 0 0 15px ${rarityColor}22`
+                            boxShadow: `0 0 20px ${rarityColor}44, inset 0 0 10px ${rarityColor}22`
                         }}>
                             <div style={{
                                 position: 'absolute', inset: -10,
-                                border: `1px solid ${rarityColor}33`,
+                                border: `1px solid ${rarityColor}22`,
                                 borderRadius: '50%',
-                                animation: 'spin-slow 20s infinite linear'
+                                animation: 'spin-slow 2s infinite linear'
                             }} />
                             <div style={{
-                                position: 'absolute', inset: -5,
-                                border: `1px dashed ${rarityColor}44`,
+                                position: 'absolute', inset: -6,
+                                border: `1px dashed ${rarityColor}33`,
                                 borderRadius: '50%',
-                                animation: 'spin-reverse 10s infinite linear'
+                                animation: 'spin-reverse 5s infinite linear'
                             }} />
 
                             <img
                                 src={getMeteoriteImage(item)}
-                                style={{ width: '32px', height: '100%', objectFit: 'contain', filter: `drop-shadow(0 0 12px ${rarityColor})` }}
+                                style={{ width: '52px', height: '52px', objectFit: 'contain', filter: `drop-shadow(0 0 15px ${rarityColor})`, animation: 'heroPulse 4s ease-in-out infinite' }}
                                 alt="loaded unit"
                             />
-                            {item.isCorrupted && (
+                            {/* Status badge row on icon: C → I → H */}
+                            {(item.isCorrupted || (item.incubatorBoost || 0) > 0 || (item as any).blueprintBoosted) && (
                                 <div style={{
                                     position: 'absolute', top: '-4px', left: '-4px',
-                                    width: '10px', height: '10px',
-                                    background: '#1e293b',
-                                    border: '1px solid #a855f7',
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 0 5px rgba(168, 85, 247, 0.4)',
+                                    display: 'flex', flexDirection: 'row', gap: '2px',
                                     zIndex: 5
                                 }}>
-                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#a855f7', lineHeight: 1 }}>C</span>
-                                </div>
-                            )}
-                            {item.blueprintBoosted && (
-                                <div style={{
-                                    position: 'absolute', bottom: '-4px', left: '-4px',
-                                    width: '10px', height: '10px',
-                                    background: '#1e293b',
-                                    border: '1px solid #60a5fa',
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 0 5px rgba(96, 165, 250, 0.4)',
-                                    zIndex: 5
-                                }}>
-                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
-                                </div>
-                            )}
-                            {item.incubatorBoost && item.incubatorBoost > 0 && (
-                                <div style={{
-                                    position: 'absolute', bottom: '-4px', right: '-4px',
-                                    width: '10px', height: '10px',
-                                    background: '#1e293b',
-                                    border: '1px solid #00d9ff',
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 0 5px rgba(0, 217, 255, 0.4)',
-                                    zIndex: 5
-                                }}>
-                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                    {item.isCorrupted && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid #991b1b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(153,27,27,0.6)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                        </div>
+                                    )}
+                                    {(item.incubatorBoost || 0) > 0 && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid rgba(0, 217, 255, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(0, 217, 255, 0.4)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                        </div>
+                                    )}
+                                    {(item as any).blueprintBoosted && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid rgba(96, 165, 250, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(96, 165, 250, 0.4)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* CENTER: UNIT NAME */}
-                    <div style={{ flex: 1, textAlign: 'center', zIndex: 1 }}>
-                        <div style={{
-                            fontSize: '15px',
-                            fontWeight: 900,
-                            color: '#fff',
-                            letterSpacing: '4px',
-                            textShadow: `0 0 15px ${rarityColor}66`,
-                            textTransform: 'uppercase'
-                        }}>
-                            {item.rarity} {tr.unit}
-                        </div>
-                    </div>
+                    {/* RIGHT: DATA SECTION */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 1, minWidth: 0 }}>
+                        {/* TOP ROW: NAME & POWER */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <h2 style={{
+                                    color: '#fff',
+                                    fontSize: '15px',
+                                    fontWeight: 950,
+                                    margin: 0,
+                                    letterSpacing: '1px',
+                                    textShadow: `0 0 15px ${rarityColor}aa`,
+                                }}>
+                                    {(t.meteorites.rarities[item.rarity as keyof typeof t.meteorites.rarities] || t.meteorites.rarities.anomalous).toUpperCase()}
+                                </h2>
 
-                    {/* RIGHT: DATA COLUMN */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', zIndex: 1, minWidth: '130px' }}>
-                        {/* REPAIR BUTTON (Top Right) */}
-                        <div style={{ height: '24px', display: 'flex', alignItems: 'center' }}>
-                            {canUpgradeQuality ? (
-                                <button
-                                    disabled={!canAffordQuality}
-                                    onClick={() => {
-                                        playSfx('upgrade-confirm');
-                                        onUpgradeQuality();
-                                    }}
-                                    style={{
-                                        background: canAffordQuality ? `linear-gradient(180deg, ${rarityColor}, ${rarityColor}cc)` : '#1e293b',
-                                        color: '#000',
-                                        border: 'none',
-                                        padding: '4px 20px', borderRadius: '4px',
-                                        fontSize: '9px', fontWeight: 900,
-                                        cursor: canAffordQuality ? 'pointer' : 'not-allowed',
-                                        boxShadow: canAffordQuality ? `0 0 12px ${rarityColor}44` : 'none',
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px',
-                                        opacity: canAffordQuality ? 1 : 0.5,
-                                        clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0 100%)',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    {tr.repair} ({qualityCost} F)
-                                </button>
-                            ) : (
-                                <span style={{ fontSize: '8px', color: '#22c55e', fontWeight: 900, letterSpacing: '1.5px', textShadow: '0 0 5px rgba(34, 197, 94, 0.5)', whiteSpace: 'nowrap' }}>✓ {tr.integrityMax}</span>
-                            )}
-                        </div>
-
-                        {/* INTEGRITY STATUS (Middle Right) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {/* Visual Integrity Bar */}
-                            <div style={{ width: '60px', height: '3px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden', display: 'flex' }}>
-                                <div style={{
-                                    width: quality === 'Broken' ? '33%' : quality === 'Damaged' ? '66%' : '100%',
-                                    height: '100%',
-                                    background: quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e',
-                                    boxShadow: `0 0 10px ${quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e'}66`
-                                }} />
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                    {item.isCorrupted && (
+                                        <div style={{
+                                            display: 'inline-flex', alignItems: 'center', marginTop: '4px',
+                                            padding: '1px 8px',
+                                            background: 'rgba(153, 27, 27, 0.25)', color: '#fecaca',
+                                            fontSize: '8px', fontWeight: 950, borderRadius: '3px',
+                                            border: '1px solid rgba(153, 27, 27, 0.6)', letterSpacing: '1px'
+                                        }}>
+                                            {t.meteorites.stats.corrupted.toUpperCase()} <span style={{ opacity: 0.7, marginLeft: '3px' }}>+3%</span>
+                                        </div>
+                                    )}
+                                    {(item.incubatorBoost || 0) > 0 && (
+                                        <div style={{
+                                            display: 'inline-flex', alignItems: 'center', marginTop: '4px',
+                                            padding: '1px 8px',
+                                            background: 'rgba(0, 217, 255, 0.1)', color: '#00d9ff',
+                                            fontSize: '8px', fontWeight: 950, borderRadius: '3px',
+                                            border: '1px solid rgba(0, 217, 255, 0.4)', letterSpacing: '1px'
+                                        }}>
+                                            INCUB <span style={{ opacity: 0.7, marginLeft: '3px' }}>+{(item.incubatorBoost || 0)}%</span>
+                                        </div>
+                                    )}
+                                    {(item as any).blueprintBoosted && (
+                                        <div style={{
+                                            display: 'inline-flex', alignItems: 'center', marginTop: '4px',
+                                            padding: '1px 8px',
+                                            background: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa',
+                                            fontSize: '8px', fontWeight: 950, borderRadius: '3px',
+                                            border: '1px solid rgba(96, 165, 250, 0.4)', letterSpacing: '1px'
+                                        }}>
+                                            HARM-V <span style={{ opacity: 0.7, marginLeft: '3px' }}>+2%</span>
+                                        </div>
+                                    )}
+                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                        <div style={{
+                                            display: 'inline-flex', alignItems: 'center', marginTop: '4px',
+                                            padding: '1px 8px',
+                                            background: 'rgba(234, 88, 12, 0.15)', color: '#f97316',
+                                            fontSize: '8px', fontWeight: 950, borderRadius: '3px',
+                                            border: '1px solid rgba(234, 88, 12, 0.4)', letterSpacing: '1px'
+                                        }}>
+                                            MATR-X <span style={{ opacity: 0.7, marginLeft: '3px' }}>+{(efficiency.blueprintBoost * 100).toFixed(1).replace('.0', '')}%</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <span style={{ fontSize: '7px', fontWeight: 900, color: quality === 'Broken' ? '#ef4444' : quality === 'Damaged' ? '#fbbf24' : '#22c55e', textTransform: 'uppercase' }}>
-                                {quality === 'Broken' ? tr.qualities.bro : quality === 'Damaged' ? tr.qualities.dam : tr.qualities.new}
-                            </span>
+
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', marginBottom: '2px' }}>
+                                    {tr.version.toUpperCase()}
+                                </div>
+                                <div style={{ fontSize: '18px', fontWeight: 950, color: '#fff', lineHeight: 1, textShadow: `0 0 20px ${rarityColor}44` }}>
+                                    {(item.version || 1.0).toFixed(1)}
+                                </div>
+                            </div>
                         </div>
 
-                        {/* VERSION & CORRUPTION STATUS (Bottom Right) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                            <span style={{
-                                fontSize: '9px', color: '#fff',
-                                fontWeight: 900, fontFamily: 'monospace',
-                                opacity: 0.8
-                            }}>
-                                {tr.version} {item.version?.toFixed(1) || '1.0'}
-                            </span>
-                            {item.incubatorBoost && item.incubatorBoost > 0 && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        background: 'rgba(0, 217, 255, 0.1)', padding: '1px 6px', borderRadius: '4px',
-                                        border: '1px solid rgba(0, 217, 255, 0.3)',
-                                        boxShadow: '0 0 10px rgba(0, 217, 255, 0.2)',
-                                        marginTop: '2px'
-                                    }}>
-                                        <span style={{ fontSize: '7px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
-                                            {tr.incubLabel} <span style={{ color: '#00d9ff' }}>+{item.incubatorBoost}%</span>
-                                        </span>
+                        <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', width: '100%' }} />
+
+                        {/* BOTTOM ROW: REPAIR */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{ height: '30px', display: 'flex', alignItems: 'center' }}>
+                                    {canUpgradeQuality ? (
+                                        <button
+                                            disabled={!canAffordQuality}
+                                            onClick={() => {
+                                                playSfx('upgrade-confirm');
+                                                onUpgradeQuality();
+                                            }}
+                                            style={{
+                                                background: canAffordQuality ? 'linear-gradient(180deg, #ffffff, #cbd5e1)' : 'rgba(0,0,0,0.6)',
+                                                color: canAffordQuality ? '#000' : 'rgba(255,255,255,0.2)',
+                                                border: canAffordQuality ? `1px solid #fff` : '1px solid rgba(255,255,255,0.05)',
+                                                padding: '3px 12px', borderRadius: '4px',
+                                                fontSize: '9px', fontWeight: 950,
+                                                cursor: canAffordQuality ? 'pointer' : 'not-allowed',
+                                                boxShadow: canAffordQuality ? `0 0 15px rgba(255,255,255,0.15)` : 'none',
+                                                transition: 'all 0.3s',
+                                                textTransform: 'uppercase',
+                                                opacity: canAffordQuality ? 1 : 0.6,
+                                                clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0 100%)',
+                                                whiteSpace: 'nowrap',
+                                                textShadow: 'none'
+                                            }}
+                                        >
+                                            {tr.repair} ({qualityCost} F)
+                                        </button>
+                                    ) : (
+                                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 950, letterSpacing: '1px' }}>✓ {tr.integrityMax.toUpperCase()}</span>
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '60px', height: '4px', background: '#000', borderRadius: '2px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{
+                                            width: quality === 'Broken' ? '33%' : quality === 'Damaged' ? '66%' : '100%',
+                                            height: '100%',
+                                            background: quality === 'Broken' ? '#94a3b8' : quality === 'Damaged' ? '#cbd5e1' : '#ffffff',
+                                        }} />
                                     </div>
-                                    <span style={{ fontSize: '6px', color: 'rgba(0, 217, 255, 0.6)', fontWeight: 700, marginTop: '1px', textTransform: 'uppercase' }}>
-                                        {tr.incubCostNote}
+                                    <span style={{
+                                        fontSize: '8px',
+                                        fontWeight: 950,
+                                        color: quality === 'Broken' ? '#94a3b8' : quality === 'Damaged' ? '#cbd5e1' : '#ffffff',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                    }}>
+                                        {quality === 'Broken' ? tr.qualities.bro.toUpperCase() : quality === 'Damaged' ? tr.qualities.dam.toUpperCase() : tr.qualities.new.toUpperCase()}
                                     </span>
                                 </div>
-                            )}
-                            {item.isCorrupted && (
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                    background: 'rgba(239, 68, 68, 0.1)', padding: '1px 4px', borderRadius: '2px',
-                                    border: '1px solid rgba(239, 68, 68, 0.3)'
-                                }}>
-                                    <span style={{ fontSize: '7px', fontWeight: 900, color: '#ef4444', letterSpacing: '0.5px' }}>{tr.corruptedUnit.toUpperCase()} // {tr.costPlus50}</span>
-                                </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* PERK ARRAY - ENHANCED VISUALS */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
                         <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: 900, letterSpacing: '4px', textTransform: 'uppercase' }}>
@@ -420,7 +388,14 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(270deg, rgba(255,255,255,0.1), transparent)' }} />
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div className="custom-scrollbar" style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        paddingRight: '6px'
+                    }}>
                         {item.perks.map((p, idx) => {
                             const isLocked = lockedIndices.includes(idx);
                             const rangeSpan = p.range.max - p.range.min;
@@ -463,72 +438,198 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             };
 
                             const formatPerkDescription = (text: string) => {
-                                if (language === 'ru') {
-                                    const mTrans = t.meteorites;
-                                    text = text
-                                        .replace(/neighboring a (Damaged|Broken|New) Meteorite/gi, (match, p1) => {
-                                            const status = p1.toLowerCase() === 'damaged' ? mTrans.stats.damaged : p1.toLowerCase() === 'broken' ? mTrans.stats.broken : mTrans.stats.new;
-                                            return `соседствует с ${status}`;
-                                        })
-                                        .replace(/neighboring/gi, 'соседствует с')
-                                        .replace(/Secondary neighboring/gi, 'Вторичное соседство с')
-                                        .replace(/Located in Sector-(\d+)/gi, (match, p1) => {
-                                            const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
-                                            return `Находится в ${sector}`;
-                                        })
-                                        .replace(/located in Sector-(\d+)/gi, (match, p1) => {
-                                            const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
-                                            return `найден в ${sector}`;
-                                        })
-                                        .replace(/located in/gi, 'найден в')
-                                        .replace(/found in (ECO|COM|DEF) HEX/gi, (match, p1) => {
-                                            const arena = p1 === 'ECO' ? mTrans.stats.economicArena : p1 === 'COM' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
-                                            return `найден в ${arena}`;
-                                        })
-                                        .replace(/found in (Economic|Combat|Defence) Arena/gi, (match, p1) => {
-                                            const arena = p1.toLowerCase() === 'economic' ? mTrans.stats.economicArena : p1.toLowerCase() === 'combat' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
-                                            return `найден в ${arena}`;
-                                        })
-                                        .replace(/connected to (Eco|Com|Def) Hexes/gi, (match, p1) => {
-                                            const arenaShort = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
-                                            return `соседствует с ${arenaShort} Легендарный ⬢`;
-                                        })
-                                        .replace(/Connects (Eco|Com|Def) & (Eco|Com|Def) Hexes/gi, (match, p1, p2) => {
-                                            const s1 = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
-                                            const s2 = p2 === 'Eco' ? 'Эко' : p2 === 'Com' ? 'Бой' : 'Защ';
-                                            return `Соседствует с ${s1} и ${s2} Легендарный ⬢`;
-                                        })
-                                        .replace(/connected to/gi, 'соседствует с')
-                                        .replace(/connects/gi, 'соседствует с')
-                                        .replace(/Connects/gi, 'Соседствует с')
+                                const isRu = language === 'ru';
+                                const mTrans = t.meteorites;
+                                let processedPerk = text;
+
+                                const getForgeName = (code: string) => {
+                                    if (isRu) {
+                                        if (code === 'Eco') return 'ЭКЗИС';
+                                        if (code === 'Com') return 'ПРЕДЕЛ';
+                                        if (code === 'Def') return 'БАСТИОН';
+                                    } else {
+                                        if (code === 'Eco') return 'EXIS';
+                                        if (code === 'Com') return 'APEX';
+                                        if (code === 'Def') return 'BASTION';
+                                    }
+                                    return code;
+                                };
+
+                                const getQualityName = (q: string) => {
+                                    if (isRu) {
+                                        if (q.toLowerCase() === 'damaged') return tr.qualities.dam;
+                                        if (q.toLowerCase() === 'broken') return tr.qualities.bro;
+                                        if (q.toLowerCase() === 'new') return tr.qualities.new;
+                                    }
+                                    return q;
+                                };
+
+                                // 1. Dual Forge Patterns (Lvl 5, 6)
+                                processedPerk = processedPerk.replace(/(\s*(?:&|and|& connects|connects|and connects)\s+)?(neighboring|secondary neighboring) a (Damaged|Broken|New) Meteorite(?:\.|\s+)?(?:\(?& connects|connects|and connects\)?)\s+[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\(]?(Eco|Com|Def)[\]\)]?( Hexes| Hex| ⬡| ⬢|)/gi, (match, conj, pref, q, p1, p2) => {
+                                    const status = getQualityName(q);
+                                    const f1 = getForgeName(p1);
+                                    const f2 = getForgeName(p2);
+                                    if (isRu) {
+                                        const prefixStr = pref.toLowerCase().includes('secondary') ? 'вторичное соседство' : 'соседствует';
+                                        return `${prefixStr} с ${status} метеоритом и усиляет кузню ${f1} и ${f2}`;
+                                    } else {
+                                        const prefixStr = conj ? pref.toLowerCase() : (pref.charAt(0).toUpperCase() + pref.toLowerCase().slice(1));
+                                        return `${conj || ''}${prefixStr} a ${q} Meteorite. Empowering Forge ${f1} and ${f2}`;
+                                    }
+                                });
+
+                                processedPerk = processedPerk.replace(/Located in Sector-(\d+)(?:\.|\s+)?(?:\(?& connects|connects|and connects\)?)\s+[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\()\]?(Eco|Com|Def)[\]\)]?( Hexes| Hex| ⬡| ⬢|)/gi, (match, sec, p1, p2) => {
+                                    const f1 = getForgeName(p1);
+                                    const f2 = getForgeName(p2);
+                                    if (isRu) return `Находится в Сектор-${sec} и усиляет кузню ${f1} и ${f2}`;
+                                    return `Located in Sector-${sec}. Empowering Forge ${f1} and ${f2}`;
+                                });
+
+                                // 2. Single Forge Patterns (Lvl 1)
+                                processedPerk = processedPerk.replace(/Located in Sector-(\d+)(?:\.|\s+)?(?:neighboring|&|& connects|connects|and connects) an? [\[\(]?(Eco|Com|Def)[\]\)]?( Hex| ⬡| ⬢|)/gi, (match, sec, p1) => {
+                                    const forge = getForgeName(p1);
+                                    if (isRu) return `Находится в Сектор-${sec} и усиляет кузню ${forge}`;
+                                    return `Located in Sector-${sec} and empowering Forge ${forge}`;
+                                });
+
+                                // 3. Generic Connects/Neighbors (Catch-all)
+                                processedPerk = processedPerk.replace(/(\s*(?:&|and)\s+)?(& connects|connects|Connects|and connects|& neighboring|neighboring|Neighboring) (an? [\[\(]?(Eco|Com|Def)[\]\)]? (Hex|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\(]?(Eco|Com|Def)[\]\)]? (Hexes|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]? (Hexes|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]?)/gi, (match, conj, verb, rest, p1, h1, p2, p3, h2, p4, h3, p5) => {
+                                    const f1Code = p1 || p2 || p4 || p5;
+                                    const f2Code = p3;
+                                    const forge1 = getForgeName(f1Code);
+                                    const verbLower = verb.toLowerCase();
+
+                                    if (verbLower.includes('neighbor')) {
+                                        const prefix = conj ? 'neighboring' : 'Neighboring';
+                                        if (f2Code) {
+                                            const forge2 = getForgeName(f2Code);
+                                            if (isRu) return `соседствует с кузней ${forge1} и ${forge2}`;
+                                            return `${conj || ''}${prefix} Forge ${forge1} and ${forge2}`;
+                                        }
+                                        if (isRu) return `соседствует с кузней ${forge1}`;
+                                        return `${conj || ''}${prefix} Forge ${forge1}`;
+                                    }
+
+                                    if (f2Code) {
+                                        const forge2 = getForgeName(f2Code);
+                                        if (isRu) return `и усиляет кузню ${forge1} и ${forge2}`;
+                                        return `Empowering Forge ${forge1} and ${forge2}`;
+                                    }
+                                    if (isRu) return `и усиляет кузню ${forge1}`;
+                                    // If preceded by sector info, add 'and'
+                                    const prefix = (conj || match.toLowerCase().includes('and') || processedPerk.toLowerCase().includes('located in sector')) ? 'and empowering' : 'Empowering';
+                                    return `${prefix} Forge ${forge1}`;
+                                });
+
+                                processedPerk = processedPerk.replace(/(\s*(?:&|and)\s+)?(neighboring|secondary neighboring) a (Damaged|Broken|New) Meteorite/gi, (match, conj, pref, q) => {
+                                    const status = getQualityName(q);
+                                    if (isRu) {
+                                        const prefixStr = pref.toLowerCase().includes('secondary') ? 'вторичное соседство' : 'соседствует';
+                                        return `${prefixStr} с ${status} метеоритом`;
+                                    }
+                                    const prefixStr = conj ? pref.toLowerCase() : (pref.charAt(0).toUpperCase() + pref.toLowerCase().slice(1));
+                                    return `${conj || ''}${prefixStr} a ${q} Meteorite`;
+                                });
+
+                                // 4. Found in
+                                processedPerk = processedPerk.replace(/found in (Economic|Combat|Defence) Arena/gi, (match, a) => {
+                                    if (isRu) {
+                                        const arena = a.toLowerCase().includes('eco') ? mTrans.stats.economicArena : a.toLowerCase().includes('com') ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
+                                        return `найден в ${arena}`;
+                                    }
+                                    return `found in ${a} Arena`;
+                                });
+
+                                // 5. Cleanup
+                                if (isRu) {
+                                    processedPerk = processedPerk
+                                        .replace(/Located in Sector-(\d+)/gi, 'Находится в Сектор-$1')
+                                        .replace(/located in Sector-(\d+)/gi, 'найден в Сектор-$1')
+                                        .replace(/Sector-(\d+)/gi, 'Сектор-$1')
+                                        .replace(/Broken Meteorite/gi, `${tr.qualities.bro} метеорит`)
+                                        .replace(/Damaged Meteorite/gi, `${tr.qualities.dam} метеорит`)
+                                        .replace(/New Meteorite/gi, `${tr.qualities.new} метеорит`)
+                                        .replace(/\bLocated in\b/gi, 'Находится в')
                                         .replace(/\band\b/gi, 'и')
                                         .replace(/&/g, 'и')
-                                        .replace(/Eco ⬢/g, 'Эко ⬢')
-                                        .replace(/Com ⬢/g, 'Бой ⬢')
-                                        .replace(/Def ⬢/g, 'Защ ⬢')
-                                        .replace(/\bEco\b/gi, 'Эко')
-                                        .replace(/\bCom\b/gi, 'Бой')
-                                        .replace(/\bDef\b/gi, 'Защ')
-                                        .replace(/Broken Meteorite/gi, mTrans.stats.broken)
-                                        .replace(/Damaged Meteorite/gi, mTrans.stats.damaged)
-                                        .replace(/New Meteorite/gi, mTrans.stats.new);
+                                        .replace(/\bEco\b/gi, 'Экзис')
+                                        .replace(/\bCom\b/gi, 'Предел')
+                                        .replace(/\bDef\b/gi, 'Бастион');
 
-                                    text = text.trim();
-                                    if (text.length > 0) {
-                                        text = text.charAt(0).toUpperCase() + text.slice(1);
-                                    }
+                                    // Explicitly fix common missing-and patterns
+                                    processedPerk = processedPerk.replace(/(Сектор-\d+)\s+усиляет/gi, '$1 и усиляет');
+
+                                    // Join descriptors in RU: Search for nouns followed by verbs and bridge them with 'и'
+                                    processedPerk = processedPerk.replace(/(Сектор-\d+|метеоритом|метеорит)\.?[\s\u00A0]*(и\s+)?(усиляет|Усиляет|найден|соседствует|вторичное)/gi, (match, obj, hasAnd, verb) => {
+                                        const v = verb.toLowerCase();
+                                        let joinVerb = v;
+                                        if (v.includes('усиляет')) joinVerb = 'усиляет';
+                                        else if (v.includes('соседствует')) joinVerb = 'соседствует';
+                                        else if (v.includes('вторичное')) joinVerb = 'вторичное соседство';
+                                        else joinVerb = 'найден';
+
+                                        return `${obj} и ${joinVerb}`;
+                                    });
+
+                                    // Final cleanup for dot-and-verb leftover patterns
+                                    processedPerk = processedPerk.replace(/\.[\s\u00A0]+и усиляет/g, ' и усиляет').replace(/\.[\s\u00A0]+усиляет/g, ' и усиляет');
+                                } else {
+                                    processedPerk = processedPerk
+                                        .replace(/Sector-01/gi, mTrans.stats.sector01)
+                                        .replace(/Sector-02/gi, mTrans.stats.sector02)
+                                        .replace(/Sector-03/gi, mTrans.stats.sector03)
+                                        .replace(/\bEco\b/gi, 'Exis')
+                                        .replace(/\bCom\b/gi, 'Apex')
+                                        .replace(/\bDef\b/gi, 'Bastion')
+                                        .replace(/&/g, 'and');
+
+                                    // Join descriptors in EN
+                                    processedPerk = processedPerk.replace(/((?:Sector-\d+|SECTOR-\d+)|Meteorite)\s+(found)/gi, '$1 and $2')
+                                        .replace(/Located in ((?:Sector-\d+|SECTOR-\d+))\s+and/gi, 'Located in $1 and');
                                 }
-                                return text;
+
+                                processedPerk = processedPerk.trim();
+                                if (processedPerk.length > 0) {
+                                    // Handle logic segments: neighboring after a period
+                                    processedPerk = processedPerk.replace(/\. neighboring/g, '. Neighboring');
+                                    // Start of string
+                                    processedPerk = processedPerk.charAt(0).toUpperCase() + processedPerk.slice(1);
+                                }
+                                return processedPerk;
                             };
 
                             const renderDescription = () => {
-                                const translatedDesc = formatPerkDescription(p.description);
+                                const count = efficiency.perkResults[p.id]?.count || 0;
+                                const translatedDesc = formatPerkDescription(p.description) + (count > 1 ? ` (x${count})` : '');
                                 const parts = getPerkParts(p.id, language);
                                 if (parts.length === 0) {
                                     return applyHighlighting(translatedDesc);
                                 }
 
                                 const isActuallySpinning = isSpinningPerks && !lockedIndices.includes(idx);
+
+                                // Build localized spin pools so SpinningWord doesn't fall back to ERROR/---
+                                const trR = tr;
+                                const mTrans = t.meteorites;
+                                const localizedPools = {
+                                    Sector: [trR.sectors.s1, trR.sectors.s2, trR.sectors.s3],
+                                    Arena: [mTrans.stats.economicArena, mTrans.stats.combatArena, mTrans.stats.defenceArena],
+                                    Legendary: [trR.legendary.eco.toUpperCase(), trR.legendary.com.toUpperCase(), trR.legendary.def.toUpperCase()],
+                                    Quality: [trR.qualities.bro, trR.qualities.dam, trR.qualities.new],
+                                };
+
+                                const getLocalizedPool = (word: string): string[] => {
+                                    if (localizedPools.Sector.includes(word)) return localizedPools.Sector;
+                                    if (localizedPools.Arena.includes(word)) return localizedPools.Arena;
+                                    if (localizedPools.Legendary.includes(word) || ['EXIS', 'APEX', 'BASTION', 'ЭКЗИС', 'ПРЕДЕЛ', 'БАСТИОН'].includes(word.toUpperCase())) return localizedPools.Legendary;
+                                    if (localizedPools.Quality.map(q => q.toLowerCase()).includes(word.toLowerCase())) return localizedPools.Quality;
+                                    // Also check SPIN_POOLS (English fallback)
+                                    if (SPIN_POOLS.Sector.includes(word)) return SPIN_POOLS.Sector;
+                                    if (SPIN_POOLS.Arena.includes(word)) return SPIN_POOLS.Arena;
+                                    if (SPIN_POOLS.Legendary.includes(word)) return SPIN_POOLS.Legendary;
+                                    if (SPIN_POOLS.Quality.includes(word)) return SPIN_POOLS.Quality;
+                                    return [word]; // just show the word itself, no random cycling
+                                };
 
                                 // Replace keywords with spinning components
                                 let res: (string | React.ReactNode)[] = [translatedDesc];
@@ -540,7 +641,8 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                             sub.forEach((s, i) => {
                                                 nextRes.push(s);
                                                 if (i < sub.length - 1) {
-                                                    nextRes.push(<SpinningWord key={part + i} target={part} isSpinning={isActuallySpinning} />);
+                                                    const color = getHighlightColor(part);
+                                                    nextRes.push(<SpinningWord key={part + i} target={part} pool={getLocalizedPool(part)} chipColor={color} isSpinning={isActuallySpinning} />);
                                                 }
                                             });
                                         } else {
@@ -552,37 +654,77 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 return <span>{res.map((chunk, i) => typeof chunk === 'string' ? applyHighlighting(chunk) : chunk)}</span>;
                             };
 
+                            const getHighlightColor = (word: string) => {
+                                const w = word.toUpperCase();
+                                // Sectors (Purple Variations - Brightened)
+                                if (w.includes('01') || w.includes('SECTOR-01') || w.includes('СЕКТОР-01')) return '#e9d5ff';
+                                if (w.includes('02') || w.includes('SECTOR-02') || w.includes('СЕКТОР-02')) return '#c084fc';
+                                if (w.includes('03') || w.includes('SECTOR-03') || w.includes('СЕКТОР-03')) return '#a855f7';
+                                // Arenas
+                                if (w.includes('ECONOMIC') || w.includes('ЭКОНОМИЧ')) return '#fbbf24';
+                                if (w.includes('COMBAT') || w.includes('БОЕВ')) return '#ef4444';
+                                if (w.includes('DEFENCE') || w.includes('ЗАЩИТН') || w.includes('ОБОРОНИТ')) return '#3b82f6';
+                                // Forges
+                                if (w.includes('EXIS') || w.includes('ЭКЗИС')) return '#d946ef';
+                                if (w.includes('APEX') || w.includes('ПРЕДЕЛ')) return '#fb923c';
+                                if (w.includes('BASTION') || w.includes('БАСТИОН')) return '#22d3ee';
+                                // Statuses (White/Grey Theme - Higher Contrast)
+                                if (w.includes('NEW') || w.includes('НОВЫЙ')) return '#ffffff';
+                                if (w.includes('DAMAGED') || w.includes('ПОВРЕЖДЕН')) return '#cbd5e1';
+                                if (w.includes('BROKEN') || w.includes('СЛОМАН')) return '#94a3b8';
+                                if (w.startsWith('(X')) return '#fb923c'; // Multiplier Orange
+                                return rarityColor;
+                            };
+
                             const applyHighlighting = (text: string) => {
-                                const highlightColor = '#60a5fa';
                                 const mTrans = t.meteorites;
                                 const keywords = [
                                     mTrans.stats.sector01, mTrans.stats.sector02, mTrans.stats.sector03,
                                     mTrans.stats.economicArena, mTrans.stats.combatArena, mTrans.stats.defenceArena,
-                                    'Economic Arena', 'Combat Arena', 'Defence Arena',
-                                    'Экономическая Арена', 'Боевая Арена', 'Защитная Арена',
-                                    'Эко ⬢', 'Бой ⬢', 'Защ ⬢',
-                                    'Эко и Бой ⬢', 'Эко и Защ ⬢', 'Бой и Защ ⬢',
-                                    'Бой и Эко ⬢', 'Защ и Эко ⬢', 'Защ и Бой ⬢',
-                                    'Эко и Эко ⬢', 'Бой и Бой ⬢', 'Защ и Защ ⬢',
+                                    'Exis', 'Apex', 'Bastion',
+                                    'Экзис', 'Предел', 'Бастион',
                                     'НОВЫЙ', 'ПОВРЕЖДЕН', 'СЛОМАН', 'ИСКАЖЕН',
-                                    'Sector-01', 'Sector-02', 'Sector-03'
+                                    'Sector-01', 'Sector-02', 'Sector-03',
+                                    'Damaged', 'Broken', 'New',
+                                    'СЕКТОР-01', 'СЕКТОР-02', 'СЕКТОР-03',
+                                    '(x2)', '(x3)', '(x4)', '(x5)', '(x6)'
                                 ];
 
                                 const regex = new RegExp(`(${keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
                                 return text.split(regex).filter(Boolean).map((part, i) => {
                                     const isKeyword = keywords.some(k => new RegExp(`^${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i').test(part));
                                     if (isKeyword) {
-                                        return <span key={i} style={{ color: highlightColor, fontWeight: 'bold' }}>{part.toUpperCase()}</span>;
+                                        const color = getHighlightColor(part);
+                                        return (
+                                            <span key={i} style={{
+                                                display: 'inline-block',
+                                                padding: '0px 5px',
+                                                borderRadius: '3px',
+                                                fontSize: '8px',
+                                                fontWeight: 900,
+                                                fontStyle: 'normal',
+                                                letterSpacing: '0.5px',
+                                                verticalAlign: 'middle',
+                                                margin: '0 1px',
+                                                lineHeight: '14px',
+                                                color: color,
+                                                background: `${color}18`,
+                                                border: `1px solid ${color}55`,
+                                                boxShadow: `0 0 8px ${color}22`,
+                                            }}>{part.toUpperCase()}</span>
+                                        );
                                     }
                                     return <span key={i}>{part}</span>;
                                 });
                             };
 
+
+
                             return (
                                 <div key={idx}
                                     style={{
                                         display: 'flex', flexDirection: 'column',
-                                        padding: '8px 12px',
+                                        padding: '7px 10px',
                                         background: isLocked ? 'rgba(251, 191, 36, 0.05)' : 'rgba(15, 23, 42, 0.5)',
                                         border: `1px solid ${isLocked ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255,255,255,0.06)'}`,
                                         borderRadius: '6px',
@@ -593,19 +735,18 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 >
                                     {isLocked && <div style={{ position: 'absolute', left: 0, top: 0, width: '2px', height: '100%', background: '#fbbf24' }} />}
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                        {/* MANUAL LOCK BUTTON */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); onToggleLock(idx); }}
                                             style={{
-                                                width: '24px', height: '24px',
+                                                width: '23px', height: '23px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 background: isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)',
                                                 border: `1px solid ${isLocked ? '#fbbf24' : 'rgba(255,255,255,0.1)'}`,
                                                 borderRadius: '4px',
                                                 cursor: 'pointer',
                                                 color: isLocked ? '#fbbf24' : 'rgba(255,255,255,0.3)',
-                                                fontSize: '12px',
+                                                fontSize: '11px',
                                                 transition: 'all 0.2s'
                                             }}
                                             onMouseEnter={(e) => {
@@ -631,7 +772,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         <div style={{ flex: 1 }} />
 
                                         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ fontSize: '15px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
+                                            <div style={{ fontSize: '14px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
                                                 {isSpinningRange && !lockedIndices.includes(idx) ?
                                                     <SpinningNumber min={p.range.min + (item.incubatorBoost || 0)} max={p.range.max + (item.incubatorBoost || 0)} isSpinning={true} />
                                                     :
@@ -676,7 +817,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                         fontSize: '9px', color: 'rgba(255,255,255,0.5)',
                                         whiteSpace: 'normal',
                                         lineHeight: '1.4',
-                                        paddingTop: '6px',
+                                        paddingTop: '5px',
                                         borderTop: '1px solid rgba(255,255,255,0.05)',
                                         fontStyle: 'italic'
                                     }}>
@@ -684,75 +825,77 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                     </div>
 
                                     {/* FILTER CONFIG PANEL - Show if EXPANDED */}
-                                    {isExpanded && config && (
-                                        <div
-                                            className="auto-lock-panel"
-                                            onClick={e => e.stopPropagation()}
-                                            style={{
-                                                marginTop: '8px',
-                                                padding: '8px',
-                                                background: 'rgba(0,0,0,0.3)',
-                                                border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                borderRadius: '4px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '6px',
-                                                animation: 'fadeIn 0.2s ease-out'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                                {/* Status Indicator */}
-                                                <div style={{
-                                                    width: '6px', height: '6px',
-                                                    background: '#3b82f6',
-                                                    borderRadius: '50%',
-                                                    boxShadow: '0 0 10px #3b82f6'
-                                                }} />
-                                                <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>{tr.autoLockActive}</span>
-                                            </div>
+                                    {
+                                        isExpanded && config && (
+                                            <div
+                                                className="auto-lock-panel"
+                                                onClick={e => e.stopPropagation()}
+                                                style={{
+                                                    marginTop: '8px',
+                                                    padding: '8px',
+                                                    background: 'rgba(0,0,0,0.3)',
+                                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                    borderRadius: '4px',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '6px',
+                                                    animation: 'fadeIn 0.2s ease-out'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                    {/* Status Indicator */}
+                                                    <div style={{
+                                                        width: '6px', height: '6px',
+                                                        background: '#3b82f6',
+                                                        borderRadius: '50%',
+                                                        boxShadow: '0 0 10px #3b82f6'
+                                                    }} />
+                                                    <span style={{ fontSize: '8px', color: '#60a5fa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>{tr.autoLockActive}</span>
+                                                </div>
 
-                                            {/* DROPDOWNS */}
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                    <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t1Label}</span>
-                                                    <select
-                                                        value={filter.thing1}
-                                                        onChange={e => updateFilter(lvl, { thing1: e.target.value })}
-                                                        style={{
-                                                            background: 'rgba(15, 23, 42, 0.8)',
-                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                            color: '#fff',
-                                                            fontSize: '7px',
-                                                            borderRadius: '2px',
-                                                            padding: '2px',
-                                                            outline: 'none'
-                                                        }}
-                                                    >
-                                                        {config.t1Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                    <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t2Label}</span>
-                                                    <select
-                                                        value={filter.thing2}
-                                                        onChange={e => updateFilter(lvl, { thing2: e.target.value })}
-                                                        style={{
-                                                            background: 'rgba(15, 23, 42, 0.8)',
-                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                            color: '#fff',
-                                                            fontSize: '7px',
-                                                            borderRadius: '2px',
-                                                            padding: '2px',
-                                                            outline: 'none',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        {config.t2Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                    </select>
+                                                {/* DROPDOWNS */}
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t1Label}</span>
+                                                        <select
+                                                            value={filter.thing1}
+                                                            onChange={e => updateFilter(lvl, { thing1: e.target.value })}
+                                                            style={{
+                                                                background: 'rgba(15, 23, 42, 0.8)',
+                                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                color: '#fff',
+                                                                fontSize: '7px',
+                                                                borderRadius: '2px',
+                                                                padding: '2px',
+                                                                outline: 'none'
+                                                            }}
+                                                        >
+                                                            {config.t1Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t2Label}</span>
+                                                        <select
+                                                            value={filter.thing2}
+                                                            onChange={e => updateFilter(lvl, { thing2: e.target.value })}
+                                                            style={{
+                                                                background: 'rgba(15, 23, 42, 0.8)',
+                                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                color: '#fff',
+                                                                fontSize: '7px',
+                                                                borderRadius: '2px',
+                                                                padding: '2px',
+                                                                outline: 'none',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            {config.t2Opts.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )
+                                    }
                                 </div>
                             );
                         })}
@@ -760,7 +903,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                 </div>
 
                 {/* BOTTOM CONSOLE: REROLL ACTIONS */}
-                <div style={{ marginTop: '-5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ marginTop: 'auto', padding: '0 8px 6px 8px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
                             disabled={isSpinningRange || (!isAutoRolling && (!canAffordRerollType || isSpinningPerks))}
@@ -857,13 +1000,13 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                                 <>
                                     <span style={{ fontSize: '11px' }}>⏹ {tr.stopAutoRoll.toUpperCase()}</span>
                                     <span style={{ fontSize: '7px', opacity: 0.7, fontFamily: 'monospace' }}>
-                                        {tr.roll.toUpperCase()} #{autoRollCount} · {rerollTypeCost.toLocaleString()} FLUX/ea
+                                        {tr.roll.toUpperCase()} #{autoRollCount} · {rerollTypeCost.toLocaleString()} {t.matrix.flux.toUpperCase()}/ea
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     <span style={{ fontSize: '12px' }}>{hasActiveFilters ? `⟳ ${tr.autoReroll.toUpperCase()}` : tr.rerollPerks.toUpperCase()}</span>
-                                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} FLUX{hasActiveFilters ? ` · ${tr.seeksFilter.toUpperCase()}` : ''}</span>
+                                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollTypeCost.toLocaleString()} {t.matrix.flux.toUpperCase()}{hasActiveFilters ? ` · ${tr.seeksFilter.toUpperCase()}` : ''}</span>
                                 </>
                             )}
                             {!isAutoRolling && canAffordRerollType && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />}
@@ -901,7 +1044,7 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                             onMouseLeave={(e) => { if (canAffordRerollValue) { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.05)'; e.currentTarget.style.borderColor = '#10b981'; } }}
                         >
                             <span style={{ fontSize: '12px' }}>{tr.rerollRange.toUpperCase()}</span>
-                            <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollValueCost.toLocaleString()} FLUX</span>
+                            <span style={{ fontSize: '8px', opacity: 0.6 }}>{rerollValueCost.toLocaleString()} {t.matrix.flux.toUpperCase()}</span>
                             {canAffordRerollValue && <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />}
                             {isSpinningRange && <div style={{ position: 'absolute', inset: 0, background: 'rgba(16, 185, 129, 0.2)', animation: 'pulse-fast 0.1s infinite alternate' }} />}
                         </button>
@@ -919,54 +1062,60 @@ export const RecalibrateInterface: React.FC<RecalibrateInterfaceProps> = ({
                         zIndex: 100
                     }} />
                 )}
+
+                <style jsx>{`
+                    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+                    
+                    @keyframes pulse-glow {
+                        0%, 100% { opacity: 0.5; box-shadow: 0 0 10px currentColor; }
+                        50% { opacity: 1; box-shadow: 0 0 20px currentColor; }
+                    }
+
+                    @keyframes panel-appear {
+                        from { opacity: 0; transform: scale(1.02) translateY(5px); filter: blur(10px); }
+                        to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+                    }
+
+                    @keyframes spin-slow {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+
+                    @keyframes spin-reverse {
+                        from { transform: rotate(360deg); }
+                        to { transform: rotate(0deg); }
+                    }
+
+                    @keyframes pulse-fast {
+                        from { opacity: 0.5; filter: blur(0px); }
+                        to { opacity: 1; filter: blur(1px); }
+                    }
+
+                    @keyframes flash-red {
+                        0%, 100% { opacity: 0; }
+                        50% { opacity: 1; }
+                    }
+
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(-5px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+
+                    @keyframes reroll-pulse {
+                        from { box-shadow: 0 0 10px rgba(168, 85, 247, 0.25), inset 0 0 8px rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.4); }
+                        to { box-shadow: 0 0 28px rgba(168, 85, 247, 0.6), inset 0 0 16px rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.9); }
+                    }
+                `}</style>
             </div>
-
-            <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-                
-                @keyframes pulse-glow {
-                    0%, 100% { opacity: 0.5; box-shadow: 0 0 10px currentColor; }
-                    50% { opacity: 1; box-shadow: 0 0 20px currentColor; }
-                }
-
-                @keyframes panel-appear {
-                    from { opacity: 0; transform: scale(1.02) translateY(5px); filter: blur(10px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-                }
-
-                @keyframes spin-slow {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-
-                @keyframes spin-reverse {
-                    from { transform: rotate(360deg); }
-                    to { transform: rotate(0deg); }
-                }
-
-                @keyframes pulse-fast {
-                    from { opacity: 0.5; filter: blur(0px); }
-                    to { opacity: 1; filter: blur(1px); }
-                }
-
-                @keyframes flash-red {
-                    0%, 100% { opacity: 0; }
-                    50% { opacity: 1; }
-                }
-
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-5px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div >
     );
 };
 
-const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ target, isSpinning }) => {
+const SpinningWord: React.FC<{ target: string, isSpinning: boolean, pool?: string[], chipColor?: string }> = ({ target, isSpinning, pool: poolProp, chipColor = '#60a5fa' }) => {
+    const { language } = useLanguage();
     const [current, setCurrent] = useState(target);
 
     useEffect(() => {
@@ -975,28 +1124,31 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
             return;
         }
 
-        let pool: string[] = [];
-        if (SPIN_POOLS.Sector.includes(target)) pool = SPIN_POOLS.Sector;
-        else if (SPIN_POOLS.Arena.includes(target)) pool = SPIN_POOLS.Arena;
-        else if (SPIN_POOLS.Legendary.includes(target)) pool = SPIN_POOLS.Legendary;
-        else if (SPIN_POOLS.Pairing.includes(target)) pool = SPIN_POOLS.Pairing;
-        else if (SPIN_POOLS.Quality.includes(target)) pool = SPIN_POOLS.Quality;
-        else pool = [target, '???', 'ERROR', '---'];
+        const localizedPools = getSpinPools(language);
+        let pool: string[];
+        if (poolProp && poolProp.length > 0) {
+            pool = poolProp;
+        } else if (localizedPools.Sector.includes(target)) pool = localizedPools.Sector;
+        else if (localizedPools.Arena.includes(target)) pool = localizedPools.Arena;
+        else if (localizedPools.Legendary.includes(target)) pool = localizedPools.Legendary;
+        else if (localizedPools.Quality.includes(target)) pool = localizedPools.Quality;
+        else pool = [target];
 
         const interval = setInterval(() => {
             setCurrent(pool[Math.floor(Math.random() * pool.length)]);
         }, 60);
 
         return () => clearInterval(interval);
-    }, [isSpinning, target]);
+    }, [isSpinning, target, poolProp, language]);
 
-    // Find the longest string in the relevant pool to act as the stable width metric
-    let longestStringInPool = target;
-    if (SPIN_POOLS.Sector.includes(target)) longestStringInPool = [...SPIN_POOLS.Sector].sort((a, b) => b.length - a.length)[0];
-    else if (SPIN_POOLS.Arena.includes(target)) longestStringInPool = [...SPIN_POOLS.Arena].sort((a, b) => b.length - a.length)[0];
-    else if (SPIN_POOLS.Legendary.includes(target)) longestStringInPool = [...SPIN_POOLS.Legendary].sort((a, b) => b.length - a.length)[0];
-    else if (SPIN_POOLS.Pairing.includes(target)) longestStringInPool = [...SPIN_POOLS.Pairing].sort((a, b) => b.length - a.length)[0];
-    else if (SPIN_POOLS.Quality.includes(target)) longestStringInPool = [...SPIN_POOLS.Quality].sort((a, b) => b.length - a.length)[0];
+    const localizedPools = getSpinPools(language);
+    const allPoolItems = poolProp && poolProp.length > 0 ? poolProp : (
+        localizedPools.Sector.includes(target) ? localizedPools.Sector :
+            localizedPools.Arena.includes(target) ? localizedPools.Arena :
+                localizedPools.Legendary.includes(target) ? localizedPools.Legendary :
+                    localizedPools.Quality.includes(target) ? localizedPools.Quality : [target]
+    );
+    const longestStringInPool = [...allPoolItems].sort((a, b) => b.length - a.length)[0] || target;
 
     return (
         <span style={{
@@ -1006,16 +1158,16 @@ const SpinningWord: React.FC<{ target: string, isSpinning: boolean }> = ({ targe
             justifyContent: 'center',
             padding: '1px 6px',
             margin: '0 2px',
-            background: 'rgba(59, 130, 246, 0.15)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
+            background: `${chipColor}18`,
+            border: `1px solid ${chipColor}55`,
             borderRadius: '4px',
-            color: '#60a5fa',
+            color: chipColor,
             fontWeight: 900,
             fontSize: '8px',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             textAlign: 'center',
-            boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)',
+            boxShadow: `0 0 10px ${chipColor}33`,
             verticalAlign: 'middle',
             animation: isSpinning ? 'pulse-fast 0.1s infinite alternate' : 'none',
             overflow: 'hidden'

@@ -36,9 +36,9 @@ interface InventoryPanelProps {
 
 }
 
-const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
+const PAIR_COMBOS = ['All', 'Exis-Exis', 'Exis-Apex', 'Exis-Bastion', 'Apex-Apex', 'Apex-Bastion', 'Bastion-Bastion'];
 const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
-const ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
+const ARENAS = ['All', 'Economic Arena', 'Combat Arena', 'Defence Arena'];
 
 
 export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
@@ -71,16 +71,162 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     const t = getUiTranslation(language);
 
     // Localized filter option arrays (values stay English for logic matching)
-    const PAIR_COMBOS = ['All', 'Eco-Eco', 'Eco-Com', 'Eco-Def', 'Com-Com', 'Com-Def', 'Def-Def'];
+    const PAIR_COMBOS = ['All', 'Exis-Exis', 'Exis-Apex', 'Exis-Bastion', 'Apex-Apex', 'Apex-Bastion', 'Bastion-Bastion'];
     const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
-    const ARENAS = ['All', 'Eco Arena', 'Combat Arena', 'Defence Arena'];
+    const ARENAS = ['All', 'Economic Arena', 'Combat Arena', 'Defence Arena'];
     const SECTOR_OPTS = ['All', 'Sector 01', 'Sector 02', 'Sector 03'];
-    const LEGENDARY_OPTS = ['All', 'Eco Legendary Hex', 'Com Legendary Hex', 'Def Legendary Hex'];
+    const LEGENDARY_OPTS = ['All', 'Exis ◈', 'Apex ◆', 'Bastion ⬡'];
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const [activePerkDropdown, setActivePerkDropdown] = useState<string | null>(null);
     const [massRecycleCandidate, setMassRecycleCandidate] = useState<{ type: 'SELECTED' | 'GHOSTS', indices: number[] } | null>(null);
     const [tick, setTick] = useState(0);
     const [hoveredSlotIdx, setHoveredSlotIdx] = useState<number | null>(null);
+
+    // Color for each perk option chip
+    const getPerkOptColor = (opt: string): string => {
+        const u = opt.toUpperCase();
+        if (u.includes('SECTOR 01') || u.includes('SECTOR-01')) return '#e9d5ff';
+        if (u.includes('SECTOR 02') || u.includes('SECTOR-02')) return '#c084fc';
+        if (u.includes('SECTOR 03') || u.includes('SECTOR-03')) return '#a855f7';
+        if (u.includes('ECONOMIC')) return '#eab308';
+        if (u.includes('COMBAT')) return '#ef4444';
+        if (u.includes('DEFENCE')) return '#3b82f6';
+        if (u === 'NEW') return '#ffffff';   // White
+        if (u === 'DAM') return '#cbd5e1';   // Light grey
+        if (u === 'BRO') return '#94a3b8';   // Medium grey
+        if (u === 'COR') return '#dc2626';
+        if (u.includes('EXIS') || u.includes('\u25C8') || u.includes('ECO')) return '#d946ef';
+        if (u.includes('APEX') || u.includes('\u25C6') || u.includes('COM')) return '#fb923c';
+        if (u.includes('BASTION') || u.includes('\u2B21') || u.includes('DEF')) return '#22d3ee';
+        if (u === 'ALL') return 'rgba(255,255,255,0.45)';
+        return '#64748b';
+    };
+
+    // Human-readable label for each option
+    const translatePerkOpt = (opt: string): string => {
+        if (opt === 'Sector 01') return t.matrix.sector01;
+        if (opt === 'Sector 02') return t.matrix.sector02;
+        if (opt === 'Sector 03') return t.matrix.sector03;
+        if (opt === 'BRO') return t.meteorites.stats.broken;
+        if (opt === 'DAM') return t.meteorites.stats.damaged;
+        if (opt === 'NEW') return t.meteorites.stats.new;
+        if (opt === 'COR') return t.meteorites.stats.corrupted || 'CORRUPTED';
+        if (opt === 'All') return t.matrix.all;
+        if (opt === 'Economic Arena') return t.matrix.ecoArena || 'ECO ARENA';
+        if (opt === 'Combat Arena') return t.matrix.comArena || 'COM ARENA';
+        if (opt === 'Defence Arena') return t.matrix.defArena || 'DEF ARENA';
+        if (opt === 'Eco Legendary Hex') return t.matrix.ecoLeg || opt;
+        if (opt === 'Com Legendary Hex') return t.matrix.comLeg || opt;
+        if (opt === 'Def Legendary Hex') return t.matrix.defLeg || opt;
+        if (opt === 'Exis-Exis') return t.matrix.comboEcoEco || opt;
+        if (opt === 'Exis-Apex') return t.matrix.comboEcoCom || opt;
+        if (opt === 'Exis-Bastion') return t.matrix.comboEcoDef || opt;
+        if (opt === 'Apex-Apex') return t.matrix.comboComCom || opt;
+        if (opt === 'Apex-Bastion') return t.matrix.comboComDef || opt;
+        if (opt === 'Bastion-Bastion') return t.matrix.comboDefDef || opt;
+        return opt;
+    };
+
+    // Custom styled perk option dropdown
+    const renderPerkDropdown = (
+        id: string,
+        value: string,
+        opts: string[],
+        onChange: (v: string) => void,
+        rarityColor: string,
+        dropUp: boolean = false
+    ) => {
+        const isOpen = activePerkDropdown === id;
+        const color = getPerkOptColor(value);
+        return (
+            <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+                {/* Trigger */}
+                <div
+                    onClick={e => { e.stopPropagation(); setActivePerkDropdown(isOpen ? null : id); }}
+                    style={{
+                        height: '17px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '0 5px',
+                        background: `${color}18`,
+                        border: `1px solid ${color}88`,
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        gap: '4px'
+                    }}
+                >
+                    <span style={{ fontSize: '7px', fontWeight: 900, color, letterSpacing: '0.3px', textTransform: 'uppercase', textShadow: `0 0 6px ${color}66`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {translatePerkOpt(value)}
+                    </span>
+                    <span style={{ fontSize: '6px', color, opacity: 0.7, flexShrink: 0 }}>{dropUp ? '▲' : '▼'}</span>
+                </div>
+
+                {/* Dropdown */}
+                {isOpen && (
+                    <>
+                        <div
+                            style={{ position: 'fixed', inset: 0, zIndex: 3999 }}
+                            onClick={() => setActivePerkDropdown(null)}
+                        />
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                position: 'absolute',
+                                ...(dropUp ? { bottom: '100%', top: 'auto', marginBottom: '2px' } : { top: '100%', marginTop: '2px' }),
+                                left: 0, width: '130px',
+                                background: '#080e1a',
+                                border: `1px solid ${rarityColor}55`,
+                                borderRadius: '4px',
+                                zIndex: 4000,
+                                boxShadow: `0 8px 24px rgba(0,0,0,0.8), 0 0 12px ${rarityColor}22`,
+                                padding: '3px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px'
+                            }}
+                        >
+                            {opts.map(opt => {
+                                const c = getPerkOptColor(opt);
+                                const isSelected = opt === value;
+                                return (
+                                    <div
+                                        key={opt}
+                                        onClick={() => { onChange(opt); setActivePerkDropdown(null); }}
+                                        style={{
+                                            padding: '4px 7px',
+                                            background: isSelected ? `${c}22` : 'transparent',
+                                            border: `1px solid ${isSelected ? c : 'transparent'}`,
+                                            borderRadius: '3px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            transition: 'all 0.15s'
+                                        }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = `${c}18`; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = isSelected ? `${c}22` : 'transparent'; }}
+                                    >
+                                        <div style={{
+                                            width: '5px', height: '5px', borderRadius: '50%',
+                                            background: c,
+                                            boxShadow: `0 0 4px ${c}`,
+                                            flexShrink: 0
+                                        }} />
+                                        <span style={{
+                                            fontSize: '7px', fontWeight: 900, color: c,
+                                            letterSpacing: '0.3px', textTransform: 'uppercase',
+                                            textShadow: isSelected ? `0 0 6px ${c}88` : 'none'
+                                        }}>
+                                            {translatePerkOpt(opt)}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    };
 
     React.useEffect(() => {
         const hasResearch = inventory.some(item => item?.isBlueprint && item.status === 'researching');
@@ -189,8 +335,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             if (itemAtTarget) {
                                 // Find first empty slot instead of overwriting
                                 let emptyIdx = -1;
-                                for (let i = 10; i < inventory.length; i++) if (!inventory[i]) { emptyIdx = i; break; }
-                                if (emptyIdx === -1) for (let i = 0; i < 10; i++) if (!inventory[i]) { emptyIdx = i; break; }
+                                for (let i = 9; i < inventory.length; i++) if (!inventory[i]) { emptyIdx = i; break; }
+                                if (emptyIdx === -1) for (let i = 0; i < 9; i++) if (!inventory[i]) { emptyIdx = i; break; }
 
                                 if (emptyIdx !== -1) {
                                     onInventoryUpdate(emptyIdx, { ...movedItem.item });
@@ -212,13 +358,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     position: 'relative',
                     cursor: isRecycleMode ? (item ? 'crosshair' : 'default') : 'pointer',
-                    opacity: (movedItem?.index === idx && movedItem.source === 'inventory') || (isRecycleMode && idx < 10) ? 0.3 : 1, // Dim safe slots in recycle mode
+                    opacity: (movedItem?.index === idx && movedItem.source === 'inventory') || (isRecycleMode && idx < 9) ? 0.3 : 1, // Dim safe slots in recycle mode
                     pointerEvents: 'auto',
-                    animation: isRecycleMode && item && idx >= 10 ? 'shake 0.5s infinite' : 'none',
+                    animation: isRecycleMode && item && idx >= 9 ? 'shake 0.5s infinite' : 'none',
                     transition: 'all 0.2s',
-                    filter: isRecycleMode && idx < 10 ? 'grayscale(1)' : 'none' // Gray out safe slots in recycle mode
+                    filter: isRecycleMode && idx < 9 ? 'grayscale(1)' : 'none' // Gray out safe slots in recycle mode
                 }}>
-                {isRecycleMode && item && idx >= 10 && (
+                {isRecycleMode && item && idx >= 9 && (
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(239, 68, 68, 0.2)', zIndex: 5, pointerEvents: 'none' }} />
                 )}
                 {item?.isNew && (
@@ -230,55 +376,33 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         filter: isVisible ? 'none' : 'grayscale(100%)',
                         opacity: isVisible ? 1 : 0.5
                     }}>
-                        {idx < 10 ? 'SAFE' : 'NEW'}
+                        {idx < 9 ? 'SAFE' : 'NEW'}
                     </div>
                 )}
-                {(item as any)?.blueprintBoosted && (
-                    <div style={{
-                        position: 'absolute', bottom: '2px', left: '2px',
-                        width: '8px', height: '8px',
-                        background: '#1e293b',
-                        border: '0.5px solid #60a5fa',
-                        borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 0 3px rgba(96, 165, 250, 0.5)',
-                        zIndex: 5,
-                        filter: isVisible ? 'none' : 'grayscale(100%)',
-                        opacity: isVisible ? 1 : 0.5
-                    }}>
-                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#60a5fa', lineHeight: 1, marginTop: '0.5px' }}>H</span>
-                    </div>
-                )}
-                {item?.isCorrupted && (
+                {/* Status badge row — top-left, flex, order: C → I → H */}
+                {(item?.isCorrupted || (item?.incubatorBoost && item.incubatorBoost > 0) || (item as any)?.blueprintBoosted) && (
                     <div style={{
                         position: 'absolute', top: '2px', left: '2px',
-                        width: '8px', height: '8px',
-                        background: '#1e293b',
-                        border: '0.5px solid #a855f7',
-                        borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 0 3px rgba(168, 85, 247, 0.5)',
+                        display: 'flex', flexDirection: 'row', gap: '2px',
                         zIndex: 5,
                         filter: isVisible ? 'none' : 'grayscale(100%)',
                         opacity: isVisible ? 1 : 0.5
                     }}>
-                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#a855f7', lineHeight: 1, marginTop: '0.5px' }}>C</span>
-                    </div>
-                )}
-                {item?.incubatorBoost && item.incubatorBoost > 0 && (
-                    <div style={{
-                        position: 'absolute', bottom: '2px', right: '2px',
-                        width: '8px', height: '8px',
-                        background: '#1e293b',
-                        border: '0.5px solid #00d9ff',
-                        borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 0 3px rgba(0, 217, 255, 0.5)',
-                        zIndex: 5,
-                        filter: isVisible ? 'none' : 'grayscale(100%)',
-                        opacity: isVisible ? 1 : 0.5
-                    }}>
-                        <span style={{ fontSize: '5px', fontWeight: 900, color: '#00d9ff', lineHeight: 1, marginTop: '0.5px' }}>I</span>
+                        {item?.isCorrupted && (
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1e293b', border: '0.5px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 3px rgba(153,27,27,0.5)' }}>
+                                <span style={{ fontSize: '5px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
+                            </div>
+                        )}
+                        {item?.incubatorBoost && item.incubatorBoost > 0 && (
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1e293b', border: '0.5px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 3px rgba(14,165,233,0.4)' }}>
+                                <span style={{ fontSize: '5px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                            </div>
+                        )}
+                        {(item as any)?.blueprintBoosted && (
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1e293b', border: '0.5px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 3px rgba(96,165,250,0.4)' }}>
+                                <span style={{ fontSize: '5px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                            </div>
+                        )}
                     </div>
                 )}
                 {item && (
@@ -364,11 +488,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 
     const labelStyle: React.CSSProperties = {
         fontSize: '8px',
+        lineHeight: 1,
         color: '#94a3b8',
         fontWeight: 900,
-        marginBottom: '1px',
+        marginBottom: '2px',
         display: 'block',
-        textTransform: 'uppercase'
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
     };
 
     const updatePerk = (lvl: number, updates: Partial<PerkFilter>) => {
@@ -398,10 +526,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     onClick={() => setActiveDropdown(isOpen ? null : key)}
                     style={{ ...selectStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: isAll ? '#fff' : '#3b82f6' }}
                 >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '8px', lineHeight: 1 }}>
                         {isAll ? t.matrix.all : (selected.length === 1 ? (getLabel ? getLabel(selected[0]) : selected[0]) : `${count} ${t.matrix.sel}`)}
                     </span>
-                    <span style={{ fontSize: '7px', opacity: 0.7 }}>▼</span>
+                    <span style={{ fontSize: '7px', opacity: 0.7, flexShrink: 0 }}>▼</span>
                 </div>
 
                 {isOpen && (
@@ -417,10 +545,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         <div
                             onClick={() => toggleFilterValue(key, 'All')}
                             style={{
-                                padding: '6px 8px', fontSize: '8px', cursor: 'pointer',
+                                padding: '5px 8px', fontSize: '8px', cursor: 'pointer',
                                 background: isAll ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
                                 color: '#fff', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                display: 'flex', alignItems: 'center'
+                                display: 'flex', alignItems: 'center', lineHeight: 1
                             }}
                         >
                             {t.matrix.all}
@@ -433,10 +561,11 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 <div key={opt}
                                     onClick={() => toggleFilterValue(key, opt)}
                                     style={{
-                                        padding: '6px 8px', fontSize: '8px', cursor: 'pointer',
+                                        padding: '5px 8px', fontSize: '8px', cursor: 'pointer',
                                         background: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                                        color: color, fontWeight: isSelected ? 600 : 400,
-                                        display: 'flex', alignItems: 'center', gap: '6px'
+                                        color: color, fontWeight: 600,
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        lineHeight: 1
                                     }}
                                 >
                                     <div style={{
@@ -496,31 +625,44 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                         gap: '6px'
                     }}>
                     {/* TOP ROW: FILTER DROPDOWNS */}
-                    <div className="filter-controls" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end', position: 'relative', zIndex: 200 }}>
+                    <div className="filter-controls" style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '4px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '6px', marginBottom: '2px', alignItems: 'flex-end', position: 'relative', zIndex: 200 }}>
                         {/* TYPE */}
-                        <div style={{ gridColumn: 'span 3' }}>
+                        <div style={{ gridColumn: 'span 2' }}>
                             {renderMultiSelect('quality', QUALITIES, t.matrix.filterType, {
-                                'NEW': '#3b82f6', 'DAM': '#f59e0b', 'BRO': '#94a3b8', 'COR': '#a855f7', 'BLUEPRINTS': '#60a5fa'
-                            }, (opt) => opt === 'BLUEPRINTS' ? 'BP' : opt)}
+                                'NEW': '#ffffff', 'DAM': '#cbd5e1', 'BRO': '#94a3b8', 'COR': '#dc2626', 'BLUEPRINTS': '#60a5fa'
+                            }, (opt) => (t.matrix as any).qualityLabels?.[opt] || opt)}
                         </div>
-                        {/* RARITY */}
-                        <div style={{ gridColumn: 'span 3' }}>
-                            {renderMultiSelect('rarity', RARITY_ORDER, t.matrix.filterRarity, RARITY_COLORS as any, (r) => r.substring(0, 3).toUpperCase())}
-                        </div>
-                        {/* FOUND IN */}
-                        <div style={{ gridColumn: 'span 3' }}>
-                            {renderMultiSelect('arena', ARENAS, t.matrix.filterFoundIn, {
-                                'Eco Arena': '#fbbf24', 'Defence Arena': '#60a5fa', 'Combat Arena': '#f87171'
-                            }, (opt) => {
-                                if (opt === 'Eco Arena') return t.matrix.ecoArena;
-                                if (opt === 'Combat Arena') return t.matrix.comArena;
-                                if (opt === 'Defence Arena') return t.matrix.defArena;
-                                return opt;
-                            })}
-                        </div>
+                        {/* RARITY — not applicable to blueprints */}
+                        {(() => {
+                            const qArr = Array.isArray(coreFilter.quality) ? coreFilter.quality : [coreFilter.quality];
+                            const onlyBP = qArr.length > 0 && !qArr.includes('All') && qArr.every(q => q === 'BLUEPRINTS');
+                            return (
+                                <div style={{ gridColumn: 'span 2', opacity: onlyBP ? 0.3 : 1, pointerEvents: onlyBP ? 'none' : 'auto', transition: 'opacity 0.2s' }}>
+                                    {renderMultiSelect('rarity', RARITY_ORDER, t.matrix.filterRarity, RARITY_COLORS as any, (r) => (t.upgradeRarities as any)[r] || r)}
+                                </div>
+                            );
+                        })()}
+                        {/* FOUND IN — not applicable to blueprints */}
+                        {(() => {
+                            const qArr = Array.isArray(coreFilter.quality) ? coreFilter.quality : [coreFilter.quality];
+                            const onlyBP = qArr.length > 0 && !qArr.includes('All') && qArr.every(q => q === 'BLUEPRINTS');
+                            return (
+                                <div style={{ gridColumn: 'span 2', opacity: onlyBP ? 0.3 : 1, pointerEvents: onlyBP ? 'none' : 'auto', transition: 'opacity 0.2s' }}>
+                                    {renderMultiSelect('arena', ARENAS, t.matrix.filterFoundIn, {
+                                        'Economic Arena': '#eab308', 'Combat Arena': '#ef4444', 'Defence Arena': '#3b82f6'
+                                    }, (opt) => (t.matrix as any).arenaLabels?.[opt] || opt)}
+                                </div>
+                            );
+                        })()}
                         {/* ACTION CONTROLS GROUP (RESET, SORT) */}
-                        <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '3px', paddingLeft: '4px' }}>
-                            {/* RESET BUTTON (Large Icon) */}
+                        <div style={{
+                            gridColumn: 'span 2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                            gap: '3px'
+                        }}>
+                            {/* RESET BUTTON */}
                             <button
                                 onClick={() => {
                                     setCoreFilter({ quality: ['All'], rarity: ['All'], arena: ['All'] });
@@ -535,8 +677,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     background: isFilterActive ? 'rgba(239, 68, 68, 0.15)' : 'rgba(156, 163, 175, 0.05)',
                                     borderColor: isFilterActive ? 'rgba(239, 68, 68, 0.5)' : 'rgba(156, 163, 175, 0.2)',
                                     color: isFilterActive ? '#ef4444' : '#6b7280',
-                                    height: '24px',
-                                    width: '28px',
+                                    height: '22px',
+                                    width: '46px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -547,13 +689,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 }}
                                 title="Reset Filters"
                             >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                                     <path d="M3 3v5h5" />
                                 </svg>
                             </button>
 
-                            {/* SORT BUTTON (Large Icon) */}
+                            {/* SORT BUTTON */}
                             <button
                                 onClick={onSort}
                                 style={{
@@ -561,8 +703,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                     background: 'rgba(59, 130, 246, 0.15)',
                                     borderColor: '#3b82f6',
                                     color: '#fff',
-                                    height: '24px',
-                                    width: '28px',
+                                    height: '22px',
+                                    width: '46px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -572,7 +714,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 }}
                                 title="Sort by Rarity"
                             >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m11 5-3-3-3 3M8 22V2M13 19l3 3 3-3M16 2v20" />
                                 </svg>
                             </button>
@@ -583,10 +725,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '6px',
-                        maxHeight: '180px', // Reduced height for sticky area
-                        overflowY: 'auto',
-                        paddingRight: '4px'
+                        gap: '6px'
                     }}>
                         {[1, 2, 3, 4, 5, 6].map(lvl => {
                             const rarityKey = RARITY_ORDER[lvl - 1];
@@ -595,10 +734,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                             const isActive = perkFilters[lvl].active;
 
                             const config = {
-                                1: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterConnected, t2Opts: LEGENDARY_OPTS },
+                                1: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: language === 'ru' ? 'КУЗНИЦА' : 'FORGE', t2Opts: LEGENDARY_OPTS },
                                 2: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterNeighbor, t2Opts: QUALITIES.slice(0, 4) },
                                 3: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterArena, t2Opts: ARENAS },
-                                4: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterArena, t2Opts: ARENAS },
+                                4: { t1Label: language === 'ru' ? 'ТИП' : 'TYPE', t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterArena, t2Opts: ARENAS },
                                 5: { t1Label: t.matrix.filterSector, t1Opts: SECTOR_OPTS, t2Label: t.matrix.filterPair, t2Opts: PAIR_COMBOS },
                                 6: { t1Label: t.matrix.filterNeighbor, t1Opts: QUALITIES.slice(0, 4), t2Label: t.matrix.filterPair, t2Opts: PAIR_COMBOS }
                             }[lvl as 1 | 2 | 3 | 4 | 5 | 6];
@@ -665,62 +804,30 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                                 />
                                             </div>
 
-                                            {/* Thing 1 Select */}
+                                            {/* Thing 1 Custom Dropdown */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                                <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t1Label}</span>
-                                                <select
-                                                    style={{ ...selectStyle, height: '16px', fontSize: '7px', borderColor: rarityColor, color: rarityColor, padding: '0 4px' }}
-                                                    value={perkFilters[lvl].thing1}
-                                                    onChange={e => updatePerk(lvl, { thing1: e.target.value })}
-                                                >
-                                                    {config.t1Opts.map(opt => (
-                                                        <option key={opt} value={opt}>
-                                                            {opt === 'Sector 01' ? t.matrix.sector01 :
-                                                                opt === 'Sector 02' ? t.matrix.sector02 :
-                                                                    opt === 'Sector 03' ? t.matrix.sector03 :
-                                                                        opt === 'Broken' ? t.meteorites.stats.broken :
-                                                                            opt === 'Damaged' ? t.meteorites.stats.damaged :
-                                                                                opt === 'New' ? t.meteorites.stats.new :
-                                                                                    opt === 'Corrupted' ? t.meteorites.stats.corrupted || 'Corrupted' :
-                                                                                        opt === 'Eco Arena' ? t.matrix.ecoArena :
-                                                                                            opt === 'Combat Arena' ? t.matrix.comArena :
-                                                                                                opt === 'Defence Arena' ? t.matrix.defArena :
-                                                                                                    opt === 'All' ? t.matrix.all : opt}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900, textTransform: 'uppercase' }}>{config.t1Label}</span>
+                                                {renderPerkDropdown(
+                                                    `${lvl}-t1`,
+                                                    perkFilters[lvl].thing1,
+                                                    config.t1Opts,
+                                                    v => updatePerk(lvl, { thing1: v }),
+                                                    rarityColor,
+                                                    lvl >= 4
+                                                )}
                                             </div>
 
-                                            {/* Thing 2 Select */}
+                                            {/* Thing 2 Custom Dropdown */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                                <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900 }}>{config.t2Label}</span>
-                                                <select
-                                                    style={{ ...selectStyle, height: '16px', fontSize: '7px', borderColor: rarityColor, color: rarityColor, padding: '0 4px' }}
-                                                    value={perkFilters[lvl].thing2}
-                                                    onChange={e => updatePerk(lvl, { thing2: e.target.value })}
-                                                >
-                                                    {config.t2Opts.map(opt => (
-                                                        <option key={opt} value={opt}>
-                                                            {opt === 'Eco Legendary Hex' ? t.matrix.ecoLeg :
-                                                                opt === 'Com Legendary Hex' ? t.matrix.comLeg :
-                                                                    opt === 'Def Legendary Hex' ? t.matrix.defLeg :
-                                                                        opt === 'Eco-Eco' ? t.matrix.comboEcoEco :
-                                                                            opt === 'Eco-Com' ? t.matrix.comboEcoCom :
-                                                                                opt === 'Eco-Def' ? t.matrix.comboEcoDef :
-                                                                                    opt === 'Com-Com' ? t.matrix.comboComCom :
-                                                                                        opt === 'Com-Def' ? t.matrix.comboComDef :
-                                                                                            opt === 'Def-Def' ? t.matrix.comboDefDef :
-                                                                                                opt === 'Eco Arena' ? t.matrix.ecoArena :
-                                                                                                    opt === 'Combat Arena' ? t.matrix.comArena :
-                                                                                                        opt === 'Defence Arena' ? t.matrix.defArena :
-                                                                                                            opt === 'Broken' ? t.meteorites.stats.broken :
-                                                                                                                opt === 'Damaged' ? t.meteorites.stats.damaged :
-                                                                                                                    opt === 'New' ? t.meteorites.stats.new :
-                                                                                                                        opt === 'Corrupted' ? t.meteorites.stats.corrupted :
-                                                                                                                            opt === 'All' ? t.matrix.all : opt}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <span style={{ fontSize: '6px', color: '#64748b', fontWeight: 900, textTransform: 'uppercase' }}>{config.t2Label}</span>
+                                                {renderPerkDropdown(
+                                                    `${lvl}-t2`,
+                                                    perkFilters[lvl].thing2,
+                                                    config.t2Opts,
+                                                    v => updatePerk(lvl, { thing2: v }),
+                                                    rarityColor,
+                                                    lvl >= 4
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -743,13 +850,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                     </div>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+                        gridTemplateColumns: 'repeat(9, minmax(0, 1fr))',
                         columnGap: '5px',
                         rowGap: '1px',
                         alignContent: 'start',
                         padding: '0 4px 0 1px'
                     }}>
-                        {Array.from({ length: 10 }).map((_, i) => renderSlot(displayInventory[i], i, isFilterActive))}
+                        {Array.from({ length: 9 }).map((_, i) => renderSlot(displayInventory[i], i, isFilterActive))}
                     </div>
                 </div>
 
@@ -769,8 +876,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
 
                     <div className="recycle-btn" style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
-                        marginTop: '2px',
-                        transform: 'translateX(-15px)'
+                        marginTop: '2px'
                     }}>
                         <button
                             onClick={onToggleRecycle}
@@ -781,11 +887,11 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 color: isRecycleMode ? '#ef4444' : '#3b82f6',
                                 height: '24px',
                                 width: 'auto',
-                                padding: '0 12px',
+                                padding: '0 8px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '6px',
+                                gap: '3px',
                                 cursor: 'pointer',
                                 boxShadow: isRecycleMode ? '0 0 10px rgba(239, 68, 68, 0.2)' : 'none',
                                 transition: 'all 0.2s',
@@ -808,7 +914,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 if (!isRecycleMode) return;
                                 const targets: number[] = [];
                                 inventory.forEach((item, i) => {
-                                    if (i >= 10 && item && matchesFilterLocal(item)) targets.push(i);
+                                    if (i >= 9 && item && matchesFilterLocal(item)) targets.push(i);
                                 });
                                 if (targets.length > 0) {
                                     setMassRecycleCandidate({ type: 'SELECTED', indices: targets });
@@ -822,8 +928,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 color: isRecycleMode ? '#fff' : '#475569',
                                 height: '24px',
                                 width: 'auto',
-                                minWidth: '70px',
-                                padding: '0 12px',
+                                minWidth: '60px',
+                                padding: '0 8px',
                                 fontSize: '9px',
                                 fontWeight: 900,
                                 cursor: isRecycleMode ? 'pointer' : 'default',
@@ -839,7 +945,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 if (!isRecycleMode) return;
                                 const discards: number[] = [];
                                 inventory.forEach((item, i) => {
-                                    if (i >= 10 && item && !matchesFilterLocal(item)) discards.push(i);
+                                    if (i >= 9 && item && !matchesFilterLocal(item)) discards.push(i);
                                 });
                                 if (discards.length > 0) {
                                     setMassRecycleCandidate({ type: 'GHOSTS', indices: discards });
@@ -854,12 +960,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                                 height: '24px',
                                 width: 'auto',
                                 minWidth: '70px',
-                                padding: '0 12px',
+                                padding: '0 8px',
                                 fontSize: '9px',
                                 fontWeight: 900,
                                 cursor: isRecycleMode ? 'pointer' : 'default',
                                 opacity: isRecycleMode ? 1 : 0.4,
                                 transition: 'all 0.2s',
+                                gap: '3px'
                             }}
                         >
                             {t.matrix.ghosts}
@@ -871,7 +978,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
             {/* STORAGE AREA */}
             <div className="inventory-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', // 10 COLUMNS as requested
+                gridTemplateColumns: 'repeat(9, minmax(0, 1fr))', // 9 COLUMNS
                 gridAutoRows: 'min-content',
                 columnGap: '5px',
                 rowGap: '1px',
@@ -885,7 +992,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
             }}>
                 {/* INVENTORY ITEMS (STORAGE ONLY) */}
                 {
-                    displayInventory.slice(10).map((item, i) => renderSlot(item, i + 10, isFilterActive))
+                    displayInventory.slice(9).map((item, i) => renderSlot(item, i + 9, isFilterActive))
                 }
             </div>
 
@@ -925,31 +1032,22 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
                 .scanner-range {
-    -webkit-appearance: none;
-    background: rgba(59, 130, 246, 0.2);
-    border - radius: 2px;
-    outline: none;
-}
-                .scanner - range:: -webkit - slider - thumb {
-    -webkit - appearance: none;
-    width: 10px;
-    height: 10px;
-    background: #3b82f6;
-    border - radius: 50 %;
-    cursor: pointer;
-    box - shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    border: 2px solid #fff;
-}
-                .scanner - range:: -moz - range - thumb {
-    width: 10px;
-    height: 10px;
-    background: #3b82f6;
-    border - radius: 50 %;
-    cursor: pointer;
-    box - shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    border: 2px solid #fff;
-}
-`}</style>
+                    -webkit-appearance: none;
+                    background: rgba(59, 130, 246, 0.2);
+                    border-radius: 2px;
+                    outline: none;
+                }
+                .scanner-range::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 10px;
+                    height: 10px;
+                    background: #3b82f6;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+                    border: 2px solid #fff;
+                }
+            `}</style>
         </div>
     );
 });

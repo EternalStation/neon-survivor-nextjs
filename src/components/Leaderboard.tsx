@@ -3,6 +3,9 @@ import api from '../api/client';
 import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/classes';
 import { formatLargeNumber } from '../utils/format';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation, UI_TRANSLATIONS } from '../lib/uiTranslations';
+import { LeaderboardStatistics } from './LeaderboardStatistics';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {
@@ -62,6 +65,9 @@ const formatTime = (seconds: number) => {
 };
 
 export default function Leaderboard({ onClose, currentUsername }: LeaderboardProps) {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language).leaderboard;
+    const [mode, setMode] = useState<'rankings' | 'meta'>('rankings');
     const [period, setPeriod] = useState<'global' | 'daily' | 'patch'>('patch');
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -118,7 +124,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
     };
 
     const handleDeleteRun = async (runId: number) => {
-        if (!window.confirm('PERMANENTLY DELETE THIS RECORD FROM NEON LINK?')) return;
+        if (!window.confirm(t.confirmDelete)) return;
 
         setDeletingId(runId);
         try {
@@ -127,14 +133,14 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             setExpandedRunId(null);
         } catch (err: any) {
             console.error('Delete failed:', err);
-            alert(`WIPE FAILED: ${err.message || 'CONNECTION INTERRUPTED'}`);
+            alert(`${t.wipeFailed} ${err.message || t.connectionInterrupted}`);
         } finally {
             setDeletingId(null);
         }
     };
 
     const handleClearAll = async () => {
-        if (!window.confirm('WIPE YOUR ENTIRE RUN HISTORY FROM THE LEADERBOARD?')) return;
+        if (!window.confirm(t.confirmPurge)) return;
 
         setLoading(true);
         try {
@@ -142,7 +148,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             loadLeaderboard();
         } catch (err: any) {
             console.error('Clear failed:', err);
-            alert(`PURGE FAILED: ${err.message || 'DATABASE LOCK DETECTED'}`);
+            alert(`${t.purgeFailed} ${err.message || t.databaseLock}`);
         } finally {
             setLoading(false);
         }
@@ -195,7 +201,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             minute: '2-digit',
             hour12: true
         };
-        return date.toLocaleDateString(undefined, dateOptions) + ' ' + date.toLocaleTimeString(undefined, timeOptions);
+        return date.toLocaleDateString(language === 'ru' ? 'ru-RU' : undefined, dateOptions) + ' ' + date.toLocaleTimeString(language === 'ru' ? 'ru-RU' : undefined, timeOptions);
     };
 
     const getRankColor = (rank: number) => {
@@ -204,15 +210,82 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         if (rank === 3) return '#CD7F32'; // Bronze
         return 'rgba(255, 255, 255, 0.7)';
     };
-
-    const getClassColor = (classId: string) => {
-        const cls = PLAYER_CLASSES.find(c => c.id === classId.toLowerCase() || c.name.toLowerCase() === classId.toLowerCase());
-        return cls?.themeColor || '#8a2be2';
+    const getClassColor = (id: string) => {
+        const cls = PLAYER_CLASSES.find(c => c.id === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase());
+        return cls?.themeColor || '#00ffff';
     };
 
     const getClassName = (classId: string) => {
         const cls = PLAYER_CLASSES.find(c => c.id === classId.toLowerCase() || c.name.toLowerCase() === classId.toLowerCase());
-        return cls?.name || classId;
+        if (!cls) return classId;
+
+        if (language === 'ru') {
+            const ruClasses = UI_TRANSLATIONS.ru.classSelection.classes;
+            const classKey = cls.id as keyof typeof ruClasses;
+            if (ruClasses[classKey]) return ruClasses[classKey].name;
+        }
+        return cls.name;
+    };
+
+    const translateDeathCause = (cause: string) => {
+        if (language === 'en') return cause;
+        if (!cause) return 'Неизвестно';
+
+        // Exact matches
+        if (cause === 'EVACUATED') return 'ЭВАКУИРОВАН';
+        if (cause === 'Legion Swarm') return 'Рой Легиона';
+        if (cause === 'Zombie Horde') return 'Орда Зомби';
+        if (cause === 'Pentagon Minion') return 'Миньон Пентагона';
+        if (cause === 'Unknown') return 'Неизвестно';
+
+        let result = cause;
+        const ruBosses = UI_TRANSLATIONS.ru.bosses.names;
+
+        // Try to translate shapes/boss names within the cause string
+        const translateShape = (shape: string) => {
+            const lowShape = shape.toLowerCase();
+            return ruBosses[lowShape as keyof typeof ruBosses] || shape;
+        };
+
+        // Patterns
+        if (result.startsWith('Boss ')) {
+            const match = result.match(/Boss (\w+)(?: \(Lvl (\d+)\))?/);
+            if (match) {
+                const shape = match[1];
+                const lvl = match[2];
+                result = `Босс ${translateShape(shape)}${lvl ? ` (Ур ${lvl})` : ''}`;
+            }
+        } else if (result.startsWith('Killed by Boss Thorns ')) {
+            const match = result.match(/\((\w+)\)/);
+            if (match) {
+                const shape = match[1];
+                result = `Убит Шипами Босса (${translateShape(shape)})`;
+            }
+        } else if (result.startsWith('Collision with Elite ')) {
+            const match = result.match(/Elite (\w+)/);
+            if (match) {
+                const shape = match[1];
+                result = `Столкновение с Элитным ${translateShape(shape)}`;
+            }
+        } else if (result.startsWith('Collision with ')) {
+            const match = result.match(/with (\w+)/);
+            if (match) {
+                const shape = match[1];
+                result = `Столкновения с ${translateShape(shape)}`;
+            }
+        } else if (result.startsWith('Anomaly ')) {
+            const match = result.match(/Anomaly (\w+)/);
+            if (match) {
+                const shape = match[1];
+                result = `Аномалия ${translateShape(shape)} (Вызвана из Ада)`;
+            }
+        } else if (result.includes('Diamond Boss: Orbital Satellites')) {
+            result = 'Уничтожен Алмазным Боссом: Орбитальные Спутники';
+        } else if (result.includes('Pentagon Boss: Parasitic Link')) {
+            result = 'Истощен Пятиугольным Боссом: Паразитическая Связь';
+        }
+
+        return result;
     };
 
     const hasUserRuns = useMemo(() => {
@@ -223,262 +296,300 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
         <div className="leaderboard-overlay" onClick={onClose}>
             <div className="leaderboard-container" onClick={(e) => e.stopPropagation()}>
                 <div className="leaderboard-header">
-                    <h2 style={{ fontFamily: 'Orbitron, sans-serif' }}>Global Leaderboard</h2>
+                    <h2 style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.title}</h2>
                     <div className="header-actions">
                         {hasUserRuns && (
-                            <button className="purge-btn" onClick={handleClearAll}>PURGE MY HISTORY</button>
+                            <button className="purge-btn" onClick={handleClearAll}>{t.purgeHistory}</button>
                         )}
                         <button className="leaderboard-close" onClick={onClose}>×</button>
                     </div>
                 </div>
 
-                <div className="leaderboard-controls">
-                    <div className="leaderboard-tabs" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                        <button className={period === 'patch' ? 'active' : ''} onClick={() => setPeriod('patch')}>By Patch</button>
-                        <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
-                        <button className={period === 'global' ? 'active' : ''} onClick={() => setPeriod('global')}>All Time</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px', marginTop: '15px', borderBottom: '1px solid rgba(0, 255, 255, 0.2)' }}>
+                    <div className="leaderboard-mode-tabs" style={{ padding: 0, margin: 0, borderBottom: 'none' }}>
+                        <button
+                            className={`mode-tab ${mode === 'rankings' ? 'active' : ''}`}
+                            onClick={() => setMode('rankings')}
+                        >
+                            {t.rankings || 'RANKINGS'}
+                        </button>
+                        <button
+                            className={`mode-tab ${mode === 'meta' ? 'active' : ''}`}
+                            onClick={() => setMode('meta')}
+                        >
+                            {t.metaTitle || 'GLOBAL STATISTICS (META)'}
+                        </button>
                     </div>
 
-                    <div className="leaderboard-filters">
-                        <div className="filter-group">
-                            <label style={{ fontFamily: 'Orbitron, sans-serif' }}>CLASS:</label>
-                            <div className="class-filter-row">
-                                <button
-                                    className={`class-filter-btn ${classFilter === 'All' ? 'active' : ''}`}
-                                    onClick={() => setClassFilter('All')}
-                                    title="ALL CLASSES"
-                                >
-                                    <div className="hex-icon-placeholder" style={{ fontFamily: 'Orbitron, sans-serif' }}>ALL</div>
-                                </button>
-                                {PLAYER_CLASSES.map(cls => (
-                                    <button
-                                        key={cls.id}
-                                        className={`class-filter-btn ${classFilter === cls.id ? 'active' : ''}`}
-                                        onClick={() => setClassFilter(cls.id)}
-                                        title={cls.name.toUpperCase()}
-                                        style={{ '--class-color': cls.themeColor } as React.CSSProperties}
-                                    >
-                                        <img src={cls.iconUrl} alt={cls.name} />
-                                    </button>
-                                ))}
+                    <div className="leaderboard-tabs" style={{ fontFamily: 'Orbitron, sans-serif', padding: '0 0 10px 0' }}>
+                        <button className={period === 'patch' ? 'active' : ''} onClick={() => setPeriod('patch')}>{t.byPatch}</button>
+                        <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>{t.daily}</button>
+                        <button className={period === 'global' ? 'active' : ''} onClick={() => setPeriod('global')}>{t.allTime}</button>
+                    </div>
+                </div>
+
+                {mode === 'rankings' ? (
+                    <>
+                        <div className="leaderboard-controls">
+                            <div className="leaderboard-filters">
+                                <div className="filter-group">
+                                    <label style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.classLabel}</label>
+                                    <div className="class-filter-row">
+                                        <button
+                                            className={`class-filter-btn ${classFilter === 'All' ? 'active' : ''}`}
+                                            onClick={() => setClassFilter('All')}
+                                            title={t.allClasses}
+                                        >
+                                            <div className="hex-icon-placeholder" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.allClasses}</div>
+                                        </button>
+                                        {PLAYER_CLASSES.map(cls => (
+                                            <button
+                                                key={cls.id}
+                                                className={`class-filter-btn ${classFilter === cls.id ? 'active' : ''}`}
+                                                onClick={() => setClassFilter(cls.id)}
+                                                title={getClassName(cls.id).toUpperCase()}
+                                                style={{ '--class-color': cls.themeColor } as React.CSSProperties}
+                                            >
+                                                <img src={cls.iconUrl} alt={cls.name} />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                {period === 'patch' && patches.length > 0 && (
+                                    <div className="filter-group">
+                                        <label style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.versionLabel}</label>
+                                        <select value={selectedPatch} onChange={(e) => setSelectedPatch(e.target.value)} style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                                            {patches.map(patch => (
+                                                <option key={patch} value={patch}>{patch}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="filter-group">
+                                <label style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.searchLabel}</label>
+                                <input
+                                    type="text"
+                                    placeholder={t.playerNamePlaceholder}
+                                    value={searchFilter}
+                                    onChange={(e) => setSearchFilter(e.target.value)}
+                                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                                />
                             </div>
                         </div>
-                        <div className="filter-group">
-                            <label style={{ fontFamily: 'Orbitron, sans-serif' }}>SEARCH:</label>
-                            <input
-                                type="text"
-                                placeholder="PLAYER NAME..."
-                                value={searchFilter}
-                                onChange={(e) => setSearchFilter(e.target.value)}
-                                style={{ fontFamily: 'Orbitron, sans-serif' }}
-                            />
-                        </div>
-                    </div>
-                </div>
 
-                {period === 'patch' && patches.length > 0 && (
-                    <div className="patch-selector">
-                        <label style={{ fontFamily: 'Orbitron, sans-serif' }}>Version:</label>
-                        <select value={selectedPatch} onChange={(e) => setSelectedPatch(e.target.value)} style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                            {patches.map(patch => (
-                                <option key={patch} value={patch}>{patch}</option>
-                            ))}
-                        </select>
+                        <div className="leaderboard-content">
+                            {loading ? (
+                                <div className="leaderboard-loading">
+                                    <div className="loading-glitch" data-text={t.loading} style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.loading}</div>
+                                </div>
+                            ) : filteredEntries.length === 0 ? (
+                                <div className="leaderboard-empty" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.noRecords}</div>
+                            ) : (
+                                <table className="leaderboard-table">
+                                    <thead style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                                        <tr>
+                                            <th>{t.rank}</th>
+                                            <th>{t.player}</th>
+                                            <th>{t.time}</th>
+                                            <th>{t.class}</th>
+                                            <th>{t.caused}</th>
+                                            <th>{t.date}</th>
+                                            <th>{t.patch}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredEntries.map((entry, index) => {
+                                            const isExpanded = expandedRunId === entry.id;
+                                            const isUserRun = entry.username === currentUsername;
+                                            const classColor = getClassColor(entry.class_used);
+
+                                            return (
+                                                <React.Fragment key={entry.id}>
+                                                    <tr
+                                                        className={`${index < 3 ? 'top-rank' : ''} ${isExpanded ? 'expanded-row-parent' : ''} ${isUserRun ? 'user-run-row' : ''}`}
+                                                        onClick={() => setExpandedRunId(isExpanded ? null : entry.id)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        <td style={{ color: getRankColor(index + 1), fontWeight: '900', fontFamily: 'Orbitron, sans-serif' }}>
+                                                            #{index + 1}
+                                                        </td>
+                                                        <td className="player-name" style={{ fontWeight: '700' }}>
+                                                            {entry.username} {isUserRun && <span className="owner-tag">{t.youTag}</span>}
+                                                        </td>
+                                                        <td className="time-val" style={{ fontFamily: 'Orbitron, sans-serif' }}>{formatTime(entry.survival_time)}</td>
+                                                        <td className="class-name" style={{ color: classColor, fontWeight: '700', fontFamily: 'Orbitron, sans-serif' }}>{getClassName(entry.class_used)}</td>
+                                                        <td className="cause-val" style={{ color: entry.death_cause === 'EVACUATED' ? '#10b981' : '#ef4444', fontSize: '0.9em', fontWeight: '500', fontFamily: 'Orbitron, sans-serif' }}>{translateDeathCause(entry.death_cause || '')}</td>
+                                                        <td className="date" style={{ opacity: 0.7 }}>{formatDate(entry.completed_at, entry.timezone_offset)}</td>
+                                                        <td className="patch-val" style={{ opacity: 0.5 }}>{entry.patch_version || '1.0.0'}</td>
+                                                    </tr>
+
+                                                    {isExpanded && (
+                                                        <tr className="expanded-details">
+                                                            <td colSpan={7}>
+                                                                <div className="run-details-grid">
+                                                                    {/* STATS ANALYTICS */}
+                                                                    <div className="details-card stats-card">
+                                                                        <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.missionData}</div>
+                                                                        <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                                                                            <div className="stat-row"><span>{t.dmgDealt}</span><span className="val-amber">{formatLargeNumber(entry.damage_dealt || 0)}</span></div>
+                                                                            <div className="stat-row"><span>{t.dmgTaken}</span><span className="val-red">{formatLargeNumber(entry.damage_taken || 0)}</span></div>
+                                                                            <div className="stat-row"><span>{t.dmgBlocked}</span><span className="val-blue">{formatLargeNumber(entry.damage_blocked || 0)}</span></div>
+                                                                            <div className="stat-sub-row"><span>{t.armor}</span><span>{formatLargeNumber(entry.damage_blocked_armor || 0)}</span></div>
+                                                                            <div className="stat-sub-row"><span>{t.shield}</span><span>{formatLargeNumber(entry.damage_blocked_shield || 0)}</span></div>
+                                                                            <div className="stat-sub-row"><span>{t.collision}</span><span>{formatLargeNumber(entry.damage_blocked_collision || 0)}</span></div>
+                                                                            <div className="stat-sub-row"><span>{t.projectile}</span><span>{formatLargeNumber(entry.damage_blocked_projectile || 0)}</span></div>
+                                                                            <div className="stat-row" style={{ marginTop: 10 }}><span>{t.kills}</span><span className="val-amber">{entry.kills.toLocaleString()}</span></div>
+                                                                            <div className="stat-row"><span>{t.snitches}</span><span className="val-cyan">{entry.snitches_caught || 0}</span></div>
+                                                                            <div className="stat-row"><span>{t.portals}</span><span className="val-purple">{entry.portals_used || 0}</span></div>
+                                                                        </div>
+
+                                                                        <div className="card-header" style={{ marginTop: 15, fontFamily: 'Orbitron, sans-serif' }}>{t.arenaLog}</div>
+                                                                        <div className="stats-list" style={{ flex: 1, fontFamily: 'Orbitron, sans-serif' }}>
+                                                                            <div className="stat-row"><span>{t.eco}</span><span>{formatTime(entry.arena_times?.[0] || 0)}</span></div>
+                                                                            <div className="stat-row"><span>{t.com}</span><span>{formatTime(entry.arena_times?.[1] || 0)}</span></div>
+                                                                            <div className="stat-row"><span>{t.def}</span><span>{formatTime(entry.arena_times?.[2] || 0)}</span></div>
+                                                                        </div>
+
+                                                                        {isUserRun && (
+                                                                            <div className="card-footer" style={{ marginTop: 20 }}>
+                                                                                <button
+                                                                                    className="delete-run-btn"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleDeleteRun(entry.id);
+                                                                                    }}
+                                                                                    disabled={deletingId === entry.id}
+                                                                                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                                                                                >
+                                                                                    {deletingId === entry.id ? t.wiping : t.wipeRecord}
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* LEGENDARY LINEUP */}
+                                                                    <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
+                                                                        <div style={{ fontSize: '12px', color: '#00ffff', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                            {t.finalPerformance}
+                                                                        </div>
+                                                                        {entry.final_stats && (
+                                                                            <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
+                                                                                <FinalStatItem label={t.dmgHit} value={formatLargeNumber(entry.final_stats.dmg)} color="#f59e0b" />
+                                                                                <FinalStatItem label={t.maxHp} value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
+                                                                                <FinalStatItem label={t.xpKill} value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
+                                                                                <FinalStatItem label={t.atkSpeed} value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
+                                                                                <FinalStatItem label={t.regen} value={formatLargeNumber(entry.final_stats.regen) + '/s'} color="#4ade80" />
+                                                                                <FinalStatItem label={t.armor} value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
+                                                                                <FinalStatItem label={t.speed} value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(59, 130, 246, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                            {t.augmentationHistory}
+                                                                        </div>
+                                                                        <div className="legendary-grid">
+                                                                            {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
+                                                                                entry.hex_levelup_order.map((step, i) => {
+                                                                                    const hexBase = entry.legendary_hexes?.find(h => h.id === step.hexId);
+                                                                                    if (!hexBase) return null;
+
+                                                                                    return (
+                                                                                        <div key={i} className="hex-step-item">
+                                                                                            <div className="hex-icon-wrapper-small">
+                                                                                                <img
+                                                                                                    src={`/assets/hexes/${hexBase.type === 'EcoDMG' ? 'EcoDMG' :
+                                                                                                        hexBase.type === 'EcoXP' ? 'EcoXP' :
+                                                                                                            hexBase.type === 'EcoHP' ? 'EcoHP' :
+                                                                                                                hexBase.type === 'ComLife' ? 'ComLife' :
+                                                                                                                    hexBase.type === 'ComCrit' ? 'ComCrit' :
+                                                                                                                        hexBase.type === 'ComWave' ? 'ComWave' :
+                                                                                                                            hexBase.type === 'DefPuddle' ? 'DefPuddle' :
+                                                                                                                                hexBase.type === 'DefEpi' ? 'DefEpi' :
+                                                                                                                                    hexBase.type === 'CombShield' ? 'EcoArmor' :
+                                                                                                                                        hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
+                                                                                                                                            hexBase.type === 'shield_passive' ? 'AigisVortex' :
+                                                                                                                                                hexBase.type === 'KineticBattery' ? 'DefBattery' :
+                                                                                                                                                    hexBase.type === 'RadiationCore' ? 'ComRad' :
+                                                                                                                                                        hexBase.type === 'ChronoPlating' ? 'DefChromo' :
+                                                                                                                                                            'MalwarePrime'
+                                                                                                        }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
+                                                                                                    alt={hexBase.name}
+                                                                                                />
+                                                                                            </div>
+                                                                                            <div className="hex-step-level">LVL {step.level}</div>
+                                                                                            <div className="hex-step-kills">{step.gameTime ? formatTime(step.gameTime) : ''}</div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })
+                                                                            ) : (
+                                                                                <div className="empty-msg" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.noAugments}</div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* RADAR PROFILE */}
+                                                                    <div className="details-card radar-card">
+                                                                        <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.hardwareProfile}</div>
+                                                                        <div style={{ padding: '10px 0' }}>
+                                                                            <RadarChart counts={entry.radar_counts} size={150} />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* BLUEPRINT LOADOUT */}
+                                                                    <div className="details-card blueprints-card" style={{ gridColumn: '1 / -1', marginTop: 10 }}>
+                                                                        <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(245, 158, 11, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                            {t.blueprintConfig}
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0' }}>
+                                                                            {entry.blueprints && entry.blueprints.length > 0 ? (
+                                                                                entry.blueprints.map((bp: any, i: number) => (
+                                                                                    <div key={i} style={{
+                                                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                                                        background: 'rgba(16, 185, 129, 0.1)',
+                                                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                                                        padding: '6px 10px', borderRadius: 6
+                                                                                    }}>
+                                                                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
+                                                                                        <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type} x{bp.count || 1}</span>
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                <div className="empty-msg" style={{ fontStyle: 'italic', opacity: 0.5, fontSize: 11, fontFamily: 'Orbitron, sans-serif' }}>{t.noBlueprints}</div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <div className="leaderboard-content" style={{ padding: '0' }}>
+                        {loading ? (
+                            <div className="leaderboard-loading">
+                                <div className="loading-glitch" data-text={t.loading} style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.loading}</div>
+                            </div>
+                        ) : (
+                            <LeaderboardStatistics
+                                entries={filteredEntries}
+                                language={language}
+                                t={t}
+                                getClassColor={getClassColor}
+                                getClassName={getClassName}
+                                translateDeathCause={translateDeathCause}
+                            />
+                        )}
                     </div>
                 )}
-
-                <div className="leaderboard-content">
-                    {loading ? (
-                        <div className="leaderboard-loading">
-                            <div className="loading-glitch" data-text="LOADING RECORDS..." style={{ fontFamily: 'Orbitron, sans-serif' }}>LOADING RECORDS...</div>
-                        </div>
-                    ) : filteredEntries.length === 0 ? (
-                        <div className="leaderboard-empty" style={{ fontFamily: 'Orbitron, sans-serif' }}>No records found matching criteria.</div>
-                    ) : (
-                        <table className="leaderboard-table">
-                            <thead style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                                <tr>
-                                    <th>Rank</th>
-                                    <th>Player</th>
-                                    <th>Time</th>
-                                    <th>Class</th>
-                                    <th>CAUSED</th>
-                                    <th>Date</th>
-                                    <th>Patch</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredEntries.map((entry, index) => {
-                                    const isExpanded = expandedRunId === entry.id;
-                                    const isUserRun = entry.username === currentUsername;
-                                    const classColor = getClassColor(entry.class_used);
-
-                                    return (
-                                        <React.Fragment key={entry.id}>
-                                            <tr
-                                                className={`${index < 3 ? 'top-rank' : ''} ${isExpanded ? 'expanded-row-parent' : ''} ${isUserRun ? 'user-run-row' : ''}`}
-                                                onClick={() => setExpandedRunId(isExpanded ? null : entry.id)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <td style={{ color: getRankColor(index + 1), fontWeight: '900', fontFamily: 'Orbitron, sans-serif' }}>
-                                                    #{index + 1}
-                                                </td>
-                                                <td className="player-name" style={{ fontWeight: '700' }}>
-                                                    {entry.username} {isUserRun && <span className="owner-tag">(YOU)</span>}
-                                                </td>
-                                                <td className="time-val" style={{ fontFamily: 'Orbitron, sans-serif' }}>{formatTime(entry.survival_time)}</td>
-                                                <td className="class-name" style={{ color: classColor, fontWeight: '700', fontFamily: 'Orbitron, sans-serif' }}>{getClassName(entry.class_used)}</td>
-                                                <td className="cause-val" style={{ color: entry.death_cause === 'EVACUATED' ? '#10b981' : '#ef4444', fontSize: '0.9em', fontWeight: '500', fontFamily: 'Orbitron, sans-serif' }}>{entry.death_cause || 'Unknown'}</td>
-                                                <td className="date" style={{ opacity: 0.7 }}>{formatDate(entry.completed_at, entry.timezone_offset)}</td>
-                                                <td className="patch-val" style={{ opacity: 0.5 }}>{entry.patch_version || '1.0.0'}</td>
-                                            </tr>
-
-                                            {isExpanded && (
-                                                <tr className="expanded-details">
-                                                    <td colSpan={7}>
-                                                        <div className="run-details-grid">
-                                                            {/* STATS ANALYTICS */}
-                                                            <div className="details-card stats-card">
-                                                                <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>MISSION DATA</div>
-                                                                <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    <div className="stat-row"><span>DMG DEALT</span><span className="val-amber">{formatLargeNumber(entry.damage_dealt || 0)}</span></div>
-                                                                    <div className="stat-row"><span>DMG TAKEN</span><span className="val-red">{formatLargeNumber(entry.damage_taken || 0)}</span></div>
-                                                                    <div className="stat-row"><span>DMG BLOCKED</span><span className="val-blue">{formatLargeNumber(entry.damage_blocked || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>ARMOR</span><span>{formatLargeNumber(entry.damage_blocked_armor || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>SHIELD</span><span>{formatLargeNumber(entry.damage_blocked_shield || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>COLLISION</span><span>{formatLargeNumber(entry.damage_blocked_collision || 0)}</span></div>
-                                                                    <div className="stat-sub-row"><span>PROJECTILE</span><span>{formatLargeNumber(entry.damage_blocked_projectile || 0)}</span></div>
-                                                                    <div className="stat-row" style={{ marginTop: 10 }}><span>KILLS</span><span className="val-amber">{entry.kills.toLocaleString()}</span></div>
-                                                                    <div className="stat-row"><span>SNITCHES</span><span className="val-cyan">{entry.snitches_caught || 0}</span></div>
-                                                                    <div className="stat-row"><span>PORTALS</span><span className="val-purple">{entry.portals_used || 0}</span></div>
-                                                                </div>
-
-                                                                <div className="card-header" style={{ marginTop: 15, fontFamily: 'Orbitron, sans-serif' }}>ARENA LOG</div>
-                                                                <div className="stats-list" style={{ flex: 1, fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    <div className="stat-row"><span>ECO</span><span>{formatTime(entry.arena_times?.[0] || 0)}</span></div>
-                                                                    <div className="stat-row"><span>COM</span><span>{formatTime(entry.arena_times?.[1] || 0)}</span></div>
-                                                                    <div className="stat-row"><span>DEF</span><span>{formatTime(entry.arena_times?.[2] || 0)}</span></div>
-                                                                </div>
-
-                                                                {isUserRun && (
-                                                                    <div className="card-footer" style={{ marginTop: 20 }}>
-                                                                        <button
-                                                                            className="delete-run-btn"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleDeleteRun(entry.id);
-                                                                            }}
-                                                                            disabled={deletingId === entry.id}
-                                                                            style={{ fontFamily: 'Orbitron, sans-serif' }}
-                                                                        >
-                                                                            {deletingId === entry.id ? 'WIPING...' : 'WIPE RECORD'}
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            {/* LEGENDARY LINEUP */}
-                                                            <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
-                                                                <div style={{ fontSize: '12px', color: '#00ffff', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    Final System Performance
-                                                                </div>
-                                                                {entry.final_stats && (
-                                                                    <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
-                                                                        <FinalStatItem label="DMG/HIT" value={formatLargeNumber(entry.final_stats.dmg)} color="#f59e0b" />
-                                                                        <FinalStatItem label="MAX HP" value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
-                                                                        <FinalStatItem label="XP/KILL" value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
-                                                                        <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
-                                                                        <FinalStatItem label="REGEN" value={formatLargeNumber(entry.final_stats.regen) + '/s'} color="#4ade80" />
-                                                                        <FinalStatItem label="ARMOR" value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
-                                                                        <FinalStatItem label="SPEED" value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
-                                                                    </div>
-                                                                )}
-
-                                                                <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(59, 130, 246, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    Augmentation History
-                                                                </div>
-                                                                <div className="legendary-grid">
-                                                                    {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
-                                                                        entry.hex_levelup_order.map((step, i) => {
-                                                                            const hexBase = entry.legendary_hexes?.find(h => h.id === step.hexId);
-                                                                            if (!hexBase) return null;
-
-                                                                            return (
-                                                                                <div key={i} className="hex-step-item">
-                                                                                    <div className="hex-icon-wrapper-small">
-                                                                                        <img
-                                                                                            src={`/assets/hexes/${hexBase.type === 'EcoDMG' ? 'EcoDMG' :
-                                                                                                hexBase.type === 'EcoXP' ? 'EcoXP' :
-                                                                                                    hexBase.type === 'EcoHP' ? 'EcoHP' :
-                                                                                                        hexBase.type === 'ComLife' ? 'ComLife' :
-                                                                                                            hexBase.type === 'ComCrit' ? 'ComCrit' :
-                                                                                                                hexBase.type === 'ComWave' ? 'ComWave' :
-                                                                                                                    hexBase.type === 'DefPuddle' ? 'DefPuddle' :
-                                                                                                                        hexBase.type === 'DefEpi' ? 'DefEpi' :
-                                                                                                                            hexBase.type === 'CombShield' ? 'DefShield' :
-                                                                                                                                hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
-                                                                                                                                    hexBase.type === 'shield_passive' ? 'AigisVortex' :
-                                                                                                                                        hexBase.type === 'KineticBattery' ? 'DefBattery' :
-                                                                                                                                            hexBase.type === 'RadiationCore' ? 'ComRad' :
-                                                                                                                                                hexBase.type === 'ChronoPlating' ? 'EcoPlating' :
-                                                                                                                                                    'MalwarePrime'
-                                                                                                }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
-                                                                                            alt={hexBase.name}
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div className="hex-step-level">LVL {step.level}</div>
-                                                                                    <div className="hex-step-kills">{step.gameTime ? formatTime(step.gameTime) : ''}</div>
-                                                                                </div>
-                                                                            );
-                                                                        })
-                                                                    ) : (
-                                                                        <div className="empty-msg" style={{ fontFamily: 'Orbitron, sans-serif' }}>No legendary augments acquired.</div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* RADAR PROFILE */}
-                                                            <div className="details-card radar-card">
-                                                                <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>HARDWARE PROFILE</div>
-                                                                <div style={{ padding: '10px 0' }}>
-                                                                    <RadarChart counts={entry.radar_counts} size={150} />
-                                                                </div>
-                                                            </div>
-
-                                                            {/* BLUEPRINT LOADOUT */}
-                                                            <div className="details-card blueprints-card" style={{ gridColumn: '1 / -1', marginTop: 10 }}>
-                                                                <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(245, 158, 11, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                    Blueprint Configuration
-                                                                </div>
-                                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0' }}>
-                                                                    {entry.blueprints && entry.blueprints.length > 0 ? (
-                                                                        entry.blueprints.map((bp: any, i: number) => (
-                                                                            <div key={i} style={{
-                                                                                display: 'flex', alignItems: 'center', gap: 6,
-                                                                                background: 'rgba(16, 185, 129, 0.1)',
-                                                                                border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                                                padding: '6px 10px', borderRadius: 6
-                                                                            }}>
-                                                                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
-                                                                                <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type} x{bp.count || 1}</span>
-                                                                            </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        <div className="empty-msg" style={{ fontStyle: 'italic', opacity: 0.5, fontSize: 11, fontFamily: 'Orbitron, sans-serif' }}>No blueprints recorded.</div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
             </div>
             <style>{`
                 .loading-glitch {

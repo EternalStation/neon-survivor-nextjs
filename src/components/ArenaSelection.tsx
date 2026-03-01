@@ -1,11 +1,15 @@
 import React from 'react';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface ArenaSelectionProps {
     onSelect: (arenaId: number, tutorialEnabled: boolean) => void;
 }
 
 export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
+    const { language } = useLanguage();
+    const t = getUiTranslation(language as any);
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [tutorialEnabled, setTutorialEnabled] = React.useState(true);
     const arenas = Object.values(ARENA_DATA);
@@ -66,7 +70,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                     marginBottom: '5px',
                     textShadow: '0 0 30px rgba(59, 130, 246, 0.6)',
                     fontWeight: 900
-                }}>DEPLOYMENT ZONE</h1>
+                }}>{language === 'ru' ? 'ЗОНА ВЫСАДКИ' : 'DEPLOYMENT ZONE'}</h1>
 
                 {/* Tutorial Toggle */}
                 <div
@@ -111,7 +115,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                         color: tutorialEnabled ? '#fff' : '#94a3b8',
                         textShadow: tutorialEnabled ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
                     }}>
-                        ENABLE TUTORIAL HINTS
+                        {t.classSelection.enableTutorialHints}
                     </span>
                 </div>
             </div>
@@ -162,7 +166,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                             letterSpacing: '2px',
                             marginBottom: '15px',
                             opacity: 0.8
-                        }}>{arena.location}</div>
+                        }}>{(t.arenas as any)[arena.id].location}</div>
 
                         <h2 style={{
                             fontSize: '1.8rem',
@@ -170,7 +174,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                             marginBottom: '20px',
                             color: '#fff',
                             textShadow: i === selectedIndex ? `0 0 20px ${arena.color}66` : 'none'
-                        }}>{arena.name}</h2>
+                        }}>{(t.arenas as any)[arena.id].name}</h2>
 
                         <p style={{
                             fontSize: '0.85rem',
@@ -178,7 +182,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                             lineHeight: '1.6',
                             marginBottom: '30px',
                             height: '60px'
-                        }}>{arena.description}</p>
+                        }}>{(t.arenas as any)[arena.id].description}</p>
 
                         <div style={{
                             marginTop: '20px',
@@ -187,7 +191,7 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                             gap: '12px'
                         }}>
                             {/* Buffs */}
-                            {arena.buffs.map((buff, bi) => (
+                            {(t.arenas as any)[arena.id].buffs.map((buff: string, bi: number) => (
                                 <div key={bi} style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -239,7 +243,9 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
                                 paddingBottom: '4px',
                                 transition: 'all 0.3s'
                             }}>
-                                {i === selectedIndex ? 'PRESS [SPACE] TO DEPLOY' : 'CLICK TO SELECT'}
+                                {i === selectedIndex
+                                    ? (language === 'ru' ? 'НАЖМИТЕ [ПРОБЕЛ] ДЛЯ ВЫСАДКИ' : 'PRESS [SPACE] TO DEPLOY')
+                                    : (language === 'ru' ? 'НАЖМИТЕ ДЛЯ ВЫБОРА' : 'CLICK TO SELECT')}
                             </div>
                         </div>
                     </div>

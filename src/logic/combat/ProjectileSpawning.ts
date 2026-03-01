@@ -12,16 +12,30 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { networkManager } from '../networking/NetworkManager';
 
 // Helper: Trigger Shockwave
-export function triggerShockwave(state: GameState, player: Player, level: number) {
-    const range = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_RANGE.LVL3 : GAME_CONFIG.SKILLS.WAVE_RANGE.LVL1;
-    const damageMult = level >= 3 ? GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL3 : GAME_CONFIG.SKILLS.WAVE_DAMAGE_MULT.LVL1;
+// Helper: Trigger Shockwave
+export function triggerShockwave(state: GameState, player: Player, level: number, isSingularity: boolean = false, isTsunami: boolean = false) {
+    const range = 1000;
     const themeColor = getPlayerThemeColor(state, player);
 
     const playerDmg = calcStat(player.dmg);
-    const waveDmg = playerDmg * damageMult;
+    const uses = player.waveUses || 0;
+    let waveDmg = playerDmg * 0.75 * (1 + (uses * 0.01));
+
+    // Tsunami Damage Scaling: +1% DMG for every 100 souls from Storm of Steel
+    if (isTsunami) {
+        const stormHex = state.moduleSockets.hexagons.find(h => h?.type === 'KineticTsunami');
+        if (stormHex && stormHex.killsAtLevel) {
+            const startKills = stormHex.killsAtLevel[1] ?? stormHex.killsAtAcquisition ?? state.killCount;
+            const stormSouls = Math.max(0, state.killCount - startKills);
+            const tsunamiBonus = Math.floor(stormSouls / 100) * 0.01;
+            waveDmg *= (1 + tsunamiBonus);
+        }
+    }
+
+    player.waveUses = uses + 1;
 
     // Visuals: Circular Shockwave Particle
-    const waveLife = 2.0 * 60; // 2.0 seconds total (120 frames at 60fps)
+    const waveLife = 60; // 1 second total (60 frames at 60fps)
 
     state.particles.push({
         x: player.x,
@@ -30,52 +44,39 @@ export function triggerShockwave(state: GameState, player: Player, level: number
         vy: 0,
         life: waveLife,
         maxLife: waveLife,
-        color: '#ef4444', // Blood Pulse Red
+        color: isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : '#ef4444'),
         size: range,
         type: 'shockwave_circle',
         alpha: 1.0,
         decay: 1.0 / waveLife
     });
 
+
+
     playSfx('sonic-wave');
 
-    // Damage Logic (Instant circular hitscan)
-    state.enemies.forEach(e => {
-        if (e.dead || e.isFriendly || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-        const dx = e.x - player.x;
-        const dy = e.y - player.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist < range) {
-            let dmgDealt = waveDmg;
-
-            // --- LEGION SHIELD LOGIC ---
-            if (e.legionId) {
-                const lead = state.legionLeads?.[e.legionId];
-                if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
-                    const shieldAbsorp = Math.min(dmgDealt, lead.legionShield || 0);
-                    lead.legionShield = (lead.legionShield || 0) - shieldAbsorp;
-                    dmgDealt -= shieldAbsorp;
-
-                    if (shieldAbsorp > 0) {
-                        spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
-                        spawnParticles(state, e.x, e.y, '#60a5fa', 1);
-                    }
-                }
-            }
-
-            if (dmgDealt > 0) {
-                e.hp -= dmgDealt;
-                player.damageDealt += dmgDealt;
-                spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
-                spawnParticles(state, e.x, e.y, '#EF4444', 3);
-            }
-
-            // Lvl 2: Fear
-            if (level >= 2) {
-                e.fearedUntil = state.gameTime + 1.5; // 1.5s
-            }
-        }
+    // Damage Logic (Dynamic expanding matching visual)
+    state.bullets.push({
+        id: Math.random(),
+        ownerId: player.id,
+        x: player.x,
+        y: player.y,
+        vx: 0,
+        vy: 0,
+        dmg: waveDmg,
+        pierce: 999999, // Infinite pierce
+        life: waveLife,
+        maxLife: waveLife,
+        isEnemy: false,
+        hits: new Set(),
+        size: 0, // Starts at 0, grows dynamically
+        isShockwaveCircle: true,
+        maxSize: range,
+        shockwaveLevel: Math.max(2, level),
+        isSingularity,
+        isTsunami,
+        color: isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : themeColor),
+        spawnTime: Date.now()
     });
 }
 
@@ -157,15 +158,8 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
             // Apply Resonance to Radius
             const resonance = getChassisResonance(state);
             const baseRadius = 100;
-            // Apply Class Curse
-            let classCurseMult = 1.0;
-            const curses = state.assistant.history.classCurses || {};
-            const curse = curses['stormstrike'];
-            if (curse && curse.expiry > Date.now()) {
-                classCurseMult = curse.intensity;
-            }
             // 100% + Resonance% (e.g. 50% resonance -> 1.5 multiplier)
-            const radius = baseRadius * (1 + resonance) * classCurseMult;
+            const radius = baseRadius * (1 + resonance);
 
             state.areaEffects.push({
                 id: Date.now() + Math.random(),
@@ -193,13 +187,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
     const bulletId = Math.random();
 
-    // Apply Class Curse
-    let classCurseMult = 1.0;
-    const curses = state.assistant.history.classCurses || {};
-    const curse = curses[player.playerClass || ''];
-    if (curse && curse.expiry > Date.now()) {
-        classCurseMult = curse.intensity;
-    }
+
 
     const b: any = {
         id: bulletId,
@@ -209,10 +197,10 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
         vy: Math.sin(angle + offsetAngle) * spd,
         dmg: finalDmg,
         pierce: bulletPierce,
-        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance) * Curse
-        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) * classCurseMult,
-        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance) * classCurseMult,
-        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance) * classCurseMult,
+        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance)
+        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance),
+        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
+        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
         isEnemy: false,
         hits: new Set(),
         size: bulletSize,
@@ -322,26 +310,19 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
         // Multi-Ring Logic
         // Ring II: 15% Base + Resonance
-        let ringCurseMult = 1.0;
-        const curses = state.assistant.history.classCurses || {};
-        const curse = curses['aigis'];
-        if (curse && curse.expiry > Date.now()) {
-            ringCurseMult = curse.intensity;
-        }
-
-        const chance2 = 0.15 * (1 + resonance) * ringCurseMult;
+        const chance2 = 0.15 * (1 + resonance);
         if (Math.random() < chance2) {
             handleRingSpawn(b, 190);
         }
 
         // Ring III: 10% Base + Resonance
-        const chance3 = 0.10 * (1 + resonance) * ringCurseMult;
+        const chance3 = 0.10 * (1 + resonance);
         if (Math.random() < chance3) {
             handleRingSpawn(b, 255);
         }
 
         // Ring IV: 5% Base + Resonance
-        const chance4 = 0.05 * (1 + resonance) * ringCurseMult;
+        const chance4 = 0.05 * (1 + resonance);
         if (Math.random() < chance4) {
             handleRingSpawn(b, 320);
         }

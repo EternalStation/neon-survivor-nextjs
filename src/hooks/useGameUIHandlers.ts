@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/types';
 import { createInitialGameState } from '../logic/core/GameState';
-import { applyUpgrade, spawnUpgrades } from '../logic/upgrades/UpgradeLogic';
+import { applyUpgrade, spawnUpgrades, spawnSnitchUpgrades } from '../logic/upgrades/UpgradeLogic';
 import { syncLegendaryHex, applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { calcStat } from '../logic/utils/MathUtils';
@@ -82,6 +82,21 @@ export function useGameUIHandlers({
             return false;
         }
 
+        // --- ABOMINATION DIMENSIONAL SUPPRESSION ---
+        const hasAbomination = gameState.current.enemies.some(e => e.shape === 'abomination' && !e.dead);
+        if (hasAbomination) {
+            gameState.current.portalBlockedByAbomination = true;
+            setPortalError(true);
+            playSfx('stun-disrupt'); // Distorted electronic sound
+            setUiState(p => p + 1);
+            setTimeout(() => {
+                setPortalError(false);
+                gameState.current.portalBlockedByAbomination = false;
+                setUiState(p => p + 1);
+            }, 2000);
+            return false;
+        }
+
         if (gameState.current.portalState === 'closed') {
             if (gameState.current.player.dust >= cost) {
                 gameState.current.player.dust -= cost;
@@ -129,7 +144,9 @@ export function useGameUIHandlers({
             gameState.current.player.rerolls--;
             // Pass true to bypass standard tier logic if we just want a fresh roll
             // Wait, spawnUpgrades second arg is isAnomaly. false is usually correct.
-            const choices = spawnUpgrades(gameState.current, false);
+            const choices = gameState.current.snitchRewardActive
+                ? spawnSnitchUpgrades(gameState.current)
+                : spawnUpgrades(gameState.current, false);
             setUpgradeChoices(choices);
             playSfx('reroll');
         }
@@ -188,6 +205,11 @@ export function useGameUIHandlers({
 
     const updateInventorySlot = useCallback((index: number, item: any) => {
         gameState.current.inventory[index] = item;
+        setUiState(prev => prev + 1);
+    }, [gameState, setUiState]);
+
+    const updateIncubatorSlot = useCallback((index: number, item: any | null) => {
+        gameState.current.incubator[index] = item;
         setUiState(prev => prev + 1);
     }, [gameState, setUiState]);
 
@@ -281,6 +303,7 @@ export function useGameUIHandlers({
         onViewChassisDetail,
         triggerPortal,
         triggerWallIncompetence,
+        updateIncubatorSlot,
         skipTime
     };
 }

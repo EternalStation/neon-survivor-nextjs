@@ -13,9 +13,10 @@ export function castSkill(state: GameState, skillIndex: number) {
 
     const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (state.player.cooldownReduction || 0));
 
-    if (skill.type === 'DefPuddle') {
+    if (skill.type === 'DefPuddle' || skill.type === 'XenoAlchemist' || skill.type === 'IrradiatedMire') {
         const level = getHexLevel(state, 'DefPuddle');
-        const radius = level >= 4 ? 600 : 500;
+        const mireLvl = getHexLevel(state, 'IrradiatedMire');
+        const radius = mireLvl > 0 ? 666 : (level >= 4 ? 600 : 500);
 
         state.areaEffects.push({
             id: Math.random(),
@@ -65,24 +66,32 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.duration = 10;
     }
 
-    if (skill.type === 'KineticBattery') {
-        const kinLvl = getHexLevel(state, 'KineticBattery');
-        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-        if (kinLvl >= 1 && triggerZap) {
-            triggerZap(state, state.player, kinLvl);
 
-            // Short cooldown for manual zap
-            skill.cooldownMax = 5 * cdMod;
-            skill.cooldown = skill.cooldownMax;
-        }
-    }
 
-    if (skill.type === 'ComWave') {
+    if (skill.type === 'ComWave' || skill.type === 'NeuralSingularity' || skill.type === 'KineticTsunami') {
         const level = getHexLevel(state, 'ComWave');
-        triggerShockwave(state, state.player, level);
+        const singLvl = getHexLevel(state, 'NeuralSingularity');
+        const tsunamiLvl = getHexLevel(state, 'KineticTsunami');
+        triggerShockwave(state, state.player, level, singLvl > 0, tsunamiLvl > 0);
+
+        if (level >= 4 || singLvl > 0 || tsunamiLvl > 0) {
+            state.player.buffs = state.player.buffs || {};
+            state.player.buffs.waveSpeed = state.gameTime + 3; // 3 seconds
+        }
 
         // Cooldown: 30s base, 20s if Level 4
-        const baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
+        let baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
+
+        if (singLvl > 0) {
+            baseCD -= (state.player.level * 0.1);
+        }
+        if (tsunamiLvl > 0) {
+            const harvestedSouls = state.player.kineticTsunamiWaveSouls || 0;
+            baseCD -= (harvestedSouls * 0.01);
+        }
+
+        if (baseCD < 5) baseCD = 5;
+
         skill.cooldownMax = baseCD * cdMod;
         skill.cooldown = skill.cooldownMax;
     }

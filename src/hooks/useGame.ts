@@ -19,6 +19,7 @@ export function useGameLoop(gameStarted: boolean) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameState = useRef<GameState>(createInitialGameState());
     const requestRef = useRef<number>(0);
+    const keys = useRef<Record<string, boolean>>({});
 
     const lastTimeRef = useRef<number>(0);
     const accRef = useRef<number>(0);
@@ -63,7 +64,7 @@ export function useGameLoop(gameStarted: boolean) {
         triggerWallIncompetence,
         triggerZeroPercentSnark,
         triggerIncubatorDestroyed
-    } = useOrbit(gameState, () => setUiState(p => p + 1));
+    } = useOrbit(gameState, () => setUiState(p => p + 1), keys);
 
     // Sync refs with state
     showStatsRef.current = showStats;
@@ -102,6 +103,7 @@ export function useGameLoop(gameStarted: boolean) {
         spendDust,
         onViewChassisDetail,
         triggerPortal,
+        updateIncubatorSlot,
         skipTime
     } = useGameUIHandlers({
         gameState,
@@ -122,8 +124,9 @@ export function useGameLoop(gameStarted: boolean) {
     });
 
     // Input Hook
-    const { keys, inputVector, mousePos, handleJoystickInput } = useGameInput({
+    const { inputVector, mousePos, handleJoystickInput } = useGameInput({
         gameState,
+        keys,
         setShowSettings,
         setShowStats,
         setShowModuleMenu,
@@ -219,6 +222,10 @@ export function useGameLoop(gameStarted: boolean) {
     useEffect(() => {
         if (showModuleMenu) setUiState(p => p + 1);
     }, [showModuleMenu]);
+
+    useEffect(() => {
+        gameState.current.language = language;
+    }, [language]);
 
     useEffect(() => {
         let cancelled = false;
@@ -454,6 +461,7 @@ export function useGameLoop(gameStarted: boolean) {
         handleLegendarySelect,
         handleModuleSocketUpdate,
         updateInventorySlot,
+        updateIncubatorSlot,
         toggleModuleMenu,
         uiState,
         inputVector,

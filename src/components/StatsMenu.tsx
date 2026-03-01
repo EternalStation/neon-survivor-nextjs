@@ -23,16 +23,16 @@ interface StatsMenuProps {
 }
 
 export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number; isDisabled?: boolean }> = ({ label, stat, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1, isDisabled = false }) => {
-    // Formula: (Base + Flat + HexFlat) * (1 + NormalMult%) * (1 + HexMult%)
+    // Formula: (Base + Flat + HexFlat) * (1 + NormalMult%) * (1 + HexMult%) * (1 + ClassMult%)
     const baseSum = stat.base + stat.flat + legendaryBonusFlat;
     const upgradeMult = 1 + (stat.mult || 0) / 100;
     const hexScaling = 1 + legendaryBonusPct / 100;
+    const classScaling = 1 + (stat.classMult || 0) / 100;
 
-    let total = baseSum * upgradeMult * hexScaling * arenaMult;
+    let total = baseSum * upgradeMult * hexScaling * classScaling * arenaMult;
     if (isDisabled) total = 0;
 
     const formatNum = (val: number) => {
-        if (isPercent) return Math.round(val).toLocaleString();
         return formatLargeNumber(val);
     };
 
@@ -64,13 +64,13 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
 
                 {/* 2. Upgrade Mult */}
                 <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                <span style={{ color: '#94a3b8', fontSize: 12 }}>{Math.round(upgradeMult * 100)}%</span>
+                <span style={{ color: '#94a3b8', fontSize: 12 }}>{formatLargeNumber(Math.round(upgradeMult * 100))}%</span>
 
                 {/* 3. Hex Mult (Orange) */}
                 {legendaryBonusPct > 0 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#f97316', fontSize: 12 }}>{Math.round(hexScaling * 100)}%</span>
+                        <span style={{ color: '#f97316', fontSize: 12 }}>{formatLargeNumber(Math.round(hexScaling * 100))}%</span>
                     </>
                 )}
 
@@ -78,19 +78,27 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                 {(stat.hexMult2 ?? 0) > 0 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: label === 'Regeneration' ? '#3b82f6' : '#fbbf24', fontSize: 12 }}>{Math.round((1 + (stat.hexMult2 ?? 0) / 100) * 100)}%</span>
+                        <span style={{ color: label === 'Regeneration' ? '#3b82f6' : '#fbbf24', fontSize: 12 }}>{formatLargeNumber(Math.round((1 + (stat.hexMult2 ?? 0) / 100) * 100))}%</span>
                     </>
                 )}
 
-                {/* 5. Arena Mult (Only if != 1) */}
+                {/* 5. Class Mult (Pink-Purple) */}
+                {(stat.classMult ?? 0) !== 0 && (
+                    <>
+                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
+                        <span style={{ color: '#d946ef', fontSize: 12 }}>{formatLargeNumber(Math.round(classScaling * 100))}%</span>
+                    </>
+                )}
+
+                {/* 6. Arena Mult (Only if != 1) */}
                 {arenaMult !== 1 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#3b82f6', fontSize: 12 }}>{Math.round(arenaMult * 100)}%</span>
+                        <span style={{ color: '#3b82f6', fontSize: 12 }}>{formatLargeNumber(Math.round(arenaMult * 100))}%</span>
                     </>
                 )}
 
-                {/* 6. Equals Total */}
+                {/* 7. Equals Total */}
                 <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
                 <span style={{ color: totalColor, fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
                     {displayTotal}
@@ -265,7 +273,9 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                 const baseSum = flatBase + hexFlat;
                                                 const normalMult = 1 + player.xp_per_kill.mult / 100;
                                                 const hexMult = 1 + calculateLegendaryBonus(gameState, 'xp_pct_per_kill') / 100;
-                                                const total = baseSum * normalMult * hexMult;
+                                                const classMult = 1 + (player.xp_per_kill.classMult || 0) / 100;
+                                                const refineryMult = (player as any).inRefineryZone ? 4.0 : 1.0;
+                                                const total = baseSum * normalMult * hexMult * classMult * refineryMult;
                                                 const showBreakdown = hexFlat > 0;
 
                                                 return (
@@ -278,15 +288,27 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                             <span style={{ color: '#64748b', fontSize: 12 }}>{Math.round(baseSum).toLocaleString()}</span>
                                                         )}
                                                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                                                        <span style={{ color: '#94a3b8', fontSize: 12 }}>{Math.round(normalMult * 100)}%</span>
+                                                        <span style={{ color: '#94a3b8', fontSize: 12 }}>{formatLargeNumber(Math.round(normalMult * 100))}%</span>
                                                         {hexMult > 1 && (
                                                             <>
                                                                 <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                                                                <span style={{ color: '#fbbf24', fontSize: 12 }}>{Math.round(hexMult * 100)}%</span>
+                                                                <span style={{ color: '#fbbf24', fontSize: 12 }}>{formatLargeNumber(Math.round(hexMult * 100))}%</span>
+                                                            </>
+                                                        )}
+                                                        {(player.xp_per_kill.classMult || 0) !== 0 && (
+                                                            <>
+                                                                <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
+                                                                <span style={{ color: '#d946ef', fontSize: 12 }}>{formatLargeNumber(Math.round(classMult * 100))}%</span>
+                                                            </>
+                                                        )}
+                                                        {(player as any).inRefineryZone && (
+                                                            <>
+                                                                <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
+                                                                <span style={{ color: '#22d3ee', fontSize: 12 }}>400%</span>
                                                             </>
                                                         )}
                                                         <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
-                                                        <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
+                                                        <span style={{ color: (player as any).inRefineryZone ? '#22d3ee' : '#4ade80', fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
                                                             {formatLargeNumber(Math.round(total))}
                                                         </span>
                                                     </>
@@ -316,7 +338,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                         {arenaMult !== 1 && (
                                                             <>
                                                                 <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                                                                <span style={{ color: '#3b82f6', fontSize: 12 }}>{Math.round(arenaMult * 100)}%</span>
+                                                                <span style={{ color: '#3b82f6', fontSize: 12 }}>{formatLargeNumber(Math.round(arenaMult * 100))}%</span>
                                                             </>
                                                         )}
                                                         {hexFlat > 0 && (
@@ -328,12 +350,12 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                         {bluePrintMult !== 1 && (
                                                             <>
                                                                 <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                                                                <span style={{ color: '#60a5fa', fontSize: 12 }}>{Math.round(bluePrintMult * 100)}%</span>
+                                                                <span style={{ color: '#60a5fa', fontSize: 12 }}>{formatLargeNumber(Math.round(bluePrintMult * 100))}%</span>
                                                             </>
                                                         )}
                                                         <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
                                                         <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
-                                                            {total.toFixed(1)}%
+                                                            {formatLargeNumber(total)}%
                                                         </span>
                                                     </>
                                                 );

@@ -369,6 +369,19 @@ export const getExtractionMessages = (lang: Language, playerName: string, arenaN
             { speaker: 'orbit', text: "EVACUATE NOW! TRANSMISSION ENDS.", pause: 5.0, isAlert: true },
         ];
 
+// ─────────────────────────────────────────────────────────────
+//  FAKE PORTAL TROLL (10-20 min mark)
+// ─────────────────────────────────────────────────────────────
+export const getFakePortalLine1 = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Протокол эвакуации активирован. Открываю портал через 10, 9, 8...', emotion: 'Point' }
+        : { text: 'Evacuation protocol activated. Opening portal in 10, 9, 8...', emotion: 'Point' };
+
+export const getFakePortalLine2 = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Ой извини, нажал не на ту кнопку что то такое', emotion: 'Smile' }
+        : { text: 'Oops sorry, pressed the wrong button or something', emotion: 'Smile' };
+
 export const getFluxGrantLine = (lang: Language): string =>
     lang === 'ru' ? "+100 ФЛЮКС" : "+100 FLUX";
 // ─────────────────────────────────────────────────────────────
@@ -502,3 +515,46 @@ export const getTutorialHints = (lang: Language): Partial<Record<TutorialStep, {
                 subtext: "When you will have too much meteorites you can use filters to filter the one you want."
             }
         };
+
+// ─────────────────────────────────────────────────────────────
+//  AFK STRIKE (Player standing still)
+// ─────────────────────────────────────────────────────────────
+export const getAfkLine1a = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Пилот тут?', emotion: 'Thinks' }
+        : { text: 'Pilot here?', emotion: 'Thinks' };
+
+export const getAfkLine1b = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Отсутствует обратная связь от штурвала.', emotion: 'Thinks' }
+        : { text: 'No feedback from the control yoke.', emotion: 'Thinks' };
+
+export const getAfkLine2 = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Запускаю дрона на последние координаты пилота…', emotion: 'Point' }
+        : { text: "Launching drone to pilot's last coordinates...", emotion: 'Point' };
+
+export const getAfkLine2Fast = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Запускаю дрона на последние координаты пилота… СЕЙЧАС! СЕЙЧАС! СЕЙЧАС!', emotion: 'Dissapointed' }
+        : { text: "Launching drone to pilot's last coordinates... NOW! NOW! NOW!", emotion: 'Dissapointed' };
+
+export const getAfkLine2FastAlready = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Дроны уже в пути! СЕЙЧАС! СЕЙЧАС! СЕЙЧАС!', emotion: 'Dissapointed' }
+        : { text: "Drones already on the way! NOW! NOW! NOW!", emotion: 'Dissapointed' };
+
+export const getAfkLineDeath = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Ой, я пролила кофе... Извини, не та кнопка.', emotion: 'Smile' }
+        : { text: 'Oops, I spilled coffee... Sorry, wrong button.', emotion: 'Smile' };
+
+export const getAfkFastDeathLine = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Ха! Думал, можешь меня дразнить? Я могу запускать дронов намного быстрее, чем ты думаешь. Даже не пытайся.', emotion: 'Dissapointed' }
+        : { text: "Ha! You thought you could tease me? I can launch drones much faster than you think. Don't try this.", emotion: 'Dissapointed' };
+
+export const getAfkLineStillAlive = (lang: Language): DialogLine =>
+    lang === 'ru'
+        ? { text: 'Пилот на месте…', emotion: 'Normal' }
+        : { text: 'Pilot is in place...', emotion: 'Normal' };

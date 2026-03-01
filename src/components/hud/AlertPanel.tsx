@@ -78,6 +78,16 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({ gameState, bossWarning }
                     </div>
                 </div>
             )}
+            {gameState.portalBlockedByAbomination && (
+                <div className="glitch-text" style={{
+                    position: 'absolute', top: 15, right: 15, textAlign: 'right',
+                    animation: 'pulse 0.2s infinite'
+                }}>
+                    <div style={{ color: '#ef4444', fontWeight: 900, letterSpacing: 1, fontSize: 20, textShadow: '0 0 20px #ff0000' }}>
+                        {t.portalsBlockedByAbomination}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

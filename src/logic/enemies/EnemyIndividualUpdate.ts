@@ -48,6 +48,9 @@ export function updateSingleEnemy(
                     p.curHp -= dmg;
                     p.damageTaken += dmg;
                     p.lastHitDamage = dmg;
+                    if (p.curHp <= 0) {
+                        p.deathCause = "Burn damage from Hell Boss";
+                    }
                     spawnFloatingNumber(state, p.x, p.y, `-${Math.round(dmg)}`, '#ef4444', false);
                 }
             }

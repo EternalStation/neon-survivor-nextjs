@@ -184,6 +184,9 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
     if (state.rareRewardActive) {
         state.rareRewardActive = false;
     }
+    if (state.snitchRewardActive) {
+        state.snitchRewardActive = false;
+    }
 
     if (choice.isSpecial) {
         if (choice.type.id === 'm') player.multi++;

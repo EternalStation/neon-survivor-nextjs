@@ -14,13 +14,14 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         speed: 6.5,
         dust: 0,
         isotopes: 0,
-        hp: { base: 150, flat: 0, mult: 0 },
+        hp: { base: 150, flat: 0, mult: 0, classMult: 0 },
         curHp: 150,
-        dmg: { base: 60, flat: 0, mult: 0 },
-        atk: { base: 300, flat: 0, mult: 0 },
-        reg: { base: 1, flat: 0, mult: 0 },
-        arm: { base: 0, flat: 0, mult: 0 },
-        xp_per_kill: { base: 25, flat: 0, mult: 0 },
+        dmg: { base: 60, flat: 0, mult: 0, classMult: 0 },
+        atk: { base: 300, flat: 0, mult: 0, classMult: 0 },
+        spd: { base: 6.5, flat: 0, mult: 0, classMult: 0 },
+        reg: { base: 1, flat: 0, mult: 0, classMult: 0 },
+        arm: { base: 0, flat: 0, mult: 0, classMult: 0 },
+        xp_per_kill: { base: 25, flat: 0, mult: 0, classMult: 0 },
         xp: { current: 0, needed: 369 },
         level: 1,
         damageDealt: 0,
@@ -50,16 +51,17 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
     };
 
     if (selectedClass) {
-        // Multiplicative stats (stored as integer percentages, e.g. 25 for +25%)
-        if (selectedClass.stats.hpMult) p.hp.mult += selectedClass.stats.hpMult * 100;
-        if (selectedClass.stats.dmgMult) p.dmg.mult += selectedClass.stats.dmgMult * 100;
-        if (selectedClass.stats.atkMult) p.atk.mult += selectedClass.stats.atkMult * 100;
-        if (selectedClass.stats.xpMult) p.xp_per_kill.mult += selectedClass.stats.xpMult * 100;
-        if (selectedClass.stats.regMult) p.reg.mult += selectedClass.stats.regMult * 100;
-        if (selectedClass.stats.armMult) p.arm.mult += selectedClass.stats.armMult * 100;
+        // Class Multipliers (Stored as integer percentages, e.g. 25 for +25%)
+        // These are now final multipliers applied in MathUtils.ts
+        if (selectedClass.stats.hpMult) p.hp.classMult = selectedClass.stats.hpMult * 100;
+        if (selectedClass.stats.dmgMult) p.dmg.classMult = selectedClass.stats.dmgMult * 100;
+        if (selectedClass.stats.atkMult) p.atk.classMult = selectedClass.stats.atkMult * 100;
+        if (selectedClass.stats.xpMult) p.xp_per_kill.classMult = selectedClass.stats.xpMult * 100;
+        if (selectedClass.stats.regMult) p.reg.classMult = selectedClass.stats.regMult * 100;
+        if (selectedClass.stats.armMult) p.arm.classMult = selectedClass.stats.armMult * 100;
+        if (selectedClass.stats.spdMult) p.spd.classMult = selectedClass.stats.spdMult * 100;
 
         // Flat/Direct stats
-        if (selectedClass.stats.spdMult) p.speed *= (1 + selectedClass.stats.spdMult);
         if (selectedClass.stats.regFlat) p.reg.flat += selectedClass.stats.regFlat;
 
         // Custom start conditions
@@ -126,6 +128,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         gameMode,
         player: players[myId], // Reference to player in the players map, not a separate copy
         players,
+        language: 'en',
         multiplayer: {
             active: gameMode === 'multiplayer',
             isHost: multiplayerConfig?.isHost || false,
@@ -190,7 +193,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
         // Inventory Defaults
         meteorites: [],
-        inventory: Array(320).fill(null), // 320 slots (10 reserved + 310 storage)
+        inventory: Array(319).fill(null), // 319 slots (9 reserved + 310 storage)
         incubator: Array(3).fill(null), // 3 slots for the void forge
         incubatorFuel: 0,
         incubatorFuelMax: 30,
@@ -234,6 +237,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         extractionDialogTime: 0,
         extractionTargetArena: 0,
         extractionPowerMult: 1.0,
+        anomalyBossCount: 0,
 
         // UI Delays
         pendingLevelUps: 0,
@@ -267,28 +271,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
                 upgradePicks: {},
                 deaths: 0,
                 totalDamageTaken: 0,
-                totalSurvivalTime: 0,
-                isCursed: false,
-                curseIntensity: 1.0,
-                classCurses: typeof localStorage !== 'undefined' ? (function () {
-                    const raw = localStorage.getItem('orbit_class_curses');
-                    const curses: Record<string, { expiry: number, intensity: number }> = {};
-                    if (raw) {
-                        try {
-                            const data = JSON.parse(raw);
-                            Object.keys(data).forEach(id => {
-                                if (data[id].expiry > Date.now()) {
-                                    curses[id] = data[id];
-                                }
-                            });
-                            // Save cleaned version back to storage
-                            localStorage.setItem('orbit_class_curses', JSON.stringify(curses));
-                        } catch (e) {
-                            localStorage.removeItem('orbit_class_curses');
-                        }
-                    }
-                    return curses;
-                })() : {},
+                totalSurvivalTime: 0
             }
         }
     };

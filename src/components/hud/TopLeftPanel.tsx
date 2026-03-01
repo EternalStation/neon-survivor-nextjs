@@ -196,35 +196,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     }
                 });
 
-                // 3. CLASS CURSE (Priority 4 - TOP)
-                const curses = gameState.assistant.history.classCurses || {};
-                const currentCurse = curses[player.playerClass || ''];
 
-                if (currentCurse && currentCurse.expiry > Date.now()) {
-                    const realTimeLeft = currentCurse.expiry - Date.now();
-                    const hours = Math.floor(realTimeLeft / 3600000);
-                    const mins = Math.floor((realTimeLeft % 3600000) / 60000);
-                    const secs = Math.floor((realTimeLeft % 60000) / 1000);
-                    const timeStr = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-                    const classIdMap: Record<string, string> = {
-                        'malware': 'MALWARE-PRIME',
-                        'eventhorizon': 'EVENT-HORIZON',
-                        'aigis': 'AIGIS-VORTEX',
-                        'stormstrike': 'COSMIC BEAM',
-                        'hivemother': 'HIVE-MOTHER'
-                    };
-                    const className = classIdMap[player.playerClass || ''] || player.playerClass;
-
-                    buffs.push({
-                        id: 'class_curse',
-                        title: `${t.penalty}: (${timeStr})`,
-                        buff: `-30% ${className} ${t.strengthPenalty}`,
-                        color: '#f87171',
-                        remaining: realTimeLeft,
-                        priority: 4
-                    });
-                }
 
                 // 4. TRIPLE WALL DAMAGE PENALTY (Priority 4 - TOP)
                 if (player.tripleWallDamageUntil && gameTime < player.tripleWallDamageUntil) {

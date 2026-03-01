@@ -265,9 +265,11 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const kinLvl = getHexLevel(gameState, 'KineticBattery');
                     if (kinLvl <= 0) return null;
 
+                    const cdMod = (isBuffActive(gameState, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
+                    const boltCDMax = 5.0 * cdMod;
                     const boltElapsed = gameState.gameTime - (player.lastKineticShockwave || 0);
-                    const boltCD = Math.max(0, 5.0 - boltElapsed);
-                    const boltPct = (boltCD / 5.0);
+                    const boltCD = Math.max(0, boltCDMax - boltElapsed);
+                    const boltPct = (boltCD / boltCDMax);
 
                     const shieldTimeLeft = Math.max(0, (player.kineticShieldTimer || 0) - gameState.gameTime);
                     const shieldPct = shieldTimeLeft / 60;

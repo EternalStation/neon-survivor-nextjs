@@ -29,12 +29,13 @@ interface ModuleMenuProps {
     onClose: () => void;
     onSocketUpdate: (type: 'hex' | 'diamond', index: number, item: any) => void;
     onInventoryUpdate: (index: number, item: any) => void;
+    onIncubatorUpdate: (index: number, item: any) => void;
     onRecycle: (source: 'inventory' | 'diamond', index: number, amount: number) => void;
     spendDust: (amount: number) => boolean;
     onViewChassisDetail: () => void;
 }
 
-export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClose, onSocketUpdate, onInventoryUpdate, onRecycle, spendDust, onViewChassisDetail }) => {
+export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClose, onSocketUpdate, onInventoryUpdate, onIncubatorUpdate, onRecycle, spendDust, onViewChassisDetail }) => {
     const [movedItem, setMovedItem] = useState<{ item: any, source: 'inventory' | 'diamond' | 'hex' | 'recalibrate' | 'incubator', index: number } | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [lockedItem, setLockedItem] = useState<{ item: Meteorite | any, x: number, y: number, index?: number } | null>(null);
@@ -46,6 +47,37 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
     const [recyclingAnim, setRecyclingAnim] = useState(false); // Used for visual feedback on button
     const [dustIndicators, setDustIndicators] = useState<{ id: number, baseValue: number, bonusValue: number }[]>([]);
     const [dustErrorBlink, setDustErrorBlink] = useState(false);
+
+    const mouseRef = useRef({ x: 0, y: 0 });
+    const requestRef = useRef<number | null>(null);
+
+    const handleMouseMove = React.useCallback((e: React.MouseEvent) => {
+        if (['requested', 'waiting'].includes(gameState.extractionStatus)) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const scaleX = (e.currentTarget as HTMLElement).offsetWidth / rect.width;
+        const scaleY = (e.currentTarget as HTMLElement).offsetHeight / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        // Only update if moved at least 0.5px to avoid sub-pixel jitter loops
+        if (Math.abs(mouseRef.current.x - x) < 0.5 && Math.abs(mouseRef.current.y - y) < 0.5) return;
+
+        mouseRef.current = { x, y };
+
+        if (!requestRef.current) {
+            requestRef.current = requestAnimationFrame(() => {
+                setMousePos({ x: mouseRef.current.x, y: mouseRef.current.y });
+                requestRef.current = null;
+            });
+        }
+    }, [gameState.extractionStatus]);
+
+    React.useEffect(() => {
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
+    }, []);
 
     const [selectedBestiaryEnemy, setSelectedBestiaryEnemy] = useState<BestiaryEntry | null>(null);
     const [recalibrateSlot, setRecalibrateSlot] = useState<Meteorite | null>(null);
@@ -321,9 +353,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         }
     };
 
-    const onIncubatorUpdate = (index: number, item: any | null) => {
-        gameState.incubator[index] = item;
-    };
+
 
     // Destroy Item Logic
     const handleRecycleClick = (idx: number) => {
@@ -462,11 +492,11 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             return;
         }
 
-        // 1. Preserve Safe Slots (0-9)
-        const protectedSlots = gameState.inventory.slice(0, 10);
+        // 1. Preserve Safe Slots (0-8)
+        const protectedSlots = gameState.inventory.slice(0, 9);
 
-        // 2. Collect & Sort Storage Items (10+)
-        const storageItems = gameState.inventory.slice(10).filter((m): m is Meteorite => m !== null);
+        // 2. Collect & Sort Storage Items (9+)
+        const storageItems = gameState.inventory.slice(9).filter((m): m is Meteorite => m !== null);
 
         const rarityMap: Record<string, number> = {};
         RARITY_ORDER.forEach((r, i) => rarityMap[r] = i);
@@ -610,17 +640,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
 
     return (
         <div
-            className="module-menu-container" // Hook for potential global styles
-            onMouseMove={(e) => {
-                if (['requested', 'waiting'].includes(gameState.extractionStatus)) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-
-                const scaleX = e.currentTarget.offsetWidth / rect.width;
-                const scaleY = e.currentTarget.offsetHeight / rect.height;
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
-                setMousePos({ x, y });
-            }}
+            className="module-menu-container"
+            onMouseMove={handleMouseMove}
             onMouseUp={() => {
                 if (movedItem && !['requested', 'waiting'].includes(gameState.extractionStatus)) {
                     // Cancel Drag / Drop back to source
@@ -630,6 +651,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         onInventoryUpdate(movedItem.index, movedItem.item);
                     } else if (movedItem.source === 'recalibrate') {
                         setRecalibrateSlot(movedItem.item);
+                    } else if (movedItem.source === 'incubator') {
+                        onIncubatorUpdate(0, movedItem.item);
                     }
                     setMovedItem(null);
                 }
@@ -650,12 +673,14 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 position: 'absolute', top: 0, left: '50%', width: '100%', height: '100%',
                 maxWidth: '1800px', // Standard wide cap to prevent elements from drifting too far
                 transform: 'translateX(-50%)',
-                display: 'flex', pointerEvents: 'none' // Allow clicks only on interactive elements
+                display: 'flex', pointerEvents: 'none', // Allow clicks only on interactive elements
+                paddingRight: '20px', // Safety margin to prevent edge cut-off
+                boxSizing: 'border-box'
             }}>
 
                 {/* LEFT: MATRIX (37%) - Adjusted as per user request */}
                 <div className="hex-grid-container" style={{
-                    width: '37%',
+                    width: '35%',
                     flexShrink: 0,
                     height: '100%',
                     position: 'relative',
@@ -714,6 +739,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         }}
                         selectedBestiaryEnemy={selectedBestiaryEnemy}
                         onSelectBestiaryEnemy={setSelectedBestiaryEnemy}
+                        onUpdate={() => setRefresh(p => p + 1)}
                     />
                     {/* Hidden element to help selector find class icon if it's deeply nested in Canvas/HexGrid? 
                          HexGrid renders HTML usually. Let's assume HexGrid uses DOM elements we can target. 
@@ -736,10 +762,10 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                 }}>
 
                     <div style={{
-                        flex: '0 0 475px',
-                        width: '475px',
-                        minWidth: '475px',
-                        maxWidth: '475px',
+                        flex: '0 0 505px',
+                        width: '505px',
+                        minWidth: '505px',
+                        maxWidth: '505px',
                         overflow: 'hidden',
                         padding: '4px',
                         boxSizing: 'border-box',
@@ -747,13 +773,13 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         display: 'flex',
                         flexDirection: 'column',
                         zIndex: 10,
-                        paddingTop: '4px',
-                        paddingBottom: '4px',
-                        paddingLeft: '4px',
-                        paddingRight: '4px'
+                        paddingTop: '2px',
+                        paddingBottom: '2px',
+                        paddingLeft: '2px',
+                        paddingRight: '2px'
                     }}>
                         {/* DATA PANEL (Top - 9:16 tactical area) */}
-                        <div className="module-detail-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div className="module-detail-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                             <ModuleDetailPanel
                                 gameState={gameState}
                                 placementAlert={placementAlert}
@@ -792,7 +818,9 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                             gap: '10px',
                             borderTop: '1px solid rgba(59, 130, 246, 0.2)', // Separator from panel
                             background: 'rgba(15, 23, 42, 0.5)',
-                            pointerEvents: 'auto'
+                            pointerEvents: 'auto',
+                            flexShrink: 0,
+                            minHeight: '62px'
                         }}>
                             {/* Recycle Button Wrapper for Spotlight */}
                             <div className="recycle-btn" style={{ display: 'none' }}></div>
@@ -900,6 +928,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     {/* COL 2: INVENTORY - Remaining Width (55%) */}
                     <div className="inventory-grid" style={{
                         flex: 1,
+                        minWidth: 0,
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
@@ -908,7 +937,8 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         marginLeft: '3px',
                         borderLeftWidth: '2px',
                         borderLeftStyle: 'solid',
-                        borderLeftColor: 'rgba(59, 130, 246, 0.3)'
+                        borderLeftColor: 'rgba(59, 130, 246, 0.3)',
+                        overflow: 'hidden'
                     }}>
 
 
@@ -1114,14 +1144,16 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             }
 
 
-            {extractionFocusActive && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, width: '37%', height: '100%',
-                    background: 'rgba(0, 0, 0, 0.75)',
-                    zIndex: 2500,
-                    pointerEvents: 'none'
-                }} />
-            )}
+            {
+                extractionFocusActive && (
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, width: '37%', height: '100%',
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        zIndex: 2500,
+                        pointerEvents: 'none'
+                    }} />
+                )
+            }
 
             <style jsx>{`
                 .dust-error {

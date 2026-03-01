@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { getUiTranslation } from '../../lib/uiTranslations';
 
 interface RemovalCandidate {
     index: number;
@@ -15,8 +17,26 @@ interface RemovalConfirmationModalProps {
 }
 
 export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> = ({ candidate, dust, cost, onCancel, onConfirm }) => {
-    const isCorrupted = candidate.item?.quality === 'Corrupted';
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+
+    const isCorrupted = candidate.item?.quality === 'Corrupted' || candidate.item?.isCorrupted;
     const [dontAskAgain, setDontAskAgain] = useState(false);
+
+    const mt = {
+        titleReplace: language === 'ru' ? 'ЗАМЕНА МОДУЛЯ' : 'REPLACE MODULE',
+        titleUnsocket: language === 'ru' ? 'ИЗВЛЕЧЕНИЕ МОДУЛЯ' : 'EXTRACT MODULE',
+        bodyReplace: language === 'ru' ? 'Вы уверены, что хотите заменить этот модуль?' : 'Are you sure you want to replace this module?',
+        bodyUnsocket: language === 'ru' ? 'Вы уверены, что хотите извлечь этот модуль?' : 'Are you sure you want to extract this module?',
+        corruptedWarning: language === 'ru' ? '(ИСКАЖЕННЫЙ ОСКОЛОК УДВАИВАЕТ ЦЕНУ)' : '(CORRUPTED MODULE COSTS EXTRA)',
+        costLabel: language === 'ru' ? 'СТОИМОСТЬ:' : 'COST:',
+        dontAskAgain: language === 'ru' ? 'Больше не спрашивать' : 'Don\'t ask again',
+        btnCancel: language === 'ru' ? 'ОТМЕНА' : 'CANCEL',
+        btnReplace: language === 'ru' ? 'ЗАМЕНИТЬ' : 'REPLACE',
+        btnExtract: language === 'ru' ? 'ИЗВЛЕЧЬ' : 'EXTRACT',
+        btnNoDust: language === 'ru' ? 'НЕТ ДАСТА' : 'NO DUST'
+    };
+
     return (
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -34,26 +54,24 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                 borderRadius: '8px',
                 boxShadow: '0 0 30px rgba(239, 68, 68, 0.3)',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
-                minWidth: '300px'
+                minWidth: '340px'
             }}
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
             >
                 <div style={{ fontSize: '18px', fontWeight: 900, color: '#ef4444', letterSpacing: '1px' }}>
-                    {candidate.replaceWith ? 'REPLACE METEORITE?' : 'UNSOCKET METEORITE?'}
+                    {candidate.replaceWith ? mt.titleReplace : mt.titleUnsocket}
                 </div>
                 <div style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px' }}>
-                    {candidate.replaceWith
-                        ? 'Replacing this meteorite will move the current one to your inventory.'
-                        : 'Removing this meteorite costs meteorite dust to extract.'}
+                    {candidate.replaceWith ? mt.bodyReplace : mt.bodyUnsocket}
                 </div>
                 {isCorrupted && (
                     <div style={{ color: '#a855f7', textAlign: 'center', fontSize: '11px', fontWeight: 800 }}>
-                        CORRUPTED METEORITE: EXTRACTION COST IS TRIPLED
+                        {mt.corruptedWarning}
                     </div>
                 )}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', padding: '8px 16px', borderRadius: '4px' }}>
-                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>COST: {cost}</span>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>{mt.costLabel} {cost}</span>
                     <img src="/assets/Icons/MeteoriteDust.png" alt="Dust" style={{ width: '20px', height: '20px' }} />
                 </div>
 
@@ -67,7 +85,7 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                             style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#ef4444' }}
                         />
                         <label htmlFor="dontAskAgain" style={{ color: '#94a3b8', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
-                            Don't ask again
+                            {mt.dontAskAgain}
                         </label>
                     </div>
                 )}
@@ -78,10 +96,10 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                         style={{
                             flex: 1, padding: '10px', background: 'rgba(255, 255, 255, 0.1)',
                             border: '1px solid #475569', color: '#fff', borderRadius: '4px', cursor: 'pointer',
-                            fontWeight: 'bold', fontSize: '12px'
+                            fontWeight: 'bold', fontSize: '12px', fontFamily: 'Orbitron, sans-serif'
                         }}
                     >
-                        CANCEL
+                        {mt.btnCancel}
                     </button>
                     <button
                         onClick={() => onConfirm(dontAskAgain)}
@@ -92,12 +110,13 @@ export const RemovalConfirmationModal: React.FC<RemovalConfirmationModalProps> =
                             border: '1px solid #ef4444', color: dust >= cost ? '#fff' : '#fecaca',
                             borderRadius: '4px', cursor: dust >= cost ? 'pointer' : 'not-allowed',
                             fontWeight: 'bold', fontSize: '12px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                            fontFamily: 'Orbitron, sans-serif'
                         }}
                     >
                         {dust >= cost
-                            ? (candidate.replaceWith ? 'REPLACE' : 'EXTRACT')
-                            : 'NO DUST'}
+                            ? (candidate.replaceWith ? mt.btnReplace : mt.btnExtract)
+                            : mt.btnNoDust}
                     </button>
                 </div>
             </div>

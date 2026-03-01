@@ -241,8 +241,7 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                             alignItems: 'center',
                             textAlign: 'center'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: cls.themeColor || cls.icon, fontWeight: 900, marginBottom: '5px', letterSpacing: '1px' }}>{t.coreCapability}</div>
-                            <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '8px', color: '#f8fafc' }}>{(t.classes as any)[cls.id]?.capabilityName || cls.capabilityName}</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '8px', color: cls.themeColor || cls.icon }}>{(t.classes as any)[cls.id]?.capabilityName || cls.capabilityName}</div>
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4', marginBottom: '24px' }}>{(t.classes as any)[cls.id]?.capabilityDesc || cls.capabilityDesc}</div>
 
                             {/* Stat Badge Container - Pushed to bottom and centered */}

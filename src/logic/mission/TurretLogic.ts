@@ -8,7 +8,7 @@ const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 2;
 const TURRET_DURATION = 30;
 const TURRET_COOLDOWN = 60;
-const REPAIR_SPEED = 50; // 2 seconds (50%/sec)
+const REPAIR_SPEED = 100; // 1 second (100%/sec)
 
 export function relocateTurretsToArena(state: GameState, arenaId: number) {
     // User Request: Turrets should always be in the arena the player entered. 

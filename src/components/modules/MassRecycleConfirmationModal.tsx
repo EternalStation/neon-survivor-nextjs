@@ -36,7 +36,7 @@ export const MassRecycleConfirmationModal: React.FC<MassRecycleConfirmationModal
                 </div>
 
                 <div style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px', lineHeight: '1.5' }}>
-                    You are about to recycle all <span style={{ color: type === 'SELECTED' ? '#3b82f6' : '#ef4444', fontWeight: 900 }}>{type.toLowerCase()}</span> modules.
+                    You are about to recycle all <span style={{ color: type === 'SELECTED' ? '#3b82f6' : '#ef4444', fontWeight: 900 }}>{type.toLowerCase()}</span> meteorites.
                     <br />
                     This action cannot be undone.
                 </div>
@@ -48,7 +48,7 @@ export const MassRecycleConfirmationModal: React.FC<MassRecycleConfirmationModal
                     border: '1px solid rgba(239, 68, 68, 0.2)'
                 }}>
                     <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                        TOTAL MODULES: <span style={{ color: '#ef4444' }}>({count})</span>
+                        TOTAL METEORITES: <span style={{ color: '#ef4444' }}>({count})</span>
                     </span>
                 </div>
 

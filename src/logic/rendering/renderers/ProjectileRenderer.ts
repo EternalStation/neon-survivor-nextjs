@@ -20,6 +20,13 @@ export function renderProjectiles(ctx: CanvasRenderingContext2D, state: GameStat
         // --- SPECIFIC MALWARE LOGIC ---
         // Ensure Malware bullets NEVER look like Nanites (Green-400), even if flags get mixed up
 
+        // --- SHOCKWAVE VISUALIZATION ---
+        // EffectRenderer already draws shockwave particles, so we skip standard bullet drawing.
+        if (b.isShockwaveCircle) {
+            ctx.restore();
+            return;
+        }
+
         // --- AIGIS RING VISUALIZATION ---
         if (b.isRing && b.ringRadius) {
             const intensity = Math.min(1.5, Math.max(0.5, (b.ringAmmo || 200) / 200));

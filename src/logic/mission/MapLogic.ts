@@ -1,4 +1,6 @@
 import type { GameState, MapPOI } from '../core/types';
+import { getUiTranslation } from '../../lib/uiTranslations';
+import type { Language } from '../../lib/LanguageContext';
 
 export const ARENA_RADIUS = 3750; // Increased by 3x (1250 -> 3750)
 export const MAP_GAP = 400;
@@ -57,6 +59,29 @@ export const ARENA_DATA: Record<number, ArenaDetails> = {
         color: "#3b82f6"
     }
 };
+
+export function getLocalizedArenaDetails(id: number, lang: Language): ArenaDetails {
+    const base = ARENA_DATA[id];
+    const t = getUiTranslation(lang);
+    const localized = (t.arenas as any)[id];
+    if (!localized) return base;
+    return {
+        ...base,
+        name: localized.name,
+        location: localized.location,
+        description: localized.description,
+        buffs: localized.buffs
+    };
+}
+
+export function getLocalizedARENA_DATA(lang: Language): Record<number, ArenaDetails> {
+    const result: Record<number, ArenaDetails> = {};
+    Object.keys(ARENA_DATA).forEach(key => {
+        const id = parseInt(key);
+        result[id] = getLocalizedArenaDetails(id, lang);
+    });
+    return result;
+}
 
 export function getArenaDetails(id: number, level: number = 1): ArenaDetails {
     const base = ARENA_DATA[id];

@@ -124,19 +124,23 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
 
         // Draw POIs
         gameState.pois.forEach(poi => {
-            if (poi.respawnTimer > 0 || poi.arenaId !== gameState.currentArena) return;
+            if (poi.arenaId !== gameState.currentArena) return;
+
+            const isCooling = (poi.cooldown > 0) || (poi.respawnTimer > 0);
+            const readyColor = poi.type === 'overclock' ? '#22d3ee' : '#ef4444';
+            const color = isCooling ? '#475569' : readyColor;
 
             ctx.save();
             ctx.translate(poi.x, poi.y);
 
             if (poi.type === 'overclock') {
-                ctx.fillStyle = '#22d3ee';
+                ctx.fillStyle = color;
                 ctx.font = 'bold 800px Orbitron';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('XP', 0, 0);
+                ctx.fillText('X2', 0, 0);
             } else if (poi.type === 'anomaly') {
-                ctx.fillStyle = '#ef4444';
+                ctx.fillStyle = color;
                 ctx.font = 'bold 1000px Orbitron';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';

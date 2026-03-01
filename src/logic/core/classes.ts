@@ -3,7 +3,7 @@ import type { PlayerClass } from './types';
 export const PLAYER_CLASSES: PlayerClass[] = [
     {
         id: 'malware',
-        name: 'Malware',
+        name: 'Sovereign',
         title: 'THE GLITCHED SOVEREIGN',
         lore: 'A flickering phantom in the machine. Reconstructed from corrupted sector data, this chassis exists in a state of constant quantum instability, allowing it to bypass standard ballistic limitations.',
         description: 'A glitched, unstable frame reconstructed from corrupted sector data.',
@@ -19,9 +19,10 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             { label: 'SPD/WALL', value: 5, unit: '%', isPercentage: true, description: 'Speed gain per bounce' },
         ],
         stats: {
-            hpMult: -0.15,
+            hpMult: -0.30,
+            atkMult: 0.50,
             bounceDmgMult: 0.2,
-            bounceSpeedBonus: 0.05, // +5%
+            bounceSpeedBonus: 0.05,
             projLifeMult: 1.5,
             pierce: 1,
         },
@@ -31,7 +32,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'eventhorizon',
-        name: 'Void',
+        name: 'Oblivion',
         title: 'THE VOID WEAVER',
         lore: 'The Singularity made manifest. This chassis warps the fabric of reality around it, turning every impact into a gravitational catastrophe.',
         description: 'Built around a contained singularity, this chassis manipulates local gravity.',
@@ -50,7 +51,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             { label: 'Boss DMG', value: 10, unit: '%', isPercentage: true, isStatic: true, description: 'Max HP per second' }
         ],
         stats: {
-            armMult: 0.30,
+            armMult: 0.20,
             spdMult: 0.10,
         },
         icon: '#8b5cf6', // Violet
@@ -59,7 +60,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'stormstrike',
-        name: 'Ray',
+        name: 'Zenith',
         title: 'THE THUNDER ENGINE',
         lore: 'A walking capacitor bank. Channels ionized atmosphere to call down devastating orbital strikes from satellite weapons platforms.',
         description: 'A heavy artillery frame with orbital strike capabilities.',
@@ -75,7 +76,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             { label: 'AOE', value: 100, unit: 'px', isPercentage: false, description: 'Strike radius' }
         ],
         stats: {
-            dmgMult: 0.40,
+            dmgMult: 0.50,
             atkMult: -0.20,
         },
         icon: '#06b6d4', // Cyan
@@ -84,7 +85,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'aigis',
-        name: 'Vortex',
+        name: 'Aegis',
         title: 'THE GOLDEN BASTION',
         lore: 'The ultimate deterrent. By weaving a web of magnetic flux, Aigis creates a rotating perimeter of death that protects its pilot while devastating anything that enters its orbit.',
         description: 'An experimental defensive unit maintaining an intense electromagnetic flux.',
@@ -110,7 +111,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'hivemother',
-        name: 'Hive-Mother',
+        name: 'Legion',
         title: 'THE SWARM OVERLORD',
         lore: 'Host to a trillion hungry minds. Each projectile fired by the Hive-Mother is a delivery system for a viral nanite swarm that consumes matter and replicates across the battlefield.',
         description: 'A bio-mechanical hybrid that hosts a swarm of adaptive nanites.',

@@ -93,14 +93,14 @@ export function updateNormalDiamond(e: Enemy, state: GameState, dist: number, dx
         vy = Math.sin(strafeAngle) * currentSpd + Math.sin(angleToPlayerD) * distFactor * currentSpd + pushY;
     }
 
-    // Standard shot (10-12s interval)
-    if (!e.nextAttackCD) e.nextAttackCD = 10 + Math.random() * 2;
+    // Standard shot (7-10s interval)
+    if (!e.nextAttackCD) e.nextAttackCD = 7 + Math.random() * 3;
     if (state.gameTime - (e.lastAttack || 0) > e.nextAttackCD) {
         const dmg = Math.floor(e.maxHp * 0.20); // 20% of max HP (doubled)
         const bulletColor = e.baseColor || (e.originalPalette ? e.originalPalette[0] : e.palette[0]);
         spawnEnemyBullet(state, e.x, e.y, angleToPlayerD, dmg, bulletColor);
         e.lastAttack = state.gameTime;
-        e.nextAttackCD = 10 + Math.random() * 2;
+        e.nextAttackCD = 7 + Math.random() * 3;
     }
 
     return { vx, vy };

@@ -41,6 +41,19 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         player.hp.hexMult = (player.hp.hexMult || 0) + 25;   // +25% Max HP
     }
 
+    // XENO-ALCHEMIST: 300% XP Stat Feedback
+    (player as any).inRefineryZone = false;
+    const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
+    if (alchemist) {
+        const playerInPuddle = state.areaEffects.some(ae =>
+            ae.type === 'puddle' &&
+            Math.hypot(ae.x - player.x, ae.y - player.y) < ae.radius
+        );
+        if (playerInPuddle) {
+            (player as any).inRefineryZone = true;
+        }
+    }
+
     // ARENA BUFFS
     const currentArenaLevel = state.arenaLevels[state.currentArena] || 0;
     const isSurging = isBuffActive(state, 'ARENA_SURGE');
@@ -61,6 +74,11 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     state.meteoriteRateBuffMult = (state.currentArena === 0 && currentArenaLevel >= 1) ? baseMult : 1.0;
 
     // Movement stat
+    player.speed = calcStat(player.spd, 1.0, curseMult);
+    if (player.buffs?.waveSpeed && state.gameTime < player.buffs.waveSpeed) {
+        player.speed *= 1.03;
+    }
+
     const maxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
     let regenAmount = (calcStat(player.reg, state.hpRegenBuffMult, curseMult) / 60);
 
@@ -110,34 +128,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
     // CHRONO PLATING (Economic - Arena 0)
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
-    if (chronoLvl >= 3) {
-        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
-        const startTime = chronoHex?.timeAtLevel?.[3] ?? state.gameTime;
-        const elapsed = state.gameTime - startTime;
-        const index = Math.floor(elapsed / 300);
-
-        if (player.lastChronoDoubleIndex === undefined) {
-            player.lastChronoDoubleIndex = 0;
-        }
-
-        if (index > player.lastChronoDoubleIndex) {
-            player.lastChronoDoubleIndex = index;
-            const currentTotal = calcStat(player.arm, 1.0, curseMult);
-            player.chronoArmorBonus = (player.chronoArmorBonus || 0) + currentTotal;
-            spawnFloatingNumber(state, player.x, player.y, "ARMOR DOUBLED!", '#60a5fa', true);
-            playSfx('level');
-        }
-    }
-
-    if (chronoLvl >= 4) {
-        // Updated Lvl 4: HP Regen increased by 0.5% OF ARMOR
-        const totalArmor = calcStat(player.arm, 1.0, curseMult);
-        const bonusRegen = totalArmor * 0.005;
-        // Apply directly to regen calculation logic?
-        // We need to add it to 'player.reg.flat' or similar for this frame.
-        // Or just add to 'regenAmount'.
-        regenAmount += (bonusRegen / 60);
-    }
 
     // Apply Regen
     if (player.healingDisabled) {

@@ -35,7 +35,7 @@ export const BASE_UPGRADE_VALUES: Record<string, number> = {
     atk_s: 30,
     hp_f: 50,
     hp_m: 30,
-    reg_f: 4,
+    reg_f: 2,
     reg_m: 30,
     xp_f: 20,
     xp_m: 10,

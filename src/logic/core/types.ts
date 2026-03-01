@@ -35,6 +35,7 @@ export interface PlayerStats {
     hexFlat?: number;
     hexMult?: number;
     hexMult2?: number;
+    classMult?: number;
 }
 
 export interface ShieldChunk {
@@ -53,7 +54,7 @@ export interface ActiveSkill {
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -83,6 +84,7 @@ export interface Player {
     };
 
     speed: number;
+    spd: PlayerStats;
     dust: number;
     isotopes: number;
     hp: PlayerStats;
@@ -102,7 +104,7 @@ export interface Player {
     reg: PlayerStats;
     invertedControlsUntil?: number;
     arm: PlayerStats;
-    xp_per_kill: { base: number; flat: number; mult: number };
+    xp_per_kill: PlayerStats;
     xp: { current: number; needed: number };
     level: number;
     lastShot: number;
@@ -131,6 +133,7 @@ export interface Player {
         puddleRegen?: boolean; // Lvl 3 puddle buff
         epicenterShield?: number; // Lvl 3 epicenter shield
         systemSurge?: { end: number, atk: number, spd: number }; // General surge buff for Storm-Strike or others
+        waveSpeed?: number; // Timestamp for wave speed buff
     };
     playerClass?: import('./classes').PlayerClassId;
     classShotCount?: number; // For Storm-Strike Hyper-Pulse
@@ -140,6 +143,7 @@ export interface Player {
     lastHitDamage?: number; // Final hit damage that killed the player
     lastDamageTime?: number; // Timestamp when player took damage
     wallHitTimestamps?: number[];
+    waveUses?: number;
     lastWallWarningTime?: number;
     tripleWallDamageUntil?: number;
     lastWallHitTime?: number; // Cooldown for wall collisions
@@ -167,6 +171,7 @@ export interface Player {
     chronoArmorBonus?: number;
     // Aigis Optimization
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
+    kineticTsunamiWaveSouls?: number;
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
@@ -259,6 +264,13 @@ export interface Bullet {
     turretLevel?: number;
     isBomb?: boolean;
     explodeRadius?: number;
+    // Shockwave
+    isShockwaveCircle?: boolean;
+    isSingularity?: boolean;
+    isTsunami?: boolean;
+    maxSize?: number;
+    shockwaveLevel?: number;
+    maxLife?: number;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
@@ -570,7 +582,7 @@ export interface Upgrade {
     isSpecial?: boolean;
 }
 
-export type LegendaryCategory = 'Economic' | 'Combat' | 'Defensive';
+export type LegendaryCategory = 'Economic' | 'Combat' | 'Defensive' | 'Fusion';
 
 export type LegendaryType =
     | 'EcoDMG' | 'EcoXP' | 'EcoHP'
@@ -578,13 +590,14 @@ export type LegendaryType =
     | 'DefPuddle' | 'DefEpi' | 'CombShield'
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
-    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating';
+    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami';
 
 export interface LegendaryHex {
     id: string;
     name: string;
     desc: string;
     category: LegendaryCategory;
+    categories?: LegendaryCategory[];
     type: LegendaryType;
     level: number;
     killsAtAcquisition: number;
@@ -705,6 +718,7 @@ export interface GameState {
     rareSpawnCycle: number; // Index of rare spawn cycle
     rareSpawnActive: boolean; // Is a rare enemy currently alive?
     rareRewardActive?: boolean; // Flag to show "Increased Rarity" text on next level up
+    snitchRewardActive?: boolean; // Flag to track Snitch rewards for rerolls
     spawnTimer: number; // For start/restart animation
     unpauseDelay?: number; // Grace period after closing menus
     unpauseMode?: 'normal' | 'slow_motion'; // Type of unpause transition
@@ -739,6 +753,7 @@ export interface GameState {
     isUpgradeMenuOpen?: boolean;
     shownUpgradeIds?: string[];
     portalBlockedByWorms?: boolean;
+    portalBlockedByAbomination?: boolean;
     transferTimer: number; // 3s delay during teleport
     nextArenaId: number | null; // Destination
     portalOneTimeUse?: boolean; // If true, portals close after one use
@@ -774,6 +789,7 @@ export interface GameState {
     // Frame-based caches (Not persistent)
     legionLeads?: Record<string, Enemy>;
     playerName?: string;
+    language: import('../../lib/LanguageContext').Language;
 
     // Blueprint System
     blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)
@@ -843,14 +859,9 @@ export interface GameState {
             totalSurvivalTime: number;
             lastOneTrickWarningTime?: number;
             lastWallWarningTime?: number;
-            isCursed?: boolean;
-            curseIntensity?: number;
             classStreak?: number;
             lastClassId?: string;
-            classCurses?: Record<string, {
-                expiry: number;
-                intensity: number;
-            }>;
+            curseIntensity?: number;
         };
     };
 }
@@ -941,6 +952,7 @@ export interface Blueprint {
     isBlueprint: boolean;
     researched: boolean;
     status: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
+    discoveredIn?: string;
     researchRemainingTime?: number;
     researchFinishTime?: number;
     researchDuration?: number;

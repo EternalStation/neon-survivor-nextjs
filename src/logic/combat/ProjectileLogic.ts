@@ -301,6 +301,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     }
 
                     if (e.hp <= 0 && !e.dead) {
+                        if (b.isTsunami) {
+                            const soulCount = e.soulRewardMult ?? (e.isElite ? (e.shape === 'pentagon' ? 5 : 10) : 1);
+                            owner.kineticTsunamiWaveSouls = (owner.kineticTsunamiWaveSouls || 0) + soulCount;
+                        }
                         handleEnemyDeath(state, e, onEvent);
                     }
 
@@ -312,8 +316,16 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             continue; // Skip standard collision logic for Ring
         }
 
+        // Update Shockwave size dynamically
+        if (b.isShockwaveCircle && b.maxLife && b.maxSize) {
+            const progress = 1 - (b.life / b.maxLife);
+            // Steady circle increase
+            b.size = b.maxSize * progress;
+        }
+
         // Collision with Enemies
-        const nearbyEnemies = state.spatialGrid.query(b.x, b.y, 100); // 100px search radius (covers max enemy size)
+        const searchRadius = typeof b.size === 'number' && b.size > 50 ? b.size + 100 : 100;
+        const nearbyEnemies = state.spatialGrid.query(b.x, b.y, searchRadius);
 
         for (let j = 0; j < nearbyEnemies.length; j++) {
             const e = nearbyEnemies[j];
@@ -324,7 +336,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
             if (e.dead || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || e.soulSuckActive || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
 
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
-            const hitRadius = e.size + 10;
+            let hitRadius = e.size + 10;
+            if (b.isShockwaveCircle && typeof b.size === 'number') {
+                hitRadius += b.size;
+            }
 
             // --- SQUARE BOSS BUBBLE REFLECTION (Lvl 3) ---
             // If boss has shields active, reflect bullets at the bubble radius
@@ -596,6 +611,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                             // Handle Death for linked targets
                             if (target.hp <= 0 && !target.dead) {
+                                if (b.isTsunami) {
+                                    const soulCount = target.soulRewardMult ?? (target.isElite ? (target.shape === 'pentagon' ? 5 : 10) : 1);
+                                    owner.kineticTsunamiWaveSouls = (owner.kineticTsunamiWaveSouls || 0) + soulCount;
+                                }
                                 handleEnemyDeath(state, target, onEvent);
                             }
                         });
@@ -613,8 +632,17 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         }
                     }
 
+                    if (b.isShockwaveCircle && b.shockwaveLevel && b.shockwaveLevel >= 2) {
+                        let fearDur = 1.5;
+                        if (b.isSingularity) {
+                            const totalFlatXp = owner.xp_per_kill.base + owner.xp_per_kill.flat + calculateLegendaryBonus(state, 'xp_per_kill', false, owner);
+                            fearDur += Math.floor(totalFlatXp / 100) * 0.1;
+                        }
+                        e.fearedUntil = state.gameTime + fearDur;
+                    }
+
                     // Hyper-Pulse infinite pierce
-                    if (!b.isHyperPulse) {
+                    if (!b.isHyperPulse && !b.isShockwaveCircle) {
                         b.pierce--;
                     }
                 }
@@ -652,15 +680,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     const resonance = getChassisResonance(state);
                     const multiplier = 1 + resonance;
 
-                    // Apply Class Curse
-                    let classCurseMult = 1.0;
-                    const curses = state.assistant.history.classCurses || {};
-                    const curse = curses['hivemother'];
-                    if (curse && curse.expiry > Date.now()) {
-                        classCurseMult = curse.intensity;
-                    }
 
-                    const swarmDmgPerSecPct = 5 * multiplier * classCurseMult;
+
+                    const swarmDmgPerSecPct = 5 * multiplier;
 
                     e.isInfected = true;
                     e.infectedUntil = 999999999; // Keep as fallback/legacy check

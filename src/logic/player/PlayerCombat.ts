@@ -22,22 +22,16 @@ export function handlePlayerCombat(
     const player: Player = overridePlayer || state.player;
     const curseMult = state.assistant.history.curseIntensity || 1.0;
 
-    // --- Kinetic Battery Skill Sync ---
-    const kinSkill = player.activeSkills.find((s: any) => s.type === 'KineticBattery');
-    if (kinSkill) {
-        const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
-        const boltElapsed = state.gameTime - (player.lastKineticShockwave || 0);
-        const boltCD = Math.max(0, (5.0 * cdMod) - boltElapsed);
-        kinSkill.cooldown = boltCD;
-        kinSkill.cooldownMax = 5.0 * cdMod;
-    }
+
 
     // RADIATION CORE (Combat - Arena 1)
-    const radLvl = getHexLevel(state, 'RadiationCore');
+    const mireLvl = getHexLevel(state, 'IrradiatedMire');
+    const radLvl = mireLvl > 0 ? 5 : getHexLevel(state, 'RadiationCore');
     if (radLvl >= 1) {
         if (state.frameCount % 10 === 0) {
-            const m = getHexMultiplier(state, 'RadiationCore');
-            const range = 500;
+            const m = getHexMultiplier(state, mireLvl > 0 ? 'IrradiatedMire' : 'RadiationCore');
+            const mireActive = mireLvl > 0;
+            const range = mireActive ? 666 : 500;
             const maxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             let dmgAmp = 1.0 * m;
             if (radLvl >= 3) {
@@ -45,8 +39,6 @@ export function handlePlayerCombat(
                 if (missing > 0) dmgAmp += missing;
             }
 
-            const maxDmgPct = 0.10 * dmgAmp;
-            const minDmgPct = 0.05 * dmgAmp;
             const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
@@ -56,15 +48,24 @@ export function handlePlayerCombat(
                 const d = Math.hypot(e.x - player.x, e.y - player.y);
                 let tickDmg = 0;
 
+                // Base Radiation Damage
                 if (radLvl >= 4) {
                     tickDmg += (e.maxHp * 0.02 * dmgAmp) / 6;
                 }
 
                 if (d < range) {
                     enemiesInAura.push(e);
-                    const distFactor = 1 - (d / range);
-                    const auraPct = minDmgPct + (distFactor * (maxDmgPct - minDmgPct));
+                    const auraPct = 0.05 * dmgAmp; // Flat 5% base from user spec
                     tickDmg += (playerMaxHp * auraPct) / 6;
+                }
+
+                // IRRADIATED MIRE: 100% MORE base damage scaling if in Acid
+                if (mireActive && d < range) {
+                    const isInAcid = state.areaEffects.some(ef => ef.type === 'puddle' && Math.hypot(e.x - ef.x, e.y - ef.y) < ef.radius);
+                    if (isInAcid) {
+                        const mireMult = getHexMultiplier(state, 'IrradiatedMire');
+                        tickDmg *= (1 + 1.0 * mireMult); // 100% base amplified by meteorites
+                    }
                 }
 
                 if (tickDmg > 0) {

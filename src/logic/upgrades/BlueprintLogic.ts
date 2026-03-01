@@ -108,7 +108,8 @@ export function createBlueprint(type: BlueprintType): Blueprint {
         ...data,
         isBlueprint: true,
         researched: false,
-        status: 'locked'
+        status: 'locked',
+        discoveredIn: 'BLUEPRINT ARCHIVE'
     };
 }
 
@@ -167,9 +168,9 @@ export function researchBlueprint(state: GameState, inventoryIndex: number): boo
     blueprint.researchDuration = randomDuration;
     blueprint.researchFinishTime = state.gameTime + randomDuration;
 
-    // Try to move to a Safe Slot (0-9) if not already in one
-    if (inventoryIndex >= 10) {
-        const safeSlotIdx = state.inventory.findIndex((s, idx) => s === null && idx < 10);
+    // Try to move to a Safe Slot (0-8) if not already in one
+    if (inventoryIndex >= 9) {
+        const safeSlotIdx = state.inventory.findIndex((s, idx) => s === null && idx < 9);
         if (safeSlotIdx !== -1) {
             state.inventory[safeSlotIdx] = blueprint;
             state.inventory[inventoryIndex] = null;

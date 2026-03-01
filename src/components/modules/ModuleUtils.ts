@@ -86,9 +86,10 @@ export const findClosestVertices = (v1s: { x: number, y: number }[], v2s: { x: n
 
 export const getLegendaryInfo = (category: string, type: string) => {
     const categories: Record<LegendaryCategory, { icon: string, color: string }> = {
-        Economic: { icon: '💰', color: '#fbbf24' },
-        Combat: { icon: '⚔️', color: '#f87171' },
-        Defensive: { icon: '🛡️', color: '#60a5fa' }
+        Economic: { icon: '', color: '#fbbf24' }, // Yellow (Arena)
+        Combat: { icon: '', color: '#ef4444' },   // Red (Arena)
+        Defensive: { icon: '', color: '#3b82f6' }, // Blue (Arena)
+        Fusion: { icon: '', color: '#a855f7' }    // Purple (Fusion)
     };
     const base = categories[category as LegendaryCategory] || { icon: '★', color: '#fbbf24' };
 
@@ -109,11 +110,25 @@ export const getLegendaryInfo = (category: string, type: string) => {
     }
 };
 
-export const getMeteoriteColor = (discoveredIn: string) => {
+export const getMeteoriteColor = (discoveredIn: string | undefined) => {
+    if (!discoveredIn) return '#94a3b8';
     const up = discoveredIn.toUpperCase();
-    if (up.includes('SECTOR-01') || up.includes('ECO')) return '#fbbf24'; // Yellow
-    if (up.includes('SECTOR-02') || up.includes('COM') || up.includes('COMBAT')) return '#f87171'; // Red
-    if (up.includes('SECTOR-03') || up.includes('DEF')) return '#60a5fa'; // Blue
+
+    // Sectors (Purple Theme - Brightened for contrast)
+    if (up.includes('SECTOR-01')) return '#e9d5ff'; // Very Light Purple
+    if (up.includes('SECTOR-02')) return '#c084fc'; // Medium Purple
+    if (up.includes('SECTOR-03')) return '#a855f7'; // Vibrant Purple
+
+    // Arenas (Synced with game roles)
+    if (up.includes('ECONOMIC')) return '#fbbf24'; // Yellow
+    if (up.includes('COMBAT')) return '#ef4444'; // Red
+    if (up.includes('DEFENCE')) return '#3b82f6'; // Blue
+
+    // Forges (Unique Colors)
+    if (up.includes('EXIS')) return '#d946ef'; // Magenta
+    if (up.includes('APEX')) return '#fb923c'; // Orange
+    if (up.includes('BASTION')) return '#22d3ee'; // Lagoon (Green-Blue)
+
     return '#94a3b8'; // Slate-400 (Default/Grey)
 };
 
@@ -162,7 +177,17 @@ export const matchesFilter = (
         }
     }
 
-    // Handle Rarity Filter
+    // Blueprints are a separate category — they bypass rarity and arena filters entirely.
+    // They only appear/disappear based on the quality (type) filter BLUEPRINTS selection.
+    // When perk filters are active, blueprints appear as ghosts so they can't be accidentally
+    // mass-recycled (since they have no perks and don't match any perk filter).
+    if (item.isBlueprint) {
+        const anyPerkActive = Object.values(perkFilters).some(f => f?.active);
+        if (anyPerkActive) return false;
+        return true;
+    }
+
+    // Handle Rarity Filter (meteorites only)
     if (Array.isArray(coreFilter.rarity)) {
         if (coreFilter.rarity.length > 0 && !coreFilter.rarity.includes('All')) {
             if (!coreFilter.rarity.includes(item.rarity)) return false;
@@ -171,20 +196,21 @@ export const matchesFilter = (
         if (coreFilter.rarity !== 'All' && item.rarity !== coreFilter.rarity) return false;
     }
 
-    // Handle Arena Filter
+    // Handle Arena Filter (meteorites only)
+    const disc = item.discoveredIn || '';
     if (Array.isArray(coreFilter.arena)) {
         if (coreFilter.arena.length > 0 && !coreFilter.arena.includes('All')) {
-            const match = coreFilter.arena.some(a => item.discoveredIn.toUpperCase().includes(a.toUpperCase()));
+            const match = coreFilter.arena.some(a => disc.toUpperCase().includes(a.toUpperCase()));
             if (!match) return false;
         }
     } else {
-        if (coreFilter.arena !== 'All' && !item.discoveredIn.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
+        if (coreFilter.arena !== 'All' && !disc.toUpperCase().includes(coreFilter.arena.toUpperCase())) return false;
     }
 
     // Perk Checks (Cumulative/AND logic)
-    // Skip blueprints, non-meteorite items (dust/flux), and items with no perks array.
+    // Skip non-meteorite items (dust/flux), and items with no perks array.
     // An empty array [] is truthy in JS, so we must also check .length > 0.
-    if (item.isBlueprint || !item.perks || !Array.isArray(item.perks) || item.perks.length === 0) return true;
+    if (!item.perks || !Array.isArray(item.perks) || item.perks.length === 0) return true;
 
     for (let lvl = 1; lvl <= 6; lvl++) {
         const f = perkFilters[lvl];
@@ -210,9 +236,15 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
 
     const normalize = (s: string) => {
         const lower = s.toLowerCase();
-        if (lower === 'sector-01' || lower === 'sector 01' || lower === 's1' || lower.includes('eco')) return 'eco';
-        if (lower === 'sector-02' || lower === 'sector 02' || lower === 's2' || lower.includes('com')) return 'com';
-        if (lower === 'sector-03' || lower === 'sector 03' || lower === 's3' || lower.includes('def')) return 'def';
+        if (lower === 'sector-01' || lower === 'sector 01' || lower === 's1' || lower.includes('eco') || lower.includes('exis') || lower.includes('экзис')) return 'eco';
+        if (lower === 'sector-02' || lower === 'sector 02' || lower === 's2' || lower.includes('com') || lower.includes('apex') || lower.includes('предел')) return 'com';
+        if (lower === 'sector-03' || lower === 'sector 03' || lower === 's3' || lower.includes('def') || lower.includes('bastion') || lower.includes('бастион')) return 'def';
+
+        // Quality mapping
+        if (lower === 'broken' || lower === 'сломан' || lower === 'bro' || lower === 'сло') return 'bro';
+        if (lower === 'damaged' || lower === 'поврежден' || lower === 'dam' || lower === 'пов') return 'dam';
+        if (lower === 'new' || lower === 'новый' || lower === 'nov' || lower === 'нов') return 'new';
+
         return lower;
     };
 
@@ -269,14 +301,23 @@ export const matchesPerk = (p: { id: string, value: number }, lvl: number, f: Pe
     return false;
 };
 
+export const getSpinPools = (language: string) => {
+    const t = getUiTranslation(language as any);
+    const m = t.meteorites.stats;
+    const isRu = language === 'ru';
+
+    return {
+        Sector: [t.recalibrate.sectors.s1, t.recalibrate.sectors.s2, t.recalibrate.sectors.s3],
+        Arena: [m.economicArena, m.combatArena, m.defenceArena],
+        Legendary: isRu ? ['ЭКЗИС', 'ПРЕДЕЛ', 'БАСТИОН'] : ['EXIS', 'APEX', 'BASTION'],
+        Quality: [t.recalibrate.qualities.bro, t.recalibrate.qualities.dam, t.recalibrate.qualities.new]
+    };
+};
+
 export const SPIN_POOLS = {
     Sector: ['Sector-01', 'Sector-02', 'Sector-03'],
     Arena: ['Economic Arena', 'Combat Arena', 'Defence Arena'],
-    Legendary: ['Eco ⬢', 'Com ⬢', 'Def ⬢'],
-    Pairing: [
-        'Eco & Eco ⬢', 'Eco & Com ⬢', 'Eco & Def ⬢',
-        'Com & Com ⬢', 'Com & Def ⬢', 'Def & Def ⬢'
-    ],
+    Legendary: ['EXIS', 'APEX', 'BASTION'],
     Quality: ['Broken', 'Damaged', 'New']
 };
 
@@ -289,8 +330,11 @@ export const getPerkParts = (id: string, language: string = 'en') => {
     if (pts.length < 2) return [];
 
     const t = getUiTranslation(language as any).recalibrate;
+    const mStats = getUiTranslation(language as any).meteorites.stats;
     const parts: string[] = [];
+    const isRu = language === 'ru';
 
+    // mapSector: returns the sector label used in description (same in both languages)
     const mapSector = (s: string) => {
         if (s === 'eco') return t.sectors.s1;
         if (s === 'com') return t.sectors.s2;
@@ -298,27 +342,30 @@ export const getPerkParts = (id: string, language: string = 'en') => {
         return s;
     };
 
+    // mapArena: must match what formatPerkDescription produces for "found in X Arena"
+    // RU uses mTrans.stats.economicArena = 'Экономическая Арена', not tr.arenas.eco = 'Эко Арена'
     const mapArena = (s: string) => {
-        if (s === 'eco') return t.arenas.eco;
-        if (s === 'com') return t.arenas.com;
-        if (s === 'def') return t.arenas.def;
+        if (s === 'eco') return mStats.economicArena;
+        if (s === 'com') return mStats.combatArena;
+        if (s === 'def') return mStats.defenceArena;
         return s;
     };
 
-    const mapLegendary = (s: string) => {
-        if (s === 'eco') return t.legendary.eco;
-        if (s === 'com') return t.legendary.com;
-        if (s === 'def') return t.legendary.def;
+    // mapLegendaryShort: short form — 'Экзис'/'Exis' etc.
+    const mapLegendaryShort = (s: string) => {
+        if (isRu) {
+            if (s === 'eco') return 'ЭКЗИС';
+            if (s === 'com') return 'ПРЕДЕЛ';
+            if (s === 'def') return 'БАСТИОН';
+        } else {
+            if (s === 'eco') return 'EXIS';
+            if (s === 'com') return 'APEX';
+            if (s === 'def') return 'BASTION';
+        }
         return s;
     };
 
-    const mapLegendarySuffix = (s: string) => {
-        if (s === 'eco') return `${t.legendary.eco} ⬢`;
-        if (s === 'com') return `${t.legendary.com} ⬢`;
-        if (s === 'def') return `${t.legendary.def} ⬢`;
-        return s;
-    };
-
+    // mapQuality: matches tr.qualities which formatPerkDescription also uses
     const mapQuality = (s: string) => {
         if (s === 'bro') return t.qualities.bro;
         if (s === 'dam') return t.qualities.dam;
@@ -326,28 +373,33 @@ export const getPerkParts = (id: string, language: string = 'en') => {
         return s;
     };
 
+    // Connector between two arena shorts in a pairing — 'и' in RU, '&' in EN
+    const connector = isRu ? ' и ' : ' & ';
+
     const lvl = parseInt(pts[0].replace('lvl', ''));
 
     if (lvl === 1) {
-        // lvl1_SECTOR_LEGENDARY
+        // lvl1_SECTOR_LEGENDARY  e.g. lvl1_eco_com
         parts.push(mapSector(pts[1]));
-        parts.push(mapLegendarySuffix(pts[2]));
+        parts.push(mapLegendaryShort(pts[2]));
     } else if (lvl === 2) {
-        // lvl2_SECTOR_NEIGHBOR
+        // lvl2_SECTOR_NEIGHBOR  e.g. lvl2_eco_bro
         parts.push(mapSector(pts[1]));
         parts.push(mapQuality(pts[2]));
     } else if (lvl === 3 || lvl === 4) {
-        // lvl3_ARENA_NEIGHBOR
+        // lvl3/4_ARENA_NEIGHBOR  e.g. lvl3_eco_bro
         parts.push(mapArena(pts[1]));
         parts.push(mapQuality(pts[2]));
     } else if (lvl === 5) {
-        // lvl5_SECTOR_PAIR1_PAIR2
+        // lvl5_SECTOR_PAIR1_PAIR2  e.g. lvl5_eco_eco_eco
         parts.push(mapSector(pts[1]));
-        parts.push(`${mapLegendary(pts[2])} & ${mapLegendarySuffix(pts[3])}`);
+        parts.push(mapLegendaryShort(pts[2]));
+        parts.push(mapLegendaryShort(pts[3]));
     } else if (lvl === 6) {
-        // lvl6_NEIGHBOR_PAIR1_PAIR2
+        // lvl6_NEIGHBOR_PAIR1_PAIR2  e.g. lvl6_bro_eco_eco
         parts.push(mapQuality(pts[1]));
-        parts.push(`${mapLegendary(pts[2])} & ${mapLegendarySuffix(pts[3])}`);
+        parts.push(mapLegendaryShort(pts[2]));
+        parts.push(mapLegendaryShort(pts[3]));
     }
 
     return parts;

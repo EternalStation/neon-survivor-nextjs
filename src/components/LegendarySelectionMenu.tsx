@@ -1,5 +1,7 @@
 import React from 'react';
 import type { LegendaryHex } from '../logic/core/types';
+import { useLanguage } from '../lib/LanguageContext';
+import { getUiTranslation } from '../lib/uiTranslations';
 
 interface LegendarySelectionMenuProps {
     options: LegendaryHex[];
@@ -7,7 +9,9 @@ interface LegendarySelectionMenuProps {
 }
 
 export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ options, onSelect }) => {
+    const { language } = useLanguage();
     const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const mTrans = getUiTranslation(language as any).meteorites;
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,12 +30,25 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
     }, [options, selectedIndex, onSelect]);
 
     const getLegendaryInfo = (category: string) => {
-        const categories: Record<string, { color: string, label: string }> = {
-            Economic: { color: '#fbbf24', label: 'ECONOMIC' },
-            Combat: { color: '#f87171', label: 'COMBAT' },
-            Defensive: { color: '#60a5fa', label: 'DEFENCE' }
+        const t = getUiTranslation(language as any).matrix.legendaryDetail;
+        const categories: Record<string, { color: string, label: string, symbol: string }> = {
+            Economic: {
+                color: '#fbbf24', // Yellow (Arena)
+                label: t.exisOrigin,
+                symbol: ''
+            },
+            Combat: {
+                color: '#ef4444', // Red (Arena)
+                label: t.apexOrigin,
+                symbol: ''
+            },
+            Defensive: {
+                color: '#3b82f6', // Blue (Arena)
+                label: t.bastionOrigin,
+                symbol: ''
+            }
         };
-        return categories[category] || { color: '#fbbf24', label: 'TECH' };
+        return categories[category] || { color: '#fbbf24', label: 'TECH', symbol: '☢' };
     };
 
     return (
@@ -45,7 +62,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                 fontSize: '3rem', color: '#fbbf24', textShadow: '0 0 20px #fbbf24',
                 letterSpacing: '10px', marginBottom: '50px', marginTop: '-60px'
             }}>
-                LEGENDARY UPGRADE
+                {language === 'ru' ? 'ЛЕГЕНДАРНЫЙ МОДУЛЬ' : 'LEGENDARY UPGRADE'}
             </h1>
 
             <div style={{ display: 'flex', gap: '20px' }}>
@@ -78,7 +95,7 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                 position: 'absolute', top: '10px', right: '10px',
                                 color: info.color, fontSize: '0.8rem', fontWeight: 'bold'
                             }}>
-                                {opt.level > 1 ? `LEVEL ${opt.level}` : 'NEW MODULE'}
+                                {opt.level > 1 ? (language === 'ru' ? `УРОВЕНЬ ${opt.level}` : `LEVEL ${opt.level}`) : (language === 'ru' ? 'НОВЫЙ МОДУЛЬ' : 'NEW MODULE')}
                             </div>
 
                             <div style={{
@@ -130,10 +147,10 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                                     borderBottom: isNew ? '1px solid #fbbf24' : (isPast ? '1px solid #4ade80' : '1px solid #334155'),
                                                     paddingBottom: '1px'
                                                 }}>
-                                                    <span>LEVEL {currentLevel}</span>
-                                                    {isNew && <span style={{ color: '#fbbf24', textShadow: '0 0 5px #fbbf24' }}>★ NEW</span>}
-                                                    {isPast && <span style={{ color: '#4ade80' }}>✔ ACTIVE</span>}
-                                                    {isFuture && <span style={{ color: '#94a3b8' }}>LOCKED</span>}
+                                                    <span>{language === 'ru' ? `УРОВЕНЬ ${currentLevel}` : `LEVEL ${currentLevel}`}</span>
+                                                    {isNew && <span style={{ color: '#fbbf24', textShadow: '0 0 5px #fbbf24' }}>★ {language === 'ru' ? 'НОВОЕ' : 'NEW'}</span>}
+                                                    {isPast && <span style={{ color: '#4ade80' }}>✔ {language === 'ru' ? 'АКТИВНО' : 'ACTIVE'}</span>}
+                                                    {isFuture && <span style={{ color: '#94a3b8' }}>{language === 'ru' ? 'ЗАКРЫТО' : 'LOCKED'}</span>}
                                                 </div>
 
                                                 {levelPerks.map((perk, pIdx) => (
@@ -158,6 +175,40 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                 ) : (
                                     opt.perks?.map((perk, idx) => {
                                         const isNew = idx === opt.level - 1;
+                                        let processedPerk = perk
+                                            .replace(/Sector-01/gi, 'Сектор-01')
+                                            .replace(/Sector-02/gi, 'Сектор-02')
+                                            .replace(/Sector-03/gi, 'Сектор-03')
+                                            .replace(/Economic Arena/gi, mTrans.stats.economicArena)
+                                            .replace(/Combat Arena/gi, mTrans.stats.combatArena)
+                                            .replace(/Defence Arena/gi, mTrans.stats.defenceArena)
+                                            .replace(/ECO HEX/gi, mTrans.stats.economicArena)
+                                            .replace(/COM HEX/gi, mTrans.stats.combatArena)
+                                            .replace(/DEF HEX/gi, mTrans.stats.defenceArena);
+
+                                        if (language === 'ru') {
+                                            processedPerk = processedPerk
+                                                .replace(/connected to (Eco|Com|Def) Hexes/gi, (match, p1) => {
+                                                    const name = p1 === 'Eco' ? 'ЭКЗИС' : p1 === 'Com' ? 'ПРЕДЕЛ' : 'БАСТИОН';
+                                                    return `и Усиляет Кузню ${name}`;
+                                                })
+                                                .replace(/Connects (Eco|Com|Def) & (Eco|Com|Def) Hexes/gi, (match, p1, p2) => {
+                                                    const s1 = p1 === 'Eco' ? 'ЭКЗИС' : p1 === 'Com' ? 'ПРЕДЕЛ' : 'БАСТИОН';
+                                                    const s2 = p2 === 'Eco' ? 'ЭКЗИС' : p2 === 'Com' ? 'ПРЕДЕЛ' : 'БАСТИОН';
+                                                    return `и Усиляет Кузню ${s1} & ${s2}`;
+                                                });
+                                        } else {
+                                            processedPerk = processedPerk
+                                                .replace(/connected to (Eco|Com|Def) Hexes/gi, (match, p1) => {
+                                                    const name = p1 === 'Eco' ? 'EXIS' : p1 === 'Com' ? 'APEX' : 'BASTION';
+                                                    return `and Empowers Forge ${name}`;
+                                                })
+                                                .replace(/Connects (Eco|Com|Def) & (Eco|Com|Def) Hexes/gi, (match, p1, p2) => {
+                                                    const s1 = p1 === 'Eco' ? 'EXIS' : p1 === 'Com' ? 'APEX' : 'BASTION';
+                                                    const s2 = p2 === 'Eco' ? 'EXIS' : p2 === 'Com' ? 'APEX' : 'BASTION';
+                                                    return `and Empowers Forge ${s1} & ${s2}`;
+                                                });
+                                        }
                                         return (
                                             <div key={idx} style={{
                                                 display: 'flex',
@@ -182,18 +233,37 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
                                                     fontWeight: '900',
                                                     textShadow: 'none',
                                                     boxShadow: '0 0 10px #fbbf24'
-                                                }}>NEW</span>}
-                                                {perk}
+                                                }}>{language === 'ru' ? 'НОВОЕ' : 'NEW'}</span>}
+                                                {processedPerk}
                                             </div>
                                         );
                                     })
                                 )}
                             </div>
 
-                            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                                <div style={{ color: '#22d3ee', fontSize: '0.8rem', letterSpacing: '2px', fontWeight: 'bold' }}>
-                                    {opt.category.toUpperCase()} SECTOR
-                                </div>
+                            {/* FORGE ORIGIN BADGE STYLE */}
+                            <div style={{
+                                position: 'absolute', bottom: '20px', left: '0', width: '100%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                            }}>
+                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '1px' }}>
+                                    {getUiTranslation(language as any).matrix.legendaryDetail.forgeOrigin}
+                                </span>
+                                <span style={{
+                                    color: opt.category === 'Economic' ? '#d946ef' : opt.category === 'Combat' ? '#fb923c' : '#4ade80',
+                                    fontSize: '10px',
+                                    fontWeight: 950,
+                                    letterSpacing: '0.5px',
+                                    background: `${opt.category === 'Economic' ? '#d946ef' : opt.category === 'Combat' ? '#fb923c' : '#4ade80'}15`,
+                                    padding: '1px 6px',
+                                    borderRadius: '2px',
+                                    border: `1px solid ${opt.category === 'Economic' ? '#d946ef' : opt.category === 'Combat' ? '#fb923c' : '#4ade80'}44`,
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {opt.category === 'Economic' ? (language === 'ru' ? 'ЭКЗИС' : 'EXIS') :
+                                        opt.category === 'Combat' ? (language === 'ru' ? 'ПРЕДЕЛ' : 'APEX') :
+                                            (language === 'ru' ? 'БАСТИОН' : 'BASTION')}
+                                </span>
                             </div>
 
                             {/* Animated Glow Line */}

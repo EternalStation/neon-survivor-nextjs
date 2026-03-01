@@ -1,6 +1,6 @@
 
 import type { GameState } from '../core/types';
-import { ARENA_DATA, ARENA_CENTERS, ARENA_RADIUS, getRandomPositionInArena } from './MapLogic';
+import { ARENA_DATA, ARENA_CENTERS, ARENA_RADIUS, getRandomPositionInArena, getLocalizedArenaDetails } from './MapLogic';
 import { playSfx, switchBGM, fadeOutMusic } from '../audio/AudioLogic';
 import { playTypewriterClick } from '../audio/SfxLogic';
 import { getStoredLanguage } from '../../lib/LanguageContext';
@@ -29,7 +29,7 @@ export function updateExtraction(state: GameState, step: number) {
 
         const lang = getStoredLanguage();
         const playerName = state.playerName || "PILOT";
-        const arenaName = state.extractionTargetArena !== undefined ? ARENA_DATA[state.extractionTargetArena]?.name || "UNKNOWN" : "UNKNOWN";
+        const arenaName = state.extractionTargetArena !== undefined ? getLocalizedArenaDetails(state.extractionTargetArena, lang).name : "UNKNOWN";
         const messages = getExtractionMessages(lang, playerName, arenaName);
 
         if (state.extractionTimer <= 0) {

@@ -166,6 +166,12 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.save();
             ctx.translate(effect.x, effect.y);
 
+            // 1. Circle Filling
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+            ctx.beginPath();
+            ctx.arc(0, 0, baseR, 0, Math.PI * 2);
+            ctx.fill();
+
             // Rotating outer ring
             ctx.rotate(state.gameTime * 2);
             ctx.beginPath();
@@ -307,6 +313,67 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.stroke();
 
             ctx.restore();
+        } else if (effect.type === 'afk_strike') {
+            const elapsed = state.gameTime - effect.creationTime;
+            const total = elapsed + effect.duration;
+            const progress = Math.min(1, elapsed / total);
+            const baseR = 300;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+
+            // First 2.5s: shrink from 300
+            // Next 2.5s: expand to 300
+            let currentRadius;
+            if (progress < 0.5) {
+                // 0 to 2.5s (0 to 0.5 progress)
+                const p = progress / 0.5; // 0 to 1
+                currentRadius = baseR * (1 - p); // 300 to 0
+            } else {
+                // 2.5 to 5s (0.5 to 1.0 progress)
+                const p = (progress - 0.5) / 0.5; // 0 to 1
+                currentRadius = baseR * p; // 0 to 300
+            }
+
+            // Dark red color
+            ctx.strokeStyle = '#8B0000'; // Dark Red
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, Math.max(1, currentRadius), 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Inner glow / fill
+            ctx.globalAlpha = 0.3 * Math.sin(progress * Math.PI); // Pulse alpha
+            ctx.fillStyle = '#8B0000';
+            ctx.fill();
+
+            // Additional Circle "Filling" (Target Ring)
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // At the very end (last frame), draw a big beam
+            if (progress > 0.95) {
+                const beamAlpha = (progress - 0.95) / 0.05;
+                const beamHeight = 2000;
+                const beamWidth = 600; // Increased from 300 to match the full radius visual weight
+                const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
+                beamGrad.addColorStop(0, 'rgba(139, 0, 0, 0)');
+                beamGrad.addColorStop(0.5, `rgba(255, 0, 0, ${0.9 * beamAlpha})`); // Slightly higher opacity
+                beamGrad.addColorStop(1, 'rgba(139, 0, 0, 0)');
+                ctx.fillStyle = beamGrad;
+                ctx.globalAlpha = 1.0;
+                ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
+
+                // Central bright core - huge 200px core
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * beamAlpha})`;
+                const coreWidth = 200; // Increased to 200 as requested
+                ctx.fillRect(-coreWidth / 2, -beamHeight, coreWidth, beamHeight);
+            }
+
+            ctx.restore();
         }
     });
 }
@@ -403,17 +470,7 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             const progress = 1 - (p.life / maxLife);
             const alpha = (p.alpha || 1.0) * (p.life / maxLife);
 
-            // Phase 1: 0.5s hold (25% of 2s duration)
-            // Phase 2: 1.5s expansion (75% of 2s duration)
-            let radius = 200;
-            if (progress > 0.25) {
-                const expansionProgress = (progress - 0.25) / 0.75;
-                radius = 200 + (p.size - 200) * expansionProgress;
-            } else {
-                // Micro-animation: grow to 200 in the first 0.1s
-                const microProgress = Math.min(1, progress / 0.05); // 0.1s is 5% of 2s
-                radius = 200 * microProgress;
-            }
+            let radius = p.size * progress;
 
             ctx.save();
             ctx.translate(p.x, p.y);
@@ -433,31 +490,33 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // 2. Trailing Background (Blood mist effect)
-            if (progress > 0.1) {
-                const trailSize = radius * 0.2;
-                const grad = ctx.createRadialGradient(0, 0, radius - trailSize, 0, 0, radius);
+            // 2. Trailing Background (Wave filling effect)
+            if (radius > 10) {
+                const fillAlpha = alpha * 0.25; // More visible fill
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
                 grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                grad.addColorStop(0.7, `rgba(239, 68, 68, ${alpha * 0.15})`);
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                grad.addColorStop(0.5, `rgba(0, 0, 0, 0)`);
+                grad.addColorStop(0.9, p.color ? p.color.replace(')', ', ' + fillAlpha + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${fillAlpha})`);
+                grad.addColorStop(1, p.color ? p.color.replace(')', ', ' + (alpha * 0.8) + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${alpha * 0.8})`);
 
                 ctx.fillStyle = grad;
                 ctx.beginPath();
                 ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.arc(0, 0, Math.max(0, radius - trailSize), 0, Math.PI * 2, true);
                 ctx.fill();
             }
 
-            // 3. Inner Echo (Blood splatter ripples)
-            if (progress > 0.4) {
-                const echoProgress = (progress - 0.4) / 0.6;
-                const echoRadius = radius * 0.8;
+            // 3. Inner Echo (Ripples inside the wave)
+            if (progress > 0.2) {
+                const echoProgress = (progress - 0.2) / 0.8;
+                const echoRadius = radius * 0.6;
                 ctx.beginPath();
                 ctx.arc(0, 0, echoRadius, 0, Math.PI * 2);
-                ctx.globalAlpha = alpha * 0.2 * (1 - echoProgress);
-                ctx.lineWidth = 1;
+                ctx.globalAlpha = alpha * 0.3 * (1 - echoProgress);
+                ctx.lineWidth = 2;
                 ctx.stroke();
             }
+
+
 
             ctx.restore();
         } else if (p.type === 'bubble') {

@@ -14,14 +14,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
     let bhPullSpeed = 0;
     if (blackholes.length > 0) {
         const resonance = getChassisResonance(state);
-        // Apply Class Curse
-        let classCurseMult = 1.0;
-        const curses = state.assistant.history.classCurses || {};
-        const curse = curses['eventhorizon'];
-        if (curse && curse.expiry > Date.now()) {
-            classCurseMult = curse.intensity;
-        }
-        bhPullSpeed = (0.66 + (resonance * 0.85)) * classCurseMult;
+        bhPullSpeed = (0.66 + (resonance * 0.85));
     }
 
     // --- ARENA TRANSITION: POI RESET ---
@@ -77,7 +70,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                     playSfx('power-down');
                     poi.activeDuration = 0;
                     poi.activationProgress = 0;
-                    poi.cooldown = 30;
+                    poi.cooldown = 60;
                 }
             } else if (poi.cooldown === 0) {
                 if (inRange) {
@@ -146,7 +139,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                         state.anomalyBossCount = (state.anomalyBossCount || 0) + 1;
                     }
                     poi.active = true;
-                    poi.cooldown = 30;
+                    poi.cooldown = 60;
                     poi.progress = 0;
                 }
             }

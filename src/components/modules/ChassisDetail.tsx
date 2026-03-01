@@ -57,8 +57,7 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                 <div className="chassis-content">
                     <div className="chassis-column-left">
                         <section className="chassis-section capability-section">
-                            <h2 className="section-header">{tChassis.primaryAugmentation}</h2>
-                            <h3 className="capability-name">{(tClass.capabilityName || playerClass.capabilityName).toUpperCase()}</h3>
+                            <h3 className="capability-name" style={{ color: playerClass.themeColor }}>{(tClass.capabilityName || playerClass.capabilityName).toUpperCase()}</h3>
                             <p className="capability-desc">{tClass.capabilityDesc || playerClass.capabilityDesc}</p>
                         </section>
 
@@ -114,21 +113,22 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                         // Static metrics explicitly marked or non-percentage stay as is
                                         const isStatic = m.isStatic || !m.isPercentage;
 
-                                        // Apply Class Curse
-                                        let classCurseMult = 1.0;
-                                        const curses = gameState.assistant.history.classCurses || {};
-                                        const curse = curses[playerClass.id];
-                                        if (curse && curse.expiry > Date.now()) {
-                                            classCurseMult = curse.intensity;
-                                        }
+                                        const metricLabel = tClass.metrics?.[i]?.label || m.label;
 
-                                        // Only multiply non-static percentage-based metrics
-                                        const finalMultiplier = multiplier * classCurseMult;
+                                        // Lookup Class Multiplier for this metric if applicable
+                                        let classStatMult = 1.0;
+                                        const labelLower = metricLabel.toLowerCase();
+                                        if (labelLower.includes('damage') || labelLower.includes('dmg')) classStatMult = 1 + (playerClass.stats.dmgMult || 0);
+                                        if (labelLower.includes('health') || labelLower.includes('hp')) classStatMult = 1 + (playerClass.stats.hpMult || 0);
+                                        if (labelLower.includes('regen')) classStatMult = 1 + (playerClass.stats.regMult || 0);
+                                        if (labelLower.includes('attack') || labelLower.includes('atk')) classStatMult = 1 + (playerClass.stats.atkMult || 0);
+                                        if (labelLower.includes('exp') || labelLower.includes('xp')) classStatMult = 1 + (playerClass.stats.xpMult || 0);
+
+                                        // Apply multipliers (Resonance * Class Multiplier)
+                                        const finalMultiplier = multiplier * classStatMult;
                                         const finalValue = (m.isPercentage && !m.isStatic)
                                             ? m.value * finalMultiplier
                                             : m.value;
-
-                                        const metricLabel = tClass.metrics?.[i]?.label || m.label;
 
                                         return (
                                             <div key={i} className="metric-item">
@@ -140,11 +140,11 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                                     {!isStatic ? (
                                                         <div className="metric-calculation">
                                                             <span className="multiplier-sym">×</span>
-                                                            <span className="res-mult" style={classCurseMult < 1 ? { color: '#f87171' } : {}}>
+                                                            <span className="res-mult" title={`Resonance: ${(multiplier).toFixed(2)}x | Class: ${classStatMult.toFixed(2)}x`}>
                                                                 {finalMultiplier.toFixed(2)}
                                                             </span>
                                                             <div className="metric-divider">|</div>
-                                                            <span className="final-val" style={classCurseMult < 1 ? { color: '#f87171' } : {}}>
+                                                            <span className="final-val">
                                                                 {finalValue.toFixed(0)}{m.unit}
                                                             </span>
                                                         </div>

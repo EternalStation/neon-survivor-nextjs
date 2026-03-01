@@ -7,6 +7,8 @@ import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
+import { getUiTranslation } from '../../lib/uiTranslations';
+import { getStoredLanguage } from '../../lib/LanguageContext';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
@@ -60,6 +62,17 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     let fluxDrop = 0;
     const minutes = state.gameTime / 60;
 
+    // --- XENO-ALCHEMIST: Refinery Bonus (300% / 4x) ---
+    let refineryBonus = 1.0;
+    const alchemyHex = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
+    if (alchemyHex) {
+        const playerInPuddle = state.areaEffects.some(ae => ae.type === 'puddle' && Math.hypot(ae.x - state.player.x, ae.y - state.player.y) < ae.radius);
+        const enemyInPuddle = state.areaEffects.some(ae => ae.type === 'puddle' && Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius + e.size);
+        if (playerInPuddle || enemyInPuddle) {
+            refineryBonus = 4.0;
+        }
+    }
+
     if (e.boss) {
         // Optimized: Scale with time to match increasing reroll costs
         // Base: 100 | Time: +15 per min | Random: +/- 15
@@ -75,17 +88,18 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
     if (fluxDrop > 0) {
+        fluxDrop *= refineryBonus;
         spawnVoidFlux(state, e.x, e.y, fluxDrop);
     }
 
     // --- 3% Dust Drop ---
     if (Math.random() < 0.03) {
-        const dustAmount = e.isElite ? 5 : 1;
+        const dustAmount = (e.isElite ? 5 : 1) * refineryBonus;
         spawnDustPile(state, e.x, e.y, dustAmount);
     }
 
     // --- EcoXP Lvl 2: Dust Extraction ---
-    const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP');
+    const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP' || h?.type === 'XenoAlchemist' || h?.type === 'NeuralSingularity');
     if (ecoXp && ecoXp.level >= 2) {
         const kl = ecoXp.killsAtLevel?.[2] ?? ecoXp.killsAtAcquisition;
         const killsSinceLvl2 = state.killCount - kl;
@@ -95,7 +109,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         const prevThresholds = Math.floor(prevKillsSinceLvl2 / 50);
 
         if (currentThresholds > prevThresholds && killsSinceLvl2 > 0) {
-            const multiplier = getHexMultiplier(state, 'EcoXP');
+            const multiplier = getHexMultiplier(state, ecoXp.type);
             const dustAmount = (currentThresholds - prevThresholds) * 1 * multiplier;
             state.player.dust += dustAmount;
             playSfx('socket-place');
@@ -113,7 +127,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         const prevThresholds = Math.floor(prevKillsSinceLvl3 / 10);
 
         if (currentThresholds > prevThresholds && killsSinceLvl3 > 0) {
-            const multiplier = getHexMultiplier(state, 'EcoXP');
+            const multiplier = getHexMultiplier(state, ecoXp.type);
             const fluxAmount = (currentThresholds - prevThresholds) * 5 * multiplier; // 10 kills * 0.5 = 5 Flux
             state.player.isotopes += fluxAmount;
             playSfx('socket-place');
@@ -197,10 +211,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
         // --- ANOMALY BOSS DEATH LOGIC ---
         if (e.isAnomaly) {
-            // Find the POI associated with this boss (it should be inactive and near spawn, but we just check distance)
             // Find the POI associated with this boss (it should be inactive).
-            // We removed the distance check because kiting to a distant turret (e.g. > 1500px) caused this to fail, breaking the loop.
-            // Since only the summoning POI is inactive during the boss fight, this is safe.
             const anomalyPoi = state.pois.find(p => p.type === 'anomaly' && !p.active);
 
             if (anomalyPoi) {
@@ -212,6 +223,8 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     spawnFloatingNumber(state, anomalyPoi.x, anomalyPoi.y, "RITUAL CLEARED", '#4ade80', true);
                 });
             }
+
+            // Anomaly reward removed per user request (moved to Snitch)
         }
 
         // UNLOCK PROGRESSION: First Boss Drops Dimensional Gate
@@ -222,7 +235,9 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
             if (!hasInv && !hasBp) {
                 dropBlueprint(state, 'DIMENSIONAL_GATE', e.x, e.y);
-                spawnFloatingNumber(state, e.x, e.y, "BLUEPRINT DETECTED", '#a855f7', true);
+                const lang = getStoredLanguage();
+                const t = getUiTranslation(lang);
+                spawnFloatingNumber(state, e.x, e.y, t.hud.blueprintFound, '#a855f7', true);
             }
         }
 
@@ -244,6 +259,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             playSfx('rare-kill');
             state.rareSpawnActive = false;
             state.snitchCaught++;
+            state.rareRewardActive = true; // Added rarity boost flag
             if (onEvent) onEvent('snitch_kill');
         } else {
             // Consolidated XP Logic (Matches PlayerLogic/ProjectileLogic advanced formula)
@@ -280,7 +296,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             const normalMult = 1 + (state.player.xp_per_kill.mult / 100);
             const hexMult = 1 + (hexPct / 100);
 
-            const finalXp = totalFlat * normalMult * hexMult;
+            const finalXp = totalFlat * normalMult * hexMult * refineryBonus;
 
             state.player.xp.current += finalXp;
         }

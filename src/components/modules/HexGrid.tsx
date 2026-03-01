@@ -9,6 +9,8 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 
 import type { BestiaryEntry } from '../../data/BestiaryData';
+import { canMergeXenoAlchemist, performXenoAlchemistMerge, canMergeIrradiatedMire, performIrradiatedMireMerge, canMergeNeuralSingularity, performNeuralSingularityMerge, canMergeKineticTsunami, performKineticTsunamiMerge } from '../../logic/upgrades/LegendaryLogic';
+import { playSfx } from '../../logic/audio/AudioLogic';
 
 interface HexGridProps {
     gameState: GameState;
@@ -27,6 +29,7 @@ interface HexGridProps {
     onAttemptPlace: (index: number, item: any, source: string, sourceIndex: number) => void;
     selectedBestiaryEnemy?: BestiaryEntry | null;
     onSelectBestiaryEnemy?: (enemy: BestiaryEntry | null) => void;
+    onUpdate?: () => void;
 }
 
 interface EfficiencyLabelProps {
@@ -161,7 +164,8 @@ export const HexGrid: React.FC<HexGridProps> = ({
     onAttemptRemove,
     onAttemptPlace,
     selectedBestiaryEnemy,
-    onSelectBestiaryEnemy
+    onSelectBestiaryEnemy,
+    onUpdate
 }) => {
     const [view, setView] = useState<'matrix' | 'bestiary'>('matrix');
     const [levitatingDiamonds, setLevitatingDiamonds] = useState<Record<number, boolean>>({});
@@ -313,6 +317,166 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
     return (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            {/* PROTOCOL MERGE BUTTON (XENO-ALCHEMIST) */}
+            {canMergeXenoAlchemist(gameState) && (
+                <button
+                    onClick={() => {
+                        performXenoAlchemistMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        right: '190px', // Positioned to the left of Bestiary button
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #065f46, #059669)',
+                        border: '2px solid #10b981',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(16, 185, 129, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4)';
+                    }}
+                >
+                    INITIATE XENO-ALCHEMIST
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (IRRADIATED MIRE) */}
+            {canMergeIrradiatedMire(gameState) && (
+                <button
+                    onClick={() => {
+                        performIrradiatedMireMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: canMergeXenoAlchemist(gameState) ? '75px' : '20px',
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #0e7490, #0891b2)',
+                        border: '2px solid #22d3ee',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(34, 211, 238, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(34, 211, 238, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.4)';
+                    }}
+                >
+                    INITIATE IRRADIATED MIRE
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (NEURAL SINGULARITY) */}
+            {canMergeNeuralSingularity(gameState) && (
+                <button
+                    onClick={() => {
+                        performNeuralSingularityMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #7c3aed, #9333ea)',
+                        border: '2px solid #a855f7',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(168, 85, 247, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(168, 85, 247, 0.4)';
+                    }}
+                >
+                    INITIATE NEURAL SINGULARITY
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (KINETIC TSUNAMI) */}
+            {canMergeKineticTsunami(gameState) && (
+                <button
+                    onClick={() => {
+                        performKineticTsunamiMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #b45309, #d97706)',
+                        border: '2px solid #fbbf24',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(251, 191, 36, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.4)';
+                    }}
+                >
+                    INITIATE KINETIC TSUNAMI
+                </button>
+            )}
+
             {/* Toggle Button */}
             <button
                 onClick={() => setView('bestiary')}
@@ -353,9 +517,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: t.matrix.sector02, code: 'SEC-02', color: '#f87171', indices: [0, 1] }, // Was Combat
-                        { name: t.matrix.sector03, code: 'SEC-03', color: '#60a5fa', indices: [2, 3] }, // Was Defense
-                        { name: t.matrix.sector01, code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Was Economic
+                        { name: t.matrix.sector02, code: 'SEC-02', color: '#c084fc', indices: [0, 1] }, // Medium Purple
+                        { name: t.matrix.sector03, code: 'SEC-03', color: '#a855f7', indices: [2, 3] }, // Vibrant Purple
+                        { name: t.matrix.sector01, code: 'SEC-01', color: '#e9d5ff', indices: [4, 5] }  // Very Light Purple
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];
@@ -379,7 +543,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         const textY = centerY + (vOutY / lenOut) * textR;
 
                         const edgeAngle = Math.atan2(o1.y - o0.y, o1.x - o0.x) * (180 / Math.PI);
-                        const rotation = (sector.name === 'SECTOR-02') ? edgeAngle + 180 : edgeAngle;
+                        const rotation = (sector.code === 'SEC-02') ? edgeAngle + 180 : edgeAngle;
                         const targetSector: 'Economic' | 'Combat' | 'Defensive' = sector.code === 'SEC-01' ? 'Economic' : (sector.code === 'SEC-02' ? 'Combat' : 'Defensive');
 
                         const lp = gameState.lastPlacement;
@@ -700,8 +864,8 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                         </text>
                                     )}
                                     <rect x={pos.x - 28} y={pos.y + 40} width="56" height="18" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke={info?.color} strokeWidth="2" pointerEvents="none" />
-                                    <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level === 5 ? "#FCD34D" : info?.color} fontSize="12" fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
-                                        {hex.level === 5 ? "MAX" : `LVL ${hex.level}`}
+                                    <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level === 5 ? "#FCD34D" : info?.color} fontSize={hex.level === 5 ? "8" : "12"} fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
+                                        {hex.level === 5 ? "MERGEABLE" : `LVL ${hex.level}`}
                                     </text>
                                     {gameState.upgradingHexIndex === i && gameState.upgradingHexTimer > 0 && (
                                         <g>
@@ -726,9 +890,6 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                                 UPGRADED!
                                             </text>
                                         </g>
-                                    )}
-                                    {hex.level === 5 && (
-                                        <circle cx={pos.x} cy={pos.y} r="55" fill="none" stroke="#FCD34D" strokeWidth="2" strokeDasharray="4 4" className="spin-slow" pointerEvents="none" />
                                     )}
                                 </g>
                             )}
@@ -950,31 +1111,33 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                         </g>
                                     )}
 
-                                    {/* Status Icons - Standardized Quadrants: TL: C, TR: M, BL: H, BR: I */}
+                                    {/* Status badge row: C → I → H → M */}
                                     <g pointerEvents="none">
-                                        {meteorite.isCorrupted && (
-                                            <g transform="translate(-22, -24)">
-                                                <circle r="7" fill="#1e293b" stroke="#a855f7" strokeWidth="1" />
-                                                <text x="0" y="3" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="900">C</text>
-                                            </g>
-                                        )}
-                                        {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
-                                            <g transform="translate(22, -24)">
-                                                <circle r="7" fill="#1e293b" stroke="#f97316" strokeWidth="1" />
-                                                <text x="0" y="3" textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="900">M</text>
-                                            </g>
-                                        )}
-                                        {meteorite.blueprintBoosted && (
-                                            <g transform="translate(-22, 24)">
-                                                <circle r="7" fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
-                                                <text x="0" y="3" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="900">H</text>
-                                            </g>
-                                        )}
-                                        {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
-                                            <g transform="translate(22, 24)">
-                                                <circle r="7" fill="#1e293b" stroke="#00d9ff" strokeWidth="1" />
-                                                <text x="0" y="3" textAnchor="middle" fill="#00d9ff" fontSize="8" fontWeight="900">I</text>
-                                            </g>
+                                        {(meteorite.isCorrupted || (meteorite.incubatorBoost && meteorite.incubatorBoost > 0) || meteorite.blueprintBoosted || isBuffActive(gameState, 'MATRIX_OVERDRIVE')) && (
+                                            <foreignObject x={-35} y={-47} width={70} height={16}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '2px', justifyContent: 'center' }}>
+                                                    {meteorite.isCorrupted && (
+                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(153,27,27,0.7)', flexShrink: 0 }}>
+                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                                        </div>
+                                                    )}
+                                                    {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
+                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(14,165,233,0.6)', flexShrink: 0 }}>
+                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                                        </div>
+                                                    )}
+                                                    {meteorite.blueprintBoosted && (
+                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(96,165,250,0.6)', flexShrink: 0 }}>
+                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                                        </div>
+                                                    )}
+                                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(234,88,12,0.6)', flexShrink: 0 }}>
+                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#f97316', lineHeight: 1 }}>M</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </foreignObject>
                                         )}
                                     </g>
                                 </g>

@@ -257,6 +257,7 @@ export default function Home() {
                     onClose={() => hook.setShowModuleMenu(false)}
                     onSocketUpdate={hook.handleModuleSocketUpdate}
                     onInventoryUpdate={hook.updateInventorySlot}
+                    onIncubatorUpdate={hook.updateIncubatorSlot}
                     onRecycle={hook.recycleMeteorite}
                     spendDust={hook.spendDust}
                     onViewChassisDetail={hook.onViewChassisDetail}

@@ -11,9 +11,11 @@ import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
 
 import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
+import { applyLegendarySelection, LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryLogic';
 
 interface GameInputProps {
     gameState: React.MutableRefObject<GameState>;
+    keys?: React.MutableRefObject<Record<string, boolean>>;
     setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
     setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,8 +26,9 @@ interface GameInputProps {
     skipTime: (min: number) => void;
 }
 
-export function useGameInput({ gameState, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
-    const keys = useRef<Record<string, boolean>>({});
+export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
+    const localKeys = useRef<Record<string, boolean>>({});
+    const keys = providedKeys || localKeys;
     const inputVector = useRef({ x: 0, y: 0 });
     const mousePos = useRef({
         x: typeof window !== 'undefined' ? window.innerWidth / 2 : 0,
@@ -209,6 +212,14 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 cheatBuffer = '';
             }
 
+            // i15 - Trigger Fake Portal Troll
+            if (cheatBuffer.endsWith('i15')) {
+                const history = gameState.current.assistant.history;
+                (history as any).fakePortalTriggerTime = gameState.current.gameTime;
+                console.log('[CHEAT] Fake Portal Troll Queued');
+                cheatBuffer = '';
+            }
+
             // K1 - Suicide
             if (cheatBuffer.endsWith('k1')) {
                 gameState.current.player.curHp = 0;
@@ -220,10 +231,41 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                 cheatBuffer = '';
             }
 
-            // L1 / LVL - Level Up
-            if (cheatBuffer.endsWith('l1') || cheatBuffer.endsWith('lvl')) {
+            // L1 / LVL - Level Up + Unlock Portals
+            if (cheatBuffer.endsWith('l1') || cheatBuffer.endsWith('lvl') || cheatBuffer.endsWith('lp')) {
+                // Level Up logic
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;
+
+                // Portal Unlock logic (Dimensional Gate effect)
+                gameState.current.portalsUnlocked = true;
+                gameState.current.portalState = 'warn';
+                gameState.current.portalTimer = 0.5; // Open in 0.5s
+
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "LEVEL UP & PORTALS UNLOCKED", '#00ffff', true);
+                playSfx('rare-spawn');
+                console.log('[CHEAT] Level up and Portals Unlocked via L1/LVL');
+
                 refreshUI();
+                cheatBuffer = '';
+            }
+
+            // O20 - Give Researched Dimensional Gate Blueprint
+            if (cheatBuffer.endsWith('o20')) {
+                import('../logic/upgrades/BlueprintLogic').then(({ createBlueprint }) => {
+                    const blueprint = createBlueprint('DIMENSIONAL_GATE');
+                    blueprint.researched = true;
+                    blueprint.status = 'ready';
+
+                    // Find a slot
+                    const slot = gameState.current.inventory.findIndex(s => s === null);
+                    if (slot !== -1) {
+                        gameState.current.inventory[slot] = blueprint as any;
+                        spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "DIMENSIONAL GATE ADDED", '#00ffff', true);
+                        playSfx('rare-spawn');
+                        console.log('[CHEAT] Researched Dimensional Gate Blueprint added via O20');
+                        refreshUI();
+                    }
+                });
                 cheatBuffer = '';
             }
 
@@ -426,6 +468,49 @@ export function useGameInput({ gameState, setShowSettings, setShowStats, setShow
                         turretSpawned = true;
                         break;
                     }
+                }
+            }
+
+            // --- LEGENDARY SPAWN CHEATS ---
+            // Y1-Y4: Economic
+            // Y5-Y8: Combat
+            // Y9-Y=: Defensive
+            const legendaryCheats: Record<string, string> = {
+                'y1': 'EcoDMG',
+                'y2': 'EcoXP',
+                'y3': 'EcoHP',
+                'y4': 'CombShield',
+                'y5': 'ComLife',
+                'y6': 'ComCrit',
+                'y7': 'ComWave',
+                'y8': 'RadiationCore',
+                'y9': 'DefPuddle',
+                'y0': 'DefEpi',
+                'y-': 'KineticBattery',
+                'y=': 'ChronoPlating'
+            };
+
+            for (const [buffCode, type] of Object.entries(legendaryCheats)) {
+                if (cheatBuffer.endsWith(buffCode)) {
+                    const state = gameState.current;
+                    const base = LEGENDARY_UPGRADES[type];
+                    if (base) {
+                        const selection: any = {
+                            ...base,
+                            level: 5,
+                            killsAtAcquisition: state.killCount,
+                            timeAtAcquisition: state.gameTime,
+                            killsAtLevel: { 1: state.killCount, 2: state.killCount, 3: state.killCount, 4: state.killCount, 5: state.killCount },
+                            timeAtLevel: { 1: state.gameTime, 2: state.gameTime, 3: state.gameTime, 4: state.gameTime, 5: state.gameTime },
+                            statBonuses: {}
+                        };
+                        applyLegendarySelection(state, selection);
+                        spawnFloatingNumber(state, state.player.x, state.player.y, `LEGENDARY ${selection.name} SPAWNED!`, '#FFD700', true);
+                        playSfx('rare-spawn');
+                        setShowModuleMenu(true); // Open menu to place it
+                        refreshUI();
+                    }
+                    cheatBuffer = '';
                 }
             }
         };

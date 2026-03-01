@@ -4,11 +4,12 @@ import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
 
 interface RadarCounts {
-    DPS: number;
-    ARM: number;
-    EXP: number;
-    HP: number;
-    REG: number;
+    dps: number;
+    arm: number;
+    exp: number;
+    hp: number;
+    reg: number;
+    [key: string]: number; // allow string index
 }
 
 interface RadarChartProps {
@@ -23,35 +24,38 @@ export const RadarChart: React.FC<RadarChartProps> = ({ player, counts: propCoun
     const t = getUiTranslation(language);
 
     // Logic: Visualize Build Focus based on upgrade counts
-    const counts = propCounts || {
-        DPS: 0,
-        ARM: 0,
-        EXP: 0,
-        HP: 0,
-        REG: 0
+    const counts = {
+        dps: propCounts?.dps ?? propCounts?.DPS ?? 0,
+        arm: propCounts?.arm ?? propCounts?.ARM ?? 0,
+        exp: propCounts?.exp ?? propCounts?.EXP ?? 0,
+        hp: propCounts?.hp ?? propCounts?.HP ?? 0,
+        reg: propCounts?.reg ?? propCounts?.REG ?? 0
     };
 
     if (player && !propCounts) {
         player.upgradesCollected.forEach((u: any) => {
             const id = u.type.id;
-            if (id.startsWith('dmg') || id === 'atk_s') counts.DPS++;
-            else if (id.startsWith('arm')) counts.ARM++;
-            else if (id.startsWith('xp')) counts.EXP++;
-            else if (id.startsWith('hp')) counts.HP++;
-            else if (id.startsWith('reg')) counts.REG++;
+            if (id.startsWith('dmg') || id === 'atk_s') counts.dps++;
+            else if (id.startsWith('arm')) counts.arm++;
+            else if (id.startsWith('xp')) counts.exp++;
+            else if (id.startsWith('hp')) counts.hp++;
+            else if (id.startsWith('reg')) counts.reg++;
         });
     }
 
-    const maxCount = Math.max(counts.DPS, counts.ARM, counts.EXP, counts.HP, counts.REG, 1); // Avoid div by 0
+    const maxCount = Math.max(counts.dps, counts.arm, counts.exp, counts.hp, counts.reg, 1); // Avoid div by 0
 
-    const getPct = (val: number) => (val / maxCount) * 100;
+    const getPct = (val: number) => {
+        const pct = (val / maxCount) * 100;
+        return isNaN(pct) ? 0 : pct;
+    };
 
     const pts = [
-        { label: t.statsMenu.radar.dps, val: getPct(counts.DPS), a: -90 }, // Top
-        { label: t.statsMenu.radar.arm, val: getPct(counts.ARM), a: -18 }, // Top Right
-        { label: t.statsMenu.radar.exp, val: getPct(counts.EXP), a: 54 },  // Bottom Right
-        { label: t.statsMenu.radar.hp, val: getPct(counts.HP), a: 126 },   // Bottom Left
-        { label: t.statsMenu.radar.reg, val: getPct(counts.REG), a: 198 }  // Top Left
+        { label: 'DPS', val: getPct(counts.dps), a: -90 }, // Top
+        { label: 'ARM', val: getPct(counts.arm), a: -18 }, // Top Right
+        { label: 'XP', val: getPct(counts.exp), a: 54 },  // Bottom Right
+        { label: 'HP', val: getPct(counts.hp), a: 126 },   // Bottom Left
+        { label: 'REG', val: getPct(counts.reg), a: 198 }  // Top Left
     ];
 
     const radius = size * 0.28; // slightly smaller than half to fit labels

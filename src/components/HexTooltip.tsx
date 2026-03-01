@@ -13,10 +13,12 @@ interface HexTooltipProps {
     y: number;
 }
 
-const CATEGORY_COLORS: Record<LegendaryCategory, string> = {
-    Economic: '#fbbf24', // Gold
-    Combat: '#f87171',   // Red
-    Defensive: '#60a5fa' // Blue
+const CATEGORY_COLORS: Record<LegendaryCategory | 'Merger', string> = {
+    Economic: '#fbbf24', // Yellow (Arena)
+    Combat: '#ef4444',   // Red (Arena)
+    Defensive: '#3b82f6', // Blue (Arena)
+    Fusion: '#f59e0b',
+    Merger: '#10b981'
 };
 
 export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, x }) => {

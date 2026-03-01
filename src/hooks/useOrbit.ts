@@ -23,6 +23,15 @@ import {
     getZeroPercentWarningVariants,
     getZeroPercent5Variants,
     getFluxGrantLine,
+    getFakePortalLine1,
+    getFakePortalLine2,
+    getAfkLine1a,
+    getAfkLine1b,
+    getAfkLine2,
+    getAfkLine2FastAlready,
+    getAfkLineDeath,
+    getAfkFastDeathLine,
+    getAfkLineStillAlive,
 } from '../lib/orbitTranslations';
 import { getUiTranslation } from '../lib/uiTranslations';
 
@@ -31,7 +40,11 @@ export interface AssistantMessage {
     emotion: AssistantEmotion;
 }
 
-export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI: () => void) => {
+export const useOrbit = (
+    gameState: React.MutableRefObject<GameState>,
+    refreshUI: () => void,
+    keysRef?: React.MutableRefObject<Record<string, boolean>>
+) => {
     const hasIntroed = useRef(false);
     const lastGameStateRef = useRef<GameState | null>(null);
 
@@ -49,7 +62,7 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         if (priority) {
             state.message = msgObj.text;
             state.emotion = msgObj.emotion;
-            state.timer = 6.0; // 6 seconds display (Updated from 5.0)
+            state.timer = 7.0; // 7 seconds display (Updated from 6.0)
             playSfx('orbit-talk');
             refreshUI();
         } else {
@@ -59,6 +72,7 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
 
     const updateOrbit = useCallback((dt: number) => {
         const state = gameState.current.assistant;
+        const player = gameState.current.player;
 
         // Detect Game Restart
         if (lastGameStateRef.current !== gameState.current) {
@@ -69,6 +83,14 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         // --- INTRO TRIGGER (30% chance at start of each game) ---
         if (!hasIntroed.current && gameState.current.frameCount >= 120) { // ~2 seconds in
             hasIntroed.current = true;
+
+            // Roll for fake portal troll (30% chance per run)
+            if (Math.random() < 0.3) {
+                // Random time between 10 and 20 minutes (600 and 1200 seconds)
+                (gameState.current.assistant.history as any).fakePortalTriggerTime = 600 + Math.random() * 600;
+            } else {
+                (gameState.current.assistant.history as any).fakePortalTriggerTime = -1;
+            }
 
             // Roll for 30% chance
             if (Math.random() < 0.3) {
@@ -106,13 +128,13 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
                     const msgObj = JSON.parse(raw) as AssistantMessage;
                     state.message = msgObj.text;
                     state.emotion = msgObj.emotion;
-                    state.timer = 6.0; // 6 seconds display (Updated from 5.0)
+                    state.timer = 7.0; // 7 seconds display (Updated from 6.0)
                     playSfx('orbit-talk');
                     refreshUI();
                 } catch (e) {
                     state.message = raw;
                     state.emotion = 'Normal';
-                    state.timer = 6.0;
+                    state.timer = 7.0;
                     refreshUI();
                 }
             }
@@ -186,7 +208,151 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
             refreshUI();
         }
 
-    }, [gameState, refreshUI]);
+        // Feature Fake Portal Troll (10-20 min mark)
+        const fakePortalTime = (history as any).fakePortalTriggerTime;
+        if (fakePortalTime && fakePortalTime > 0 && gameState.current.gameTime >= fakePortalTime) {
+            const lang = getStoredLanguage();
+            const msg1 = getFakePortalLine1(lang);
+            pushOrbitMessage(msg1, true); // Intercept it as priority
+
+            // Trigger fake portal animation (same parameters as useGameUIHandlers triggerPortal but open locally, without requiring cost)
+            gameState.current.portalState = 'warn';
+            gameState.current.portalTimer = 10;
+            playSfx('warning');
+
+            // Queue second message in exactly 10 seconds of real-time
+            (history as any).pendingFakePortalPhase2Time = Date.now() + 10000;
+
+            // Ensure we don't trigger it again
+            (history as any).fakePortalTriggerTime = -1;
+        }
+
+        if ((history as any).pendingFakePortalPhase2Time && Date.now() >= (history as any).pendingFakePortalPhase2Time) {
+            const lang = getStoredLanguage();
+            const msg2 = getFakePortalLine2(lang);
+            pushOrbitMessage(msg2, true);
+
+            // Abort portal
+            gameState.current.portalState = 'closed';
+            gameState.current.portalTimer = 240; // Reset timer to idle
+
+            (history as any).pendingFakePortalPhase2Time = 0;
+            refreshUI();
+        }
+
+        // --- AFK STRIKE LOGIC ---
+        if (keysRef) {
+            const h = history as any;
+            const isMenuOpen = gameState.current.isUpgradeMenuOpen || gameState.current.showModuleMenu;
+
+            // Check if ANY movement keys are pressed
+            const moveKeys = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+            const isMovingInput = moveKeys.some(k => keysRef.current[k.toLowerCase()]);
+
+            if (isMovingInput) {
+                // Point of No Return: If phase >= 3, moving doesn't cancel the strike
+                if (h.afkPhase > 0 && (h.afkPhase as number) < 3) {
+                    const lang = getStoredLanguage();
+                    pushOrbitMessage(getAfkLineStillAlive(lang), true);
+                    h.afkPhase = 0;
+                }
+                h.lastMovementTime = gameState.current.gameTime;
+            }
+
+            const afkTime = gameState.current.gameTime - (h.lastMovementTime || 0);
+
+            if (h.afkPhase === 0 || h.afkPhase === undefined) {
+                if (afkTime >= 10) {
+                    const lang = getStoredLanguage();
+                    pushOrbitMessage(getAfkLine1a(lang), true);
+                    h.afkPhase = 1;
+                }
+            } else if (h.afkPhase === 1) {
+                if (afkTime >= 16) {
+                    const lang = getStoredLanguage();
+                    pushOrbitMessage(getAfkLine1b(lang), true);
+                    h.afkPhase = 2;
+                }
+            } else if (h.afkPhase === 2) {
+                if (afkTime >= 22) {
+                    // LOCK-IN STARTED
+                    h.afkPhase = 3;
+                    h.afkLockX = player.x;
+                    h.afkLockY = player.y;
+                    h.afkPhase3StartTime = gameState.current.gameTime;
+                    h.afkDroneSeenCount = (h.afkDroneSeenCount || 0) + 1;
+
+                    const lang = getStoredLanguage();
+                    const isFastTrack = h.afkDroneSeenCount >= 3;
+
+                    if (isFastTrack) {
+                        pushOrbitMessage(getAfkLine2FastAlready(lang), true);
+                        // SPAWN FAST LASER IMMEDIATELY
+                        gameState.current.areaEffects.push({
+                            id: Date.now(),
+                            type: 'afk_strike',
+                            x: h.afkLockX,
+                            y: h.afkLockY,
+                            radius: 300,
+                            duration: 1.0,
+                            creationTime: gameState.current.gameTime,
+                            level: 1
+                        });
+                        h.afkStrikeActive = true;
+                        h.afkStrikeStartTime = gameState.current.gameTime;
+                        h.afkIsFastStrike = true;
+                        playSfx('warning');
+                        h.afkPhase = 5; // Skip to active strike tracking
+                    } else {
+                        pushOrbitMessage(getAfkLine2(lang), true);
+                        // Normal sequence continues to phase 4 (3s delay)
+                    }
+                }
+            } else if (h.afkPhase === 3) {
+                // Wait for Message 2 to finish (7s)
+                if (gameState.current.gameTime >= h.afkPhase3StartTime + 7) {
+                    h.afkPhase = 4;
+                    h.afkPhase4StartTime = gameState.current.gameTime;
+                }
+            } else if (h.afkPhase === 4) {
+                // 3s Suspense Delay
+                if (gameState.current.gameTime >= h.afkPhase4StartTime + 3) {
+                    gameState.current.areaEffects.push({
+                        id: Date.now(),
+                        type: 'afk_strike',
+                        x: h.afkLockX,
+                        y: h.afkLockY,
+                        radius: 300,
+                        duration: 5.0,
+                        creationTime: gameState.current.gameTime,
+                        level: 1
+                    });
+                    h.afkStrikeActive = true;
+                    h.afkStrikeStartTime = gameState.current.gameTime;
+                    h.afkIsFastStrike = false;
+                    playSfx('warning');
+                    h.afkPhase = 5;
+                }
+            }
+
+            // Check if strike finished and player survived
+            const strikeDuration = h.afkIsFastStrike ? 1.0 : 5.0;
+            if (h.afkStrikeActive && gameState.current.gameTime >= h.afkStrikeStartTime + strikeDuration) {
+                h.afkStrikeActive = false;
+                h.afkPhase = 0; // Return to idle for potential next iteration
+                if (gameState.current.player.curHp > 0) {
+                    h.afkStillAliveTriggerTime = gameState.current.gameTime + 3.0;
+                }
+            }
+
+            if (h.afkStillAliveTriggerTime && gameState.current.gameTime >= h.afkStillAliveTriggerTime) {
+                const lang = getStoredLanguage();
+                pushOrbitMessage(getAfkLineStillAlive(lang), true);
+                h.afkStillAliveTriggerTime = 0;
+            }
+        }
+
+    }, [gameState, refreshUI, keysRef, pushOrbitMessage]);
 
     // Triggers
     const triggerOneTrickPony = useCallback((upgradeId: string) => {
@@ -235,30 +401,50 @@ export const useOrbit = (gameState: React.MutableRefObject<GameState>, refreshUI
         const deathCause = gameState.current.player.deathCause || "";
         history.deaths++;
 
-        const lang = getStoredLanguage();
-        const genericSnarks = getGenericDeathSnarks(lang);
+        // IMMEDIATELY clear any current message (Drones already on the way, etc.)
+        gameState.current.assistant.message = "";
+        gameState.current.assistant.timer = 0;
+        refreshUI();
 
-        let contextSnarks: AssistantMessage[] = [];
+        setTimeout(() => {
+            // Check if game is still over (prevent message showing if player somehow revived or quit)
+            if (!gameState.current.gameOver) return;
 
-        // Context-sensitive snarks
-        if (deathCause.toLowerCase().includes('projectile') || deathCause.toLowerCase().includes('thorns') || deathCause.toLowerCase().includes('bullet')) {
-            contextSnarks.push(getProjectileDeathLine(lang));
-        }
+            const lang = getStoredLanguage();
+            const genericSnarks = getGenericDeathSnarks(lang);
+            let contextSnarks: AssistantMessage[] = [];
 
-        if (gameTime < 120) {
-            contextSnarks.push(getFastDeathLine(lang));
-        }
+            // Highest Priority: Coffee Spilled
+            if (deathCause === 'Coffee Spilled') {
+                const h = history as any;
+                if (h.afkDroneSeenCount >= 3) {
+                    pushOrbitMessage(getAfkFastDeathLine(lang), true);
+                } else {
+                    pushOrbitMessage(getAfkLineDeath(lang), true);
+                }
+                return;
+            }
 
-        if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell') || deathCause.toLowerCase().includes('abomination')) {
-            contextSnarks.push(getAnomalyDeathLine(lang));
-        }
+            // Context-sensitive snarks
+            if (deathCause.toLowerCase().includes('projectile') || deathCause.toLowerCase().includes('thorns') || deathCause.toLowerCase().includes('bullet')) {
+                contextSnarks.push(getProjectileDeathLine(lang));
+            }
 
-        // Use context-specific if available, otherwise pick from generic pool
-        const pool = contextSnarks.length > 0 ? contextSnarks : genericSnarks;
-        const msgObj = pool[Math.floor(Math.random() * pool.length)];
+            if (gameTime < 120) {
+                contextSnarks.push(getFastDeathLine(lang));
+            }
 
-        // Use priority to show message immediately on death screen
-        pushOrbitMessage(msgObj, true);
+            if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell') || deathCause.toLowerCase().includes('abomination')) {
+                contextSnarks.push(getAnomalyDeathLine(lang));
+            }
+
+            // Use context-specific if available, otherwise pick from generic pool
+            const pool = contextSnarks.length > 0 ? contextSnarks : genericSnarks;
+            const msgObj = pool[Math.floor(Math.random() * pool.length)];
+
+            // Use priority to show message immediately on death screen
+            pushOrbitMessage(msgObj, true);
+        }, 5000);
     }, [gameState, pushOrbitMessage]);
 
     const triggerClassStreak = useCallback((streak: number, classId: string) => {

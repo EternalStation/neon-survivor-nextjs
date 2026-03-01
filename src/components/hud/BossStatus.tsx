@@ -96,7 +96,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                             }}>
                                 <span>{BOSS_NAMES[boss.shape] || hudT.bossWord}</span>
                                 <span style={{ color: '#ef4444' }}>
-                                    {hudT.bossLvl} {isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1')))}
+                                    {hudT.bossLvl} {boss.isAnomaly ? (boss.anomalyGeneration !== undefined ? boss.anomalyGeneration + 1 : '1') : (isLevel5 ? '5' : (isLevel4 ? '4' : (isLevel3 ? '3' : (isLevel2 ? '2' : '1'))))}
                                 </span>
                             </div>
 

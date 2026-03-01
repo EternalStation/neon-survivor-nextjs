@@ -3,7 +3,7 @@ import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/
 import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
 import { isBuffActive, activateBlueprint, scrapBlueprint } from '../../logic/upgrades/BlueprintLogic';
-import { ARENA_DATA, SECTOR_NAMES } from '../../logic/mission/MapLogic';
+import { ARENA_DATA, SECTOR_NAMES, getLocalizedArenaDetails } from '../../logic/mission/MapLogic';
 import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
@@ -69,7 +69,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     const lastCharIndexRef = React.useRef(0);
     const extractionDialogActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
     const playerName = gameState.playerName || PLAYER_CLASSES.find(c => c.id === gameState.player.playerClass)?.name || "PILOT";
-    const arenaName = gameState.extractionTargetArena !== undefined ? ARENA_DATA[gameState.extractionTargetArena]?.name || "UNKNOWN" : "UNKNOWN";
+    const arenaName = gameState.extractionTargetArena !== undefined ? getLocalizedArenaDetails(gameState.extractionTargetArena, language as any).name : "UNKNOWN";
     const extractionMessages = getExtractionMessages(language, playerName, arenaName);
 
     const alertIdx = extractionMessages.findIndex(m => m.isAlert);
@@ -328,11 +328,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: isAlertActive ? 'rgba(45, 0, 0, 0.98)' : 'rgba(5, 5, 15, 0.98)',
-            borderWidth: '2px',
-            borderStyle: 'solid',
-            borderColor: themeColor,
             borderRadius: '8px',
-            boxShadow: `0 0 30px ${themeColorRgba}`,
             position: 'relative',
             overflow: 'hidden'
         }}>
@@ -567,7 +563,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     hoveredItem.item.isBlueprint ? (
                         renderBlueprintPanel(hoveredItem.item, gameState, onUpdate)
                     ) : (
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
                             <MeteoriteTooltip meteorite={hoveredItem.item} gameState={gameState} meteoriteIdx={hoveredItem.index} x={0} y={0} isEmbedded={true} />
                         </div>
@@ -810,6 +806,16 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     100% { top: 105%; opacity: 0; }
                 }
             `}</style>
+
+            {/* HIGH-FIDELITY FRAME OVERLAY (Topmost) */}
+            <div style={{
+                position: 'absolute', inset: 0,
+                border: `2px solid ${themeColor}`,
+                borderRadius: '8px',
+                boxShadow: `inset 0 0 20px ${themeColorBgRgba}, 0 0 25px ${themeColorRgba}`,
+                pointerEvents: 'none',
+                zIndex: 1000 // Always on front
+            }} />
         </div >
     );
 };

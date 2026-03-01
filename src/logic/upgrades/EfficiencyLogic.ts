@@ -55,7 +55,12 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const targetHexType = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     if (sector === targetSector) {
-                        const matchingHexIndices = hexConnData.indices.filter(hIdx => state.moduleSockets.hexagons[hIdx]?.category === targetHexType);
+                        const matchingHexIndices = hexConnData.indices.filter(hIdx => {
+                            const hex = state.moduleSockets.hexagons[hIdx];
+                            if (!hex) return false;
+                            if (hex.categories) return hex.categories.includes(targetHexType);
+                            return hex.category === targetHexType;
+                        });
                         if (matchingHexIndices.length > 0) {
                             count = 1;
                             conns.sectors.push(targetSector);
@@ -129,9 +134,16 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
                     const matchingNeighborIdxs = neighbors.indices.filter(nIdx => state.moduleSockets.diamonds[nIdx]?.quality === targetQuality);
                     const isBridge = hexConnData.hexes.length >= 2 && (() => {
-                        const categories = [hexConnData.hexes[0].category, hexConnData.hexes[1].category].sort();
+                        const getCat = (h: LegendaryHex) => h.categories || [h.category];
+                        const c1 = getCat(hexConnData.hexes[0]);
+                        const c2 = getCat(hexConnData.hexes[1]);
                         const targets = [t1, t2].sort();
-                        return (categories[0] === targets[0] && categories[1] === targets[1]);
+
+                        // Check if any combination of categories matches targets
+                        return c1.some(cat1 => c2.some(cat2 => {
+                            const sortedActual = [cat1, cat2].sort();
+                            return sortedActual[0] === targets[0] && sortedActual[1] === targets[1];
+                        }));
                     })();
                     if (matchingNeighborIdxs.length > 0 && isBridge) {
                         count = 1;
@@ -154,11 +166,13 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
 
     const matrixActive = isBuffActive(state, 'MATRIX_OVERDRIVE');
     const finalBoost = (totalActiveBoostPct / 100) * (matrixActive ? 1.15 : 1.0);
+    // User Request: MATR-X is 15% of the WHOLE meteorite efficiency (Base 100% + Perks)
+    const bpBoost = matrixActive ? (1 + (totalActiveBoostPct / 100)) * 0.15 : 0;
 
     return {
         totalBoost: finalBoost,
         perkResults,
-        blueprintBoost: matrixActive ? (totalActiveBoostPct / 100) * 0.15 : 0
+        blueprintBoost: bpBoost
     };
 }
 
@@ -265,10 +279,16 @@ function calculatePairBonus(hexes: LegendaryHex[], perkId: string, value: number
     const targetTypes = idMap[perkId.replace('_lvl', '')];
     if (!targetTypes) return 0;
 
-    const actualTypes = [h1.category, h2.category].sort();
+    const getCat = (h: LegendaryHex) => h.categories || [h.category];
+    const c1 = getCat(h1);
+    const c2 = getCat(h2);
     const sortedTargets = [...targetTypes].sort();
 
-    const typeMatch = actualTypes[0] === sortedTargets[0] && actualTypes[1] === sortedTargets[1];
+    const typeMatch = c1.some(cat1 => c2.some(cat2 => {
+        const sortedActual = [cat1, cat2].sort();
+        return sortedActual[0] === sortedTargets[0] && sortedActual[1] === sortedTargets[1];
+    }));
+
     if (!typeMatch) return 0;
 
     if (checkLevel && h1.level !== h2.level) return 0;

@@ -1,224 +1,275 @@
-import React from 'react';
-import type { GameState, Meteorite, MeteoriteRarity, Blueprint } from '../logic/core/types';
-import './MeteoriteTooltip.css';
-import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
-import { getPerkName, getPerkIcon } from './modules/ModuleUtils';
+import React, { useMemo } from 'react';
+import type { GameState, Meteorite } from '../logic/core/types';
+import { getMeteoriteImage, RARITY_COLORS, getPerkName, getPerkParts, getMeteoriteColor } from './modules/ModuleUtils';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
+import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
+import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 
 interface MeteoriteTooltipProps {
     meteorite: Meteorite;
     gameState: GameState;
-    meteoriteIdx?: number; // Optional index if placed in socket
+    meteoriteIdx?: number;
     x: number;
     y: number;
     isInteractive?: boolean;
     isEmbedded?: boolean;
-    onMouseEnter?: () => void;
-    onMouseLeave?: () => void;
+    onMouseEnter?: (e: React.MouseEvent) => void;
+    onMouseLeave?: (e: React.MouseEvent) => void;
 }
 
-const RARITY_COLORS: Record<string, string> = {
-    // Removed legacy rarities to match MeteoriteRarity type
-    anomalous: '#60a5fa', // Blue (Anomalous)
-    radiant: '#FFD700',
-    void: '#8B0000',
-    abyss: '#8B0000', // Legacy alias for void
-    eternal: '#B8860B',
-    divine: '#FFFFFF',
-    singularity: '#E942FF'
-};
-
-const getMeteoriteImage = (m: Meteorite) => {
-    return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
-};
-
-
-
 export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
-    meteorite, gameState, meteoriteIdx = -1, x,
+    meteorite, gameState, meteoriteIdx = -1, x, y,
     isInteractive,
     isEmbedded,
     onMouseEnter, onMouseLeave
 }) => {
     const { language } = useLanguage();
+    const isRu = language === 'ru';
     const t = getUiTranslation(language);
     const mTrans = t.meteorites;
-
-    // const [shake, setShake] = React.useState(false); // Unused
     const rarityColor = RARITY_COLORS[meteorite.rarity];
     const infoName = mTrans.rarities[meteorite.rarity as keyof typeof mTrans.rarities] || mTrans.rarities.anomalous;
 
-    const formatDescription = (text: string, highlightColor: string) => {
-        const { language } = useLanguage();
-        const mTrans = getUiTranslation(language).meteorites;
+    const formatPerkDescription = (description: string) => {
+        const isRu = language === 'ru';
+        let text = description;
 
-        if (language === 'ru') {
-            // 1. Initial pattern-based replacements for better grammar
-            text = text
-                .replace(/neighboring a (Damaged|Broken|New) Meteorite/gi, (match, p1) => {
-                    const status = p1.toLowerCase() === 'damaged' ? mTrans.stats.damaged : p1.toLowerCase() === 'broken' ? mTrans.stats.broken : mTrans.stats.new;
-                    return `соседствует с ${status}`;
-                })
-                .replace(/neighboring/gi, 'соседствует с')
-                .replace(/Secondary neighboring/gi, 'Вторичное соседство с')
-                .replace(/Located in Sector-(\d+)/gi, (match, p1) => {
-                    const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
-                    return `Находится в ${sector}`;
-                })
-                .replace(/located in Sector-(\d+)/gi, (match, p1) => {
-                    const sector = p1 === '01' ? mTrans.stats.sector01 : p1 === '02' ? mTrans.stats.sector02 : mTrans.stats.sector03;
-                    return `найден в ${sector}`;
-                })
-                .replace(/located in/gi, 'найден в')
-                .replace(/found in (ECO|COM|DEF) HEX/gi, (match, p1) => {
-                    const arena = p1 === 'ECO' ? mTrans.stats.economicArena : p1 === 'COM' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
-                    return `найден в ${arena}`;
-                })
-                .replace(/found in (Economic|Combat|Defence) Arena/gi, (match, p1) => {
-                    const arena = p1.toLowerCase() === 'economic' ? mTrans.stats.economicArena : p1.toLowerCase() === 'combat' ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
-                    return `найден в ${arena}`;
-                })
-                .replace(/connected to (Eco|Com|Def) Hexes/gi, (match, p1) => {
-                    const arenaShort = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
-                    return `соседствует с ${arenaShort} Легендарный ⬢`;
-                })
-                .replace(/Connects (Eco|Com|Def) & (Eco|Com|Def) Hexes/gi, (match, p1, p2) => {
-                    const s1 = p1 === 'Eco' ? 'Эко' : p1 === 'Com' ? 'Бой' : 'Защ';
-                    const s2 = p2 === 'Eco' ? 'Эко' : p2 === 'Com' ? 'Бой' : 'Защ';
-                    return `Соседствует с ${s1} и ${s2} Легендарный ⬢`;
-                });
-
-            // 2. Connector replacements
-            text = text
-                .replace(/connected to/gi, 'соседствует с')
-                .replace(/connects/gi, 'соседствует с')
-                .replace(/Connects/gi, 'Соседствует с')
-                .replace(/\band\b/gi, 'и')
-                .replace(/&/g, 'и')
-                .replace(/Eco ⬢/g, 'Эко ⬢')
-                .replace(/Com ⬢/g, 'Бой ⬢')
-                .replace(/Def ⬢/g, 'Защ ⬢')
-                .replace(/\bEco\b/gi, 'Эко')
-                .replace(/\bCom\b/gi, 'Бой')
-                .replace(/\bDef\b/gi, 'Защ')
-                .replace(/ECO HEX/gi, mTrans.stats.sector01)
-                .replace(/COM HEX/gi, mTrans.stats.sector02)
-                .replace(/DEF HEX/gi, mTrans.stats.sector03)
-                .replace(/Hexes/gi, 'Легендарный ⬢')
-                .replace(/Hex/gi, 'Легендарный ⬢')
-                .replace(/Damaged Meteorite/gi, mTrans.stats.damaged)
-                .replace(/Broken Meteorite/gi, mTrans.stats.broken)
-                .replace(/New Meteorite/gi, mTrans.stats.new);
-
-            // 3. Final polish: Ensure starting capital letter
-            text = text.trim();
-            if (text.length > 0) {
-                text = text.charAt(0).toUpperCase() + text.slice(1);
+        const getForgeName = (code: string) => {
+            if (isRu) {
+                if (code === 'Eco') return 'ЭКЗИС';
+                if (code === 'Com') return 'ПРЕДЕЛ';
+                if (code === 'Def') return 'БАСТИОН';
+            } else {
+                if (code === 'Eco') return 'EXIS';
+                if (code === 'Com') return 'APEX';
+                if (code === 'Def') return 'BASTION';
             }
+            return code;
+        };
+
+        const getQualityName = (q: string) => {
+            if (isRu) {
+                if (q.toLowerCase() === 'damaged') return t.meteorites.stats.damaged;
+                if (q.toLowerCase() === 'broken') return t.meteorites.stats.broken;
+                if (q.toLowerCase() === 'new') return t.meteorites.stats.new;
+            }
+            return q;
+        };
+
+        // 1. Dual Forge Patterns (Lvl 5, 6)
+        text = text.replace(/(\s*(?:&|and|& connects|connects|and connects)\s+)?(neighboring|secondary neighboring) a (Damaged|Broken|New) Meteorite(?:\.|\s+)?(?:\(?& connects|connects|and connects\)?)\s+[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\(]?(Eco|Com|Def)[\]\)]?( Hexes| Hex| ⬡| ⬢|)/gi, (match, conj, pref, q, p1, p2) => {
+            const status = getQualityName(q);
+            const f1 = getForgeName(p1);
+            const f2 = getForgeName(p2);
+            if (isRu) {
+                const prefixStr = pref.toLowerCase().includes('secondary') ? 'вторичное соседство' : 'соседствует';
+                return `${prefixStr} с ${status} метеоритом и усиляет кузню ${f1} и ${f2}`;
+            } else {
+                const prefixStr = conj ? pref.toLowerCase() : (pref.charAt(0).toUpperCase() + pref.toLowerCase().slice(1));
+                return `${conj || ''}${prefixStr} a ${q} Meteorite. Empowering Forge ${f1} and ${f2}`;
+            }
+        });
+
+        text = text.replace(/Located in Sector-(\d+)(?:\.|\s+)?(?:\(?& connects|connects|and connects\)?)\s+[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\()\]?(Eco|Com|Def)[\]\)]?( Hexes| Hex| ⬡| ⬢|)/gi, (match, sec, p1, p2) => {
+            const f1 = getForgeName(p1);
+            const f2 = getForgeName(p2);
+            if (isRu) return `Находится в Сектор-${sec} и усиляет кузню ${f1} и ${f2}`;
+            return `Located in Sector-${sec}. Empowering Forge ${f1} and ${f2}`;
+        });
+
+        // 2. Single Forge Patterns (Lvl 1)
+        text = text.replace(/Located in Sector-(\d+)(?:\.|\s+)?(?:neighboring|&|& connects|connects|and connects) an? [\[\(]?(Eco|Com|Def)[\]\)]?( Hex| ⬡| ⬢|)/gi, (match, sec, p1) => {
+            const forge = getForgeName(p1);
+            if (isRu) return `Находится в Сектор-${sec} и усиляет кузню ${forge}`;
+            return `Located in Sector-${sec} and empowering Forge ${forge}`;
+        });
+
+        // 3. Generic Connects/Neighbors (Catch-all)
+        text = text.replace(/(\s*(?:&|and)\s+)?(& connects|connects|Connects|and connects|& neighboring|neighboring|Neighboring) (an? [\[\(]?(Eco|Com|Def)[\]\)]? (Hex|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]? & [\[\(]?(Eco|Com|Def)[\]\)]? (Hexes|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]? (Hexes|⬡|⬢)|[\[\(]?(Eco|Com|Def)[\]\)]?)/gi, (match, conj, verb, rest, p1, h1, p2, p3, h2, p4, h3, p5) => {
+            const f1Code = p1 || p2 || p4 || p5;
+            const f2Code = p3;
+            const forge1 = getForgeName(f1Code);
+            const verbLower = verb.toLowerCase();
+
+            if (verbLower.includes('neighbor')) {
+                const prefix = conj ? 'neighboring' : 'Neighboring';
+                if (f2Code) {
+                    const forge2 = getForgeName(f2Code);
+                    if (isRu) return `соседствует с кузней ${forge1} и ${forge2}`;
+                    return `${conj || ''}${prefix} Forge ${forge1} and ${forge2}`;
+                }
+                if (isRu) return `соседствует с кузней ${forge1}`;
+                return `${conj || ''}${prefix} Forge ${forge1}`;
+            }
+
+            if (f2Code) {
+                const forge2 = getForgeName(f2Code);
+                if (isRu) return `усиляет кузню ${forge1} и ${forge2}`;
+                return `Empowering Forge ${forge1} and ${forge2}`;
+            }
+            if (isRu) return `усиляет кузню ${forge1}`;
+            // If preceded by sector info, add 'and'
+            const prefix = (conj || match.toLowerCase().includes('and') || text.toLowerCase().includes('located in sector')) ? 'and empowering' : 'Empowering';
+            return `${prefix} Forge ${forge1}`;
+        });
+
+        text = text.replace(/(\s*(?:&|and)\s+)?(neighboring|secondary neighboring) a (Damaged|Broken|New) Meteorite/gi, (match, conj, pref, q) => {
+            const status = getQualityName(q);
+            if (isRu) {
+                const prefixStr = pref.toLowerCase().includes('secondary') ? 'вторичное соседство' : 'соседствует';
+                return `${prefixStr} с ${status} метеоритом`;
+            }
+            const prefixStr = conj ? pref.toLowerCase() : (pref.charAt(0).toUpperCase() + pref.toLowerCase().slice(1));
+            return `${conj || ''}${prefixStr} a ${q} Meteorite`;
+        });
+
+        // 4. Found in
+        text = text.replace(/found in (Economic|Combat|Defence) Arena/gi, (match, a) => {
+            if (isRu) {
+                const arena = a.toLowerCase().includes('eco') ? mTrans.stats.economicArena : a.toLowerCase().includes('com') ? mTrans.stats.combatArena : mTrans.stats.defenceArena;
+                return `найден в ${arena}`;
+            }
+            return `found in ${a} Arena`;
+        });
+
+        // 5. Cleanup
+        if (isRu) {
+            text = text
+                .replace(/Located in Sector-(\d+)/gi, 'Находится в Сектор-$1')
+                .replace(/located in Sector-(\d+)/gi, 'найден в Сектор-$1')
+                .replace(/Sector-(\d+)/gi, 'Сектор-$1')
+                .replace(/Broken Meteorite/gi, `${t.meteorites.stats.broken} метеорит`)
+                .replace(/Damaged Meteorite/gi, `${t.meteorites.stats.damaged} метеорит`)
+                .replace(/New Meteorite/gi, `${t.meteorites.stats.new} метеорит`)
+                .replace(/\bLocated in\b/gi, 'Находится в')
+                .replace(/\band\b/gi, 'и')
+                .replace(/&/g, 'и');
+
+            // Explicitly fix common missing-and patterns
+            text = text.replace(/(Сектор-\d+)\s+усиляет/gi, '$1 и усиляет');
+
+            // Join descriptors in RU: Search for nouns followed by verbs and bridge them with 'и'
+            text = text.replace(/(Сектор-\d+|метеоритом|метеорит)\.?[\s\u00A0]*(и\s+)?(усиляет|Усиляет|найден|соседствует|вторичное)/gi, (match, obj, hasAnd, verb) => {
+                const v = verb.toLowerCase();
+                let joinVerb = v;
+                if (v.includes('усиляет')) joinVerb = 'усиляет';
+                else if (v.includes('соседствует')) joinVerb = 'соседствует';
+                else if (v.includes('вторичное')) joinVerb = 'вторичное соседство';
+                else joinVerb = 'найден';
+
+                return `${obj} и ${joinVerb}`;
+            });
+
+            // Final cleanup for dot-and-verb leftover patterns
+            text = text.replace(/\.[\s\u00A0]+и усиляет/g, ' и усиляет').replace(/\.[\s\u00A0]+усиляет/g, ' и усиляет');
         } else {
-            // Original English replacement logic
-            text = text.replace(/found in ECO HEX/gi, `found in ${mTrans.stats.economicArena}`)
-                .replace(/found in COM HEX/gi, `found in ${mTrans.stats.combatArena}`)
-                .replace(/found in DEF HEX/gi, `found in ${mTrans.stats.defenceArena}`)
-                .replace(/found in Economic Arena/gi, `found in ${mTrans.stats.economicArena}`)
-                .replace(/found in Combat Arena/gi, `found in ${mTrans.stats.combatArena}`)
-                .replace(/found in Defence Arena/gi, `found in ${mTrans.stats.defenceArena}`)
-                .replace(/Located in Sector-01/gi, `Located in ${mTrans.stats.sector01}`)
-                .replace(/Located in Sector-02/gi, `Located in ${mTrans.stats.sector02}`)
-                .replace(/Located in Sector-03/gi, `Located in ${mTrans.stats.sector03}`)
-                .replace(/Located in ECO HEX/gi, `Located in ${mTrans.stats.sector01}`)
-                .replace(/Located in COM HEX/gi, `Located in ${mTrans.stats.sector02}`)
-                .replace(/Located in DEF HEX/gi, `Located in ${mTrans.stats.sector03}`)
-                .replace(/connected to Eco Hexes/gi, 'connected to Eco Legendary Upgrade')
-                .replace(/connected to Com Hexes/gi, 'connected to Com Legendary Upgrade')
-                .replace(/connected to Def Hexes/gi, 'connected to Def Legendary Upgrade')
-                .replace(/neighboring a/gi, 'neighboring a')
-                .replace(/neighboring/gi, 'neighboring')
-                .replace(/Eco ⬢/g, 'Eco ⬢')
-                .replace(/Com ⬢/g, 'Com ⬢')
-                .replace(/Def ⬢/g, 'Def ⬢')
-                .replace(/Hexes/gi, 'Legendary ⬢')
-                .replace(/Hex/gi, 'Legendary ⬢')
-                .replace(/ECO HEX/gi, mTrans.stats.sector01)
-                .replace(/COM HEX/gi, mTrans.stats.sector02)
-                .replace(/DEF HEX/gi, mTrans.stats.sector03);
+            text = text
+                .replace(/Sector-01/gi, mTrans.stats.sector01)
+                .replace(/Sector-02/gi, mTrans.stats.sector02)
+                .replace(/Sector-03/gi, mTrans.stats.sector03)
+                .replace(/&/g, 'and');
+
+            // Join descriptors in EN
+            text = text.replace(/((?:Sector-\d+|SECTOR-\d+)|Meteorite)\s+(found)/gi, '$1 and $2')
+                .replace(/Located in ((?:Sector-\d+|SECTOR-\d+))\s+and/gi, 'Located in $1 and');
         }
 
-        // Keywords to highlight - Order matters (longest first to avoid partial matches)
+        text = text.trim();
+        if (text.length > 0) {
+            text = text.charAt(0).toUpperCase() + text.slice(1);
+        }
+        return text;
+    };
+
+    const applyHighlighting = (text: string) => {
         const keywords = [
             mTrans.stats.sector01, mTrans.stats.sector02, mTrans.stats.sector03,
             mTrans.stats.economicArena, mTrans.stats.combatArena, mTrans.stats.defenceArena,
-            'Economic', 'Combat', 'Defence',
-            'Экономическая', 'Боевая', 'Защитная',
-            'Экономическая Арена', 'Боевая Арена', 'Защитная Арена',
-            '(?:Eco|Com|Def) & (?:Eco|Com|Def) ⬢',
-            '\\bEco\\b', '\\bCom\\b', '\\bDef\\b',
-            '\\bЭко\\b', '\\bБой\\b', '\\bЗащ\\b',
-            'Эко ⬢', 'Бой ⬢', 'Защ ⬢',
-            'Эко и Бой ⬢', 'Эко и Защ ⬢', 'Бой и Защ ⬢',
-            'Бой и Эко ⬢', 'Защ и Эко ⬢', 'Защ и Бой ⬢',
-            'Эко и Эко ⬢', 'Бой и Бой ⬢', 'Защ и Защ ⬢',
-            'ECO-ECO', 'ECO-COM', 'ECO-DEF', 'COM-COM', 'COM-DEF', 'DEF-DEF',
-            'HEX', 'NEW', 'DAMAGED', 'BROKEN', 'CORRUPTED',
+            'Exis', 'Apex', 'Bastion',
+            'Экзис', 'Предел', 'Бастион',
             'НОВЫЙ', 'ПОВРЕЖДЕН', 'СЛОМАН', 'ИСКАЖЕН',
-            'ТИП', 'РАРИТЕТ', 'СЕКТОР',
-            'Type', 'Rarity', 'Sector',
-            '\\(Any\\)', 'same level', 'того же уровня'
+            'Sector-01', 'Sector-02', 'Sector-03',
+            'Damaged', 'Broken', 'New',
+            'СЕКТОР-01', 'СЕКТОР-02', 'СЕКТОР-03',
+            '(x2)', '(x3)', '(x4)', '(x5)', '(x6)'
         ];
 
-        // Case-insensitive regex
-        const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
+        const getHighlightColor = (word: string) => {
+            const w = word.toUpperCase();
+            // Sectors (Purple Variations - Brightened)
+            if (w.includes('01') || w.includes('SECTOR-01') || w.includes('СЕКТОР-01')) return '#e9d5ff';
+            if (w.includes('02') || w.includes('SECTOR-02') || w.includes('СЕКТОР-02')) return '#c084fc';
+            if (w.includes('03') || w.includes('SECTOR-03') || w.includes('СЕКТОР-03')) return '#a855f7';
+            // Arenas
+            if (w.includes('ECONOMIC') || w.includes('ЭКОНОМИЧ')) return '#fbbf24';
+            if (w.includes('COMBAT') || w.includes('БОЕВ')) return '#ef4444';
+            if (w.includes('DEFENCE') || w.includes('ЗАЩИТН') || w.includes('ОБОРОНИТ')) return '#3b82f6';
+            // Forges
+            if (w.includes('EXIS') || w.includes('ЭКЗИС')) return '#d946ef';
+            if (w.includes('APEX') || w.includes('ПРЕДЕЛ')) return '#fb923c';
+            if (w.includes('BASTION') || w.includes('БАСТИОН')) return '#22d3ee';
+            // Statuses (White/Grey Theme - Higher Contrast)
+            if (w.includes('NEW') || w.includes('НОВЫЙ')) return '#ffffff';
+            if (w.includes('DAMAGED') || w.includes('ПОВРЕЖДЕН')) return '#cbd5e1';
+            if (w.includes('BROKEN') || w.includes('СЛОМАН')) return '#94a3b8';
+            if (w.startsWith('(X')) return '#fb923c'; // Multiplier Orange
+            return rarityColor;
+        };
+
+        const regex = new RegExp(`(${keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
         return text.split(regex).filter(Boolean).map((part, i) => {
-            const upperPart = part.toUpperCase();
-
-            // Fixed matching logic
-            const isKeyword = keywords.some(k => {
-                const cleanK = k.replace(/\\b/g, '').replace(/\((?:\?\:)?/g, '').replace(/\)/g, '');
-                return new RegExp(`^${cleanK}$`, 'i').test(part);
-            });
-
+            const isKeyword = keywords.some(k => new RegExp(`^${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i').test(part));
             if (isKeyword) {
-                const isCorrupted = upperPart === 'CORRUPTED' || upperPart === 'ИСКАЖЕН';
+                const color = getHighlightColor(part);
                 return (
                     <span key={i} style={{
-                        color: highlightColor,
-                        fontWeight: 'bold',
-                        background: isCorrupted ? `${highlightColor}15` : 'transparent',
-                        padding: isCorrupted ? '0 4px' : '0',
+                        display: 'inline-block',
+                        padding: '0px 5px',
                         borderRadius: '3px',
-                        border: isCorrupted ? `1px solid ${highlightColor}33` : 'none',
-                        textShadow: `0 0 8px ${highlightColor}44`,
-                        display: isCorrupted ? 'inline-block' : 'inline',
-                        lineHeight: isCorrupted ? '1.2' : 'normal'
-                    }}>
-                        {upperPart}
-                    </span>
+                        fontSize: '8px',
+                        fontWeight: 900,
+                        fontStyle: 'normal',
+                        letterSpacing: '0.5px',
+                        verticalAlign: 'middle',
+                        margin: '0 1px',
+                        lineHeight: '14px',
+                        color: color,
+                        background: `${color}18`,
+                        border: `1px solid ${color}55`,
+                        boxShadow: `0 0 8px ${color}22`,
+                        whiteSpace: 'nowrap'
+                    }}>{part.toUpperCase()}</span>
                 );
             }
             return <span key={i}>{part}</span>;
         });
     };
 
-    // ... efficiency logic remains ...
-    const efficiency = meteoriteIdx !== -1
-        ? calculateMeteoriteEfficiency(gameState, meteoriteIdx)
-        : { totalBoost: 0, perkResults: {} as Record<string, any>, blueprintBoost: 0 };
+    const efficiency = useMemo(() => {
+        return meteoriteIdx !== -1
+            ? calculateMeteoriteEfficiency(gameState, meteoriteIdx)
+            : { totalBoost: 0, perkResults: {} as Record<string, any>, blueprintBoost: 0 };
+    }, [gameState, meteoriteIdx]);
 
-    // Calculate how many stats we have
     const activeStatsCount = meteorite.perks ? meteorite.perks.length : 0;
-
-    const CARD_WIDTH = isEmbedded ? '100%' : 350;
-    // Tighter height calculation to remove empty space
-    const CARD_HEIGHT = isEmbedded ? '100%' : 260 + (activeStatsCount * 36);
+    const CARD_WIDTH = isEmbedded ? '100%' : 320;
+    const CARD_HEIGHT = isEmbedded ? 'auto' : 310 + (activeStatsCount * 65);
     const OFFSET = 20;
 
-    // Final positioning: Centered vertically on screen, horizontal follows cursor
     let finalX = x + OFFSET;
+    const getQualityColor = (quality: string | undefined) => {
+        const q = quality?.toLowerCase();
+        if (q === 'new') return '#ffffff';      // White
+        if (q === 'damaged') return '#cbd5e1';  // Light grey
+        if (q === 'broken') return '#94a3b8';   // Medium grey
+        return rarityColor;
+    };
+
     const finalY = (window.innerHeight - (typeof CARD_HEIGHT === 'number' ? CARD_HEIGHT : 400)) / 2;
 
-    if (!isEmbedded && finalX + (typeof CARD_WIDTH === 'number' ? CARD_WIDTH : 350) > window.innerWidth) {
-        finalX = x - (typeof CARD_WIDTH === 'number' ? CARD_WIDTH : 350) - OFFSET;
+    if (!isEmbedded && finalX + (typeof CARD_WIDTH === 'number' ? CARD_WIDTH : 320) > window.innerWidth) {
+        finalX = x - (typeof CARD_WIDTH === 'number' ? CARD_WIDTH : 320) - OFFSET;
     }
 
     const tooltipStyle: React.CSSProperties = isEmbedded ? {
@@ -226,444 +277,374 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        boxSizing: 'border-box',
-        background: 'transparent',
-        ['--rarity-color' as any]: rarityColor
+        pointerEvents: 'none'
     } : {
         position: 'fixed',
         left: finalX,
         top: finalY,
-        width: `${CARD_WIDTH}px`,
-        height: 'auto', // Allow content to dictate height to ensure border wraps everything
-        minHeight: `${CARD_HEIGHT}px`,
-        zIndex: 5000,
-        pointerEvents: isInteractive ? 'auto' : 'none',
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        zIndex: 10000,
+        pointerEvents: 'none',
         display: 'flex',
         flexDirection: 'column',
-        boxSizing: 'border-box',
-        border: `3px solid ${rarityColor}`,
-        background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
-        boxShadow: `0 0 30px ${rarityColor}44`,
-        ['--rarity-color' as any]: rarityColor,
-        // Animation removed
-    };
-
-    const formatPct = (val: number, isDirectPct: boolean = false) => {
-        const raw = isDirectPct ? val : val * 100;
-        const rounded = Math.round(raw * 10) / 10;
-        return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
+        animation: 'cardEntry 0.3s ease-out forwards'
     };
 
     return (
         <div
+            id="meteorite-tooltip"
             style={tooltipStyle}
-            className="meteorite-card-pulse"
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
         >
-            <style>{`
-                @keyframes shake {
-                    10%, 90% { transform: translate3d(-1px, 0, 0); }
-                    20%, 80% { transform: translate3d(2px, 0, 0); }
-                    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-                    40%, 60% { transform: translate3d(4px, 0, 0); }
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.2);
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: ${rarityColor}66;
-                    border-radius: 2px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: ${rarityColor};
-                }
-            `}</style>
-            {meteorite.isBlueprint ? (
-                (() => {
-                    const bp = meteorite as any as Blueprint;
-                    const isResearching = bp.status === 'researching';
-                    const timeLeft = isResearching && bp.researchFinishTime ? Math.max(0, bp.researchFinishTime - gameState.gameTime) : 0;
+            <style>
+                {`
+                    @keyframes cardEntry {
+                        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                        to { opacity: 1; transform: scale(1) translateY(0); }
+                    }
+                    @keyframes heroPulse {
+                        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px ${rarityColor}44); }
+                        50% { transform: scale(1.05); filter: drop-shadow(0 0 40px ${rarityColor}88); }
+                    }
+                `}
+            </style>
 
-                    return (
+            {/* Main tooltip content */}
+            <div style={{
+                background: isEmbedded ? 'transparent' : '#0a0a0f',
+                backgroundImage: isEmbedded ? 'none' : `
+                    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: '20px 20px',
+                backdropFilter: isEmbedded ? 'none' : 'blur(16px)',
+                border: isEmbedded ? 'none' : `1px solid ${rarityColor}55`,
+                boxShadow: isEmbedded ? 'none' : `0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px ${rarityColor}11`,
+                borderRadius: '8px',
+                height: isEmbedded ? '100%' : '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+            }}>
+                {/* Header (Integrated Compact Design) */}
+                <div style={{
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.85) 100%)',
+                    borderBottom: '1px solid rgba(255,255,255,0.12)',
+                    boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 0 25px ${rarityColor}15`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minHeight: '97px',
+                    flexShrink: 0
+                }}>
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: `linear-gradient(to right, ${rarityColor}15, transparent)`,
+                        pointerEvents: 'none'
+                    }} />
+
+                    {/* LEFT: ICON SECTION */}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <div style={{
-                            padding: '20px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '12px',
-                            background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
-                            border: `2px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
-                            boxShadow: `0 0 30px ${isResearching ? 'rgba(251, 191, 36, 0.4)' : 'rgba(59, 130, 246, 0.5)'}, inset 0 0 20px ${isResearching ? 'rgba(251, 191, 36, 0.1)' : 'rgba(59, 130, 246, 0.2)'}`,
-                            minHeight: '180px',
-                            justifyContent: 'center',
                             position: 'relative',
-                            overflow: 'hidden'
+                            width: '70px', height: '70px',
+                            background: 'rgba(0,0,0,0.6)',
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: `2px solid ${rarityColor}aa`,
+                            boxShadow: `0 0 20px ${rarityColor}44, inset 0 0 10px ${rarityColor}22`
                         }}>
-                            {/* SCANLINE EFFECT */}
                             <div style={{
-                                position: 'absolute', inset: 0,
-                                background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(59, 130, 246, 0.05) 1px, rgba(59, 130, 246, 0.05) 2px)',
-                                pointerEvents: 'none'
+                                position: 'absolute', inset: -10,
+                                border: `1px solid ${rarityColor}22`,
+                                borderRadius: '50%',
+                                animation: 'spin-slow 2s infinite linear'
+                            }} />
+                            <div style={{
+                                position: 'absolute', inset: -6,
+                                border: `1px dashed ${rarityColor}33`,
+                                borderRadius: '50%',
+                                animation: 'spin-reverse 5s infinite linear'
                             }} />
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', zIndex: 1 }}>
+                            <img
+                                src={getMeteoriteImage(meteorite)}
+                                style={{ width: '52px', height: '52px', objectFit: 'contain', filter: `drop-shadow(0 0 15px ${rarityColor})`, animation: 'heroPulse 4s ease-in-out infinite' }}
+                                alt="loaded unit"
+                            />
+                            {/* Status micro-badge row: C → I → H → M */}
+                            {(meteorite.isCorrupted || (meteorite.incubatorBoost || 0) > 0 || (meteorite as any).blueprintBoosted || isBuffActive(gameState, 'MATRIX_OVERDRIVE')) && (
                                 <div style={{
-                                    width: '65px', height: '65px',
-                                    background: isResearching ? 'rgba(251, 191, 36, 0.05)' : 'rgba(59, 130, 246, 0.1)',
-                                    border: `1px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
-                                    borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: `0 0 15px ${isResearching ? 'rgba(251, 191, 36, 0.2)' : 'rgba(59, 130, 246, 0.3)'}`,
-                                    position: 'relative',
-                                    overflow: 'hidden'
+                                    position: 'absolute', top: '-4px', left: '-4px',
+                                    display: 'flex', flexDirection: 'row', gap: '2px',
+                                    zIndex: 5
                                 }}>
-                                    <img src="/assets/Icons/Blueprint.png" style={{
-                                        width: '75%', height: '75%', objectFit: 'contain',
-                                        filter: isResearching ? 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(-10deg) saturate(3)' : 'drop-shadow(0 0 5px #60a5fa)',
-                                        opacity: isResearching ? 0.3 : 1
-                                    }} alt="BP" />
-
-                                    {isResearching && (
-                                        <div style={{
-                                            position: 'absolute', inset: 0,
-                                            background: 'linear-gradient(transparent, #fbbf24, transparent)',
-                                            height: '200%', width: '100%',
-                                            opacity: 0.3,
-                                            animation: 'scanning-bar 1.5s infinite linear'
-                                        }} />
+                                    {meteorite.isCorrupted && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid #991b1b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(153,27,27,0.6)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                        </div>
+                                    )}
+                                    {(meteorite.incubatorBoost || 0) > 0 && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid #0ea5e9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(14,165,233,0.5)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                        </div>
+                                    )}
+                                    {(meteorite as any).blueprintBoosted && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid #3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(96,165,250,0.5)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                        </div>
+                                    )}
+                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                        <div style={{ width: '14px', height: '14px', background: '#0a0f18', border: '1px solid #ea580c', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(234,88,12,0.5)' }}>
+                                            <span style={{ fontSize: '8px', fontWeight: 950, color: '#f97316', lineHeight: 1 }}>M</span>
+                                        </div>
                                     )}
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ width: '8px', height: '8px', background: isResearching ? '#fbbf24' : '#3b82f6', borderRadius: '50%', boxShadow: `0 0 5px ${isResearching ? '#fbbf24' : '#3b82f6'}` }} />
-                                        <span style={{ fontSize: '10px', color: isResearching ? '#fbbf24' : '#60a5fa', fontWeight: 900, letterSpacing: '2px' }}>
-                                            {isResearching ? (language === 'ru' ? 'ИДЕТ ДЕШИФРОВКА' : 'DECRYPTION UNDERWAY') : (language === 'ru' ? 'АРХИВНАЯ АНОМАЛИЯ' : 'ARCHIVE ANOMALY')}
-                                        </span>
-                                    </div>
-                                    <span style={{
-                                        fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '1px',
-                                        textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                                        fontFamily: 'Orbitron, sans-serif'
-                                    }}>
-                                        {isResearching ? (language === 'ru' ? 'ЗАШИФРОВАННОЕ ЯДРО' : 'ENCRYPTED CORE') : (bp.name || (language === 'ru' ? 'НЕИЗВЕСТНЫЙ НАБОР' : 'UNKNOWN DATASET'))}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <p style={{
-                                fontSize: '11px', color: '#94a3b8', margin: '8px 0', lineHeight: '1.5',
-                                borderLeft: `3px solid ${isResearching ? '#fbbf24' : '#3b82f6'}`,
-                                paddingLeft: '12px', position: 'relative', zIndex: 1
-                            }}>
-                                {isResearching
-                                    ? (language === 'ru' ? "Система в данный момент анализирует зашифрованные пакеты высокой плотности. Структурный анализ и функциональный обзор недоступны до завершения синхронизации потока битов." : "System is currently parsing high-density encrypted packets. Structural analysis and functional overview are unavailable until bitstream synchronization is complete.")
-                                    : (bp.desc || (language === 'ru' ? "Телеметрия из глубокого космоса, полученная с заброшенной орбитальной станции. Требуется локальная обработка для инициализации." : "Deep-space telemetry recovered from an abandoned orbital station. Requires local research processing to initialize."))}
-                            </p>
-
-                            <div style={{
-                                marginTop: '10px',
-                                padding: '12px',
-                                background: isResearching ? 'rgba(251, 191, 36, 0.05)' : 'rgba(59, 130, 246, 0.05)',
-                                border: `1px dashed ${isResearching ? 'rgba(251, 191, 36, 0.4)' : 'rgba(59, 130, 246, 0.4)'}`,
-                                borderRadius: '6px',
-                                textAlign: 'center',
-                                position: 'relative', zIndex: 1
-                            }}>
-                                <div style={{ fontSize: '9px', fontWeight: 900, color: isResearching ? '#fbbf24' : '#60a5fa', marginBottom: '4px', letterSpacing: '1px' }}>
-                                    {isResearching ? (language === 'ru' ? 'СТАТУС ДЕШИФРОВКИ' : 'DECRYPTION STATUS') : (language === 'ru' ? 'АНАЛИЗ ИССЛЕДОВАНИЯ' : 'RESEARCH ANALYSIS')}
-                                </div>
-
-                                {isResearching ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
-                                        <div style={{ fontSize: '24px', color: '#fbbf24', fontWeight: 900, fontFamily: 'monospace', textShadow: '0 0 10px #fbbf24' }}>
-                                            {timeLeft.toFixed(1)}s
-                                        </div>
-                                        <div style={{ width: '100%', height: '4px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                                            <div style={{
-                                                height: '100%', background: '#fbbf24',
-                                                width: `${Math.max(5, (1 - (timeLeft / (bp.researchDuration || 60))) * 100)}%`,
-                                                boxShadow: '0 0 10px #fbbf24'
-                                            }} />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '6px' }}>
-                                            <span style={{ fontSize: '10px', color: '#94a3b8' }}>{language === 'ru' ? 'ПРОЧНОСТЬ:' : 'DURABILITY STATUS:'}</span>
-                                            <span style={{ fontSize: '10px', color: '#fff', fontWeight: 900 }}>{language === 'ru' ? 'СТАБИЛЬНО' : 'STABLE'}</span>
-                                        </div>
-                                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#fbbf24', letterSpacing: '0.5px' }}>
-                                            {language === 'ru' ? 'ГОТОВО К ИНИЦИАЛИЗАЦИИ' : 'READY FOR INITIALIZATION'}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-
-                            <style>{`
-                                @keyframes scanning-bar {
-                                    from { transform: translateY(-100%); }
-                                    to { transform: translateY(100%); }
-                                }
-                            `}</style>
-                        </div>
-                    );
-                })()
-            ) : (
-                <>
-                    {/* Header: Name + Symbol + Total Power */}
-                    <div style={{
-                        padding: '12px 10px',
-                        borderBottom: `2px solid ${rarityColor}66`,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: `${rarityColor}11`
-                    }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{
-                                    fontSize: '14px',
-                                    fontWeight: 900,
-                                    color: '#fff',
-                                    letterSpacing: '1px'
-                                }}>{infoName}</span>
-                                <span style={{
-                                    fontSize: '9px', padding: '1px 4px',
-                                    background: `${rarityColor}33`, color: rarityColor,
-                                    borderRadius: '2px', fontWeight: 900
-                                }}>V {meteorite.version?.toFixed(1) || '1.0'}</span>
-                                {meteorite.isCorrupted && (
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        background: 'rgba(239, 68, 68, 0.15)', padding: '1px 6px', borderRadius: '4px',
-                                        border: '1px solid #ef4444',
-                                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'
-                                    }}>
-                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#ef4444', letterSpacing: '0.5px' }}>{mTrans.stats.corruptedEject}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div style={{
-                                marginTop: '2px',
-                                fontSize: '12px',
-                                fontWeight: 900,
-                                color: rarityColor,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                            }}>
-                                <span style={{ opacity: 0.6, fontSize: '10px' }}>{mTrans.stats.activePower}</span>
-                                <span>+{formatPct(efficiency.totalBoost)}%</span>
-                                {meteorite.blueprintBoosted && (
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px',
-                                        background: 'rgba(59, 130, 246, 0.2)', padding: '1px 6px', borderRadius: '4px',
-                                        border: '1px solid rgba(59, 130, 246, 0.4)',
-                                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)'
-                                    }}>
-                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa', letterSpacing: '0.5px' }}>{mTrans.stats.harmV} +2%</span>
-                                    </div>
-                                )}
-                                {efficiency.blueprintBoost > 0 && (
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px',
-                                        background: 'rgba(249, 115, 22, 0.2)', padding: '1px 6px', borderRadius: '4px',
-                                        border: '1px solid rgba(249, 115, 22, 0.4)',
-                                        boxShadow: '0 0 10px rgba(249, 115, 22, 0.3)'
-                                    }}>
-                                        <span style={{ fontSize: '9px', fontWeight: 900, color: '#fb923c', letterSpacing: '0.5px' }}>{mTrans.stats.coreX} +{formatPct(efficiency.blueprintBoost)}%</span>
-                                    </div>
-                                )}
-                                {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
-                                    <div style={{
-                                        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: '6px'
-                                    }}>
-                                        <div style={{
-                                            display: 'flex', alignItems: 'center', gap: '4px',
-                                            background: 'rgba(15, 23, 42, 0.8)', padding: '1px 8px', borderRadius: '4px',
-                                            border: '1px solid #475569',
-                                            boxShadow: '0 0 15px rgba(0, 217, 255, 0.3)'
-                                        }}>
-                                            <span style={{ fontSize: '10px', fontWeight: 950, color: '#fff', letterSpacing: '0.5px' }}>
-                                                {mTrans.stats.incubLabel} <span style={{ color: '#00d9ff' }}>+{formatPct(meteorite.incubatorBoost, true)}%</span>
-                                            </span>
-                                        </div>
-                                        <span style={{ fontSize: '6px', color: 'rgba(0, 217, 255, 0.6)', fontWeight: 700, marginTop: '2px', textTransform: 'uppercase' }}>
-                                            {t.recalibrate.incubCostNote}
-                                        </span>
-                                    </div>
-                                )}
-                                {meteoriteIdx === -1 && <span style={{ fontSize: '9px', opacity: 0.5, marginLeft: '4px' }}>{mTrans.stats.unplaced}</span>}
-                            </div>
+                            )}
                         </div>
                     </div>
 
+                    {/* RIGHT: DATA SECTION */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <h2 style={{
+                                    color: '#fff',
+                                    fontSize: '15px',
+                                    fontWeight: 950,
+                                    margin: 0,
+                                    letterSpacing: '1px',
+                                    textShadow: `0 0 15px ${rarityColor}aa`,
+                                }}>
+                                    {infoName.toUpperCase()}
+                                </h2>
+                                <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                    {meteorite.isCorrupted && (
+                                        <div style={{
+                                            background: 'rgba(153, 27, 27, 0.15)',
+                                            color: '#ef4444',
+                                            padding: '2px 5px',
+                                            borderRadius: '4px',
+                                            fontSize: '7px',
+                                            fontWeight: 900,
+                                            border: '1px solid rgba(153, 27, 27, 0.4)',
+                                            letterSpacing: '0.5px',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {mTrans.stats.corrupted} <span style={{ opacity: 0.7 }}>+3%</span>
+                                        </div>
+                                    )}
+                                    {(meteorite.incubatorBoost || 0) > 0 && (
+                                        <div style={{
+                                            background: 'rgba(0, 217, 255, 0.1)',
+                                            color: '#00d9ff',
+                                            padding: '2px 5px',
+                                            borderRadius: '4px',
+                                            fontSize: '7px',
+                                            fontWeight: 900,
+                                            border: '1px solid rgba(0, 217, 255, 0.4)',
+                                            letterSpacing: '0.5px'
+                                        }}>
+                                            INCUB +{meteorite.incubatorBoost}%
+                                        </div>
+                                    )}
+                                    {(meteorite as any).blueprintBoosted && (
+                                        <div style={{
+                                            background: 'rgba(96, 165, 250, 0.15)',
+                                            color: '#60a5fa',
+                                            padding: '2px 5px',
+                                            borderRadius: '4px',
+                                            fontSize: '7px',
+                                            fontWeight: 900,
+                                            border: '1px solid rgba(96, 165, 250, 0.4)',
+                                            letterSpacing: '0.5px',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            HARM-V <span style={{ opacity: 0.7 }}>+2%</span>
+                                        </div>
+                                    )}
+                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                        <div style={{
+                                            background: 'rgba(234, 88, 12, 0.15)',
+                                            color: '#f97316',
+                                            padding: '2px 5px',
+                                            borderRadius: '4px',
+                                            fontSize: '7px',
+                                            fontWeight: 900,
+                                            border: '1px solid rgba(234, 88, 12, 0.4)',
+                                            letterSpacing: '0.5px',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            MATR-X <span style={{ opacity: 0.7 }}>+{(efficiency.blueprintBoost * 100).toFixed(1).replace('.0', '')}%</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Illustration Area (Unchanged) */}
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', marginBottom: '2px' }}>
+                                    {language === 'ru' ? 'ВЕРСИЯ' : 'VERSION'}
+                                </div>
+                                <div style={{ fontSize: '18px', fontWeight: 950, color: '#fff', lineHeight: 1, textShadow: `0 0 20px ${rarityColor}44` }}>
+                                    {(meteorite.version || 1.0).toFixed(1)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* HARDWARE ARRAY divider - matches Recalibrate style */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
+                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: 900, letterSpacing: '4px', textTransform: 'uppercase' }}>
+                        {t.recalibrate.hardwareArray}
+                    </div>
+                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(270deg, rgba(255,255,255,0.1), transparent)' }} />
+                </div>
+
+                <div style={{
+                    padding: '2px 10px 8px',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                }}>
+                    {meteorite.perks && meteorite.perks.map((perk, i) => {
+                        const val = perk.value + (meteorite.incubatorBoost || 0);
+                        const rangeSpan = perk.range.max - perk.range.min;
+                        const pos = rangeSpan > 0 ? (perk.value - perk.range.min) / rangeSpan : 1;
+                        const effColor = pos < 0.3 ? '#f87171' : pos < 0.7 ? '#fbbf24' : '#34d399';
+
+                        return (
+                            <div key={i} style={{
+                                display: 'flex', flexDirection: 'column',
+                                padding: '7px 10px',
+                                background: 'rgba(15, 23, 42, 0.5)',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                borderRadius: '6px',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px' }}>
+                                        {getPerkName(perk.id, language).toUpperCase()}
+                                    </span>
+
+                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', letterSpacing: '1px' }}>
+                                        [{perk.range.min + (meteorite.incubatorBoost || 0)}-{perk.range.max + (meteorite.incubatorBoost || 0)}%]
+                                    </span>
+
+                                    <div style={{ flex: 1 }} />
+
+                                    <div style={{ fontSize: '14px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
+                                        {val}%
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    fontSize: '9px', color: 'rgba(255,255,255,0.5)',
+                                    whiteSpace: 'normal',
+                                    lineHeight: '1.4',
+                                    paddingTop: '5px',
+                                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                                    fontStyle: 'italic'
+                                }}>
+                                    {applyHighlighting(
+                                        formatPerkDescription(perk.description) +
+                                        ((efficiency.perkResults[perk.id]?.count > 1) ? ` (x${efficiency.perkResults[perk.id].count})` : '')
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* FOOTER: TYPE & FOUND IN - LARGE CONSOLE STYLE */}
+                <div style={{
+                    padding: '8px 12px 12px',
+                    display: 'flex',
+                    gap: '10px',
+                    marginTop: 'auto',
+                    flexShrink: 0
+                }}>
+                    {/* FOUND IN LABEL */}
                     <div style={{
-                        flex: '0 0 140px',
+                        flex: 1,
+                        height: '46px',
+                        background: `${getMeteoriteColor(meteorite.discoveredIn)}12`,
+                        border: `1px solid ${getMeteoriteColor(meteorite.discoveredIn)}`,
+                        borderRadius: '4px',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)`,
-                        position: 'relative',
-                        overflow: 'hidden'
+                        gap: '2px',
+                        boxShadow: `0 0 10px ${getMeteoriteColor(meteorite.discoveredIn)}22`,
                     }}>
-                        <div style={{
-                            position: 'absolute',
-                            top: 0, left: 0, width: '100%', height: '100%',
-                            opacity: 0.1,
-                            backgroundImage: `linear-gradient(${rarityColor} 1px, transparent 1px), linear-gradient(90deg, ${rarityColor} 1px, transparent 1px)`,
-                            backgroundSize: '20px 20px'
-                        }} />
-                        {/* USER MANUAL EDIT REPLACED IMG WITH DIV IN BLUEPRINTBAY, BUT TOOLTIP SHOULD KEEP IMG */}
-                        <img
-                            src={getMeteoriteImage(meteorite)}
-                            alt={meteorite.rarity}
-                            style={{
-                                width: '110px',
-                                height: '110px',
-                                objectFit: 'contain',
-                                filter: `drop-shadow(0 0 15px ${rarityColor})`
-                            }}
-                        />
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>
+                            {t.recalibrate.filterLabels.foundIn.toUpperCase()}
+                        </span>
+                        <span style={{
+                            color: getMeteoriteColor(meteorite.discoveredIn),
+                            fontSize: '11px',
+                            fontWeight: 950,
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase',
+                            textShadow: `0 0 10px ${getMeteoriteColor(meteorite.discoveredIn)}66`
+                        }}>
+                            {(meteorite.discoveredIn?.toUpperCase().includes('FORGE') || meteorite.discoveredIn?.toUpperCase().includes('LEGENDARY')) ? (
+                                meteorite.discoveredIn?.includes('Eco') ? t.matrix.legendaryDetail.exisOrigin :
+                                    meteorite.discoveredIn?.includes('Com') ? t.matrix.legendaryDetail.apexOrigin :
+                                        t.matrix.legendaryDetail.bastionOrigin
+                            ) : (
+                                meteorite.discoveredIn?.includes('Eco') ? mTrans.stats.economicArena :
+                                    meteorite.discoveredIn?.includes('Com') ? mTrans.stats.combatArena :
+                                        mTrans.stats.defenceArena
+                            )}
+                        </span>
                     </div>
 
-                    {/* Protocols Label */}
+                    {/* CONDITION LABEL */}
                     <div style={{
-                        padding: '4px 10px',
-                        fontSize: '10px',
-                        color: rarityColor,
-                        fontWeight: 900,
-                        letterSpacing: '2px',
-                        backgroundColor: `${rarityColor}22`,
-                        textAlign: 'center',
-                        textTransform: 'uppercase'
-                    }}>
-                        {mTrans.stats.augmentationProtocols}
-                    </div>
-
-                    {/* Stats Area with Active/Inactive Logic */}
-                    <div className="custom-scrollbar" style={{
                         flex: 1,
-                        padding: '12px 15px',
+                        height: '46px',
+                        background: `${getQualityColor(meteorite.quality)}12`,
+                        border: `1px solid ${getQualityColor(meteorite.quality)}`,
+                        borderRadius: '4px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px',
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        overflowY: 'auto',
-                        minHeight: 0
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px',
+                        boxShadow: `0 0 10px ${getQualityColor(meteorite.quality)}22`,
                     }}>
-                        {meteorite.perks && meteorite.perks.map((perk, idx) => {
-                            const perkResult = efficiency.perkResults[perk.id];
-                            const isActive = perkResult && perkResult.count > 0;
-
-
-
-                            const formatVal = (val: number) => {
-                                const rounded = Math.round(val * 10) / 10;
-                                return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
-                            };
-
-                            return (
-                                <div key={idx} className="card-stat-line" style={{
-                                    alignItems: 'center',
-                                    paddingRight: '6px',
-                                    display: 'flex',
-                                    gap: '10px',
-                                    minHeight: '42px' // Ensure enough height for 2 lines + padding
-                                }}>
-                                    <span className="bullet" style={{ color: isActive ? rarityColor : '#94a3b8', opacity: isActive ? 1 : 0.6 }}>
-                                        {getPerkIcon(perk.id)}
-                                    </span>
-                                    <div className="content" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                            <span className="label" style={{ fontSize: '9px', opacity: 0.9, fontWeight: 900 }}>
-                                                {(() => {
-                                                    const rawName = getPerkName(perk.id);
-                                                    if (rawName.includes('Perk')) {
-                                                        const num = parseInt(rawName);
-                                                        if (!isNaN(num)) {
-                                                            if (language === 'ru') return `${num}-ый перк`;
-                                                            const suffixes = ['st', 'nd', 'rd', 'th'];
-                                                            const suffix = num <= 3 ? suffixes[num - 1] : 'th';
-                                                            return `${num}${suffix} Perk`;
-                                                        }
-                                                        const key = Object.keys(mTrans.perkNames).find(k => rawName.toLowerCase().startsWith(k));
-                                                        return key ? mTrans.perkNames[key as keyof typeof mTrans.perkNames] : rawName;
-                                                    }
-                                                    return rawName;
-                                                })()}
-                                            </span>
-                                            <span style={{ fontSize: '9px', color: rarityColor, opacity: 0.5 }}>
-                                                ({perk.range.min + (meteorite.incubatorBoost || 0)}-{perk.range.max + (meteorite.incubatorBoost || 0)}%)
-                                            </span>
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.2', opacity: 0.9 }}>
-                                            {formatDescription(perk.description, rarityColor)}
-                                            {isActive && perkResult.count > 1 && <span style={{ color: '#FCD34D' }}> (x{perkResult.count})</span>}
-                                        </div>
-                                    </div>
-                                    <span className="value" style={{
-                                        fontSize: '13px',
-                                        color: isActive ? '#fff' : '#94a3b8',
-                                        opacity: isActive ? 1 : 0.4,
-                                        fontWeight: 900,
-                                        textAlign: 'right',
-                                        minWidth: '45px'
-                                    }}>
-                                        +{formatPct(isActive ? perkResult.activeValue : (perk.value + (meteorite.incubatorBoost || 0)), true)}%
-                                    </span>
-                                </div>
-                            );
-                        })}
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>
+                            {language === 'ru' ? 'СОСТОЯНИЕ' : 'CONDITION'}
+                        </span>
+                        <span style={{
+                            color: getQualityColor(meteorite.quality),
+                            fontSize: '11px',
+                            fontWeight: 950,
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase',
+                            textShadow: `0 0 10px ${getQualityColor(meteorite.quality)}66`
+                        }}>
+                            {isRu ? (
+                                meteorite.quality?.toLowerCase() === 'broken' ? mTrans.stats.broken :
+                                    meteorite.quality?.toLowerCase() === 'damaged' ? mTrans.stats.damaged :
+                                        mTrans.stats.new
+                            ) : (
+                                meteorite.quality?.toUpperCase() || 'NEW'
+                            )}
+                        </span>
                     </div>
-
-                    {/* Footer / Info Panel */}
-                    <div style={{
-                        padding: '10px 15px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px',
-                        marginTop: '10px', // Added spacing per request
-                        borderTop: `1px solid ${rarityColor}33`,
-                        background: 'rgba(0,0,0,0.5)',
-                        fontSize: '11px',
-                        letterSpacing: '0.5px',
-                        fontWeight: 900,
-                        textTransform: 'uppercase'
-                    }}>
-                        <div style={{ color: '#fff' }}>
-                            <span style={{ color: rarityColor, opacity: 0.8 }}>{mTrans.stats.typeLabel}</span> <span style={{
-                                fontSize: '12px',
-                                fontWeight: 900,
-                                textShadow: `0 0 10px ${meteorite.quality === 'New' ? '#4ade80' : (meteorite.quality === 'Broken' ? '#ef4444' : '#fbbf24')}`
-                            }}>{(() => {
-                                if (meteorite.quality === 'New') return mTrans.stats.new;
-                                if (meteorite.quality === 'Broken') return mTrans.stats.broken;
-                                if (meteorite.quality === 'Damaged') return mTrans.stats.damaged;
-                                return (meteorite.quality as string).toUpperCase();
-                            })()}
-                            </span>
-                        </div>
-                        <div style={{ color: '#fff' }}>
-                            <span style={{ color: rarityColor, opacity: 0.8 }}>{mTrans.stats.foundInLabel}</span> {
-                                meteorite.discoveredIn
-                                    .replace(/Sector-01/gi, mTrans.stats.economicArena)
-                                    .replace(/Sector-02/gi, mTrans.stats.combatArena)
-                                    .replace(/Sector-03/gi, mTrans.stats.defenceArena)
-                                    .replace(/ECO HEX/gi, mTrans.stats.economicArena)
-                                    .replace(/COM HEX/gi, mTrans.stats.combatArena)
-                                    .replace(/DEF HEX/gi, mTrans.stats.defenceArena)
-                            }
-                        </div>
-                    </div>
-
-                </>
-            )}
+                </div>
+            </div>
         </div>
     );
 };

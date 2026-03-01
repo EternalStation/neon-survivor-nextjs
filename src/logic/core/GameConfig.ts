@@ -87,7 +87,7 @@ export const GAME_CONFIG = {
         PLAYER_BULLET_LIFE: 140,
         PLAYER_BULLET_SIZE: 4,
 
-        ENEMY_BULLET_SPEED: 6,
+        ENEMY_BULLET_SPEED: 10,
         ENEMY_BULLET_LIFE: 300,
         ENEMY_BULLET_SIZE: 6,
     }

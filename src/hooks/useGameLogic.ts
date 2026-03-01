@@ -14,7 +14,7 @@ import { updateLoot } from '../logic/mission/LootLogic';
 import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { spawnUpgrades, spawnSnitchUpgrades } from '../logic/upgrades/UpgradeLogic';
 import { updateIncubator } from '../logic/upgrades/IncubatorLogic';
-import { getLegendaryOptions } from '../logic/upgrades/LegendaryLogic';
+import { getLegendaryOptions, getHexLevel, getHexMultiplier } from '../logic/upgrades/LegendaryLogic';
 import { playSfx, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/audio/AudioLogic';
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/mission/MapLogic';
 import { calcStat } from '../logic/utils/MathUtils';
@@ -74,6 +74,7 @@ export function useGameLogic({
                 if (state.bossKillTimer <= 0) state.bossKillTimer = 1.0;
             }
             if (event === 'snitch_kill') {
+                state.snitchRewardActive = true;
                 const choices = spawnSnitchUpgrades(state);
                 setUpgradeChoices(choices);
                 state.isPaused = true;
@@ -227,6 +228,9 @@ export function useGameLogic({
         state.camera.y = localPlayer.y;
 
         // --- AREA EFFECTS UPDATE LOOP ---
+        const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player].filter(p => !!p);
+        players.forEach(p => { if (p.buffs) p.buffs.puddleRegen = false; });
+
         for (let i = state.areaEffects.length - 1; i >= 0; i--) {
             const effect = state.areaEffects[i];
             effect.duration -= step;
@@ -256,7 +260,6 @@ export function useGameLogic({
 
             if (effect.type === 'glitch_cloud') {
                 const range = effect.radius;
-                const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player].filter(p => !!p);
                 players.forEach(p => {
                     const dist = Math.hypot(p.x - effect.x, p.y - effect.y);
                     if (dist < range + p.size) {
@@ -266,18 +269,59 @@ export function useGameLogic({
             }
 
             if (effect.type === 'puddle') {
-                const range = effect.radius;
+                const mireLvl = getHexLevel(state, 'IrradiatedMire');
+                const range = mireLvl > 0 ? 666 : effect.radius;
+
+                // Player Buff Check (Level 3+)
+                players.forEach(p => {
+                    const dist = Math.hypot(p.x - effect.x, p.y - effect.y);
+                    if (dist < range + p.size) {
+                        if (effect.level >= 3) {
+                            if (!p.buffs) p.buffs = {};
+                            p.buffs.puddleRegen = true;
+                        }
+                    }
+                });
+
+                // Flux Injection scaling (Xeno-Alchemist)
+                let fluxBonus = 0;
+                const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
+                if (alchemist) {
+                    // 1% slow and damage taken per 500 Flux
+                    fluxBonus = (state.player.isotopes || 0) / 500;
+                }
+
                 state.enemies.forEach(e => {
                     if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                     const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
                     if (dist < range + e.size) {
-                        const slowAmt = effect.level >= 4 ? 0.40 : 0.20;
-                        e.slowFactor = Math.max(e.slowFactor || 0, slowAmt);
-                        const dmgAmp = effect.level >= 4 ? 1.4 : 1.2;
-                        e.takenDamageMultiplier = Math.max(e.takenDamageMultiplier || 1.0, dmgAmp);
+                        // LVL 2: 20% Slow
+                        if (effect.level >= 2) {
+                            const baseSlow = 0.20;
+                            const slowAmt = baseSlow + (fluxBonus / 100);
+                            e.slowFactor = Math.max(e.slowFactor || 0, slowAmt);
+                        }
 
+                        // LVL 4: 40% Damage Amp
+                        if (effect.level >= 4) {
+                            const baseAmp = 1.4;
+                            const dmgAmp = baseAmp + (fluxBonus / 100);
+                            e.takenDamageMultiplier = Math.max(e.takenDamageMultiplier || 1.0, dmgAmp);
+                        }
+
+                        // LVL 1: 5% Max HP Damage
                         if (effect.level >= 1) {
-                            const dotDmg = (e.maxHp * 0.05) * step;
+                            let dotDmg = (e.maxHp * 0.05) * step;
+
+                            // IRRADIATED MIRE: 100% more damage if in Radiation Aura
+                            if (mireLvl > 0) {
+                                const distToPlayer = Math.hypot(e.x - state.player.x, e.y - state.player.y);
+                                if (distToPlayer < 666) {
+                                    const mireMult = getHexMultiplier(state, 'IrradiatedMire');
+                                    dotDmg *= (1 + 1.0 * mireMult); // 100% base amplified by meteorites
+                                }
+                            }
+
                             e.hp -= dotDmg;
                             state.player.damageDealt += dotDmg;
                             if (e.hp <= 0) e.hp = 0;
@@ -401,6 +445,23 @@ export function useGameLogic({
                     });
 
                     playSfx('laser');
+                } else if (effect.type === 'afk_strike') {
+                    // Play strike sound regardless of hit
+                    playSfx('laser');
+
+                    const player = state.player;
+                    const dist = Math.hypot(player.x - effect.x, player.y - effect.y);
+                    if (dist < effect.radius) {
+                        // 10x Max HP
+                        const maxHp = calcStat(player.hp, 1.0); // No surge buff for max hp calc? Usually 1.0
+                        const dmg = maxHp * 10;
+                        player.curHp -= dmg;
+                        player.damageTaken += dmg;
+                        player.deathCause = 'Coffee Spilled';
+
+                        spawnParticles(state, player.x, player.y, '#8B0000', 50, 4, 30, 'shockwave');
+                        if (player.curHp <= 0) triggerDeath();
+                    }
                 }
 
                 if (effect.type === 'epicenter') state.player.immobilized = false;

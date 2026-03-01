@@ -164,12 +164,12 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
 
             {gameState.rareRewardActive && (
                 <div className="glitch-text" style={{
-                    color: '#FACC15',
+                    color: '#c084fc',
                     fontSize: 24,
                     fontFamily: 'Orbitron, sans-serif',
                     textTransform: 'uppercase',
                     letterSpacing: 2,
-                    textShadow: '0 0 10px #FACC15',
+                    textShadow: '0 0 10px #c084fc',
                     zIndex: 20,
                     textAlign: 'center',
                     width: '100%',

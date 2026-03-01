@@ -3,16 +3,20 @@ import type { PlayerStats } from '../core/types';
 export function calcStat(s: PlayerStats, arenaMult: number = 1, curseMult: number = 1): number {
     const baseSum = s.base + s.flat + (s.hexFlat || 0);
 
-    // Tier 1: Normal Multiplier (Additive within tier)
+    // Tier 1: Normal Multipliers (Additive within Tier)
     const normalMult = 1 + (s.mult || 0) / 100;
 
-    // Tier 2: Legendary Multiplier (Additive within tier)
-    // Joined sum of all legendary percentage sources
+    // Tier 2: Legendary Multipliers (Additive within Tier - as requested: "sum of all legendary multipliers")
     const legendaryBonus = (s.hexMult || 0) + (s.hexMult2 || 0);
     const legendaryMult = 1 + legendaryBonus / 100;
 
-    // Final Calculation: (Base + Flats) * NormalMult * LegendaryMult * GlobalEffects
-    return baseSum * normalMult * legendaryMult * arenaMult * curseMult;
+    // Tier 3: Class Multipliers (Final Multiplier - multiplies the entire result of previous tiers)
+    const classBonus = s.classMult || 0;
+    const classMultMod = 1 + classBonus / 100;
+
+    // Calculation: (Base + Flats) * Tier1 * Tier2 * Tier3 * GlobalEffects
+    // This ensures Class buffs/debuffs (e.g. +50% regen) are truly final and multiplicative.
+    return baseSum * normalMult * legendaryMult * classMultMod * arenaMult * curseMult;
 }
 
 export function getDefenseReduction(armor: number, cap: number = 0.95): number {

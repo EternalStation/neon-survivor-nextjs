@@ -145,8 +145,26 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                 <img
                                     src={getMeteoriteImage(recalibrateSlot)}
                                     className="item-img"
-                                    style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 0 15px #3b82f6)' }}
+                                    style={{ width: '62px', height: '62px', objectFit: 'contain', filter: 'drop-shadow(0 0 15px #3b82f6)' }}
                                 />
+                                {/* Status badges */}
+                                <div style={{ position: 'absolute', bottom: '-13px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '2px', zIndex: 10 }}>
+                                    {recalibrateSlot.isCorrupted && (
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(153,27,27,0.6)' }}>
+                                            <span style={{ fontSize: '6px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                        </div>
+                                    )}
+                                    {(recalibrateSlot.incubatorBoost || 0) > 0 && (
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(14,165,233,0.5)' }}>
+                                            <span style={{ fontSize: '6px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                        </div>
+                                    )}
+                                    {(recalibrateSlot as any).blueprintBoosted && (
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(96,165,250,0.5)' }}>
+                                            <span style={{ fontSize: '6px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div
                                     className="item-drag-layer"
                                     onMouseDown={(e) => {
@@ -170,7 +188,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                         <span>{t.incubator.title}</span>
                         <div className="fuel-header-wrap">
                             <span className="fuel-text">{gameState.incubatorFuel}/30</span>
-                            <div className="tube-container horizontal" style={{ width: '80px' }}>
+                            <div className="tube-container horizontal" style={{ width: '64px' }}>
                                 <div className="tube-fill fuel horizontal" style={{ width: `${(gameState.incubatorFuel / gameState.incubatorFuelMax) * 100}%` }}>
                                     <div className="plasma-core horizontal" />
                                     <div className="plasma-bubbles horizontal" />
@@ -287,12 +305,12 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                     {/* INCUBATOR GROWTH LABEL (STATIC) */}
                                     <div style={{
                                         position: 'absolute',
-                                        top: gameState.incubator[0].isRuined ? '-21px' : '-25px',
+                                        top: gameState.incubator[0].isRuined ? '-18px' : '-22px',
                                         left: '50%',
                                         transform: 'translateX(-50%)',
                                         whiteSpace: 'nowrap',
                                         color: (gameState.incubator[0].isRuined || gameState.incubatorFuel <= 0) ? '#ef4444' : '#00d9ff',
-                                        fontSize: '11px',
+                                        fontSize: '10px',
                                         fontWeight: 950,
                                         textAlign: 'center',
                                         textShadow: (gameState.incubator[0].isRuined || gameState.incubatorFuel <= 0)
@@ -307,7 +325,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                                 : `${t.meteorites.stats.incubLabel || 'INCUB'}: +${gameState.incubator[0].incubatorBoost || 0}%`}
                                     </div>
 
-                                    <div className="socket-item-wrap floating-forge" style={{ width: '64px', height: '88px', zIndex: 1 }}>
+                                    <div className="socket-item-wrap floating-forge" style={{ width: '52px', height: '72px', zIndex: 1 }}>
                                         <img
                                             src={getMeteoriteImage(gameState.incubator[0])}
                                             className="item-img forge-img"
@@ -346,8 +364,49 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                             setMovedItem({ item: met, source: 'incubator', index: 0 });
                                             onIncubatorUpdate(0, null);
                                             onUpdate();
-                                        }} />
+                                        }}
+                                            onDoubleClick={(e) => {
+                                                const met = gameState.incubator[0];
+                                                if (!met) return;
+                                                // Find first empty slot (preferring storage 9+)
+                                                let emptyIdx = -1;
+                                                for (let i = 9; i < gameState.inventory.length; i++) {
+                                                    if (gameState.inventory[i] === null) { emptyIdx = i; break; }
+                                                }
+                                                if (emptyIdx === -1) {
+                                                    for (let i = 0; i < 9; i++) {
+                                                        if (gameState.inventory[i] === null) { emptyIdx = i; break; }
+                                                    }
+                                                }
 
+                                                if (emptyIdx !== -1) {
+                                                    onInventoryUpdate(emptyIdx, met);
+                                                    onIncubatorUpdate(0, null);
+                                                    setMovedItem(null); // Just in case it was picked up
+                                                    playSfx('socket-place');
+                                                    onUpdate();
+                                                }
+                                            }}
+                                        />
+
+                                        {/* Status badges for incubator — order: C → I → H */}
+                                        <div style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '2px', zIndex: 10 }}>
+                                            {gameState.incubator[0]?.isCorrupted && (
+                                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(153,27,27,0.6)' }}>
+                                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                                </div>
+                                            )}
+                                            {(gameState.incubator[0]?.incubatorBoost || 0) > 0 && (
+                                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(14,165,233,0.5)' }}>
+                                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                                </div>
+                                            )}
+                                            {(gameState.incubator[0]?.blueprintBoosted) && (
+                                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1e293b', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 4px rgba(96,165,250,0.5)' }}>
+                                                    <span style={{ fontSize: '6px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                                </div>
+                                            )}
+                                        </div>
                                         {/* CORRUPTION SMOKE / GLOW */}
                                         <div className="forge-energy-field" />
                                     </div>
@@ -435,11 +494,11 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                         {/* STATUS HUB (Tubes) */}
                         <div className="status-hub single-hub">
                             {/* Tube 1: Instability */}
-                            <div className="hub-module" style={{ position: 'relative', paddingTop: '10px' }}>
+                            <div className="hub-module" style={{ position: 'relative', paddingTop: '6px' }}>
                                 <div className="tube-label" style={{
                                     position: 'absolute', top: '-2px', left: '50%', transform: 'translateX(-50%)',
                                     whiteSpace: 'nowrap', color: '#94a3b8', letterSpacing: '1px'
-                                }}>INSTABILITY</div>
+                                }}>{t.incubator.instability}</div>
 
                                 <div className="tube-container" style={{ marginTop: '11px' }}>
                                     <div className="tube-fill red" style={{ height: `${gameState.incubator[0]?.instability || 0}%` }}>
@@ -528,12 +587,12 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     background: rgba(4, 4, 8, 0.98);
                     border: 1px solid rgba(59, 130, 246, 0.2);
                     border-radius: 4px;
-                    padding: 8px 12px;
+                    padding: 6px 12px;
                     color: white;
                     font-family: 'JetBrains Mono', 'Inter', monospace;
                     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(59, 130, 246, 0.05);
-                    margin-top: 8px;
-                    height: 200px;
+                    margin-top: 4px;
+                    height: 175px;
                     overflow: visible;
                     z-index: 100;
                     display: flex;
@@ -688,8 +747,8 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
 
                 /* RECALIBRATION SCANNER DOCK */
                 .scanner-socket {
-                    width: 110px;
-                    height: 110px;
+                    width: 128px;
+                    height: 128px;
                     background: rgba(15, 23, 42, 0.9);
                     border: 1px solid rgba(148, 163, 184, 0.1);
                     clip-path: polygon(15% 0, 85% 0, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0 85%, 0 15%);
@@ -724,7 +783,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
 
                 .optical-lens {
                     position: absolute;
-                    inset: 20px;
+                    inset: 14px;
                     border-radius: 50%;
                     background: #020617;
                     border: 1px solid rgba(59, 130, 246, 0.2);
@@ -765,16 +824,16 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
 
                 .diagnostic-ring {
                     position: absolute;
-                    width: 70px;
-                    height: 70px;
+                    width: 86px;
+                    height: 86px;
                     border: 1px dashed rgba(59, 130, 246, 0.3);
                     border-radius: 50%;
                     animation: spin 15s linear infinite;
                     pointer-events: none;
                     top: 50%;
                     left: 50%;
-                    margin-top: -35px;
-                    margin-left: -35px;
+                    margin-top: -43px;
+                    margin-left: -43px;
                 }
 
 
@@ -783,13 +842,13 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     display: flex;
                     gap: 15px;
                     align-items: center;
-                    height: 130px;
+                    height: 110px;
                     margin-top: auto;
                     margin-bottom: 4px;
                 }
                 .forge-socket {
                     width: 130px;
-                    height: 110px;
+                    height: 92px;
                     position: relative;
                     background: radial-gradient(ellipse at bottom, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
                     display: flex;
@@ -1055,7 +1114,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                     background: rgba(15, 23, 42, 0.4);
                     border: 1px solid rgba(59, 130, 246, 0.1);
                     border-radius: 4px;
-                    height: 130px;
+                    height: 115px;
                     transform: translateY(-5px);
                 }
                 .single-hub {

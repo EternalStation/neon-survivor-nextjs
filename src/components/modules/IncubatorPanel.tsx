@@ -90,8 +90,8 @@ export const IncubatorPanel: React.FC<IncubatorPanelProps> = ({
                         onMouseUp={() => handleMouseUp(i)}
                         onMouseDown={() => handleMouseDown(i)}
                         style={{
-                            width: '70px',
-                            height: '70px',
+                            width: '60px',
+                            height: '60px',
                             background: met ? (met.isRuined ? 'rgba(50, 10, 10, 0.5)' : 'rgba(30, 10, 50, 0.5)') : 'rgba(0,0,0,0.3)',
                             border: `1px solid ${met ? (met.isRuined ? '#ef4444' : '#a855f7') : '#334155'}`,
                             borderRadius: '6px',
@@ -111,8 +111,8 @@ export const IncubatorPanel: React.FC<IncubatorPanelProps> = ({
                                     src={getMeteoriteImage(met)}
                                     alt="Meteorite"
                                     style={{
-                                        width: '45px',
-                                        height: '45px',
+                                        width: '38px',
+                                        height: '38px',
                                         objectFit: 'contain',
                                         filter: met.isRuined ? 'grayscale(100%) brightness(0.5)' : `drop-shadow(0 0 5px #a855f7)`,
                                         opacity: met.isRuined ? 0.4 : 1

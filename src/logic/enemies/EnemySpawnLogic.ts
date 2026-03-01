@@ -94,7 +94,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     // Scaling
     const minutes = gameTime / 60;
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-    const hpMult = getCycleHpMult(gameTime) * SHAPE_DEFS[chosenShape].hpMult;
+    const hpMult = getCycleHpMult(gameTime) * (isAnomaly ? 2.0 : SHAPE_DEFS[chosenShape].hpMult);
     let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, progressive cycle multiplier
 
     // Extraction Rage scaling (Fast growth)
@@ -119,7 +119,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
     let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
     if (isAnomaly) {
         const gen = state.anomalyBossCount || 0;
-        hp *= (1.5 + (gen * 0.5)); // +50% base, +50% per summon
+        hp *= (1.5 + (gen * 0.8)); // +50% base, +80% per summon
     }
 
     // Boss Size Scaling
@@ -154,7 +154,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         fluxState: fluxState,
         pulsePhase: 0,
         rotationPhase: Math.random() * Math.PI * 2,
-        lastAttack: chosenShape === 'pentagon' ? state.gameTime - 15.0 : state.gameTime + Math.random() * 2.0,
+        lastAttack: (chosenShape === 'pentagon' || chosenShape === 'diamond') ? state.gameTime - 15.0 : state.gameTime + Math.random() * 2.0,
         timer: 0,
         summonState: 0,
         dodgeDir: Math.random() > 0.5 ? 1 : -1,
