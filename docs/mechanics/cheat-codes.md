@@ -31,6 +31,7 @@
 |-----|--------|
 | `lvl`, `l1`, `lp` | XP → до следующего уровня (level up), разблокирует порталы (`portalsUnlocked = true`), открывает предупреждение о портале через 0.5 с |
 | `k1` | Убивает игрока (HP → 0, `gameOver = true`), причина смерти: `SIMULATION TERMINATED (DEBUG)` |
+| `cs2` | Удваивает текущий `chassisResonanceBonus`: 1-е нажатие → 0.5, затем 0.5→1→2→4→... Эффекты резонанса: EventHorizon — Pull Strength; Malware — bounce DMG/Speed/Range; StormStrike — AOE radius; HiveMother — Infection Rate и Swarm DMG. |
 
 ---
 

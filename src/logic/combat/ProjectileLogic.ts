@@ -647,34 +647,6 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     }
                 }
 
-                // --- CLASS MODIFIER: Event-Horizon Gravimetric Pull ---
-                if (owner.playerClass === 'eventhorizon') {
-                    const now = state.gameTime;
-                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
-                    const cooldownDuration = 10 * cdMod; // 10 seconds * reduction
-                    const blackholeDuration = 3; // 3 seconds
-
-                    // Check if blackhole is off cooldown
-                    if (!owner.blackholeCooldown || now >= owner.blackholeCooldown) {
-                        // Create persistent blackhole area effect
-                        state.areaEffects.push({
-                            id: Date.now(),
-                            type: 'blackhole',
-                            x: b.x,
-                            y: b.y,
-                            radius: 400, // User Request: Fixed 400px range
-                            duration: blackholeDuration,
-                            creationTime: now,
-                            level: 1
-                        });
-
-                        playSfx('impact'); // Heavier feedback
-
-                        // Set cooldown
-                        owner.blackholeCooldown = now + cooldownDuration;
-                    }
-                }
-
                 // --- CLASS MODIFIER: Hive-Mother Nanite Swarm ---
                 if (owner.playerClass === 'hivemother' && !b.isNanite) {
                     const resonance = getChassisResonance(state);

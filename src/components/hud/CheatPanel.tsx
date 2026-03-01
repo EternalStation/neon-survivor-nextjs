@@ -24,6 +24,7 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
         entries: [
             { code: 'lvl', description: 'Level Up + Unlock Portals' },
             { code: 'k1', description: 'Suicide (DEBUG)' },
+            { code: 'cs2', description: 'Class Skill Resonance x2 per press (0→0.5→1→2→4...)' },
         ]
     },
     {

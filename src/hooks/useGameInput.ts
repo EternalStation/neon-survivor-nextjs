@@ -4,9 +4,8 @@ import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
 import { triggerDash } from '../logic/player/PlayerMovement';
-import { calcStat } from '../logic/utils/MathUtils';
 import { getKeybinds } from '../logic/utils/Keybinds';
-import { dropBlueprint } from '../logic/upgrades/BlueprintLogic';
+import { dropBlueprint, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
@@ -124,6 +123,46 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     triggerDash(gameState.current, keys.current, inputVector.current);
                 }
                 e.preventDefault();
+            }
+
+            // CLASS ABILITY TRIGGER (Event Horizon: Void Marker)
+            if (code === (keybinds.classAbility || 'keye').toLowerCase()) {
+                const state = gameState.current;
+                const player = state.player;
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'eventhorizon') {
+                    const now = state.gameTime;
+                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+
+                    if (player.voidMarkerActive) {
+                        const bx = player.voidMarkerX ?? player.x;
+                        const by = player.voidMarkerY ?? player.y;
+                        state.areaEffects.push({
+                            id: Date.now(),
+                            type: 'blackhole',
+                            x: bx,
+                            y: by,
+                            radius: 400,
+                            duration: 3,
+                            creationTime: now,
+                            level: 1
+                        });
+                        player.voidMarkerActive = false;
+                        player.blackholeCooldown = now + 10 * cdMod;
+                        playSfx('impact');
+                    } else if (!player.blackholeCooldown || now >= player.blackholeCooldown) {
+                        const dx = mousePos.current.x - window.innerWidth / 2;
+                        const dy = mousePos.current.y - window.innerHeight / 2;
+                        const angle = Math.atan2(dy, dx);
+                        const MARKER_SPEED = 500;
+                        player.voidMarkerActive = true;
+                        player.voidMarkerX = player.x;
+                        player.voidMarkerY = player.y;
+                        player.voidMarkerVx = Math.cos(angle) * MARKER_SPEED;
+                        player.voidMarkerVy = Math.sin(angle) * MARKER_SPEED;
+                        player.voidMarkerSpawnTime = now;
+                        playSfx('spawn');
+                    }
+                }
             }
 
             // PORTAL TRIGGER
@@ -495,6 +534,18 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     }
                     cheatBuffer = '';
                 }
+            }
+
+
+            // CS2 - Boost Chassis Resonance (x2 from current per press)
+            if (cheatBuffer.endsWith('cs2')) {
+                const state = gameState.current;
+                const cur = state.chassisResonanceBonus || 0;
+                state.chassisResonanceBonus = cur === 0 ? 0.5 : cur * 2;
+                spawnFloatingNumber(state, state.player.x, state.player.y, `RESONANCE ${state.chassisResonanceBonus.toFixed(1)}`, '#a855f7', true);
+                playSfx('power-up');
+                refreshUI();
+                cheatBuffer = '';
             }
         };
 

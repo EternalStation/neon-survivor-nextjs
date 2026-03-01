@@ -3,6 +3,7 @@ export interface Keybinds {
     matrix: string;
     portal: string;
     dash: string;
+    classAbility: string;
     skill1: string;
     skill2: string;
     skill3: string;
@@ -16,6 +17,7 @@ const DEFAULT_KEYBINDS: Keybinds = {
     matrix: 'KeyX',
     portal: 'KeyP',
     dash: 'Space',
+    classAbility: 'KeyE',
     skill1: 'Digit1',
     skill2: 'Digit2',
     skill3: 'Digit3',

@@ -157,6 +157,14 @@ export interface Player {
     dashVx?: number;
     dashVy?: number;
 
+    // Void Marker (Event Horizon Active Ability)
+    voidMarkerActive?: boolean;
+    voidMarkerX?: number;
+    voidMarkerY?: number;
+    voidMarkerVx?: number;
+    voidMarkerVy?: number;
+    voidMarkerSpawnTime?: number;
+
     // Level 4 Boss Debuffs
     soulDrainMult?: number;
     healingDisabled?: boolean;
@@ -808,6 +816,7 @@ export interface GameState {
     xpSoulBuffMult: number; // For Economic Arena
     meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
     gameSpeedMult: number; // Global speed multiplier (0.1 - 5.0, default 1.0)
+    chassisResonanceBonus?: number;
 
     // Extraction System
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';

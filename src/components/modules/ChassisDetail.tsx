@@ -28,8 +28,8 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
         return calculateMeteoriteEfficiency(gameState, dIdx).totalBoost;
     });
 
-    const totalResonance = individualBoosts.reduce((acc, b) => acc + b, 0);
-    const multiplier = 1 + totalResonance;
+    const chassisBonus = gameState.chassisResonanceBonus || 0;
+    const totalResonance = individualBoosts.reduce((acc, b) => acc + b, 0) + chassisBonus;
 
     return (
         <div className="chassis-detail-overlay" onClick={onClose}>
@@ -94,6 +94,12 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                     );
                                 })}
                             </div>
+                            {chassisBonus > 0 && (
+                                <div className="resonance-footer" style={{ color: '#a855f7', borderTop: 'none', paddingTop: 0 }}>
+                                    <span className="label">[DEBUG] Resonance Bonus</span>
+                                    <span className="value">+{Math.round(chassisBonus * 100)}%</span>
+                                </div>
+                            )}
                             <div className="resonance-footer">
                                 <span className="label">{tChassis.totalOctaveResonance}</span>
                                 <span className="value">+{Math.round(totalResonance * 100)}%</span>
@@ -108,56 +114,19 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                         <section className="chassis-section metrics-section">
                             <h2 className="section-header">{tChassis.performanceMetrics}</h2>
                             <div className="metrics-list">
-                                {playerClass.capabilityMetrics
-                                    .map((m, i) => {
-                                        // Static metrics explicitly marked or non-percentage stay as is
-                                        const isStatic = m.isStatic || !m.isPercentage;
-
-                                        const metricLabel = tClass.metrics?.[i]?.label || m.label;
-
-                                        // Lookup Class Multiplier for this metric if applicable
-                                        let classStatMult = 1.0;
-                                        const labelLower = metricLabel.toLowerCase();
-                                        if (labelLower.includes('damage') || labelLower.includes('dmg')) classStatMult = 1 + (playerClass.stats.dmgMult || 0);
-                                        if (labelLower.includes('health') || labelLower.includes('hp')) classStatMult = 1 + (playerClass.stats.hpMult || 0);
-                                        if (labelLower.includes('regen')) classStatMult = 1 + (playerClass.stats.regMult || 0);
-                                        if (labelLower.includes('attack') || labelLower.includes('atk')) classStatMult = 1 + (playerClass.stats.atkMult || 0);
-                                        if (labelLower.includes('exp') || labelLower.includes('xp')) classStatMult = 1 + (playerClass.stats.xpMult || 0);
-
-                                        // Apply multipliers (Resonance * Class Multiplier)
-                                        const finalMultiplier = multiplier * classStatMult;
-                                        const finalValue = (m.isPercentage && !m.isStatic)
-                                            ? m.value * finalMultiplier
-                                            : m.value;
-
-                                        return (
-                                            <div key={i} className="metric-item">
-                                                <div className="metric-row">
-                                                    <div className="metric-base-group">
-                                                        <span className="metric-base-val">{m.value}{m.unit}</span>
-                                                        <span className="metric-label">{metricLabel}</span>
-                                                    </div>
-                                                    {!isStatic ? (
-                                                        <div className="metric-calculation">
-                                                            <span className="multiplier-sym">×</span>
-                                                            <span className="res-mult" title={`Resonance: ${(multiplier).toFixed(2)}x | Class: ${classStatMult.toFixed(2)}x`}>
-                                                                {finalMultiplier.toFixed(2)}
-                                                            </span>
-                                                            <div className="metric-divider">|</div>
-                                                            <span className="final-val">
-                                                                {finalValue.toFixed(0)}{m.unit}
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="metric-calculation">
-                                                            <span className="final-val" style={{ color: '#94a3b8' }}>{tChassis.static}</span>
-                                                        </div>
-                                                    )}
+                                {playerClass.capabilityMetrics.map((m, i) => {
+                                    const metricLabel = tClass.metrics?.[i]?.label || m.label;
+                                    return (
+                                        <div key={i} className="metric-item">
+                                            <div className="metric-row">
+                                                <div className="metric-base-group">
+                                                    <span className="metric-base-val">{m.value}{m.unit}</span>
+                                                    <span className="metric-label">{metricLabel}</span>
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                }
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </section>
 

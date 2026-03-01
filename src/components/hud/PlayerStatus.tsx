@@ -156,17 +156,20 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         }
                     } else if (player.playerClass === 'eventhorizon') {
                         show = true;
-                        // blackholeCooldown is a timestamp in SECONDS
-                        // If logic sets it with reduction, we just need accurate maxCd for bar
-                        const nextReady = player.blackholeCooldown || 0;
-                        if (nowSec >= nextReady) {
+                        if (player.voidMarkerActive) {
                             cdPct = 0;
                             isReady = true;
                         } else {
-                            const remaining = nextReady - nowSec;
-                            const maxCd = 10 * cdMod; // 10s static * mod
-                            cdPct = Math.min(1, remaining / maxCd);
-                            remainingDisplay = remaining.toFixed(1);
+                            const nextReady = player.blackholeCooldown || 0;
+                            if (nowSec >= nextReady) {
+                                cdPct = 0;
+                                isReady = true;
+                            } else {
+                                const remaining = nextReady - nowSec;
+                                const maxCd = 10 * cdMod;
+                                cdPct = Math.min(1, remaining / maxCd);
+                                remainingDisplay = remaining.toFixed(1);
+                            }
                         }
                     }
 
@@ -175,16 +178,18 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const themeColor = pClass.themeColor || '#fff';
                     const iconUrl = pClass.iconUrl || '';
 
+                    const markerFlying = player.playerClass === 'eventhorizon' && !!player.voidMarkerActive;
+
                     return (
                         <div style={{ position: 'relative', width: 42, height: 48 }}>
                             {/* Hexagon Border Container */}
                             <div style={{
                                 width: '100%', height: '100%',
-                                backgroundColor: isReady ? themeColor : '#475569',
+                                backgroundColor: markerFlying ? '#a855f7' : isReady ? themeColor : '#475569',
                                 clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: isReady ? `0 0 15px ${themeColor}` : 'none',
-                                transition: 'background-color 0.2s'
+                                boxShadow: markerFlying ? '0 0 15px #a855f7' : isReady ? `0 0 15px ${themeColor}` : 'none',
+                                transition: 'background-color 0.1s'
                             }}>
                                 {/* Inner Content */}
                                 <div style={{
@@ -217,6 +222,19 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     )}
                                 </div>
                             </div>
+
+                            {player.playerClass === 'eventhorizon' && (
+                                <div style={{
+                                    position: 'absolute', top: -4, right: -4,
+                                    background: '#0f172a', border: '1px solid #475569',
+                                    color: '#94a3b8', fontSize: 8, fontWeight: 900,
+                                    padding: '1px 3px', borderRadius: 3,
+                                    boxShadow: '0 0 4px #000', zIndex: 10,
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    E
+                                </div>
+                            )}
 
                             {/* CD Reduced Icon */}
                             {cdMod < 1.0 && (
