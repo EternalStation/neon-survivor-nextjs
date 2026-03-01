@@ -54,6 +54,10 @@ export function useGameLoop(gameStarted: boolean) {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showAdminConsole, setShowAdminConsole] = useState(false);
     const [showCheatPanel, setShowCheatPanel] = useState(false);
+    const [gameSpeedMult, setGameSpeedMultState] = useState<number>(() => {
+        const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('gameSpeedMult') : null;
+        return saved ? parseFloat(saved) : 1.0;
+    });
 
     // Orbit Assistant Hook
     const {
@@ -487,6 +491,13 @@ export function useGameLoop(gameStarted: boolean) {
         setShowAdminConsole,
         showCheatPanel,
         setShowCheatPanel,
+        gameSpeedMult,
+        setGameSpeedMult: (mult: number) => {
+            const clamped = Math.max(0.1, Math.min(5.0, mult));
+            if (typeof localStorage !== 'undefined') localStorage.setItem('gameSpeedMult', String(clamped));
+            gameState.current.gameSpeedMult = clamped;
+            setGameSpeedMultState(clamped);
+        },
         skipTime,
         triggerOneTrickPony,
         triggerDamageTaken,

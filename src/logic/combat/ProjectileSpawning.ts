@@ -82,7 +82,7 @@ export function triggerShockwave(state: GameState, player: Player, level: number
 
 export function spawnBullet(state: GameState, player: Player, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
     if (player.immobilized) return;
-    const spd = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
+    const spd = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
     // --- ComCrit Logic ---
     const critLevel = getHexLevel(state, 'ComCrit');
@@ -197,8 +197,8 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
         vy: Math.sin(angle + offsetAngle) * spd,
         dmg: finalDmg,
         pierce: bulletPierce,
-        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance)
-        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance),
+        // Dynamic Life: Base 140 * Class Mult * (1 + Resonance) / gameSpeedMult (чтобы дальность не зависела от скорости игры)
+        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) / (state.gameSpeedMult ?? 1),
         bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
         bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
         isEnemy: false,
@@ -348,7 +348,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 }
 
 export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
-    const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED;
+    const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
     // Always use the bright color from the current 15-minute era palette
     const minutes = state.gameTime / 60;
@@ -363,7 +363,7 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         vy: Math.sin(angle) * spd,
         dmg,
         pierce: 0,
-        life: 300,
+        life: 300 / (state.gameSpeedMult ?? 1),
         isEnemy: true,
         hits: new Set(),
         color: brightColor, // Ignore passed color, use bright era color

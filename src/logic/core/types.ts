@@ -800,6 +800,7 @@ export interface GameState {
     dmgAtkBuffMult: number; // For Combat Arena
     xpSoulBuffMult: number; // For Economic Arena
     meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
+    gameSpeedMult: number; // Global speed multiplier (0.1 - 5.0, default 1.0)
 
     // Extraction System
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';

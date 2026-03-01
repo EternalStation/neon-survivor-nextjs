@@ -73,8 +73,9 @@ export function handlePlayerMovement(
     if (vx !== 0 || vy !== 0) {
         // Normalize
         const mag = Math.hypot(vx, vy);
-        const dx = (vx / mag) * player.speed;
-        const dy = (vy / mag) * player.speed;
+        const spd = player.speed * (state.gameSpeedMult ?? 1);
+        const dx = (vx / mag) * spd;
+        const dy = (vy / mag) * spd;
 
         player.lastAngle = Math.atan2(dy, dx);
         const nextX = player.x + dx;
@@ -133,8 +134,9 @@ export function handlePlayerMovement(
             const ry = dy - 2 * dot * ny;
             const reflectDir = Math.atan2(ry, rx);
 
-            player.knockback.x = Math.cos(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
-            player.knockback.y = Math.sin(reflectDir) * GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED;
+            const wallBounceSpd = GAME_CONFIG.PLAYER.WALL_BOUNCE_SPEED * (state.gameSpeedMult ?? 1);
+            player.knockback.x = Math.cos(reflectDir) * wallBounceSpd;
+            player.knockback.y = Math.sin(reflectDir) * wallBounceSpd;
             player.wallsHit++;
             triggerWallIncompetence?.();
 

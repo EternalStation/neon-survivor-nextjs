@@ -202,7 +202,7 @@ export function handleSpawnExecution(state: GameState, overclockActive: boolean,
         actualRate *= 2.0;
     }
 
-    const spawnChancePerFrame = actualRate * step;
+    const spawnChancePerFrame = actualRate * step * (state.gameSpeedMult ?? 1);
     let spawnsToExecute = Math.floor(spawnChancePerFrame);
     if (Math.random() < (spawnChancePerFrame - spawnsToExecute)) spawnsToExecute++;
 

@@ -284,6 +284,8 @@ export default function Home() {
                       hook.setShowSettings(false);
                       hook.setShowFeedbackModal(true);
                     }}
+                    gameSpeedMult={hook.gameSpeedMult}
+                    onGameSpeedChange={hook.setGameSpeedMult}
                   />
                 </div>
               )}

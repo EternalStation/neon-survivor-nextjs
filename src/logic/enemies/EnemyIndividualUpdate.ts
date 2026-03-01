@@ -100,7 +100,7 @@ export function updateSingleEnemy(
             e.vx = 0; e.vy = 0;
             if (state.frameCount % 10 < 5) spawnParticles(state, e.x, e.y, '#FFFFFF', 1, 4, 10);
         } else if (host.phalanxState === 3) {
-            const spd = 15;
+            const spd = 15 * (state.gameSpeedMult ?? 1);
             const moveAngle = host.phalanxAngle || 0;
             e.x += Math.cos(moveAngle) * spd;
             e.y += Math.sin(moveAngle) * spd;
@@ -291,7 +291,7 @@ export function updateSingleEnemy(
     let pushX = e.lastPushX || 0;
     let pushY = e.lastPushY || 0;
 
-    let currentSpd = e.spd;
+    let currentSpd = e.spd * (state.gameSpeedMult ?? 1);
     if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
     if (e.slowFactor) {
         currentSpd *= (1 - e.slowFactor);
@@ -450,7 +450,7 @@ export function updateSingleEnemy(
     }
 
     const { pulseDef } = getProgressionParams(state.gameTime);
-    e.pulsePhase = (e.pulsePhase + (Math.PI * 2) / pulseDef.interval) % (Math.PI * 2);
+    e.pulsePhase = (e.pulsePhase + (Math.PI * 2) / pulseDef.interval * (state.gameSpeedMult ?? 1)) % (Math.PI * 2);
     e.rotationPhase = (e.rotationPhase || 0) + 0.01;
     if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
 }

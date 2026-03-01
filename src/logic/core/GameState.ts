@@ -229,6 +229,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         dmgAtkBuffMult: 1.0,
         xpSoulBuffMult: 1.0,
         meteoriteRateBuffMult: 1.0,
+        gameSpeedMult: parseFloat(typeof localStorage !== 'undefined' ? (localStorage.getItem('gameSpeedMult') || '1') : '1'),
 
         // Extraction System
         extractionStatus: 'none',
