@@ -9,11 +9,11 @@ export interface Particle {
     life: number;
     color: string;
     size: number;
-    type?: 'shard' | 'spark' | 'bubble' | 'vapor' | 'void' | 'shockwave';
+    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust';
     alpha?: number; // For fading effects
 }
 
-export function spawnParticles(state: GameState, x: number, y: number, color: string | string[], count: number = 8, sizeOverride?: number, lifeOverride?: number, type: 'shard' | 'spark' | 'bubble' | 'vapor' | 'void' | 'shockwave' = 'spark') {
+export function spawnParticles(state: GameState, x: number, y: number, color: string | string[], count: number = 8, sizeOverride?: number, lifeOverride?: number, type: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust' = 'spark') {
     if (!state.particles) state.particles = [];
 
     // Performance: Cap particles — void particles get a higher cap to ensure visibility

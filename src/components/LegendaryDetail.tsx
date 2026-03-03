@@ -32,24 +32,25 @@ const FORGE_COLORS: Record<LegendaryCategory | 'Merger', string> = {
 export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState, hexIdx, pending, placementAlert }) => {
     const { language } = useLanguage();
     const t = getUiTranslation(language as any);
+    const isTsunami = hex.type === 'KineticTsunami';
     const isXeno = hex.type === 'XenoAlchemist';
     const isMire = hex.type === 'IrradiatedMire';
     const isSingularity = hex.type === 'NeuralSingularity';
-    const isMerger = isXeno || isMire || isSingularity;
+    const isMerger = isXeno || isMire || isSingularity || isTsunami;
 
     const color = placementAlert ? '#ef4444' :
         (isXeno ? CATEGORY_COLORS.Merger :
             (isMire ? '#22d3ee' :
-                (isSingularity ? '#a855f7' : CATEGORY_COLORS[hex.category])));
+                (isSingularity ? '#f59e0b' : CATEGORY_COLORS[hex.category])));
 
     const forgeColor = isXeno ? FORGE_COLORS.Merger :
         (isMire ? '#22d3ee' :
-            (isSingularity ? '#a855f7' : FORGE_COLORS[hex.category]));
+            (isSingularity ? '#f59e0b' : FORGE_COLORS[hex.category]));
 
     const bgGlow = placementAlert ? 'rgba(239, 68, 68, 0.15)' :
         (isXeno ? 'rgba(16, 185, 129, 0.1)' :
             (isMire ? 'rgba(34, 211, 238, 0.1)' :
-                (isSingularity ? 'rgba(168, 85, 247, 0.1)' : `${color}11`)));
+                (isSingularity ? 'rgba(245, 158, 11, 0.1)' : `${color}11`)));
 
     // Efficiency calculations
     const connectedDiamondIdxs = pending ? [] : [
@@ -124,27 +125,11 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                     marginBottom: '15px', position: 'relative'
                 }}>
-                    <div style={{
-                        width: '52px', height: '60px',
-                        backgroundColor: color,
-                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        position: 'relative',
-                        boxShadow: `0 0 20px ${color}33`
-                    }}>
-                        <div style={{
-                            width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
-                            backgroundColor: '#0f172a',
-                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            {hex.customIcon ? (
-                                <img src={hex.customIcon} alt="hex" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-                            ) : (
-                                <span style={{ fontSize: '32px', color: color }}>★</span>
-                            )}
-                        </div>
-                    </div>
+                    {hex.customIcon ? (
+                        <img src={hex.customIcon} alt={hex.name} style={{ width: '72px', height: '72px', objectFit: 'contain' }} />
+                    ) : (
+                        <span style={{ fontSize: '32px', color: color }}>★</span>
+                    )}
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', letterSpacing: '1px', textShadow: `0 0 10px ${color}66` }}>
                             {hex.name.toUpperCase()}
@@ -181,13 +166,26 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             {t.legendary?.skillSpecsHeader || 'ACTIVE SKILL SPECIFICATIONS'}
                         </div>
                         <div style={{ fontSize: '10px', color: '#fff', lineHeight: '1.4', fontWeight: 600 }}>
-                            {(t.legendaries as any)[hex.type].skillDesc}
+                            {(() => {
+                                let desc = (t.legendaries as any)[hex.type].skillDesc;
+                                if (isTsunami) {
+                                    const stormHex = gameState.moduleSockets.hexagons.find(h => h?.type === 'KineticTsunami' || h?.type === 'EcoDMG');
+                                    const startKills = stormHex?.killsAtLevel?.[1] ?? stormHex?.killsAtAcquisition ?? gameState.killCount;
+                                    const stormSouls = Math.max(0, gameState.killCount - startKills);
+                                    const bonus = Math.floor(stormSouls / 100);
+                                    return `${desc} (Actually +${bonus}% bonus based on ${stormSouls} souls)`;
+                                }
+                                if (isSingularity) {
+                                    return desc;
+                                }
+                                return desc;
+                            })()}
                         </div>
                     </div>
                 )}
 
                 <div style={{
-                    display: 'flex', flexDirection: 'column', gap: '2px',
+                    display: 'flex', flexDirection: 'column', gap: '4px',
                     background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px',
                     border: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px'
                 }}>
@@ -201,9 +199,8 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             const groupName = p.replace('GROUP:', '');
                             return (
                                 <div key={i} style={{
-                                    marginTop: '4px',
-                                    marginBottom: '2px',
-                                    padding: '2px 0',
+                                    paddingTop: '2px',
+                                    paddingBottom: '2px',
                                     borderBottom: `1px solid ${color}33`,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -233,28 +230,34 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
 
                         const soulsMatch = p.match(/\(([\d\.]+) Souls\)/);
                         const levelKills = soulsMatch ? parseFloat(soulsMatch[1]) : 0;
-                        const strippedForBase = p.replace(/\([\d\.]+ Souls\)/, '');
+
+                        // Identify if the string starts with an index prefix (e.g., "LVL 1 ", "1: ", "УР 1 ")
+                        const indexPrefixMatch = p.match(/^((LVL|УР|Ур|Lvl)\s*)?\d+\s*[:\.]?\s+/i);
+                        const mainPart = indexPrefixMatch ? p.slice(indexPrefixMatch[0].length) : p;
+
+                        const strippedForBase = mainPart.replace(/\([\d\.]+ Souls\)/, '');
                         const baseMatch = strippedForBase.match(/(\d+\.?\d*)/);
                         let baseValue: number | string = baseMatch ? parseFloat(baseMatch[1]) : 0;
-                        let hasPercent = p.includes('%');
+                        let hasPercent = mainPart.includes('%');
 
-                        const isRange = p.includes('-') && (p.includes('%') || p.includes('HP'));
-                        const isEconomic = (hex.category === 'Economic' && p.toLowerCase().includes('kill')) || (hex.type === 'CombShield' && p.includes('Armor'));
-                        const isCurve = hex.type === 'CombShield' && (p.includes('Collision') || p.includes('Projectile'));
+                        const isRangeMatch = mainPart.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                        const isRange = isRangeMatch !== null && (mainPart.includes('%') || mainPart.includes('HP'));
+                        const isEconomic = ((hex.category === 'Economic' || hex.categories?.includes('Economic')) && mainPart.toLowerCase().includes('kill')) || (hex.type === 'CombShield' && mainPart.includes('Armor'));
+                        const isCurve = hex.type === 'CombShield' && (mainPart.includes('Collision') || mainPart.includes('Projectile'));
 
                         let displayValue = "";
                         let cleanLabel = p;
                         let isNumeric = false;
-                        const tacticalKeywords = ['DMG', 'HP', 'Lifesteal', 'Crit', 'Slow', 'Taken', 'Resist', 'Range', 'Duration', 'Uptime', 'Regen', 'XP', 'Dust', 'Flux', 'Fear', 'Урон', 'ОЗ', 'Вампир', 'Крит', 'Замедл', 'Опыт', 'Пыль', 'Поток', 'Страх'];
+                        const tacticalKeywords = ['DMG', 'HP', 'Lifesteal', 'Crit', 'Slow', 'Taken', 'Resist', 'Range', 'Duration', 'Uptime', 'Regen', 'XP', 'Dust', 'Flux', 'Fear', 'Cooldown', 'Level', 'ATS', 'ATC', 'Souls', 'Execute', 'Урон', 'ОЗ', 'Вампир', 'Крит', 'Замедл', 'Опыт', 'Пыль', 'Поток', 'Страх', 'Перезарядка', 'Уров', 'Душ', 'Казнь'];
 
                         if (isCurve) {
                             const stacks = levelKills * multiplier;
                             const val = 85 * (Math.pow(stacks, 0.75) / (Math.pow(stacks, 0.75) + 400));
                             displayValue = `+${val.toFixed(1)}%`;
                             isNumeric = true;
-                            cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '').trim();
+                            cleanLabel = mainPart.replace(/[+-]?\d+\.?\d*%?\s*/i, '').trim();
                         } else if (isRange) {
-                            const matches = p.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                            const matches = mainPart.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
                             if (matches) {
                                 const low = parseFloat(matches[1]);
                                 const high = parseFloat(matches[2]);
@@ -263,35 +266,76 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                                 const finalHigh = (high * multiplier).toFixed(1);
                                 displayValue = `[${finalLow}-${finalHigh}%]`;
                                 isNumeric = true;
-                                // Keep original label but remove the numbers (e.g. "Deals 5-10% HP/sec" -> "Deals HP/sec")
-                                cleanLabel = p.replace(/(\d+\.?\d*)-(\d+\.?\d*)%?/, '').trim();
+                                cleanLabel = mainPart.replace(/(\d+\.?\d*)-(\d+\.?\d*)%?/, '').trim();
                             }
                         } else if (isEconomic) {
                             const finalValuePerKill = (baseValue as number) * multiplier;
                             let divisor = 1;
                             let useFloor = false;
-                            if (p.includes('per 20 kills')) divisor = 20;
-                            if (p.includes('per 50 kills')) { divisor = 50; useFloor = true; }
-                            if (p.includes('for 100 kills')) { divisor = 100; useFloor = false; }
+                            if (mainPart.includes('per 20 kills')) divisor = 20;
+                            if (mainPart.includes('per 50 kills')) { divisor = 50; useFloor = true; }
+                            if (mainPart.includes('for 100 kills')) { divisor = 100; useFloor = false; }
                             const effectiveKills = useFloor ? Math.floor(levelKills / divisor) : (levelKills / divisor);
                             const totalValue = finalValuePerKill * effectiveKills;
                             displayValue = `+${totalValue.toFixed(1)}${hasPercent ? '%' : ''}`;
-                            isNumeric = p.toLowerCase().includes('kill') || p.toLowerCase().includes('убий');
-                            cleanLabel = p.replace(/[+-]?\d+\.?\d*%?\s*/, '').trim();
+                            isNumeric = mainPart.toLowerCase().includes('kill') || mainPart.toLowerCase().includes('убий');
+                            cleanLabel = mainPart.replace(/[+-]?\d+\.?\d*%?\s*/i, '').trim();
                         } else {
-                            if ((baseValue as number) > 0 && (hasPercent || tacticalKeywords.some(k => p.includes(k)))) {
+                            const hasTimeOrPct = mainPart.match(/\d+\.?\d*(s|%)/i);
+                            if ((baseValue as number) > 0 && (hasPercent || hasTimeOrPct || tacticalKeywords.some(k => mainPart.toLowerCase().includes(k.toLowerCase())))) {
                                 const amplified = (baseValue as number) * multiplier;
-                                const hasSeconds = p.match(/\d+\.?\d*s\b/);
+                                const hasSeconds = mainPart.match(/\d+\.?\d*s\b/i);
                                 const suffix = hasPercent ? '%' : (hasSeconds ? 's' : '');
                                 displayValue = `${hasPercent ? '+' : ''}${amplified.toFixed(1)}${suffix}`;
                                 isNumeric = true;
-                                cleanLabel = p.replace(/[+-]?\d+\.?\d*%?s?\s*/, '').trim();
-                                if (soulsMatch && multiplier > 1) {
-                                    const rawSouls = parseFloat(soulsMatch[1]);
-                                    const effectiveSouls = rawSouls * multiplier;
-                                    cleanLabel = cleanLabel.replace(/\([\d\.]+ Souls\)/, `(${rawSouls.toFixed(0)} x ${(multiplier * 100).toFixed(0)}% = ${effectiveSouls.toFixed(1)})`);
+                                cleanLabel = mainPart.replace(/[+-]?\d+\.?\d*%?s?\s*/i, '').trim();
+
+                                if (multiplier > 1) {
+                                    // Also amplify other numbers in the label that look like stats (followed by s or %)
+                                    // but EXCLUDE numbers that look like Soul/XP costs (e.g. "per 100 XP")
+                                    cleanLabel = cleanLabel.replace(/(\d+\.?\d*)(s|%)(?!\s*(XP|Souls|kills|убий|ОПЫТ))/gi, (match, val, suff) => {
+                                        const amp = parseFloat(val) * multiplier;
+                                        return `${amp.toFixed(2)}${suff}`;
+                                    });
+
+                                    if (soulsMatch) {
+                                        const rawSouls = parseFloat(soulsMatch[1]);
+                                        const effectiveSouls = rawSouls * multiplier;
+                                        cleanLabel = cleanLabel.replace(/\([\d\.]+ Souls\)/, `(${rawSouls.toFixed(0)} x ${(multiplier * 100).toFixed(0)}% = ${effectiveSouls.toFixed(1)})`);
+                                    }
                                 }
                             }
+                        }
+
+                        // Specific override for Terror Pulse Activation Damage (used)
+                        if (mainPart.toLowerCase().includes('activation') || mainPart.toLowerCase().includes('использовани')) {
+                            if (mainPart.includes('DMG') || mainPart.includes('урона')) {
+                                const uses = gameState.player.waveUses || 0;
+                                const totalValue = uses * (baseValue as number) * multiplier;
+                                // Clean up the label from redundant "(used)" variants and put Uses at the end
+                                // Also remove "1%" from the start of the label text since it's already shown as the baseValue
+                                let finalLabel = mainPart.replace(/\(used\)/i, '').replace(/\(использовано\)/i, '').replace(/\(использ\)/i, '').trim();
+                                finalLabel = finalLabel.replace(/^[+-]?\d+\.?\d*%?\s*/, '').trim(); // Remove the "1%" or similar from text start
+
+                                cleanLabel = `${finalLabel} [${uses} Uses]`;
+                                displayValue = `+${totalValue.toFixed(1)}%`;
+                                isNumeric = true;
+                            }
+                        }
+
+                        // Override for Neural Singularity Fear calculation
+                        if (isSingularity && (mainPart.toLowerCase().includes('fear') || mainPart.toLowerCase().includes('страх')) && (mainPart.toLowerCase().includes('500xp') || mainPart.toLowerCase().includes('500 опыт'))) {
+                            const xpStat = gameState.player.xp_per_kill;
+                            const totalXpPerKill = Math.floor((xpStat.base || 0) + (xpStat.flat || 0));
+                            const actualFear = (Math.floor(totalXpPerKill / 500) * 0.1) * multiplier;
+                            displayValue = `+${actualFear.toFixed(1)}s`;
+                            cleanLabel = mainPart.replace(/[+-]?\d+\.?\d*s?/, '').trim();
+                            isNumeric = true;
+                        }
+
+                        // Final cleanup: remove index prefix if it somehow survived in cleanLabel
+                        if (indexPrefixMatch) {
+                            cleanLabel = cleanLabel.replace(indexPrefixMatch[0], '').trim();
                         }
 
                         let isStatic = false;
@@ -331,6 +375,35 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             baseValue = "666px";
                             displayValue = "666px";
                             cleanLabel = p.includes('Radius') || p.includes('Радиус') ? (cleanLabel.includes('px') ? cleanLabel.replace('666px ', '') : cleanLabel) : cleanLabel;
+                        }
+
+                        if (isTsunami) {
+                            if (mainPart.includes('every 100 Souls') || mainPart.includes('каждые 100 Душ')) {
+                                const stormHex = gameState.moduleSockets.hexagons.find(h => h?.type === 'KineticTsunami' || h?.type === 'EcoDMG');
+                                const startKills = stormHex?.killsAtLevel?.[1] ?? stormHex?.killsAtAcquisition ?? gameState.killCount;
+                                const stormSouls = Math.max(0, gameState.killCount - startKills);
+                                const bonus = Math.floor(stormSouls / 100);
+                                cleanLabel += ` (Actually +${bonus}%)`;
+                            }
+                            if (mainPart.includes('harvested by Wave') || mainPart.includes('собранную Волной')) {
+                                const harvestedSouls = gameState.player.kineticTsunamiWaveSouls || 0;
+                                cleanLabel += ` (${harvestedSouls} Souls)`;
+                            }
+                        }
+
+                        if (isSingularity) {
+                            const lowerPart = mainPart.toLowerCase();
+                            if (lowerPart.includes('cooldown') || lowerPart.includes('перезарядки')) {
+                                const curLVL = gameState.player.level || 0;
+                                const bonus = (curLVL * 0.02) * multiplier;
+                                cleanLabel += ` (${bonus.toFixed(2)}s actual based on lvl ${curLVL})`;
+                            }
+                            if (lowerPart.includes('fear') || lowerPart.includes('страха')) {
+                                const xpStat = gameState.player.xp_per_kill;
+                                const totalXpPerKill = Math.floor((xpStat.base || 0) + (xpStat.flat || 0));
+                                const bonus = (Math.floor(totalXpPerKill / 500) * 0.1) * multiplier;
+                                cleanLabel += ` (${bonus.toFixed(1)}s actual)`;
+                            }
                         }
 
                         return (

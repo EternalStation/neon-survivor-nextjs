@@ -1,41 +1,42 @@
 # CRIMSON FEAST (ComLife)
 
-**Категория:** Combat | **Арена:** 1 (пул: RadiationCore, ComLife, ComCrit, ComWave)
+**Category:** Combat | **Arena:** 1 (pool: RadiationCore, ComLife, ComCrit, ComWave)
 
-## Перки по уровням
+## Perks by Level
 
-| Уровень | Перк |
-|---------|------|
-| 1 | +3% Lifesteal (восстановление HP от нанесённого урона) |
-| 2 | Overheal создаёт Shield (200% эффективность, 3s) |
-| 3 | +2% Max HP врага как дополнительный урон (не для Боссов) |
-| 4 | 10% шанс спавна Zombie при убийстве (5s задержка, тип Feasters) |
+| Level | Perk |
+|-------|------|
+| 1 | 3% Lifesteal of DMG dealt by your Projectiles |
+| 2 | Overheal becomes Shield (5s Static) |
+| 3 | +2% additional DMG to your Projectiles from Enemy Max HP (Non-Bosses) |
+| 4 | 10% Zombie Spawn Chance (5s Delay, Feasters) |
 | 5 | MAX LEVEL |
 
-## Механика
+## Mechanics
 
-**L1 — Lifesteal (3%):**
+**L1 — Lifesteal (3% of Projectile DMG):**
 ```
-lifesteal = 3 × HexMultiplier   (% от нанесённого урона)
+heal = damageAmount × 0.03
 ```
-`calculateLegendaryBonus(state, 'lifesteal')` возвращает `3 × HexMultiplier`. Применяется при нанесении урона снарядом: восстанавливает `нанесённый_урон × (lifesteal / 100)` HP.
+Applied inline in `ProjectileLogic.ts` when a bullet deals damage. Restores `damageAmount × 0.03` HP to the player (owner), capped at MaxHP. **Shockwaves do NOT trigger lifesteal unless Blood-Forged Capacitor is active.**
 
-**L2 — Overheal Shield:**
-- Если исцеление превышает MaxHP (исцеление в overheal), избыток конвертируется в щит.
-- Эффективность конвертации: ×2.0 (200%).
-- Длительность щита: 3 секунды.
-- Щит хранится в `player.shieldChunks` с `source: 'lifesteal'`.
+**L2 — Overheal Shield (Static 5s):**
+- If lifesteal heal would exceed MaxHP, the overflow is stored as a shield chunk.
+- Conversion is **1:1** — no efficiency multiplier.
+- Duration: **5 seconds, static** (not affected by any multiplier or upgrade).
+- Shield is stored in `player.shieldChunks` with `source: 'lifesteal'`.
 
-**L3 — HP%-дамаг:**
-- При попадании снарядом по не-боссу: `дополнительный_урон = enemy.maxHp × 0.02`.
-- Не применяется к врагам с флагом `boss`.
+**L3 — Max HP Projectile Damage Bonus:**
+- When a player projectile hits a non-boss: `bonus_damage = enemy.maxHp × 0.02`.
+- Applied to `damageAmount` in `ProjectileLogic.ts` before final damage is dealt.
+- Does NOT apply to enemies with the `boss` flag.
 
 **L4 — Zombie Spawn:**
-- 10% шанс при каждом убийстве создать Zombie (тип Feasters).
-- Задержка спавна: 5 секунд после убийства.
+- 10% chance on each kill to spawn a friendly Zombie (Feasters type).
+- Spawn delay: 5 seconds after the kill.
 
-## Затронутые характеристики
+## Affected Files
 
-Lifesteal не является PlayerStats — применяется inline при нанесении урона. Подробнее о взаимодействии со щитами:
-- [HP](../stats/hp.md) — Lifesteal восстанавливает curHp, ограниченный MaxHP
-- [Броня](../stats/armor.md) — взаимодействие с KineticBattery L3 (HP < 50%)
+- `ProjectileLogic.ts` — Lifesteal heal, overheal shield push, and Lvl 3 bonus damage.
+- `calculateLegendaryBonus` — Returns `lifesteal` stat used for any future references.
+- `DeathLogic.ts` — Zombie spawn logic on kill.

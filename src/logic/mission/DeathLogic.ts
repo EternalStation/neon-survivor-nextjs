@@ -46,9 +46,21 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     // Apply Eco Buff (Only affects Legendary scaling, not displayed kill count)
     const soulCount = baseSouls * state.xpSoulBuffMult;
 
+    // SOUL-SHATTER CORE: Execute multiplier (Static 5x)
+    let finalSoulCount = soulCount;
+    const shatterLvl = getHexLevel(state, 'SoulShatterCore');
+    if (shatterLvl > 0 && e.isExecuted) {
+        finalSoulCount = soulCount * 5;
+    }
+
     state.killCount += soulCount;
     state.score += soulCount;
     recordLegendarySouls(state, soulCount);
+
+    // Add to SoulShatter pool
+    if (shatterLvl > 0) {
+        state.player.soulShatterSouls = (state.player.soulShatterSouls || 0) + finalSoulCount;
+    }
 
     // Track unbuffed kills for HUD
     if (state.rawKillCount === undefined) {

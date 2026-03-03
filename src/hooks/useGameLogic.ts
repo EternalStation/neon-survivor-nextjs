@@ -662,7 +662,9 @@ export function useGameLogic({
         const targetPresence = activeBoss ? 1.0 : 0.0;
         state.bossPresence = state.bossPresence + (targetPresence - state.bossPresence) * 0.02;
 
-        if (activeBoss) startBossAmbience();
+        // Boss Ambience only plays during the 10s warning period
+        const isWarning = timeLeft <= 10 && timeLeft > 0;
+        if (isWarning) startBossAmbience();
         else stopBossAmbience();
     }, [bossWarning, keys, inputVector, setUpgradeChoices, setShowLegendarySelection, setGameOver, setBossWarning, canvasRef, mousePos, windowScaleFactor, triggerIncubatorDestroyed]);
 

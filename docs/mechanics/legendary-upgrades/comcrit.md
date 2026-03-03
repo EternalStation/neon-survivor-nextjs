@@ -1,42 +1,46 @@
 # SHATTERED FATE (ComCrit)
 
-**Категория:** Combat | **Арена:** 1 (пул: RadiationCore, ComLife, ComCrit, ComWave)
+**Category:** Combat | **Arena:** 1 (pool: RadiationCore, ComLife, ComCrit, ComWave)
 
-## Перки по уровням
+## Perks by Level
 
-| Уровень | Перк |
-|---------|------|
-| 1 | +15% шанс крита (Crit Chance) |
-| 2 | HP < 50%: 10% Execute (мгновенное убийство не-боссов) |
-| 3 | 300% Death Mark Damage (маркированные цели получают тройной урон) |
-| 4 | 25% Mega-Crit Chance (350% урона вместо 200%) |
-| 5 | MAX LEVEL |
+| Level | Perk |
+|-------|------|
+| 1 | +15% Crit Chance — shots deal 200% damage on crit |
+| 2 | HP < 50%: 10% Execute chance on non-bosses |
+| 3 | Death Mark: every 10s, marks an enemy — all attacks deal 300% DMG to it for 3s |
+| 4 | Boss HP < 40%: 5% Execute chance on bosses |
+| 5 | MAX LEVEL (Mergeable into THE SOUL-SHATTER CORE) |
 
-## Механика
+## Mechanics
 
-**L1 — Крит:**
+**L1 — Crit:**
 ```
-CRIT_BASE_CHANCE = 0.15
-CRIT_BASE_MULT = 2.0   (×2 урона снаряда)
-```
-
-**L4 — Mega-Crit (заменяет обычный крит):**
-```
-CRIT_LVL4_CHANCE = 0.25
-CRIT_LVL4_MULT = 3.5   (×3.5 урона снаряда)
+CRIT_BASE_CHANCE = 0.15   (+15% crit chance)
+CRIT_BASE_MULT   = 2.0    (×2 damage on crit)
 ```
 
-При L4 Mega-Crit заменяет обычный крит (не суммируется с ним). Проверка происходит при каждом спавне снаряда: `if (Math.random() < chance) finalDmg *= mult`.
-
-**L2 — Execute (HP < 50%):**
-- Проверяется при нанесении урона: 10% шанс мгновенно убить врага с HP < 50%.
-- Не работает на боссах.
+**L2 — Execute (non-bosses, HP < 50%):**
+- On every hit: 10% chance to instantly kill an enemy below 50% HP.
+- Does NOT work on bosses.
+- `EXECUTE_THRESHOLD = 0.5`
+- `EXECUTE_CHANCE    = 0.10`
 
 **L3 — Death Mark:**
-- Каждые 10 секунд ближайший враг получает Death Mark (3 секунды).
-- Помеченный враг получает ×3.0 урона от всех источников.
+- Cooldown: 10 seconds (reduced by Neural Overclock buff).
+- On the next hit after cooldown: marks the target with `deathMarkExpiry = gameTime + 3`.
+- While marked, ALL hits deal `max(critMult, 3.0)` multiplier instead of normal damage.
+- Visual: purple particles + sound cue on marking.
+- `DEATH_MARK_MULT     = 3.0`
+- `DEATH_MARK_COOLDOWN = 10`
+- `DEATH_MARK_DURATION = 3`
 
-## Затронутые характеристики
+**L4 — Boss Execute (HP < 40%):**
+- On every hit on a boss: 5% chance to instantly execute when below 40% HP.
+- Displays "BOSS EXEC" floating number in red.
+- `BOSS_EXECUTE_THRESHOLD = 0.4`
+- `BOSS_EXECUTE_CHANCE    = 0.05`
 
-ComCrit не изменяет PlayerStats — применяется к итоговому значению `calcStat(dmg)` при создании снаряда:
-- [Урон](../stats/damage.md) — умножитель крита применяется поверх `calcStat(dmg)`
+## Fusion
+
+ComCrit at Level 5 can be merged with **Storm of Steel (EcoDMG)** to create **THE SOUL-SHATTER CORE**, which inherits all 4 perks above.

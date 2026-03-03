@@ -1,5 +1,5 @@
 import type { GameState } from '../core/types';
-import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -83,11 +83,13 @@ export function castSkill(state: GameState, skillIndex: number) {
         let baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
 
         if (singLvl > 0) {
-            baseCD -= (state.player.level * 0.1);
+            const mult = getHexMultiplier(state, 'NeuralSingularity');
+            baseCD -= (state.player.level * 0.02 * mult);
         }
         if (tsunamiLvl > 0) {
+            const mult = getHexMultiplier(state, 'KineticTsunami');
             const harvestedSouls = state.player.kineticTsunamiWaveSouls || 0;
-            baseCD -= (harvestedSouls * 0.01);
+            baseCD -= (harvestedSouls * 0.01 * mult);
         }
 
         if (baseCD < 5) baseCD = 5;

@@ -9,7 +9,14 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 
 import type { BestiaryEntry } from '../../data/BestiaryData';
-import { canMergeXenoAlchemist, performXenoAlchemistMerge, canMergeIrradiatedMire, performIrradiatedMireMerge, canMergeNeuralSingularity, performNeuralSingularityMerge, canMergeKineticTsunami, performKineticTsunamiMerge } from '../../logic/upgrades/LegendaryLogic';
+import {
+    canMergeXenoAlchemist, performXenoAlchemistMerge,
+    canMergeIrradiatedMire, performIrradiatedMireMerge,
+    canMergeNeuralSingularity, performNeuralSingularityMerge,
+    canMergeKineticTsunami, performKineticTsunamiMerge,
+    canMergeSoulShatterCore, performSoulShatterCoreMerge,
+    canMergeBloodForgedCapacitor, performBloodForgedCapacitorMerge
+} from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 
 interface HexGridProps {
@@ -474,6 +481,86 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     }}
                 >
                     INITIATE KINETIC TSUNAMI
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (SOUL-SHATTER CORE) */}
+            {canMergeSoulShatterCore(gameState) && (
+                <button
+                    onClick={() => {
+                        performSoulShatterCoreMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #7f1d1d, #450a0a)',
+                        border: '2px solid #ef4444',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(239, 68, 68, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.4)';
+                    }}
+                >
+                    INITIATE SOUL-SHATTER CORE
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (BLOOD-FORGED CAPACITOR) */}
+            {canMergeBloodForgedCapacitor(gameState) && (
+                <button
+                    onClick={() => {
+                        performBloodForgedCapacitorMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #831843, #4c0519)',
+                        border: '2px solid #be123c',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(190, 18, 60, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(190, 18, 60, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(190, 18, 60, 0.4)';
+                    }}
+                >
+                    INITIATE BLOOD-FORGED CAPACITOR
                 </button>
             )}
 

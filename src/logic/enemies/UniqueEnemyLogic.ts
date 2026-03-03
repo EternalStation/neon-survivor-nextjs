@@ -413,6 +413,13 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                 // Elite: Consume (5s passed). Kill Target. Zombie Dies (Cost 3).
                 target.hp = 0;
                 handleEnemyDeath(state, target, onEvent);
+
+                const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
+                if (bloodLvl >= 5 && Math.random() < 0.05) {
+                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                    if (triggerZap) triggerZap(state, player, e);
+                }
+
                 takeZombieDamage(3);
             } else {
                 // Normal & Legion Completion Logic
@@ -431,7 +438,13 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     target.hp = 0;
                     handleEnemyDeath(state, target, onEvent);
                     playSfx('zombie-consume');
-                    spawnParticles(state, target.x, target.y, '#ef4444', 20); // Blood/Parts
+                    spawnParticles(state, target.x, target.y, '#ef4444', 20);
+
+                    const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
+                    if (bloodLvl >= 5 && Math.random() < 0.05) {
+                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                        if (triggerZap) triggerZap(state, player, e);
+                    }
                 }
 
                 takeZombieDamage(1);

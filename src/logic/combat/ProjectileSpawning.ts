@@ -1,7 +1,7 @@
 import type { GameState, Player } from '../core/types';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
-import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
@@ -19,7 +19,13 @@ export function triggerShockwave(state: GameState, player: Player, level: number
 
     const playerDmg = calcStat(player.dmg);
     const uses = player.waveUses || 0;
-    let waveDmg = playerDmg * 0.75 * (1 + (uses * 0.01));
+
+    let multiplier = 1.0;
+    if (isSingularity) multiplier = getHexMultiplier(state, 'NeuralSingularity');
+    else if (isTsunami) multiplier = getHexMultiplier(state, 'KineticTsunami');
+    else multiplier = getHexMultiplier(state, 'ComWave');
+
+    let waveDmg = playerDmg * 0.75 * (1 + (uses * 0.01 * multiplier));
 
     // Tsunami Damage Scaling: +1% DMG for every 100 souls from Storm of Steel
     if (isTsunami) {
@@ -47,6 +53,8 @@ export function triggerShockwave(state: GameState, player: Player, level: number
         color: isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : '#ef4444'),
         size: range,
         type: 'shockwave_circle',
+        isTsunami,
+        isSingularity,
         alpha: 1.0,
         decay: 1.0 / waveLife
     });
@@ -86,17 +94,20 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
     // --- ComCrit Logic ---
     const critLevel = getHexLevel(state, 'ComCrit');
+    const shatterLvl = getHexLevel(state, 'SoulShatterCore');
     let isCrit = false;
     let finalDmg = dmg;
     let mult = 1.0;
 
-    if (critLevel > 0) {
+    if (critLevel > 0 || shatterLvl > 0) {
         let chance = GAME_CONFIG.SKILLS.CRIT_BASE_CHANCE;
         mult = GAME_CONFIG.SKILLS.CRIT_BASE_MULT;
-        if (state.moduleSockets.hexagons.some(h => h?.type === 'ComCrit' && h.level >= 4)) {
-            chance = GAME_CONFIG.SKILLS.CRIT_LVL4_CHANCE;
-            mult = GAME_CONFIG.SKILLS.CRIT_LVL4_MULT;
-        }
+
+        const chanceBonus = calculateLegendaryBonus(state, 'crit_chance_scaling', false, player);
+        const dmgBonus = calculateLegendaryBonus(state, 'crit_dmg_scaling', false, player);
+
+        chance += (chanceBonus / 100);
+        mult += (dmgBonus / 100);
 
         if (Math.random() < chance) {
             isCrit = true;

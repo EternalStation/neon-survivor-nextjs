@@ -8,10 +8,12 @@ export interface Particle {
     life: number;
     color: string;
     size: number;
-    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle';
+    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust';
     alpha?: number;
     decay?: number;
     maxLife?: number;
+    isTsunami?: boolean;
+    isSingularity?: boolean;
 }
 
 export interface FloatingNumber {
@@ -187,6 +189,7 @@ export interface Player {
     // Aigis Optimization
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
     kineticTsunamiWaveSouls?: number;
+    soulShatterSouls?: number;
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
@@ -605,7 +608,9 @@ export type LegendaryType =
     | 'DefPuddle' | 'DefEpi' | 'CombShield'
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
-    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami';
+    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
+    | 'SoulShatterCore'
+    | 'BloodForgedCapacitor';
 
 export interface LegendaryHex {
     id: string;

@@ -399,16 +399,17 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
                 // Check if Marked (Shattered Fate Lvl 3)
-                if (critLevel >= 3 && e.deathMarkExpiry && state.gameTime < e.deathMarkExpiry) {
+                const critLevelForMark = critLevel;
+                const shatterForDmgMark = getHexLevel(state, 'SoulShatterCore');
+                if ((critLevelForMark >= 3 || shatterForDmgMark > 0) && e.deathMarkExpiry && state.gameTime < e.deathMarkExpiry) {
                     const markMult = GAME_CONFIG.SKILLS.DEATH_MARK_MULT;
                     const bulletMult = b.critMult || 1.0;
                     const finalMult = Math.max(bulletMult, markMult);
 
-                    // Priority: Apply the highest multiplier (ensure at least 300% for marked)
                     damageAmount = (b.dmg / bulletMult) * finalMult;
 
                     spawnParticles(state, e.x, e.y, '#FF0000', 3);
-                    e.critGlitchUntil = now + 100; // Set glitch timer (100ms)
+                    e.critGlitchUntil = now + 100;
                 }
 
                 // --- TRIANGLE BOSS DEFLECTION (Lvl 3) ---
@@ -456,7 +457,6 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
 
-                // --- ComLife Lvl 3: +2% Max HP Dmg (Non-Boss) ---
                 const lifeLevel = getHexLevel(state, 'ComLife');
                 if (lifeLevel >= 3 && !e.boss) {
                     damageAmount += e.maxHp * 0.02;
@@ -635,8 +635,9 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     if (b.isShockwaveCircle && b.shockwaveLevel && b.shockwaveLevel >= 2) {
                         let fearDur = 1.5;
                         if (b.isSingularity) {
+                            const mult = getHexMultiplier(state, 'NeuralSingularity');
                             const totalFlatXp = owner.xp_per_kill.base + owner.xp_per_kill.flat + calculateLegendaryBonus(state, 'xp_per_kill', false, owner);
-                            fearDur += Math.floor(totalFlatXp / 100) * 0.1;
+                            fearDur += (Math.floor(totalFlatXp / 500) * 0.1) * mult;
                         }
                         e.fearedUntil = state.gameTime + fearDur;
                     }
@@ -671,24 +672,31 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 }
 
                 // --- ComCrit Lvl 3: Apply Death Mark ---
-                // "Death marks enemy you hit every 10second"
-                if (critLevel >= 3) {
+                const shatterForMark = getHexLevel(state, 'SoulShatterCore');
+                if (critLevel >= 3 || shatterForMark > 0) {
                     const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
                     const dmCooldown = 10 * cdMod;
 
                     if (!owner.lastDeathMark || state.gameTime - owner.lastDeathMark > dmCooldown) {
-                        e.deathMarkExpiry = state.gameTime + 3; // 3 seconds
+                        e.deathMarkExpiry = state.gameTime + 3;
                         owner.lastDeathMark = state.gameTime;
-                        // Visual for Mark?
-                        spawnParticles(state, e.x, e.y, '#8800FF', 8); // Reduced count
-                        playSfx('rare-spawn'); // Sound cue
+                        spawnParticles(state, e.x, e.y, '#8800FF', 8);
+                        playSfx('rare-spawn');
                     }
                 }
 
-                // --- ComLife Lvl 1: Lifesteal ---
-                if (lifeLevel >= 1 && (b.id !== -1) && !owner.healingDisabled) { // Ensure it's a projectile (Shockwave shouldn't trigger this? Bullet ID check is weak but ok)
-                    // "Lifesteal from dmg dealth of projectiles"
-                    const heal = damageAmount * 0.03;
+                const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
+                let lifestealPercent = 0;
+
+                if (lifeLevel >= 1 && !b.isShockwaveCircle && b.id !== -1) {
+                    lifestealPercent = 0.03;
+                }
+                if (bloodLevel >= 5 && b.isShockwaveCircle) {
+                    lifestealPercent = 0.01;
+                }
+
+                if (lifestealPercent > 0 && !owner.healingDisabled) {
+                    const heal = damageAmount * lifestealPercent;
 
                     const maxHp = calcStat(owner.hp);
                     const missing = maxHp - owner.curHp;
@@ -697,29 +705,14 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                         owner.curHp += heal;
                     } else {
                         owner.curHp = maxHp;
-                        // Lvl 2: Overheal Shield Chunks (Dynamic Max HP Cap)
                         if (lifeLevel >= 2) {
                             const overflow = heal - missing;
-                            let shieldGain = overflow * 2.0; // Double stolen health
-
                             if (!owner.shieldChunks) owner.shieldChunks = [];
-
-                            const currentLifestealShield = owner.shieldChunks
-                                .filter(c => (c as any).source === 'lifesteal')
-                                .reduce((s, c) => s + c.amount, 0);
-
-                            const effMult = getHexMultiplier(state, 'ComLife');
-                            const lifestealCap = maxHp * effMult;
-
-                            if (currentLifestealShield < lifestealCap) {
-                                // Cap to lifestealCap
-                                shieldGain = Math.min(shieldGain, lifestealCap - currentLifestealShield);
-                                owner.shieldChunks.push({
-                                    amount: shieldGain,
-                                    expiry: now + 3.0,
-                                    source: 'lifesteal'
-                                });
-                            }
+                            owner.shieldChunks.push({
+                                amount: overflow,
+                                expiry: now + 5.0,
+                                source: 'lifesteal'
+                            });
                         }
                     }
                 }
@@ -805,16 +798,28 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     }
                 }
 
-                // --- ComCrit Lvl 2: Execute ---
-                if (critLevel >= 2 && !e.boss && e.hp < e.maxHp * GAME_CONFIG.SKILLS.EXECUTE_THRESHOLD) {
+                // --- ComCrit Lvl 2: Execute (Non-Bosses) ---
+                const shatterLvl = getHexLevel(state, 'SoulShatterCore');
+                if ((critLevel >= 2 || shatterLvl > 0) && !e.boss && e.hp < e.maxHp * GAME_CONFIG.SKILLS.EXECUTE_THRESHOLD) {
                     if (Math.random() < GAME_CONFIG.SKILLS.EXECUTE_CHANCE) {
                         const remainingHp = Math.round(e.hp);
-                        e.hp = 0; // Execute
-                        e.isExecuted = true; // Mark for no particles in handleEnemyDeath
+                        e.hp = 0;
+                        e.isExecuted = true;
 
-                        // "Death Color" (Greyish) - Combined into one line for clarity.
-                        // Shifted 10px to the right to clear the enemy model.
                         spawnFloatingNumber(state, e.x + 10, e.y - 10, `EXEC ${remainingHp}`, '#64748b', false);
+
+                        playSfx('rare-kill');
+                    }
+                }
+
+                // --- ComCrit Lvl 4: Execute Bosses ---
+                if ((critLevel >= 4 || shatterLvl > 0) && e.boss && e.hp < e.maxHp * GAME_CONFIG.SKILLS.BOSS_EXECUTE_THRESHOLD) {
+                    if (Math.random() < GAME_CONFIG.SKILLS.BOSS_EXECUTE_CHANCE) {
+                        const remainingHp = Math.round(e.hp);
+                        e.hp = 0;
+                        e.isExecuted = true;
+
+                        spawnFloatingNumber(state, e.x + 10, e.y - 20, `BOSS EXEC ${remainingHp}`, '#dc2626', true);
 
                         playSfx('rare-kill');
                     }
@@ -845,7 +850,6 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
 
                         e.hp = 1000; e.maxHp = 1000; // Ensure survival
                         e.knockback = { x: 0, y: 0 };
-                        b.life = 0; // Consume bullet
 
                         // Signal Teleport Logic (handled in UniqueEnemyLogic.ts)
                         e.forceTeleport = true;
@@ -952,8 +956,7 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 const armRedMult = 1 - getDefenseReduction(armorValue);
 
                 const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, p);
-                const projRed = Math.min(80, projRedRaw); // Cap at 80% reduction
-                const projRedMult = 1 - (projRed / 100);
+                const projRedMult = 1 - getDefenseReduction(projRedRaw, 0.80);
 
                 const rawDmg = eb.dmg;
                 const dmgAfterArmor = rawDmg * armRedMult;

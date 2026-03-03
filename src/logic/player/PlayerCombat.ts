@@ -239,7 +239,8 @@ export function handleEnemyContact(
             if (kinLvl >= 1) triggerKineticBatteryZap(state, player);
 
             const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill');
-            const colRedMult = 1 - (Math.min(80, colRedRaw) / 100);
+            // Logarithmic scaling: ~100,000 souls (coefficient 0.08) to reach ~80% reduction
+            const colRedMult = 1 - getDefenseReduction(colRedRaw, 0.80);
 
             const dmgAfterArmor = rawDmg * armRedMult;
             player.damageBlockedByArmor += (rawDmg - dmgAfterArmor);
@@ -440,6 +441,14 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 target.hp -= zap.dmg;
                 spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
                 if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
+
+                const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
+                const player = state.player;
+                if (bloodLevel >= 5 && !player.healingDisabled) {
+                    const heal = zap.dmg * 0.03;
+                    const maxHp = calcStat(player.hp);
+                    player.curHp = Math.min(maxHp, player.curHp + heal);
+                }
                 // Increased life to 15 for better visibility
                 spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 15);
                 state.particles.push({ x: target.x, y: target.y, vx: 0, vy: 0, life: 10, color: '#60a5fa', size: 20, type: 'shockwave', alpha: 0.8 });

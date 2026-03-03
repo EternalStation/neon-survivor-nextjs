@@ -273,7 +273,9 @@ export function startBossAmbience() {
     bossAmbienceGain = audioCtx.createGain();
 
     bossAmbienceOsc.type = 'sawtooth';
+    // Start at 55Hz and ramp to 110Hz over 10s for tension
     bossAmbienceOsc.frequency.setValueAtTime(55, t);
+    bossAmbienceOsc.frequency.linearRampToValueAtTime(110, t + 10.0);
 
     const lfo = audioCtx.createOscillator();
     lfo.frequency.value = 0.5;
@@ -288,7 +290,7 @@ export function startBossAmbience() {
     filter.frequency.value = 200;
 
     bossAmbienceGain.gain.setValueAtTime(0, t);
-    bossAmbienceGain.gain.linearRampToValueAtTime(0.3, t + 2.0);
+    bossAmbienceGain.gain.linearRampToValueAtTime(0.2, t + 1.0);
 
     bossAmbienceOsc.connect(filter);
     filter.connect(bossAmbienceGain);
