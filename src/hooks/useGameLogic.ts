@@ -365,10 +365,17 @@ export function useGameLogic({
                     range *= Math.max(1, growthFactor);
                 }
 
+                // Sync current range to state for rendering
+                effect.radius = range;
+
                 // Apply continuous effects to enemies in range
                 state.enemies.forEach(e => {
                     if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-                    const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
+
+                    // Use perspective-corrected distance to match elliptical visual
+                    const dx = e.x - effect.x;
+                    const dy = (e.y - effect.y) / 0.6;
+                    const dist = Math.hypot(dx, dy);
 
                     if (dist < range + e.size) {
                         // 1. Level 1: Continuous 50% Slow
@@ -403,7 +410,10 @@ export function useGameLogic({
 
                     state.enemies.forEach(e => {
                         if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-                        if (Math.hypot(e.x - effect.x, e.y - effect.y) < range) {
+
+                        const dx = e.x - effect.x;
+                        const dy = (e.y - effect.y) / 0.6;
+                        if (Math.hypot(dx, dy) < range) {
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#0ea5e9', false);

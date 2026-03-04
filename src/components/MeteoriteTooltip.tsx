@@ -528,7 +528,9 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                 border: '1px solid rgba(255,255,255,0.06)',
                                 borderRadius: '6px',
                                 position: 'relative',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                filter: (meteoriteIdx !== -1 && efficiency.perkResults[perk.id]?.count === 0) ? 'grayscale(1) opacity(0.8)' : 'none',
+                                transition: 'all 0.3s ease'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
                                     <span style={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px' }}>
@@ -541,7 +543,7 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
 
                                     <div style={{ flex: 1 }} />
 
-                                    <div style={{ fontSize: '14px', fontWeight: 900, color: effColor, textShadow: `0 0 10px ${effColor}44` }}>
+                                    <div style={{ fontSize: '14px', fontWeight: 900, color: (meteoriteIdx !== -1 && efficiency.perkResults[perk.id]?.count === 0) ? '#64748b' : effColor, textShadow: (meteoriteIdx !== -1 && efficiency.perkResults[perk.id]?.count === 0) ? 'none' : `0 0 10px ${effColor}44` }}>
                                         {val}%
                                     </div>
                                 </div>

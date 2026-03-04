@@ -15,6 +15,33 @@ Fusions are powerful legendary upgrades created by merging two specific Max Leve
 | **THE GRAVITY ANCHOR** | Aegis Protocol + Epicenter | Defensive / Defensive | BASTION / BASTION |
 | **THE TEMPORAL MONOLITH** | Aegis Protocol + Chrono Plating | Defensive / Defensive | BASTION / BASTION |
 | **THE NEUTRON STAR** | Essence Syphon + Radiation Core | Economic / Combat | EXIS / APEX |
+| **THE GRAVITATIONAL HARVEST** | Essence Syphon + Epicenter | Economic / Defensive | EXIS / BASTION |
+| **THE SHATTERED CAPACITOR** | Shattered Fate + Kinetic Battery | Combat / Defensive | APEX / BASTION |
+| **THE CHRONO-DEVOURER** | Crimson Feast + Chrono Plating | Combat / Defensive | APEX / BASTION |
+
+---
+
+## THE GRAVITATIONAL HARVEST
+
+A stellar resonance between **Essence Syphon** (EcoHP) and **Epicenter**. It converts the life force of fallen enemies into gravitational stability.
+
+### Passive Perks
+Inherits all 4 perks from **Essence Syphon** and all 4 perks from **Epicenter**:
+- **Essence Syphon (Enhanced)** — kill scaling doubled:
+    - LVL 1: +0.2 Max HP per kill
+    - LVL 2: +0.06 HP/sec per kill
+    - LVL 3: +0.2% Max HP per kill
+    - LVL 4: +0.06% HP/sec per kill
+- **Epicenter**:
+    - LVL 1: 25% of players DMG dealt every second and slows for 50%
+    - LVL 2: 2% Pull strength towards the center
+    - LVL 3: 20% Radius grows over 10s
+    - LVL 4: 5% MAX HP threshold to execute enemy
+
+### Fusion Mechanics: Singularity Harvest
+- **Eternal Pull**: The gravity well's duration is extended by **0.1 seconds for every enemy killed** within the Epicenter.
+- **Trapped Resilience**: **10% of all damage** the player takes is reflected to every enemy currently trapped inside the Epicenter's gravity well.
+- **Enhanced Siphon**: Essence Syphon's kill-scaling perks are doubled in effectiveness.
 
 ---
 
@@ -54,6 +81,31 @@ Inherits all perks from **Crimson Feast** (Lvl 1-4) and **Kinetic Battery** (Lvl
 - **Bleed Status**: 15% dmg of your armour applied as bleeding to your enemeis on hit for 3 seconds.
 
 ---
+
+## THE SHATTERED CAPACITOR
+
+A lethal fusion of **Shattered Fate** and **Kinetic Battery**. Projectiles arc kinetic bolts that shred armor and bleed enemies dry.
+
+### Passive Perks
+Inherits all four perks from **Shattered Fate** and all four perks from **Kinetic Battery**.
+
+### Fusion Mechanics: Kinetic Resonance
+- **Armor Shred & Chain**: Projectiles arc a kinetic bolt to 2 nearby enemies. The bolt's base damage is scaled by Shattered Fate's crit mechanics and Kinetic Battery's arcing logic (20% of the damage the projectile dealt, multiplied by the Kinetic Battery damage modifier).
+- **Kinetic Bleed**: The kinetic bolt applies a Bleed effect based on the armor damage over 3 seconds.
+
+---
+
+## THE CHRONO-DEVOURER
+
+A parasitic anomaly that feeds on both temporal energy and biomatter. It trades your shields for raw devastation, while accelerating your systems with every successful consumption.
+
+### Passive Perks
+Inherits all four perks from **Crimson Feast** and all four perks from **Chrono Plating**.
+
+### Active Skill & Fusion Mechanics
+- **Active Skill**: Explodes all shields to deal AOE damage based on Armor + Shield value (15s CD).
+- **Zombie Voracity**: 10% Chance for zombies to consume enemy on first bite.
+- **Consumption Momentum**: 20% Cooldown Recovery Speed increase for 1sec every time zombie successfully consumes enemy.
 
 ---
 

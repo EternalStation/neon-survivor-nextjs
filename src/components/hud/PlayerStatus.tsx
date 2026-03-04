@@ -362,7 +362,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     return (
                         <div style={{ display: 'flex', gap: 8 }}>
                             {/* BOLT TIMER */}
-                            <div style={{ position: 'relative', width: 38, height: 44 }}>
+                            <div style={{ position: 'relative', width: 42, height: 48 }}>
                                 <div style={{
                                     width: '100%', height: '100%',
                                     backgroundColor: boltCD <= 0 ? '#3b82f6' : '#475569',
@@ -403,7 +403,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                             {/* SHIELD TIMER (Lvl 2+) */}
                             {kinLvl >= 2 && (
-                                <div style={{ position: 'relative', width: 38, height: 44 }}>
+                                <div style={{ position: 'relative', width: 42, height: 48 }}>
                                     <div style={{
                                         width: '100%', height: '100%',
                                         backgroundColor: shieldTimeLeft <= 0 ? '#60a5fa' : '#475569',

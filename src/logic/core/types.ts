@@ -195,6 +195,7 @@ export interface Player {
     soulShatterSouls?: number;
     temporalMonolithSouls?: number;
     neutronStarAuraKills?: number;
+    chronoDevourerBuffTime?: number; // Timestamp when 10% CDR buff expires
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
@@ -468,6 +469,7 @@ export interface Enemy {
     // Status Effects
     deathMarkExpiry?: number;
     fearedUntil?: number;
+    stunnedUntil?: number;
     temporalMonolithExplosive?: boolean;
 
     // Friendly Zombie Props (Refined)
@@ -619,7 +621,7 @@ export type LegendaryType =
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
     | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
-    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar';
+    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer';
 
 export interface LegendaryHex {
     id: string;
@@ -639,6 +641,7 @@ export interface LegendaryHex {
     perks?: string[];
     allPerks?: string[][];
     statBonuses?: Record<string, number>; // Baked-in bonuses per kill (Snapshotted with Efficiency)
+    forgedAt?: string[];
 }
 
 export interface UpgradeChoice {
@@ -861,7 +864,7 @@ export interface GameState {
     levelUpTimer: number;
     pendingBossKills: number;
     bossKillTimer: number;
-    pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, applyBleed?: boolean, history: { x1: number; y1: number; x2: number; y2: number }[] }>;
+    pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, applyBleed?: boolean, applyStun?: boolean, history: { x1: number; y1: number; x2: number; y2: number }[], travelProgress?: number, isHunting?: boolean, color?: string }>;
 
     // Spawn Logic
     firstMeteoriteSpawned?: boolean;

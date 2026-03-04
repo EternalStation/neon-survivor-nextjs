@@ -4,9 +4,9 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/constants';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { handlePlayerMovement } from './PlayerMovement';
 import { updatePlayerStats } from './PlayerStats';
-import { handlePlayerCombat, triggerKineticBatteryZap, spawnLightning } from './PlayerCombat';
+import { handlePlayerCombat, triggerKineticBatteryZap, triggerZombieZap, spawnLightning } from './PlayerCombat';
 
-export { triggerKineticBatteryZap, spawnLightning };
+export { triggerKineticBatteryZap, triggerZombieZap, spawnLightning };
 
 export function updatePlayer(
     state: GameState,
@@ -78,5 +78,7 @@ export function updatePlayer(
     if (!(state as any).triggerKineticBatteryZap) {
         (state as any).triggerKineticBatteryZap = triggerKineticBatteryZap;
         (window as any).triggerKineticBatteryZap = triggerKineticBatteryZap;
+        (state as any).triggerZombieZap = triggerZombieZap;
+        (window as any).triggerZombieZap = triggerZombieZap;
     }
 }

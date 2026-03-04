@@ -395,8 +395,8 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     // Kinetic Battery: Trigger Zap on Zombie Collision
                     const kinLvl = getHexLevel(state, 'KineticBattery');
                     if (kinLvl >= 1) {
-                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                        if (triggerZap) triggerZap(state, player, kinLvl);
+                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
+                        if (triggerZap) triggerZap(state, player, e);
                     }
 
                     if (e.dead) return; // Stop if died
@@ -415,9 +415,14 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                 handleEnemyDeath(state, target, onEvent);
 
                 const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
-                if (bloodLvl >= 5 && Math.random() < 0.05) {
-                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                if (bloodLvl >= 5 && Math.random() < 0.10) {
+                    const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
                     if (triggerZap) triggerZap(state, player, e);
+                }
+
+                const devLvl = getHexLevel(state, 'ChronoDevourer');
+                if (devLvl >= 5) {
+                    player.chronoDevourerBuffTime = now + 1000;
                 }
 
                 takeZombieDamage(3);
@@ -441,9 +446,14 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     spawnParticles(state, target.x, target.y, '#ef4444', 20);
 
                     const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
-                    if (bloodLvl >= 5 && Math.random() < 0.05) {
-                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                    if (bloodLvl >= 5 && Math.random() < 0.10) {
+                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
                         if (triggerZap) triggerZap(state, player, e);
+                    }
+
+                    const devLvl = getHexLevel(state, 'ChronoDevourer');
+                    if (devLvl >= 5) {
+                        player.chronoDevourerBuffTime = now + 1000;
                     }
                 }
 
@@ -524,6 +534,11 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     const eatDuration = (target.boss || target.isElite) ? 5000 : 3000;
                     e.timer = now + eatDuration;
 
+                    const devLvl = getHexLevel(state, 'ChronoDevourer');
+                    if (devLvl >= 5 && Math.random() < 0.10) {
+                        e.timer = now; // Instant consume
+                    }
+
                     // playSfx('zombie-consume'); // Removed per user request (no start eat sound)
                     return; // Stop processing active state
                 } else {
@@ -533,8 +548,8 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
                     // Kinetic Battery: Trigger Zap on Zombie Collision
                     const kinLvl = getHexLevel(state, 'KineticBattery');
                     if (kinLvl >= 1) {
-                        const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                        if (triggerZap) triggerZap(state, player, kinLvl);
+                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
+                        if (triggerZap) triggerZap(state, player, e);
                     }
 
                     // Bounce off

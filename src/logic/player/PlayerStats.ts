@@ -108,29 +108,23 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
                 spawnFloatingNumber(state, player.x, player.y, "SHIELD RECHARGE", '#3b82f6', true);
             }
         }
-        if (kinLvl >= 4) {
-            // Updated Lvl 4: CD Reduction per minute
-            const kinHex = state.moduleSockets.hexagons.find(h => h?.type === 'KineticBattery');
-            const startTime = kinHex?.timeAtLevel?.[4] ?? state.gameTime;
-            const elapsed = state.gameTime - startTime;
-            const minutes = Math.floor(elapsed / 60);
-            const mult = kinHex ? getHexMultiplier(state, kinHex.type) : 1;
-            // 0.25% per minute * multiplier
-            player.cooldownReduction += minutes * 0.0025 * mult;
-        }
     }
 
     // CHRONO PLATING (Defensive - Arena 2) / TEMPORAL MONOLITH Inherited
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
-    const monolithIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'TemporalMonolith');
+    const monolithIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
     if (chronoLvl >= 3 || monolithIdx !== -1) {
-        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith');
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
         const startTime = chronoHex?.timeAtLevel?.[3] ?? state.gameTime;
         const elapsed = state.gameTime - startTime;
         const minutes = Math.floor(elapsed / 60);
         const mult = chronoHex ? getHexMultiplier(state, chronoHex.type) : 1;
         // 0.25% per minute * efficiency multiplier
         player.cooldownReduction += minutes * 0.0025 * mult;
+    }
+
+    if (player.chronoDevourerBuffTime && state.gameTime * 1000 < player.chronoDevourerBuffTime) {
+        player.cooldownReduction += 0.10;
     }
 
     // Apply Regen

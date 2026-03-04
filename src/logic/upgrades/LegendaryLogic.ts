@@ -1,12 +1,11 @@
 import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/types';
-import { ARENA_CENTERS } from '../mission/MapLogic';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
 import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 
-export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'KineticBattery', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'BloodForgedCapacitor', 'SoulShatterCore', 'GravityAnchor', 'TemporalMonolith'];
+export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'ChronoDevourer'];
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {
@@ -19,7 +18,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'EcoDMG',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoDMG.png'
+        customIcon: '/assets/hexes/EcoDMG.png',
+        forgedAt: ['Exis']
     },
     EcoXP: {
         id: 'eco_xp',
@@ -31,7 +31,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'EcoXP',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoXP.png'
+        customIcon: '/assets/hexes/EcoXP.png',
+        forgedAt: ['Exis']
     },
     EcoHP: {
         id: 'eco_hp',
@@ -43,7 +44,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'EcoHP',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoHP.png'
+        customIcon: '/assets/hexes/EcoHP.png',
+        forgedAt: ['Exis']
     },
     ComLife: {
         id: 'com_life',
@@ -55,7 +57,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ComLife',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComLife.png'
+        customIcon: '/assets/hexes/ComLife.png',
+        forgedAt: ['Apex']
     },
     ComCrit: {
         id: 'com_crit',
@@ -67,7 +70,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ComCrit',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComCrit.png'
+        customIcon: '/assets/hexes/ComCrit.png',
+        forgedAt: ['Apex']
     },
     ComWave: {
         id: 'com_wave',
@@ -79,7 +83,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ComWave',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComWave.png'
+        customIcon: '/assets/hexes/ComWave.png',
+        forgedAt: ['Apex']
     },
     DefPuddle: {
         id: 'def_puddle',
@@ -91,7 +96,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'DefPuddle',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefPuddle.png'
+        customIcon: '/assets/hexes/DefPuddle.png',
+        forgedAt: ['Bastion']
     },
     DefEpi: {
         id: 'def_epi',
@@ -103,7 +109,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'DefEpi',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefEpi.png'
+        customIcon: '/assets/hexes/DefEpi.png',
+        forgedAt: ['Bastion']
     },
     CombShield: {
         id: 'comb_shield',
@@ -115,7 +122,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'CombShield',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoArmor.png'
+        customIcon: '/assets/hexes/EcoArmor.png',
+        forgedAt: ['Exis']
     },
     KineticBattery: {
         id: 'kin_bat',
@@ -127,7 +135,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'KineticBattery',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefBattery.png'
+        customIcon: '/assets/hexes/DefBattery.png',
+        forgedAt: ['Bastion']
     },
     RadiationCore: {
         id: 'rad_core',
@@ -139,7 +148,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'RadiationCore',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComRad.png'
+        customIcon: '/assets/hexes/ComRad.png',
+        forgedAt: ['Apex']
     },
     ChronoPlating: {
         id: 'chrono_plate',
@@ -151,7 +161,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ChronoPlating',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefChromo.png'
+        customIcon: '/assets/hexes/DefChromo.png',
+        forgedAt: ['Bastion']
     },
     XenoAlchemist: {
         id: 'xeno_alchemist',
@@ -222,7 +233,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         id: 'blood_forged_capacitor',
         name: 'THE BLOOD-FORGED CAPACITOR',
         desc: 'Combat / Defensive Fusion',
-        description: '20% of your armour dealth to 2 nearby enemies on projectile hit. 15% dmg of your armour applied as bleeding to your enemeis on hit for 3 seconds.',
+        description: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.',
         lore: 'The capacitor doesn’t just store energy; it refines it through the lens of pain. Every shockwave sent through the enemy ranks carries a parasitic pulse, tearing life from their hulls and feeding it directly into your core.',
         category: 'Fusion',
         categories: ['Combat', 'Defensive'],
@@ -269,6 +280,45 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         level: 5,
         killsAtAcquisition: 0,
         customIcon: '/assets/hexes/ComRad.png'
+    },
+    GravitationalHarvest: {
+        id: 'gravitational_harvest',
+        name: 'THE GRAVITATIONAL HARVEST',
+        desc: 'EcoHP / Defensive Fusion',
+        description: 'A stellar resonance between Essence Syphon and Epicenter. Kills within the well extend its duration. 10% of damage taken is reflected to trapped enemies.',
+        lore: 'The harvest is eternal. As you pull them into your reach, their very life force is used to stabilize the gravity well, while their strikes only fuel the crushing pressure of the singularity.',
+        category: 'Fusion',
+        categories: ['Economic', 'Defensive'],
+        type: 'GravitationalHarvest',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/EcoHP.png'
+    },
+    ShatteredCapacitor: {
+        id: 'shattered_capacitor',
+        name: 'THE SHATTERED CAPACITOR',
+        desc: 'Combat / Defensive Fusion',
+        description: '20% of your Armor dealt as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
+        lore: 'The capacitor doesn’t just store energy; it refines it through the lens of critical impact. Every arc sent through the enemy ranks identifies a structural failure, letting the next strike tear them apart.',
+        category: 'Fusion',
+        categories: ['Combat', 'Defensive'],
+        type: 'ShatteredCapacitor',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/DefBattery.png'
+    },
+    ChronoDevourer: {
+        id: 'chrono_devourer',
+        name: 'THE CHRONO-DEVOURER',
+        desc: 'Combat / Defensive Fusion',
+        description: 'Active: Explodes all shields to deal AOE damage based on Armor + Shield value. Zombies have a 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.',
+        lore: 'A parasitic anomaly that feeds on both temporal energy and biomatter. It trades your shields for raw devastation, while accelerating your systems with every successful consumption.',
+        category: 'Fusion',
+        categories: ['Combat', 'Defensive'],
+        type: 'ChronoDevourer',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/ComLife.png'
     }
 };
 
@@ -288,7 +338,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
     const formatPerk = (p: string, lvl: number) => {
         let soulLvl = lvl;
 
-        if (type === 'XenoAlchemist' || type === 'NeuralSingularity' || type === 'IrradiatedMire' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar') {
+        if (type === 'XenoAlchemist' || type === 'NeuralSingularity' || type === 'IrradiatedMire' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer') {
             for (const key of Object.keys(perks)) {
                 if (key === type) continue;
                 const arr = perks[key];
@@ -306,7 +356,10 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         const souls = getSouls(soulLvl);
         const isNewFusionPerk = (type === 'NeuralSingularity' && (p.toLowerCase().includes('fear') || p.toLowerCase().includes('cooldown') || p.toLowerCase().includes('страх') || p.toLowerCase().includes('перезарядк'))) ||
             (type === 'TemporalMonolith' && (p.toLowerCase().includes('frozen') || p.toLowerCase().includes('заморозк') || p.toLowerCase().includes('damage received') || p.toLowerCase().includes('снижения перезарядки'))) ||
-            (type === 'NeutronStar' && (p.toLowerCase().includes('horizon') || p.toLowerCase().includes('aura') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('аура')));
+            (type === 'NeutronStar' && (p.toLowerCase().includes('horizon') || p.toLowerCase().includes('aura') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('аура'))) ||
+            (type === 'GravitationalHarvest' && (p.toLowerCase().includes('duration extension') || p.toLowerCase().includes('reflected') || p.toLowerCase().includes('продление') || p.toLowerCase().includes('отражает'))) ||
+            (type === 'ShatteredCapacitor' && (p.toLowerCase().includes('arcs a kinetic') || p.toLowerCase().includes('armor dmg as bleed') || p.toLowerCase().includes('рикошетит кинетический') || p.toLowerCase().includes('кровотечение'))) ||
+            (type === 'ChronoDevourer' && (p.toLowerCase().includes('explode all shields') || p.toLowerCase().includes('cooldown recovery') || p.toLowerCase().includes('chance for zombies') || p.toLowerCase().includes('взрывает все щиты') || p.toLowerCase().includes('шанс зомби') || p.toLowerCase().includes('ускорение перезарядки')));
 
         if (type === 'SoulShatterCore') {
             if (p.includes('+5% Crit DMG') || p.includes('+5% Крит Урона')) {
@@ -337,6 +390,36 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             }
         }
 
+        if (p.includes('0.25% Cooldown reduction every minute') || p.includes('0.25% перезарядки каждую минуту')) {
+            const chronoHex = state?.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
+            if (chronoHex?.timeAtLevel && chronoHex.timeAtLevel[3] !== undefined) {
+                const diffSeconds = (state?.gameTime || 0) - chronoHex.timeAtLevel[3];
+                const minutes = Math.floor(diffSeconds / 60);
+                const mult = state ? getHexMultiplier(state, chronoHex.type) : 1;
+                const accumulated = minutes * 0.25 * mult;
+                return `${p} (${accumulated.toFixed(2)}% total)`;
+            }
+        }
+
+        if ((type === 'ChronoPlating' || type === 'TemporalMonolith' || type === 'ChronoDevourer') && (p.includes('1% of your Armor') || p.includes('1% от твоей Брони'))) {
+            const totalArmor = state ? calcStat(state.player.arm) : 0;
+            const mult = state ? getHexMultiplier(state, type) : 1;
+            const bonus = totalArmor * 0.01 * mult;
+            return `${p} (+${bonus.toFixed(1)}% actual)`;
+        }
+
+        if (p.includes('CD)') || p.includes('КД)')) {
+            const cdMatch = p.match(/(\d+)s CD/i) || p.match(/(\d+)с КД/i);
+            if (cdMatch && state) {
+                const baseCd = parseInt(cdMatch[1]);
+                const cdMod = (1 - (state.player.cooldownReduction || 0));
+                const actualCd = baseCd * cdMod;
+                if (actualCd < baseCd - 0.05) {
+                    return `${p} (${actualCd.toFixed(1)}s actual)`;
+                }
+            }
+        }
+
         if (souls !== null && !isNewFusionPerk && (p.toLowerCase().includes("kill") || p.toLowerCase().includes("убий") || p.includes("Resist"))) {
             return `${p} (${souls} Souls)`;
         }
@@ -352,7 +435,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         return formattedList;
     }
 
-    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar') {
+    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer') {
         return formattedList.flat();
     }
 
@@ -483,6 +566,8 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                     if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
                     if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
                     if (selection.type === 'TemporalMonolith') baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
+                    if (selection.type === 'GravitationalHarvest') baseCD = 30000;
+                    if (selection.type === 'ChronoDevourer') baseCD = 15000;
 
                     state.player.activeSkills.push({
                         type: selection.type,
@@ -525,8 +610,12 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
         const shatter = state.moduleSockets.hexagons.find(h => h?.type === 'SoulShatterCore');
         if (shatter) return 5;
     }
-    if (type === 'ComLife' || type === 'KineticBattery') {
-        const blood = state.moduleSockets.hexagons.find(h => h?.type === 'BloodForgedCapacitor');
+    if (type === 'ComCrit' || type === 'KineticBattery') {
+        const shattered = state.moduleSockets.hexagons.find(h => h?.type === 'ShatteredCapacitor');
+        if (shattered) return 5;
+    }
+    if (type === 'ComLife' || type === 'ChronoPlating') {
+        const blood = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoDevourer');
         if (blood) return 5;
     }
     if (type === 'DefEpi' || type === 'CombShield') {
@@ -537,9 +626,21 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
         const monolith = state.moduleSockets.hexagons.find(h => h?.type === 'TemporalMonolith');
         if (monolith) return 5;
     }
+    if (type === 'ComLife' || type === 'KineticBattery') {
+        const blood = state.moduleSockets.hexagons.find(h => h?.type === 'BloodForgedCapacitor');
+        if (blood) return 5;
+    }
     if (type === 'EcoHP' || type === 'RadiationCore') {
         const neutron = state.moduleSockets.hexagons.find(h => h?.type === 'NeutronStar');
         if (neutron) return 5;
+    }
+    if (type === 'EcoHP' || type === 'DefEpi') {
+        const harvest = state.moduleSockets.hexagons.find(h => h?.type === 'GravitationalHarvest');
+        if (harvest) return 5;
+    }
+    if (type === 'ComCrit' || type === 'KineticBattery') {
+        const shattered = state.moduleSockets.hexagons.find(h => h?.type === 'ShatteredCapacitor');
+        if (shattered) return 5;
     }
     return 0;
 }
@@ -618,8 +719,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.1;
         }
 
-        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar') {
-            const multi = (hex.type === 'NeutronStar') ? 2.0 : 1.0;
+        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') {
+            const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') ? 2.0 : 1.0;
             if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.1 * multi;
             if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.03 * multi;
             if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1 * multi;
