@@ -1,9 +1,9 @@
 import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/types';
-import { ARENA_CENTERS } from '../mission/MapLogic';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
 import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
+import { GAME_CONFIG } from '../core/GameConfig';
 
 export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'ChronoDevourer'];
 
@@ -560,18 +560,19 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                 const key = availableKeys.find(k => !usedKeys.includes(k));
 
                 if (key) {
-                    let cd = 30000;
-                    if (selection.type === 'DefPuddle') cd = 25000;
-                    if (selection.type === 'DefEpi') cd = 30000;
-                    if (selection.type === 'ComWave') cd = (selection.level >= 4 ? 20000 : 30000);
-                    if (selection.type === 'TemporalMonolith') cd = 30000;
-                    if (selection.type === 'GravitationalHarvest') cd = 30000;
-                    if (selection.type === 'ChronoDevourer') cd = 15000;
+                    let baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
+                    if (selection.type === 'DefPuddle') baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
+                    if (selection.type === 'DefEpi') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
+                    if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
+                    if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
+                    if (selection.type === 'TemporalMonolith') baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
+                    if (selection.type === 'GravitationalHarvest') baseCD = 30000;
+                    if (selection.type === 'ChronoDevourer') baseCD = 15000;
 
                     state.player.activeSkills.push({
                         type: selection.type,
-                        cooldownMax: cd,
-                        cooldown: 0,
+                        baseCD,
+                        lastUsed: -999999,
                         inUse: false,
                         keyBind: key,
                         icon: selection.customIcon

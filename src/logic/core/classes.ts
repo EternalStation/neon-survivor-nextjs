@@ -62,18 +62,18 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         id: 'stormstrike',
         name: 'Zenith',
         title: 'THE THUNDER ENGINE',
-        lore: 'A walking capacitor bank. Channels ionized atmosphere to call down devastating orbital strikes from satellite weapons platforms.',
-        description: 'A heavy artillery frame with orbital strike capabilities.',
+        lore: 'A walking capacitor bank. Saturates the ionosphere with targeting data, then unleashes a devastating ring of orbital laser strikes around itself.',
+        description: 'A heavy artillery frame with a chargeable orbital ring strike.',
         characteristics: [
             'Slow-firing heavy ordnance',
-            'Massive AOE orbital strikes'
+            'Chargeable ring of laser strikes (E)'
         ],
-        capabilityName: 'Orbital Strike',
-        capabilityDesc: 'Every 8 seconds, a massive vertical laser beam strikes a random enemy, dealing 150% AOE damage in a 100px radius.',
+        capabilityName: 'Storm Circle',
+        capabilityDesc: 'Press E to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.',
         capabilityMetrics: [
-            { label: 'Frequency', value: 8, unit: 's', isPercentage: false, description: 'Static cooldown (Every 8s)' },
-            { label: 'Strike DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage multiplier' },
-            { label: 'AOE', value: 100, unit: 'px', isPercentage: false, description: 'Strike radius' }
+            { label: 'Max Charge', value: 10, unit: 's', isPercentage: false, description: 'Full charge time' },
+            { label: 'Max DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage per laser at full charge' },
+            { label: 'Max Lasers', value: 12, unit: '', isPercentage: false, description: 'Laser count at full charge' }
         ],
         stats: {
             dmgMult: 0.50,

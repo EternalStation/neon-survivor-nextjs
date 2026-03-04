@@ -5,6 +5,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { getCdMod } from '../utils/CooldownUtils';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
@@ -47,8 +48,9 @@ export function triggerDash(state: GameState, keys: Record<string, boolean>, inp
     player.dashVx = nx * speedPerFrame;
     player.dashVy = ny * speedPerFrame;
     player.dashUntil = state.gameTime + duration;
-    player.dashCooldown = GAME_CONFIG.DASH.COOLDOWN;
-    player.dashCooldownMax = GAME_CONFIG.DASH.COOLDOWN;
+    const dashCD = GAME_CONFIG.DASH.COOLDOWN * getCdMod(state, player);
+    player.dashCooldown = dashCD;
+    player.dashCooldownMax = dashCD;
     player.invincibleUntil = state.gameTime + GAME_CONFIG.DASH.INVINCIBLE_DURATION;
 
     spawnParticles(state, player.x, player.y, '#22d3ee', 8, 3, 30, 'spark');
@@ -77,7 +79,19 @@ export function handlePlayerMovement(
     if (isDashing && player.dashVx !== undefined && player.dashVy !== undefined) {
         const nx = player.x + player.dashVx;
         const ny = player.y + player.dashVy;
-        if (isInMap(nx, ny)) {
+        const hitboxR = GAME_CONFIG.PLAYER.HITBOX_RADIUS;
+        let dashPosValid = isInMap(nx, ny) || isInActivePortal(nx, ny, state);
+        if (dashPosValid) {
+            for (let i = 0; i < 6; i++) {
+                const ang = (Math.PI / 3) * i;
+                if (!isInMap(nx + Math.cos(ang) * hitboxR, ny + Math.sin(ang) * hitboxR) &&
+                    !isInActivePortal(nx + Math.cos(ang) * hitboxR, ny + Math.sin(ang) * hitboxR, state)) {
+                    dashPosValid = false;
+                    break;
+                }
+            }
+        }
+        if (dashPosValid) {
             player.x = nx;
             player.y = ny;
         } else {
@@ -114,9 +128,13 @@ export function handlePlayerMovement(
     }
 
     if (vx !== 0 || vy !== 0) {
-        // Normalize
         const mag = Math.hypot(vx, vy);
-        const spd = player.speed * (state.gameSpeedMult ?? 1);
+        let stormMod = 1;
+        if (player.playerClass === 'stormstrike') {
+            const ct = Math.max(0, Math.min(GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE, player.stormCircleChargeTime ?? 0));
+            stormMod = 1 + (-0.2 + (ct / GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE) * 0.4);
+        }
+        const spd = player.speed * (state.gameSpeedMult ?? 1) * stormMod;
         const dx = (vx / mag) * spd;
         const dy = (vy / mag) * spd;
 

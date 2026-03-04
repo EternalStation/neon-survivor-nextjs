@@ -42,31 +42,15 @@ export function updatePlayer(
         if (player.spawnTimer > 0.3) return; // Allow movement in last 0.3s
     }
 
-    // 0. Active Skill Cooldown Management
+    // 0. Active Duration Logic (for inUse visual state)
     if (player.activeSkills) {
         player.activeSkills.forEach((skill: import('../core/types').ActiveSkill) => {
-            // Kinetic Battery handles its own cooldown dynamically based on timestamps
-            if (skill.type === 'KineticBattery') return;
-
-            if (skill.cooldown > 0) {
-                let recoverySpeed = 1;
-                if ((player as any).temporalMonolithBuff && now < (player as any).temporalMonolithBuff) {
-                    recoverySpeed = 1.2;
-                }
-                skill.cooldown -= (1 / 60) * recoverySpeed;
-                if (skill.cooldown < 0) skill.cooldown = 0;
-            }
-
-            // Active Duration Logic (for visuals/logic lock)
             if (skill.duration && skill.duration > 0) {
                 skill.duration -= 1 / 60;
                 if (skill.duration <= 0) {
                     skill.duration = 0;
                     skill.inUse = false;
                 }
-            } else if (skill.cooldown <= 0) {
-                // Failsafe: If no duration or duration expired, and cooldown done, reset inUse
-                skill.inUse = false;
             }
         });
     }

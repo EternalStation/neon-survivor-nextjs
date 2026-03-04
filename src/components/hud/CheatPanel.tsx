@@ -25,6 +25,7 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'lvl', description: 'Level Up + Unlock Portals' },
             { code: 'k1', description: 'Suicide (DEBUG)' },
             { code: 'cs2', description: 'Class Skill Resonance x2 per press (0→0.5→1→2→4...)' },
+            { code: 'cdr', description: 'Cooldown Reduction +20% per press (0→20→40→60→80→90%)' },
         ]
     },
     {
@@ -136,6 +137,7 @@ interface CheatPanelProps {
 
 export function CheatPanel({ onClose }: CheatPanelProps) {
     const [searchTerm, setSearchTerm] = useState('');
+    const [stayOpen, setStayOpen] = useState(false);
     const [recentCheats, setRecentCheats] = useState<CheatEntry[]>([]);
 
     useEffect(() => {
@@ -156,7 +158,7 @@ export function CheatPanel({ onClose }: CheatPanelProps) {
         entry.code.split('').forEach(char =>
             window.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }))
         );
-        onClose();
+        if (!stayOpen) onClose();
     };
 
     const filteredCategories = useMemo(() => {
@@ -186,16 +188,27 @@ export function CheatPanel({ onClose }: CheatPanelProps) {
                 borderRadius: '4px', padding: '24px', position: 'relative', overflow: 'hidden',
                 display: 'flex', flexDirection: 'column'
             }}>
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute', top: '16px', right: '16px',
-                        background: 'transparent', border: '1px solid #00ff00', color: '#00ff00',
-                        padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px'
-                    }}
-                >
-                    EXIT
-                </button>
+                <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={() => setStayOpen(v => !v)}
+                        style={{
+                            background: stayOpen ? '#00ff00' : 'transparent',
+                            border: '1px solid #00ff00', color: stayOpen ? '#000' : '#00ff00',
+                            padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px'
+                        }}
+                    >
+                        LOCK
+                    </button>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: 'transparent', border: '1px solid #00ff00', color: '#00ff00',
+                            padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px'
+                        }}
+                    >
+                        EXIT
+                    </button>
+                </div>
 
                 <h2 style={{ margin: '0 0 16px 0', fontSize: '22px', textTransform: 'uppercase', borderBottom: '1px solid #00ff00', paddingBottom: '10px' }}>
                     {'>'} CHEAT_PANEL :: DEBUG_CODES

@@ -48,15 +48,15 @@ export interface ShieldChunk {
 
 export interface ActiveSkill {
     type: LegendaryType;
-    cooldownMax: number;
-    cooldown: number;
+    baseCD: number;
+    lastUsed: number;
     duration?: number;
     inUse: boolean;
-    keyBind: string; // '1', '2', '3', '4', '5'
+    keyBind: string;
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'storm_laser' | 'storm_zone' | 'storm_hit';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -68,9 +68,9 @@ export interface AreaEffect {
     level: number;
     // Puddle props
     tickTimer?: number;
-    // Epicenter props
-    casterId?: number; // Player ID?
+    casterId?: number;
     pulseTimer?: number;
+    dmgMult?: number;
 }
 
 export interface Player {
@@ -139,8 +139,10 @@ export interface Player {
     };
     playerClass?: import('./classes').PlayerClassId;
     classShotCount?: number; // For Storm-Strike Hyper-Pulse
-    lastCosmicStrikeTime?: number; // For Cosmic Beam class tracking
-    blackholeCooldown?: number; // Timestamp when next blackhole can be created (Event Horizon)
+    lastCosmicStrikeTime?: number;
+    lastBlackholeUse?: number;
+    stormCircleChargeTime?: number;
+    stormCircleCooldownEnd?: number;
     deathCause?: string; // Reason for game over
     lastHitDamage?: number; // Final hit damage that killed the player
     lastDamageTime?: number; // Timestamp when player took damage
@@ -184,6 +186,7 @@ export interface Player {
     lastKineticShockwave?: number;
     kineticShieldTimer?: number;
     cooldownReduction?: number;
+    cooldownReductionBonus?: number;
     lastChronoDoubleIndex?: number;
     chronoArmorBonus?: number;
     // Aigis Optimization

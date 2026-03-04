@@ -7,6 +7,8 @@ import { PLAYER_CLASSES } from '../../logic/core/classes';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { calcStat } from '../../logic/utils/MathUtils';
 import { formatLargeNumber } from '../../utils/format';
+import { getCdMod, getRemainingCD, getCDProgress, isOnCooldown } from '../../logic/utils/CooldownUtils';
+import { GAME_CONFIG } from '../../logic/core/GameConfig';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 
@@ -105,29 +107,33 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
                     if (!pClass) return null;
 
-                    const cdMod = isBuffActive(gameState, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+                    const cdMod = getCdMod(gameState, player);
+                    const now = gameState.gameTime;
 
-                    let cdPct = 0; // 0 = Ready, 1 = Max Cooldown
+                    let cdPct = 0;
                     let remainingDisplay = '';
                     let isReady = false;
                     let show = false;
+                    let isStormCooldown = false;
+                    let stormChargePct = 0;
 
-                    const nowMs = Date.now();
-                    const nowSec = gameState.gameTime;
-
-                    // Logic for specific classes
                     if (player.playerClass === 'stormstrike') {
                         show = true;
-                        const maxCd = 8000 * cdMod; // Apply reduction
-                        const last = player.lastCosmicStrikeTime || 0;
-                        const diff = nowMs - last;
-                        if (diff >= maxCd) {
-                            cdPct = 0; // Ready
-                            isReady = true;
+                        const maxCharge = GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE;
+                        const cooldownEnd = player.stormCircleCooldownEnd ?? 0;
+                        const ct = player.stormCircleChargeTime ?? 0;
+                        const onCooldown = now < cooldownEnd;
+                        isStormCooldown = onCooldown;
+
+                        if (onCooldown) {
+                            const remaining = cooldownEnd - now;
+                            cdPct = remaining / GAME_CONFIG.SKILLS.STORM_CIRCLE_RECHARGE_DELAY;
+                            remainingDisplay = remaining.toFixed(1);
+                            isReady = false;
                         } else {
-                            const remaining = maxCd - diff;
-                            cdPct = remaining / maxCd;
-                            remainingDisplay = (remaining / 1000).toFixed(1);
+                            stormChargePct = Math.sqrt(ct / maxCharge);
+                            cdPct = 1 - stormChargePct;
+                            isReady = ct >= maxCharge;
                         }
                     } else if (player.playerClass === 'eventhorizon') {
                         show = true;
@@ -135,16 +141,10 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             cdPct = 0;
                             isReady = true;
                         } else {
-                            const nextReady = player.blackholeCooldown || 0;
-                            if (nowSec >= nextReady) {
-                                cdPct = 0;
-                                isReady = true;
-                            } else {
-                                const remaining = nextReady - nowSec;
-                                const maxCd = 10 * cdMod;
-                                cdPct = Math.min(1, remaining / maxCd);
-                                remainingDisplay = remaining.toFixed(1);
-                            }
+                            const remaining = getRemainingCD(player.lastBlackholeUse ?? -999999, GAME_CONFIG.SKILLS.BLACKHOLE_COOLDOWN, cdMod, now);
+                            cdPct = getCDProgress(player.lastBlackholeUse ?? -999999, GAME_CONFIG.SKILLS.BLACKHOLE_COOLDOWN, cdMod, now);
+                            isReady = remaining <= 0;
+                            if (!isReady) remainingDisplay = remaining.toFixed(1);
                         }
                     }
 
@@ -176,18 +176,45 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     {/* Icon */}
                                     {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.6 }} />}
 
-                                    {/* Cooldown Overlay */}
-                                    {cdPct > 0 && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${cdPct * 100}%`,
-                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                            transition: 'height 0.1s linear'
-                                        }} />
+                                    {player.playerClass === 'stormstrike' ? (
+                                        <>
+                                            {isStormCooldown && cdPct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                    height: `${cdPct * 100}%`,
+                                                    backgroundColor: 'rgba(120, 120, 120, 0.85)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                            {!isStormCooldown && cdPct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', top: 0, left: 0, width: '100%',
+                                                    height: `${cdPct * 100}%`,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                            {!isStormCooldown && stormChargePct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                    height: `${stormChargePct * 100}%`,
+                                                    backgroundColor: 'rgba(234, 179, 8, 0.4)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                        </>
+                                    ) : (
+                                        cdPct > 0 && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${cdPct * 100}%`,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                transition: 'height 0.1s linear'
+                                            }} />
+                                        )
                                     )}
 
-                                    {/* Cooldown Text */}
-                                    {cdPct > 0 && (
+                                    {cdPct > 0 && remainingDisplay && (
                                         <div style={{
                                             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                                             color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
@@ -198,7 +225,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 </div>
                             </div>
 
-                            {player.playerClass === 'eventhorizon' && (
+                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike') && (
                                 <div style={{
                                     position: 'absolute', top: -4, right: -4,
                                     background: '#0f172a', border: '1px solid #475569',
@@ -252,31 +279,38 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 position: 'relative'
                             }}>
                                 {/* Icon (Placeholder or Actual) */}
-                                {skill.icon ? (
-                                    <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: skill.cooldown > 0 ? 0.5 : 1 }} />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
-                                        {t.skill}
-                                    </div>
-                                )}
-
-                                {/* Cooldown Overlay */}
-                                {skill.cooldown > 0 && (
-                                    <div style={{
-                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                        height: `${(skill.cooldown / skill.cooldownMax) * 100}%`,
-                                        background: 'rgba(0, 0, 0, 0.7)',
-                                        transition: 'height 0.1s linear'
-                                    }} />
-                                )}
-                                {skill.cooldown > 0 && (
-                                    <div style={{
-                                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                        color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
-                                    }}>
-                                        {Math.ceil(skill.cooldown)}
-                                    </div>
-                                )}
+                                {(() => {
+                                    const skillCdMod = getCdMod(gameState, player);
+                                    const skillNow = gameState.gameTime;
+                                    const skillProgress = getCDProgress(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
+                                    const skillRemaining = getRemainingCD(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
+                                    const onCd = skillProgress > 0;
+                                    return (<>
+                                        {skill.icon ? (
+                                            <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: onCd ? 0.5 : 1 }} />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
+                                                {t.skill}
+                                            </div>
+                                        )}
+                                        {onCd && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${skillProgress * 100}%`,
+                                                background: 'rgba(0, 0, 0, 0.7)',
+                                                transition: 'height 0.1s linear'
+                                            }} />
+                                        )}
+                                        {onCd && (
+                                            <div style={{
+                                                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                                color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
+                                            }}>
+                                                {Math.ceil(skillRemaining)}
+                                            </div>
+                                        )}
+                                    </>);
+                                })()}
                             </div>
                         </div>
 
@@ -316,11 +350,11 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const kinLvl = getHexLevel(gameState, 'KineticBattery');
                     if (kinLvl <= 0) return null;
 
-                    const cdMod = (isBuffActive(gameState, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
-                    const boltCDMax = 5.0 * cdMod;
-                    const boltElapsed = gameState.gameTime - (player.lastKineticShockwave || 0);
-                    const boltCD = Math.max(0, boltCDMax - boltElapsed);
-                    const boltPct = (boltCD / boltCDMax);
+                    const cdMod = getCdMod(gameState, player);
+                    const kinNow = gameState.gameTime;
+                    const boltProgress = getCDProgress(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, kinNow);
+                    const boltCD = getRemainingCD(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, kinNow);
+                    const boltPct = boltProgress;
 
                     const shieldTimeLeft = Math.max(0, (player.kineticShieldTimer || 0) - gameState.gameTime);
                     const shieldPct = shieldTimeLeft / 60;

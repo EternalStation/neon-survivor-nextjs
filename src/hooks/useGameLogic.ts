@@ -227,6 +227,18 @@ export function useGameLogic({
         state.camera.x = localPlayer.x;
         state.camera.y = localPlayer.y;
 
+        // --- STORM CIRCLE CHARGE UPDATE (Stormstrike Active Ability) ---
+        if (state.player.playerClass === 'stormstrike') {
+            const p = state.player;
+            const maxCharge = GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE;
+            const cooldownEnd = p.stormCircleCooldownEnd ?? 0;
+            const ct = p.stormCircleChargeTime ?? 0;
+
+            if (state.gameTime >= cooldownEnd && ct < maxCharge) {
+                p.stormCircleChargeTime = Math.min(maxCharge, ct + step);
+            }
+        }
+
         // --- VOID MARKER UPDATE (Event Horizon Active Ability) ---
         if (state.player.voidMarkerActive) {
             state.player.voidMarkerX = (state.player.voidMarkerX ?? state.player.x) + (state.player.voidMarkerVx ?? 0) * step;
@@ -251,9 +263,12 @@ export function useGameLogic({
             } else if (effect.type === 'epicenter') {
                 if (Math.random() < 0.4) spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 1.2, effect.y + (Math.random() - 0.5) * effect.radius * 1.2, ['#ffffff', '#22d3ee', '#0ea5e9'], 1, 3, 30, 'spark');
             } else if (effect.type === 'orbital_strike') {
-                // Start of the strike (Charging visual)
                 if (Math.random() < 0.5) {
                     spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius, effect.y + (Math.random() - 0.5) * effect.radius, '#06b6d4', 1, 2, 20, 'spark');
+                }
+            } else if (effect.type === 'storm_laser') {
+                if (Math.random() < 0.4) {
+                    spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 0.6, effect.y + (Math.random() - 0.5) * effect.radius * 0.6, '#06b6d4', 1, 2, 15, 'spark');
                 }
             } else if (effect.type === 'blackhole') {
                 // Blackhole visuals (Event Horizon)
@@ -468,7 +483,7 @@ export function useGameLogic({
                             state.player.damageDealt += dmg;
                             if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
                             if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
-                        } else if (e.isElite || e.isRare) {
+                        } else if ((e.isElite || e.isRare) && e.shape !== 'snitch') {
                             const dmg = (e.maxHp * eliteDps) * step;
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
@@ -483,8 +498,8 @@ export function useGameLogic({
                                 spawnParticles(state, e.x, e.y, '#8b5cf6', 5, 2, 30, 'void');
                                 // Trigger immediate death
                                 handleEnemyDeath(state, e, eventHandler);
-                            } else if (e.shape !== 'worm') {
-                                // Drag damage (Skip for Worms to prevent periodic damage numbers/drain)
+                            } else if (e.shape !== 'worm' && e.shape !== 'snitch') {
+                                // Drag damage (Skip for Worms and Snitch — Snitch only dies at core)
                                 const dmg = (e.maxHp * 0.5) * step; // 50% HP/sec drag dmg
                                 e.hp -= dmg;
                                 if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
@@ -495,7 +510,35 @@ export function useGameLogic({
             }
 
             if (effect.duration <= 0) {
-                if (effect.type === 'orbital_strike') {
+                if (effect.type === 'storm_laser') {
+                    const dmgPct = effect.dmgMult ?? 0.1;
+                    const pDmg = calcStat(state.player.dmg, state.dmgAtkBuffMult);
+                    const dmg = pDmg * dmgPct;
+
+                    state.enemies.forEach(e => {
+                        if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
+                        if (Math.hypot(e.x - effect.x, e.y - effect.y) < effect.radius) {
+                            e.hp -= dmg;
+                            state.player.damageDealt += dmg;
+                            spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true);
+                            spawnParticles(state, e.x, e.y, '#06b6d4', 4);
+                            if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
+                        }
+                    });
+
+                    state.areaEffects.push({
+                        id: Date.now() + Math.random(),
+                        type: 'storm_hit',
+                        x: effect.x,
+                        y: effect.y,
+                        radius: effect.radius,
+                        duration: 0.45,
+                        creationTime: state.gameTime,
+                        level: 1
+                    });
+
+                    playSfx('laser');
+                } else if (effect.type === 'orbital_strike') {
                     // Trigger Massive Damage on Expiry
                     const range = effect.radius;
                     const pDmg = calcStat(state.player.dmg, state.dmgAtkBuffMult);

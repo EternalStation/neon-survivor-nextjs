@@ -191,6 +191,95 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
 
             ctx.restore();
 
+        } else if (effect.type === 'storm_zone') {
+            const alpha = Math.min(1, effect.duration * 3);
+            const baseR = effect.radius || 350;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.beginPath();
+            ctx.arc(0, 0, baseR, 0, Math.PI * 2);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([14, 10]);
+            ctx.lineDashOffset = -(state.gameTime * 60) % 24;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 1;
+            ctx.restore();
+
+        } else if (effect.type === 'storm_laser') {
+            const initialDuration = effect.pulseTimer || 0.15;
+            const progress = Math.min(1, 1 - (effect.duration / initialDuration));
+            const visR = (effect.radius || 120) * 0.55;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+
+            ctx.beginPath();
+            ctx.arc(0, 0, visR, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.08 + progress * 0.12})`;
+            ctx.fill();
+
+            ctx.rotate(state.gameTime * 4);
+            ctx.beginPath();
+            ctx.arc(0, 0, visR * (1 - progress * 0.3), 0, Math.PI * 2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.35 + progress * 0.65})`;
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.beginPath();
+            ctx.arc(0, 0, visR * 0.18, 0, Math.PI * 2);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+
+        } else if (effect.type === 'storm_hit') {
+            const lifeTime = state.gameTime - effect.creationTime;
+            const beamDuration = 0.35;
+            const radius = effect.radius || 120;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+
+            if (lifeTime < beamDuration) {
+                const beamAlpha = 1 - (lifeTime / beamDuration);
+                const beamHeight = 2000;
+                const beamWidth = radius * 0.9;
+
+                const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
+                beamGrad.addColorStop(0, `rgba(56, 189, 248, 0)`);
+                beamGrad.addColorStop(0.25, `rgba(186, 230, 253, ${0.45 * beamAlpha})`);
+                beamGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.85 * beamAlpha})`);
+                beamGrad.addColorStop(0.75, `rgba(186, 230, 253, ${0.45 * beamAlpha})`);
+                beamGrad.addColorStop(1, `rgba(56, 189, 248, 0)`);
+                ctx.fillStyle = beamGrad;
+                ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
+
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * beamAlpha})`;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -beamHeight);
+                ctx.stroke();
+
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = `rgba(56, 189, 248, ${0.35 * beamAlpha})`;
+                ctx.beginPath();
+                ctx.moveTo(-radius * 0.35, 0); ctx.lineTo(-radius * 0.35, -beamHeight);
+                ctx.moveTo(radius * 0.35, 0); ctx.lineTo(radius * 0.35, -beamHeight);
+                ctx.stroke();
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            ctx.restore();
+
         } else if (effect.type === 'crater') {
             // CRATER + BEAM (Lasts 5s)
 
