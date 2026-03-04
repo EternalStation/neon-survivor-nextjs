@@ -67,6 +67,8 @@ export const GAME_CONFIG = {
         KINETIC_ZAP_COOLDOWN: 5.0,
         BLACKHOLE_COOLDOWN: 10,
         COSMIC_COOLDOWN: 8,
+        STORM_CIRCLE_MAX_CHARGE: 10,
+        STORM_CIRCLE_RECHARGE_DELAY: 3,
 
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,

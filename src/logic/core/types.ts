@@ -56,7 +56,7 @@ export interface ActiveSkill {
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'storm_laser' | 'storm_zone' | 'storm_hit';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -68,9 +68,9 @@ export interface AreaEffect {
     level: number;
     // Puddle props
     tickTimer?: number;
-    // Epicenter props
-    casterId?: number; // Player ID?
+    casterId?: number;
     pulseTimer?: number;
+    dmgMult?: number;
 }
 
 export interface Player {
@@ -141,6 +141,8 @@ export interface Player {
     classShotCount?: number; // For Storm-Strike Hyper-Pulse
     lastCosmicStrikeTime?: number;
     lastBlackholeUse?: number;
+    stormCircleChargeTime?: number;
+    stormCircleCooldownEnd?: number;
     deathCause?: string; // Reason for game over
     lastHitDamage?: number; // Final hit damage that killed the player
     lastDamageTime?: number; // Timestamp when player took damage

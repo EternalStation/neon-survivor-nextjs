@@ -10,6 +10,7 @@ import { getCdMod, isOnCooldown } from '../logic/utils/CooldownUtils';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
+import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { BlueprintType } from '../logic/core/types';
 
 import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
@@ -127,10 +128,56 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 e.preventDefault();
             }
 
-            // CLASS ABILITY TRIGGER (Event Horizon: Void Marker)
+            // CLASS ABILITY TRIGGER
             if (code === (keybinds.classAbility || 'keye').toLowerCase()) {
                 const state = gameState.current;
                 const player = state.player;
+
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'stormstrike') {
+                    const ct = Math.max(0, Math.min(GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE, player.stormCircleChargeTime ?? 0));
+                    if (ct > 0) {
+                        const resonance = getChassisResonance(state);
+                        const strikeRadius = 350 * (1 + resonance * 0.25);
+                        const laserAoe = 120 * (1 + resonance * 0.25);
+                        const laserCount = Math.max(4, Math.round(4 + Math.max(0, ct - 1) * 8 / 9));
+                        const dmgMult = 0.1 + Math.max(0, ct - 1) * (1.4 / 9);
+                        const lastLaserDelay = 0.15 + (laserCount - 1) * 0.15;
+
+                        state.areaEffects.push({
+                            id: Date.now() + Math.random(),
+                            type: 'storm_zone',
+                            x: player.x,
+                            y: player.y,
+                            radius: strikeRadius,
+                            duration: lastLaserDelay + 0.3,
+                            creationTime: state.gameTime,
+                            level: 1
+                        });
+
+                        for (let i = 0; i < laserCount; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const dist = 50 + Math.random() * (strikeRadius - 50);
+                            state.areaEffects.push({
+                                id: Date.now() + Math.random(),
+                                type: 'storm_laser',
+                                x: player.x + Math.cos(angle) * dist,
+                                y: player.y + Math.sin(angle) * dist,
+                                radius: laserAoe,
+                                duration: 0.15 + i * 0.15,
+                                creationTime: state.gameTime,
+                                level: 1,
+                                casterId: 1,
+                                dmgMult,
+                                pulseTimer: 0.15 + i * 0.15
+                            });
+                        }
+
+                        playSfx('lock-on');
+                        player.stormCircleChargeTime = 0;
+                        player.stormCircleCooldownEnd = state.gameTime + GAME_CONFIG.SKILLS.STORM_CIRCLE_RECHARGE_DELAY;
+                    }
+                }
+
                 if (!state.isPaused && !state.gameOver && player.playerClass === 'eventhorizon') {
                     const now = state.gameTime;
                     const cdMod = getCdMod(state, player);
@@ -155,7 +202,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         const dx = mousePos.current.x - window.innerWidth / 2;
                         const dy = mousePos.current.y - window.innerHeight / 2;
                         const angle = Math.atan2(dy, dx);
-                        const MARKER_SPEED = 1200;
+                        const MARKER_SPEED = 800;
                         player.voidMarkerActive = true;
                         player.voidMarkerX = player.x;
                         player.voidMarkerY = player.y;

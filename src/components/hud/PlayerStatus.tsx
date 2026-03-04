@@ -114,13 +114,27 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     let remainingDisplay = '';
                     let isReady = false;
                     let show = false;
+                    let isStormCooldown = false;
+                    let stormChargePct = 0;
 
                     if (player.playerClass === 'stormstrike') {
                         show = true;
-                        const remaining = getRemainingCD(player.lastCosmicStrikeTime ?? -999999, GAME_CONFIG.SKILLS.COSMIC_COOLDOWN, cdMod, now);
-                        cdPct = getCDProgress(player.lastCosmicStrikeTime ?? -999999, GAME_CONFIG.SKILLS.COSMIC_COOLDOWN, cdMod, now);
-                        isReady = remaining <= 0;
-                        if (!isReady) remainingDisplay = remaining.toFixed(1);
+                        const maxCharge = GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE;
+                        const cooldownEnd = player.stormCircleCooldownEnd ?? 0;
+                        const ct = player.stormCircleChargeTime ?? 0;
+                        const onCooldown = now < cooldownEnd;
+                        isStormCooldown = onCooldown;
+
+                        if (onCooldown) {
+                            const remaining = cooldownEnd - now;
+                            cdPct = remaining / GAME_CONFIG.SKILLS.STORM_CIRCLE_RECHARGE_DELAY;
+                            remainingDisplay = remaining.toFixed(1);
+                            isReady = false;
+                        } else {
+                            stormChargePct = Math.sqrt(ct / maxCharge);
+                            cdPct = 1 - stormChargePct;
+                            isReady = ct >= maxCharge;
+                        }
                     } else if (player.playerClass === 'eventhorizon') {
                         show = true;
                         if (player.voidMarkerActive) {
@@ -162,18 +176,45 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     {/* Icon */}
                                     {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.6 }} />}
 
-                                    {/* Cooldown Overlay */}
-                                    {cdPct > 0 && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${cdPct * 100}%`,
-                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                            transition: 'height 0.1s linear'
-                                        }} />
+                                    {player.playerClass === 'stormstrike' ? (
+                                        <>
+                                            {isStormCooldown && cdPct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                    height: `${cdPct * 100}%`,
+                                                    backgroundColor: 'rgba(120, 120, 120, 0.85)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                            {!isStormCooldown && cdPct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', top: 0, left: 0, width: '100%',
+                                                    height: `${cdPct * 100}%`,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                            {!isStormCooldown && stormChargePct > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                    height: `${stormChargePct * 100}%`,
+                                                    backgroundColor: 'rgba(234, 179, 8, 0.4)',
+                                                    transition: 'height 0.1s linear'
+                                                }} />
+                                            )}
+                                        </>
+                                    ) : (
+                                        cdPct > 0 && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${cdPct * 100}%`,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                transition: 'height 0.1s linear'
+                                            }} />
+                                        )
                                     )}
 
-                                    {/* Cooldown Text */}
-                                    {cdPct > 0 && (
+                                    {cdPct > 0 && remainingDisplay && (
                                         <div style={{
                                             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                                             color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
@@ -184,7 +225,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 </div>
                             </div>
 
-                            {player.playerClass === 'eventhorizon' && (
+                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike') && (
                                 <div style={{
                                     position: 'absolute', top: -4, right: -4,
                                     background: '#0f172a', border: '1px solid #475569',

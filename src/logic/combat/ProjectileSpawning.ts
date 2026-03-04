@@ -3,7 +3,6 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
-import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
@@ -123,70 +122,6 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     let pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
     let bulletColor: string | undefined = pClass?.themeColor;
     let bulletPierce = pierce;
-    // Malware pierce logic is now handled in player.pierce initialization in GameState.ts
-
-
-    // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
-    if (player.playerClass === 'stormstrike') {
-        const now = state.gameTime;
-        const cdMod = getCdMod(state, player);
-        if (!isOnCooldown(player.lastCosmicStrikeTime ?? -999999, GAME_CONFIG.SKILLS.COSMIC_COOLDOWN, cdMod, now)) {
-            playSfx('lock-on');
-            player.lastCosmicStrikeTime = now;
-
-            // Determine Impact Point
-            let tx = player.targetX;
-            let ty = player.targetY;
-
-            // Range-limited Targeting Logic (1000px)
-            const maxRange = 1000;
-            const liveEnemies = state.enemies.filter(e => {
-                if (e.dead || e.isFriendly || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return false;
-                const d = Math.hypot(e.x - x, e.y - y);
-                return d <= maxRange;
-            });
-
-            if (liveEnemies.length > 0) {
-                const randomEnemy = liveEnemies[Math.floor(Math.random() * liveEnemies.length)];
-                tx = randomEnemy.x;
-                ty = randomEnemy.y;
-            } else {
-                // Fallback if no enemies within range: Project out from cursor/aim up to maxRange
-                const angleToUse = (tx !== undefined && ty !== undefined)
-                    ? Math.atan2(ty - player.y, tx - player.x)
-                    : (angle + offsetAngle);
-
-                tx = x + Math.cos(angleToUse) * maxRange;
-                ty = y + Math.sin(angleToUse) * maxRange;
-            }
-
-            // Apply Resonance to Radius
-            const resonance = getChassisResonance(state);
-            const baseRadius = 100;
-            // 100% + Resonance% (e.g. 50% resonance -> 1.5 multiplier)
-            const radius = baseRadius * (1 + resonance);
-
-            state.areaEffects.push({
-                id: Date.now() + Math.random(),
-                type: 'orbital_strike',
-                x: tx,
-                y: ty,
-                radius: radius,
-                duration: 0.3, // 0.3s delay (Reverted to ensure hits)
-                creationTime: Date.now(),
-                level: 1,
-                casterId: player.playerClass === 'stormstrike' ? 1 : 0
-            });
-
-            // Visual Marker immediately
-            // spawnParticles(state, tx, ty, '#38bdf8', 1, 150, 0, 'shockwave'); // Removed as per request
-
-            return; // STOP! Do not spawn a bullet.
-        }
-    }
-
-    // --- CLASS MODIFIERS: Stinger -> Stinger id is gone, replaced by others. 
-    // Wait, I should use the new IDs.
     const classStats = PLAYER_CLASSES.find(c => c.id === player.playerClass);
     const resonance = getChassisResonance(state);
 
