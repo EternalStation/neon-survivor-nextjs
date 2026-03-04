@@ -1,6 +1,22 @@
 import type { GameState, Meteorite, LegendaryHex } from '../core/types';
 import { isBuffActive } from './BlueprintLogic';
 
+const FORGE_MAP: Record<string, string> = {
+    'Economic': 'Exis',
+    'Combat': 'Apex',
+    'Defensive': 'Bastion'
+};
+
+function hasCategory(hex: LegendaryHex, cat: string): boolean {
+    if (hex.category === cat) return true;
+    if (hex.categories?.includes(cat as any)) return true;
+    if (hex.forgedAt) {
+        const forgeName = FORGE_MAP[cat];
+        if (forgeName && hex.forgedAt.includes(forgeName)) return true;
+    }
+    return false;
+}
+
 export interface PerkResult {
     activeValue: number;
     count: number;
@@ -58,8 +74,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                         const matchingHexIndices = hexConnData.indices.filter(hIdx => {
                             const hex = state.moduleSockets.hexagons[hIdx];
                             if (!hex) return false;
-                            if (hex.categories) return hex.categories.includes(targetHexType);
-                            return hex.category === targetHexType;
+                            return hasCategory(hex, targetHexType);
                         });
                         if (matchingHexIndices.length > 0) {
                             count = 1;
@@ -117,9 +132,9 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
                     if (sector === targetSector && hexConnData.hexes.length >= 2) {
-                        const categories = [hexConnData.hexes[0].category, hexConnData.hexes[1].category].sort();
-                        const targets = [t1, t2].sort();
-                        if (categories[0] === targets[0] && categories[1] === targets[1]) {
+                        const h1 = hexConnData.hexes[0];
+                        const h2 = hexConnData.hexes[1];
+                        if ((hasCategory(h1, t1) && hasCategory(h2, t2)) || (hasCategory(h1, t2) && hasCategory(h2, t1))) {
                             count = 1;
                             conns.sectors.push(targetSector);
                             conns.hexagons.push(...hexConnData.indices);
@@ -133,18 +148,10 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
                     const matchingNeighborIdxs = neighbors.indices.filter(nIdx => state.moduleSockets.diamonds[nIdx]?.quality === targetQuality);
-                    const isBridge = hexConnData.hexes.length >= 2 && (() => {
-                        const getCat = (h: LegendaryHex) => h.categories || [h.category];
-                        const c1 = getCat(hexConnData.hexes[0]);
-                        const c2 = getCat(hexConnData.hexes[1]);
-                        const targets = [t1, t2].sort();
-
-                        // Check if any combination of categories matches targets
-                        return c1.some(cat1 => c2.some(cat2 => {
-                            const sortedActual = [cat1, cat2].sort();
-                            return sortedActual[0] === targets[0] && sortedActual[1] === targets[1];
-                        }));
-                    })();
+                    const isBridge = hexConnData.hexes.length >= 2 && (
+                        (hasCategory(hexConnData.hexes[0], t1) && hasCategory(hexConnData.hexes[1], t2)) ||
+                        (hasCategory(hexConnData.hexes[0], t2) && hasCategory(hexConnData.hexes[1], t1))
+                    );
                     if (matchingNeighborIdxs.length > 0 && isBridge) {
                         count = 1;
                         conns.diamonds.push(...matchingNeighborIdxs);

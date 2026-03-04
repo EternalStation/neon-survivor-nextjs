@@ -89,6 +89,22 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     state.score += soulCount;
     recordLegendarySouls(state, soulCount);
 
+    // --- GRAVITATIONAL HARVEST: Duration Extension ---
+    const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
+    if (harvestLvl > 0) {
+        // Check if killed within an epicenter
+        const epi = state.areaEffects.find(ae => ae.type === 'epicenter' && Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius);
+        if (epi) {
+            const extension = 0.1; // 0.1 seconds per kill
+            epi.duration += extension;
+            // Also extend player's skill active state if possible
+            const skill = state.player.activeSkills.find(s => s.type === 'GravitationalHarvest');
+            if (skill && skill.duration !== undefined) {
+                skill.duration += extension;
+            }
+        }
+    }
+
     // Add to SoulShatter pool
     if (shatterLvl > 0) {
         state.player.soulShatterSouls = (state.player.soulShatterSouls || 0) + finalSoulCount;

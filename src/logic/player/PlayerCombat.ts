@@ -308,6 +308,28 @@ export function handleEnemyContact(
                     player.damageTaken += actualDmg;
                     player.lastHitDamage = actualDmg;
                     triggerDamageTaken?.(actualDmg);
+
+                    // --- GRAVITATIONAL HARVEST: Damage Reflection ---
+                    const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
+                    if (harvestLvl > 0) {
+                        const reflectedDmg = actualDmg * 0.10;
+                        state.areaEffects.filter(ae => ae.type === 'epicenter').forEach(ae => {
+                            state.enemies.forEach(target => {
+                                if (!target.dead && !target.isFriendly) {
+                                    const d = Math.hypot(target.x - ae.x, target.y - ae.y);
+                                    if (d < ae.radius) {
+                                        target.hp -= reflectedDmg;
+                                        player.damageDealt += reflectedDmg;
+                                        spawnFloatingNumber(state, target.x, target.y, Math.round(reflectedDmg).toString(), '#ef4444', false);
+                                        if (target.hp <= 0 && !target.dead) {
+                                            handleEnemyDeath(state, target, onEvent);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                    }
+
                     if (state.gameTime - (player.lastDamageTime ?? -999) >= 1.5) {
                         player.lastDamageTime = state.gameTime;
                     }
@@ -399,7 +421,7 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     if (kinLvl < 1) return;
     const now = state.gameTime;
     const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
-    if (player.lastKineticShockwave && now < player.lastKineticShockwave + (5.0 * cdMod)) return;
+    if (player.lastKineticShockwave && now < player.lastKineticShockwave + (8.0 * cdMod)) return;
 
     player.lastKineticShockwave = now;
     const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 1.0; // Updated to 100% Armor
@@ -434,14 +456,20 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
 
         state.pendingZaps.push({
             targetIds, dmg: shockDmg, nextZapTime: now, currentIndex: 0,
-            sourcePos: { x: sx, y: sy }, history: []
+            sourcePos: { x: sx, y: sy }, history: [],
+            travelProgress: 0, isHunting: true, color: '#60a5fa',
+            applyStun: kinLvl >= 4
         });
         playSfx('wall-shock');
     }
 }
 
-export function triggerKineticBolt(state: GameState, player: Player, source: { x: number, y: number }, targets: number, dmg: number, applyBleed: boolean = false) {
+export function triggerZombieZap(state: GameState, player: Player, source: { x: number, y: number }) {
     const now = state.gameTime;
+    if (!state.pendingZaps) state.pendingZaps = [];
+
+    // Use 20% Armor Damage (matching the theme of Blood Forged Capacitor)
+    const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 0.2;
 
     let first: Enemy | null = null;
     let minD = Infinity;
@@ -452,10 +480,10 @@ export function triggerKineticBolt(state: GameState, player: Player, source: { x
     });
 
     if (first) {
-        if (!state.pendingZaps) state.pendingZaps = [];
-        const targetIds: number[] = [(first as Enemy).id];
+        const targetIds: number[] = [(first as any).id];
         let currentInChain: Enemy = first;
-        for (let i = 0; i < targets - 1; i++) {
+        // Total 3 targets (1st + 2 chain steps)
+        for (let i = 0; i < 2; i++) {
             let best: Enemy | null = null;
             let bestD = Infinity;
             state.enemies.forEach((cand: Enemy) => {
@@ -463,15 +491,111 @@ export function triggerKineticBolt(state: GameState, player: Player, source: { x
                 const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
                 if (d < bestD) { bestD = d; best = cand; }
             });
-            if (best) { targetIds.push((best as Enemy).id); currentInChain = best; }
-            else break;
+            if (best) {
+                targetIds.push((best as any).id);
+                currentInChain = best;
+            } else break;
         }
 
         state.pendingZaps.push({
-            targetIds, dmg, nextZapTime: now, currentIndex: 0,
+            targetIds, dmg: shockDmg, nextZapTime: now, currentIndex: 0,
             sourcePos: { x: source.x, y: source.y }, history: [],
-            applyBleed
+            travelProgress: 0, isHunting: true, color: '#4ade80', // Green for zombies
+            applyStun: false,
+            applyBleed: true // Inheritance of merge properties
         });
+        playSfx('wall-shock');
+    }
+}
+
+export function spawnHuntingLine(state: GameState, x1: number, y1: number, x2: number, y2: number, color: string, progress: number) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const steps = Math.floor(dist / 4);
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const time = state.frameCount * 0.15;
+
+    for (let i = 0; i <= steps * progress; i++) {
+        const t = i / steps;
+        // Anchor the start by scaling wobble by t
+        const wobbleFactor = Math.min(1.0, t * 10);
+        const wobble = (Math.sin(t * Math.PI * 3 + time) * 8 + Math.cos(t * Math.PI * 1.5 - time * 0.5) * 4) * wobbleFactor;
+
+        const px = x1 + (x2 - x1) * t + Math.cos(angle + Math.PI / 2) * wobble;
+        const py = y1 + (y2 - y1) * t + Math.sin(angle + Math.PI / 2) * wobble;
+
+        // Core line
+        state.particles.push({
+            x: px, y: py, vx: 0, vy: 0, life: 8, color: '#fff',
+            size: 0.6, type: 'spark', alpha: 1.0
+        });
+        // Glow
+        state.particles.push({
+            x: px, y: py, vx: 0, vy: 0, life: 12, color: color,
+            size: 1.5, type: 'spark', alpha: 0.4
+        });
+    }
+}
+
+export function triggerKineticBolt(state: GameState, player: Player, source: { x: number, y: number }, targets: number, dmg: number, applyBleed: boolean = false, applyStun: boolean = false) {
+    const now = state.gameTime;
+    if (!state.pendingZaps) state.pendingZaps = [];
+
+    // Find nearest enemies
+    const sortedEnemies = state.enemies
+        .filter(e => !e.dead && !e.isNeutral && e.wormBurrowState !== 'underground')
+        .map(e => ({ e, d: Math.hypot(e.x - source.x, e.y - source.y) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, targets);
+
+    sortedEnemies.forEach(entry => {
+        state.pendingZaps!.push({
+            targetIds: [entry.e.id],
+            dmg,
+            nextZapTime: now,
+            currentIndex: 0,
+            sourcePos: { x: source.x, y: source.y },
+            applyBleed,
+            travelProgress: 0,
+            isHunting: true,
+            color: '#dc2626', // Red for merged upgrade
+            history: [],
+            applyStun
+        });
+    });
+
+    if (sortedEnemies.length > 0) {
+        playSfx('impact');
+    }
+}
+
+export function triggerStaticBolt(state: GameState, player: Player, source: { x: number, y: number }, targets: number, dmg: number, applyBleed: boolean = false) {
+    const now = state.gameTime;
+    if (!state.pendingZaps) state.pendingZaps = [];
+
+    // Find nearest enemies
+    const sortedEnemies = state.enemies
+        .filter(e => !e.dead && !e.isNeutral && e.wormBurrowState !== 'underground')
+        .map(e => ({ e, d: Math.hypot(e.x - source.x, e.y - source.y) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, targets);
+
+    sortedEnemies.forEach(entry => {
+        state.pendingZaps!.push({
+            targetIds: [entry.e.id],
+            dmg,
+            nextZapTime: now,
+            currentIndex: 0,
+            sourcePos: { x: source.x, y: source.y },
+            applyBleed,
+            travelProgress: 0,
+            isHunting: true,
+            color: '#dc2626', // Red for Static Bolt
+            history: [],
+            applyStun: false // Shattered Capacitor Static Bolt never stuns
+        });
+    });
+
+    if (sortedEnemies.length > 0) {
         playSfx('impact');
     }
 }
@@ -480,12 +604,28 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
     if (!state.pendingZaps || state.pendingZaps.length === 0) return;
     for (let i = state.pendingZaps.length - 1; i >= 0; i--) {
         const zap = state.pendingZaps[i];
-        if (state.gameTime >= zap.nextZapTime) {
-            const target = state.enemies.find(e => e.id === zap.targetIds[zap.currentIndex]);
-            if (target && !target.dead) {
+        const target = state.enemies.find(e => e.id === zap.targetIds[zap.currentIndex]);
+
+        if (target && !target.dead) {
+            // Smoothly increase travel progress
+            zap.travelProgress = (zap.travelProgress || 0) + 0.25;
+
+            // USE REAL-TIME POSITION: Update destination to enemy's current x/y
+            const destX = target.x;
+            const destY = target.y;
+
+            // Draw the hunting line every frame targeting current position
+            const boltColor = zap.color || '#60a5fa';
+            spawnHuntingLine(state, zap.sourcePos.x, zap.sourcePos.y, destX, destY, boltColor, Math.min(1, zap.travelProgress));
+
+            // When it reaches the target, apply damage and move to next
+            if (zap.travelProgress >= 1.0) {
                 target.hp -= zap.dmg;
                 spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
                 if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
+                else if (zap.applyStun) {
+                    target.stunnedUntil = Math.max(target.stunnedUntil || 0, state.gameTime + 0.5);
+                }
 
                 const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
                 const player = state.player;
@@ -497,22 +637,29 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
 
                 if (zap.applyBleed) {
                     const armorValue = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0);
-                    // 15% Armor dmg over 3s = 6 ticks of 2.5% armor each (if dotFreq is 30 in EnemyIndividualUpdate)
                     target.bleedDmg = armorValue * 0.025;
-                    target.bleedTimer = 180; // 3 seconds
+                    target.bleedTimer = 180;
                     target.bleedAccumulator = 0;
                 }
-                // Increased life to 15 for better visibility
-                spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 15);
-                state.particles.push({ x: target.x, y: target.y, vx: 0, vy: 0, life: 10, color: '#60a5fa', size: 20, type: 'shockwave', alpha: 0.8 });
+
+                const boltColor = zap.color || '#60a5fa';
+                state.particles.push({ x: target.x, y: target.y, vx: 0, vy: 0, life: 10, color: boltColor, size: 20, type: 'shockwave', alpha: 0.8 });
+
                 zap.currentIndex++;
-                zap.nextZapTime = state.gameTime + 0.016;
                 zap.sourcePos = { x: target.x, y: target.y };
-                if (zap.currentIndex >= zap.targetIds.length) state.pendingZaps.splice(i, 1);
+                zap.travelProgress = 0; // Reset for next target
+
+                if (zap.currentIndex >= zap.targetIds.length) {
+                    state.pendingZaps.splice(i, 1);
+                }
+            }
+        } else {
+            // Target dead, move on immediately
+            zap.currentIndex++;
+            if (zap.currentIndex >= zap.targetIds.length) {
+                state.pendingZaps.splice(i, 1);
             } else {
-                zap.currentIndex++;
-                if (zap.currentIndex >= zap.targetIds.length) state.pendingZaps.splice(i, 1);
-                else zap.nextZapTime = state.gameTime;
+                zap.travelProgress = 0;
             }
         }
     }

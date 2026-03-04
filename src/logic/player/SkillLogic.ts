@@ -3,6 +3,7 @@ import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
+import { calcStat } from '../utils/MathUtils';
 
 export function castSkill(state: GameState, skillIndex: number) {
     // 0-indexed skill slot
@@ -36,8 +37,8 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.duration = 10; // Track active duration for UI/Logic
     }
 
-    if (skill.type === 'DefEpi') {
-        const level = getHexLevel(state, 'DefEpi');
+    if (skill.type === 'DefEpi' || skill.type === 'GravitationalHarvest') {
+        const level = getHexLevel(state, skill.type as any);
 
         state.areaEffects.push({
             id: Math.random(),
@@ -123,5 +124,46 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.cooldown = skill.cooldownMax;
         skill.inUse = true;
         skill.duration = duration;
+    }
+
+    if (skill.type === 'ChronoDevourer') {
+        const mult = getHexMultiplier(state, 'ChronoDevourer');
+        const shieldPieces = state.player.shieldChunks || [];
+        const totalShield = shieldPieces.reduce((sum, chunk) => sum + Math.max(0, chunk.amount), 0);
+        const totalArmor = calcStat(state.player.arm);
+
+        const damage = (totalArmor + totalShield) * mult;
+
+        // Remove all shields
+        state.player.shieldChunks = [];
+        state.player.shield = 0; // Legacy
+
+        const radius = 600 * mult;
+
+        state.areaEffects.push({
+            id: Math.random(),
+            type: 'temporal_burst',
+            x: state.player.x,
+            y: state.player.y,
+            radius,
+            duration: 0.5,
+            creationTime: state.gameTime,
+            level: 5
+        });
+
+        // Deal damage
+        state.enemies.forEach(e => {
+            if (!e.dead && !e.boss && !e.isFriendly) {
+                const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
+                if (dist <= radius) {
+                    e.hp -= damage;
+                }
+            }
+        });
+
+        skill.cooldownMax = 15 * cdMod;
+        skill.cooldown = skill.cooldownMax;
+        skill.inUse = true;
+        skill.duration = 0.5;
     }
 }

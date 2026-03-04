@@ -369,10 +369,13 @@ export const UI_TRANSLATIONS = {
             NeuralSingularity: { name: 'THE NEURAL SINGULARITY', desc: 'A mind-bending fusion of Neural Harvest and Terror Pulse. Extends fear based on your enlightenment.', skillDesc: 'Releases a massive wave of fear. Fear duration increased by 0.1s per 500 XP per kill. Cooldown reduced by 0.1s per level.' },
             KineticTsunami: { name: 'THE KINETIC TSUNAMI', desc: 'A devastating fusion of Storm of Steel and Terror Pulse. Sonic avalanches harvest kinetic trauma to amplify your power.', skillDesc: 'Releases a devastating sonic wave. Wave damage is increased by 1% for every 100 souls harvested by Storm of Steel. Wave cooldown permanently reduced by 0.01s for every enemy killed by the wave.' },
             SoulShatterCore: { name: 'THE SOUL-SHATTER CORE', desc: 'A critical fusion of Shattered Fate and Storm of Steel. Extends critical lethality through soul harvesting.' },
-            BloodForgedCapacitor: { name: 'THE BLOOD-FORGED CAPACITOR', desc: '20% of your armour dealth to 2 nearby enemies on projectile hit. 15% dmg of your armour applied as bleeding to your enemeis on hit for 3 seconds.' },
+            BloodForgedCapacitor: { name: 'THE BLOOD-FORGED CAPACITOR', desc: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.', skillDesc: 'Zombie consumption has a 10% chance to cast a Green Kinetic Bolt that deals 20% Armor DMG and chains to 3 targets.' },
             GravityAnchor: { name: 'THE GRAVITY ANCHOR', desc: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.' },
             TemporalMonolith: { name: 'THE TEMPORAL MONOLITH', desc: 'A timeless monolith forged from raw endurance. Converts kinetic energy into temporal acceleration.', skillDesc: 'Releases a wave of temporal energy. Freezes all enemies within 400px for 4s. Enemies that die while frozen shatter for 25% MAX HP AOE damage.' },
             NeutronStar: { name: 'THE NEUTRON STAR', desc: 'A stellar collapse between Essence Syphon and Radiation Core. [EVENT HORIZON] Radiation damage increased by 2% for every 100 Max HP. 0.01% Aura DMG increase for kills by your Radiant Aura and double souls for Essence Syphon.' },
+            GravitationalHarvest: { name: 'THE GRAVITATIONAL HARVEST', desc: 'A stellar resonance between Essence Syphon and Epicenter. Kills within the well extend its duration. 10% of damage taken is reflected to trapped enemies.', skillDesc: 'Drops crystalline spikes (Radius: 500px) that pull enemies. Duration +0.1s on kill. Reflects 10% damage taken to trapped enemies. Recharges in 30s.' },
+            ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of your Armor dealt as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Static bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
+            ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Active: Explodes all shields to deal AOE damage (Radius 600px) based on Armor + Shield value. Zombies have 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.' },
             perks: {
                 EcoDMG: ["+0.1 DMG per kill", "+0.1 ATC per kill", "+0.05% DMG per kill", "+0.05% ATC per kill"],
                 EcoXP: ["+0.1 XP per kill", "+0.05 Dust per kill", "+0.1 Flux per kill", "+0.1% XP per kill"],
@@ -388,7 +391,7 @@ export const UI_TRANSLATIONS = {
                 ],
                 DefEpi: ["25% of players DMG dealt every second and slows for 50%", "2% Pull strength towards the center", "20% Radius grows over 10s", "5% MAX HP threshold to execute enemy"],
                 CombShield: ["+0.01 Armor per kill", "+0.01% DMG reduction from Collision per kill", "+0.01% DMG reduction from Projectile per kill", "+0.05% Armor per kill"],
-                KineticBattery: ["100% Armor DMG Shockwave, 10 Targets (On Damage, 5s CD)", "100% Armor granted as Shield every 1 Minute", "100% Armor increase when HP below 50%", "0.25% Cooldown Reduction per minute"],
+                KineticBattery: ["100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "100% Armor granted as Shield every 1 Minute", "100% Armor increase when HP below 50%", "0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
                 RadiationCore: ["5% of Players MAX HP/sec is dealt to enemies in 500px", "0.2% MAX HP/sec heals player per enemy in Radiation Aura", "1% Additional Radiation Aura DMG per 1% of your Missing HP", "2.0% of MAX HP/sec enemies lose every sec MAP wide"],
                 ChronoPlating: ["1% of your Armor increased your DMG%", "1% of your Armor increased your HP%", "0.25% Cooldown reduction every minute", "1% of your Armor increased your HP/sec%"],
                 XenoAlchemist: [
@@ -468,18 +471,18 @@ export const UI_TRANSLATIONS = {
                 ],
                 BloodForgedCapacitor: [
                     "GROUP:THE BLOOD-FORGED CAPACITOR",
-                    "20% of your armour dealth to 2 nearby enemies on projectile hit",
-                    "15% dmg of your armour applied as bleeding to your enemeis on hit for 3 seconds",
+                    "Kinetic Shockwaves trigger 1% Lifesteal from total damage dealt",
+                    "Zombie Consumption has 10% chance to trigger a Green Kinetic Bolt",
                     "GROUP:CRIMSON FEAST",
                     "3% Lifesteal of DMG dealt by your Projectiles",
                     "5s Overheal becomes Shield",
                     "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
                     "10% Zombie Spawn Chance (5s Delay, Feasters)",
                     "GROUP:KINETIC BATTERY",
-                    "100% Armor DMG Shockwave, 10 Targets (On Damage, 5s CD)",
+                    "100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
                     "100% Armor granted as Shield every 1 Minute",
                     "100% Armor increase when HP below 50%",
-                    "0.25% Cooldown Reduction per minute"
+                    "0.5s Stun enemies hit by Kinetic Bolt (Chain)"
                 ],
                 GravityAnchor: [
                     "GROUP:THE GRAVITY ANCHOR",
@@ -525,6 +528,51 @@ export const UI_TRANSLATIONS = {
                     "0.2% MAX HP/sec heals player per enemy in Radiation Aura",
                     "1% Additional Radiation Aura DMG per 1% of your Missing HP",
                     "2.0% of MAX HP/sec enemies lose every sec MAP-WIDE"
+                ],
+                GravitationalHarvest: [
+                    "GROUP:SINGULARITY HARVEST",
+                    "0.1 Duration extension for every kill within Epicenter",
+                    "10% of DMG taken reflected to all enemies inside epicenter",
+                    "GROUP:ESSENCE SYPHON (ENHANCED)",
+                    "+0.2 Max HP per kill",
+                    "+0.06 HP/sec per kill",
+                    "+0.2% Max HP per kill",
+                    "+0.06% HP/sec per kill",
+                    "GROUP:EPICENTER",
+                    "LVL 1 25% of players DMG dealt every second and slows for 50%",
+                    "LVL 2 2% Pull strength towards the center",
+                    "LVL 3 20% Radius grows over 10s",
+                    "LVL 4 5% MAX HP threshold to execute enemy"
+                ],
+                ShatteredCapacitor: [
+                    "GROUP:THE SHATTERED CAPACITOR",
+                    "20% of your total Armor dealt to 2 nearby enemies on Projectile Hit",
+                    "15% of total Armor as Bleed over 3 seconds to enemies hit by Kinetic Bolt",
+                    "GROUP:SHATTERED FATE",
+                    "+15% Crit Chance",
+                    "+7% Execute Non Bosses on Hit",
+                    "Death Marks Enemy to receive +300% DMG from you (CD 10s)",
+                    "+3% Execute Boss on Hit",
+                    "GROUP:KINETIC BATTERY",
+                    "100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
+                    "100% Armor granted as Shield every 1 Minute",
+                    "100% Armor increase when HP below 50%",
+                    "0.5s Stun enemies hit by Kinetic Bolt (Chain)"
+                ],
+                ChronoDevourer: [
+                    "GROUP:THE CHRONO-DEVOURER",
+                    "10% Cooldown Recovery Speed increase for 1sec every time zombie successfully consumes enemy",
+                    "10% Chance for zombies to consume enemy on first bite",
+                    "GROUP:CRIMSON FEAST",
+                    "3% Lifesteal of DMG dealt by your Projectiles",
+                    "5s Overheal becomes Shield",
+                    "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
+                    "10% Zombie Spawn Chance (5s Delay, Feasters)",
+                    "GROUP:CHRONO PLATING",
+                    "1% of your Armor increased your DMG%",
+                    "1% of your Armor increased your HP%",
+                    "0.25% Cooldown reduction every minute",
+                    "1% of your Armor increased your HP/sec%"
                 ]
             }
         },
@@ -686,7 +734,7 @@ export const UI_TRANSLATIONS = {
             arenas: {
                 eco: 'Eco Arena',
                 com: 'Combat Arena',
-                def: 'Defence Arena'
+                def: 'Def Arena'
             },
             legendary: {
                 eco: 'Eco Legendary',
@@ -1208,10 +1256,13 @@ export const UI_TRANSLATIONS = {
             NeuralSingularity: { name: 'НЕЙРОННАЯ СИНГУЛЯРНОСТЬ', desc: 'Завораживающее слияние Нейрожатвы и Волны Ужаса. Продлевает страх на основе вашего просвещения.', skillDesc: 'Выпускает массивную волну страха. Длительность страха увеличена на 0.1 сек за каждые 500 ОПЫТА за убийство. Перезарядка сокращается на 0.1 сек за уровень.' },
             KineticTsunami: { name: 'КИНЕТИЧЕСКОЕ ЦУНАМИ', desc: 'Разрушительное слияние Стального Шторма и Импульса Ужаса. Звуковые лавины поглощают кинетическую энергию, увеличивая вашу мощь.', skillDesc: 'Выпускает разрушительную звуковую волну. Урон волны увеличивается на 1% за каждые 100 душ, собранных Стальным Штормом. Перезарядка навсегда снижается на 0.01с за каждого врага, убитого волной.' },
             SoulShatterCore: { name: 'ЯДРО СОКРУШЕНИЯ ДУШ', desc: 'Критическое слияние Осколков Судьбы и Стального Шторма. Увеличивает критическую летальность через сбор душ.' },
-            BloodForgedCapacitor: { name: 'КРОВОКОВАННЫЙ КОНДЕНСАТОР', desc: '20% вашей брони наносится 2 ближайшим врагам при попадании снаряда. 15% урона от вашей брони наносится как кровотечение при попадании в течение 3 секунд.' },
+            BloodForgedCapacitor: { name: 'КРОВОКОВАННЫЙ КОНДЕНСАТОР', desc: 'Кинетические ударные волны вызывают вампиризм от нанесенного урона. Каждый раз, когда зомби поглощает врага, есть шанс выпустить один зеленый кинетический разряд.', skillDesc: 'При поглощении врага зомби, 10% шанс выпустить зеленый кинетический разряд, наносящий 100% урона от Брони 10 целям. КД 8с.' },
             GravityAnchor: { name: 'ГРАВИТАЦИОННЫЙ ЯКОРЬ', desc: 'Структурный коллапс между Протоколом Эгиды и Эпицентром. Раздавливает врагов под тяжестью вашей брони.' },
             TemporalMonolith: { name: 'ТЕМПОРАЛЬНЫЙ МОНОЛИТ', desc: 'Вневременной монолит, выкованный из чистой выносливости. Преобразует кинетическую энергию в темпоральное ускорение.', skillDesc: 'Выпускает волну темпоральной энергии. Замораживает всех врагов в радиусе 400px на 4с. Враги, погибшие в заморозке, взрываются на 25% от макс. HP урона по области.' },
             NeutronStar: { name: 'НЕЙТРОННАЯ ЗВЕЗДА', desc: 'Звездный коллапс между Сифоном Эссенции и Радиационным Ядром. [ГОРИЗОНТ СОБЫТИЙ] Урон радиации увеличен на 2% за каждые 100 Макс. HP. Увеличение урона ауры на 0.01% за убийства Радиационной Аурой и двойные души для Сифона Эссенции.' },
+            GravitationalHarvest: { name: 'ГРАВИТАЦИОННАЯ ЖАТВА', desc: 'Звездный резонанс между Сифоном Эссенции и Эпицентром. Убийства внутри воронки продлевают её действие. 10% полученного урона отражается на врагов внутри.', skillDesc: 'Выпускает кристаллические шипы (Радиус: 500px), притягивающие врагов. Длительность +0.1с за убийство. Отражает 10% полученного урона. Перезарядка: 30 сек.' },
+            ShatteredCapacitor: { name: 'РАЗБИТЫЙ КОНДЕНСАТОР', desc: '20% вашей Брони наносится как урон Кинетическим Разрядом 2 ближайшим врагам при попадании. Накладывает кровотечение в размере 15% Брони на 3 секунды.', skillDesc: '100% урона Брони — Кинетический заряд (Цепь) по 10 целям (8с КД). Кинетические разряды по 2 целям при попадании снаряда: 15% Брони как кровотечение 3с.' },
+            ChronoDevourer: { name: 'ХРОНО-ПОЖИРАТЕЛЬ', desc: 'Паразитическая аномалия, которая питается темпоральной энергией и биоматерией, ускоряя ваши системы с каждым успешным поглощением.', skillDesc: 'У зомби есть 10% шанс поглотить врага при первом укусе. Убийства зомби дают 20% ускорение перезарядки на 1с.' },
             perks: {
                 EcoDMG: ["+0.1 УРОНА за убийство", "+0.1 ATC за убийство", "+0.05% УРОНА за убийство", "+0.05% ATC за убийство"],
                 EcoXP: ["+0.1 ОПЫТА за убийство", "+0.05 Пыли за убийство", "+0.1 Потока за убийство", "+0.1% ОПЫТА за убийство"],
@@ -1227,7 +1278,7 @@ export const UI_TRANSLATIONS = {
                 ],
                 DefEpi: ["25% от урона игрока наносится каждую секунду и замедляет на 50%", "2% Сила притяжения врагов к центру", "20% Увеличение радиуса в течение 10 секунд", "5% Порог от МАКС ОЗ для казни врага"],
                 CombShield: ["+0.01 Брони за убийство", "+0.01% Защиты от столкновений за убийство", "+0.01% Защиты от снарядов за убийство", "+0.05% Брони за убийство"],
-                KineticBattery: ["100% урона Брони — Ударная волна по 10 целям (При уроне, 5с КД)", "100% Брони выдаётся как Щит каждую 1 минуту", "100% доп. Броня при ОЗ ниже 50%", "0.25% снижения перезарядки в минуту"],
+                KineticBattery: ["100% урона Брони — Кинетический заряд (Цепь) по 10 целям (При уроне, 8с КД)", "100% Брони выдаётся как Щит каждую 1 минуту", "100% доп. Броня при ОЗ ниже 50%", "0.5s Оглушение врагов, попавших под Кинетический заряд (Цепь)"],
                 RadiationCore: ["5% Макс. ОЗ игрока/сек наносится врагам в радиусе 500px", "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре", "1% Доп. урона Ауры за каждый 1% недостающего ОЗ", "2.0% Макс. ОЗ/сек враги теряют каждую сек по всей КАРТЕ"],
                 ChronoPlating: ["1% от твоей Брони увеличивает Урон%", "1% от твоей Брони увеличивает Здоровье%", "0.25% перезарядки каждую минуту", "1% от твоей Брони увеличивает Регенерацию%"],
                 XenoAlchemist: [
@@ -1307,18 +1358,18 @@ export const UI_TRANSLATIONS = {
                 ],
                 BloodForgedCapacitor: [
                     "GROUP:КРОВОКОВАННЫЙ КОНДЕНСАТОР",
-                    "20% вашей брони наносится 2 ближайшим врагам при попадании снаряда",
-                    "15% урона от вашей брони наносится как кровотечение при попадании в течение 3 секунд",
+                    "Кинетические Ударные Волны вызывают 1% Вампиризма от общего нанесенного урона",
+                    "Поглощение врага зомби дает 10% шанс выпустить Зеленый Кинетический Разряд",
                     "GROUP:БАГРОВЫЙ ПИР",
                     "3% Вампиризм от урона ваших снарядов",
                     "5s Перелечение становится щитом",
                     "2% доп. урона снарядов от макс. ОЗ врага (не боссы)",
                     "10% шанс спавна зомби (задержка 5 сек, Пожиратели)",
                     "GROUP:КИНЕТИЧЕСКАЯ БАТАРЕЯ",
-                    "100% урона Брони — Ударная волна по 10 целям (При уроне, 5с КД)",
+                    "100% урона Брони — Кинетический заряд по 10 целям (При уроне, 8с КД)",
                     "100% Брони выдаётся как Щит каждую 1 минуту",
                     "100% доп. Броня при ОЗ ниже 50%",
-                    "0.25% снижения перезарядки в минуту"
+                    "0.5s Оглушение врагов, попавших под Кинетический заряд (Цепь)"
                 ],
                 GravityAnchor: [
                     "GROUP:ГРАВИТАЦИОННЫЙ ЯКОРЬ",
@@ -1364,6 +1415,51 @@ export const UI_TRANSLATIONS = {
                     "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре",
                     "1% Доп. урона Ауры за каждый 1% недостающего ОЗ",
                     "2.0% Макс. ОЗ/сек враги теряют каждую сек по всей КАРТЕ"
+                ],
+                GravitationalHarvest: [
+                    "GROUP:ГРАВИТАЦИОННАЯ ЖАТВА",
+                    "Продление действия на 0.1 за каждое убийство внутри Эпицентра",
+                    "10% полученного урона отражается на всех врагов внутри Эпицентра",
+                    "GROUP:СИФОН ЭССЕНЦИИ (УСИЛЕННЫЙ)",
+                    "+0.2 Макс HP за убийство",
+                    "+0.06 HP/сек за убийство",
+                    "+0.2% Макс HP за убийство",
+                    "+0.06% HP/сек за убийство",
+                    "GROUP:ЭПИЦЕНТР",
+                    "УР 1 25% от урона игрока наносится каждую секунду и замедляет на 50%",
+                    "УР 2 2% Сила притяжения к центру",
+                    "УР 3 20% Увеличение радиуса во время действия",
+                    "УР 4 5% Порог МАКС ХП для казни врага"
+                ],
+                ShatteredCapacitor: [
+                    "GROUP:РАЗБИТЫЙ КОНДЕНСАТОР",
+                    "20% вашей Брони наносится 2 ближайшим врагам при попадании снаряда",
+                    "15% от Брони как Кровотечение на 3с врагам, пораженным Кинетическим Разрядом",
+                    "GROUP:ОСКОЛКИ СУДЬБЫ",
+                    "+15% Шанс крита",
+                    "+7% Казнь не боссов при попадании",
+                    "Метка Смерти: враг получает +300% урона от вас (КД 10с)",
+                    "+3% Казнь Босса при попадании",
+                    "GROUP:КИНЕТИЧЕСКАЯ БАТАРЕЯ",
+                    "100% урона Брони — Кинетический заряд (Цепь) по 10 целям (При уроне, 8с КД)",
+                    "100% Брони выдаётся как Щит каждую 1 минуту",
+                    "100% доп. Броня при ОЗ ниже 50%",
+                    "0.5s Оглушение врагов, попавших под Кинетический заряд (Цепь)"
+                ],
+                ChronoDevourer: [
+                    "GROUP:ХРОНО-ПОЖИРАТЕЛЬ",
+                    "10% ускорение перезарядки на 1с каждый раз, когда зомби съедает врага",
+                    "10% Шанс зомби поглотить врагов при первом укусе",
+                    "GROUP:БАГРОВЫЙ ПИР",
+                    "3% Вампиризм от урона ваших снарядов",
+                    "5s Перелечение становится щитом",
+                    "2% доп. урона снарядов от макс. ОЗ врага (не боссы)",
+                    "10% шанс спавна зомби (задержка 5 сек, Пожиратели)",
+                    "GROUP:ХРОНО-ПЛАСТИНЫ",
+                    "1% от твоей Брони увеличивает Урон%",
+                    "1% от твоей Брони увеличивает Здоровье%",
+                    "0.25% перезарядки каждую минуту",
+                    "1% от твоей Брони увеличивает Регенерацию%"
                 ]
             }
         },

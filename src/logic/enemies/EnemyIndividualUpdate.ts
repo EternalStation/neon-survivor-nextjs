@@ -131,6 +131,11 @@ export function updateSingleEnemy(
         return;
     }
 
+    if (e.stunnedUntil && e.stunnedUntil > state.gameTime) {
+        if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
+        return;
+    }
+
     if (e.spawnGracePeriod && e.spawnGracePeriod > 0) {
         e.spawnGracePeriod -= step;
         if (e.spawnGracePeriod <= 0) e.spawnGracePeriod = undefined;

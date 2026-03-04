@@ -76,9 +76,9 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
         return cat;
     };
 
-    const forgeName = isXeno ? 'EXIS / BASTION' :
-        (isMire ? 'APEX / BASTION' :
-            (isSingularity ? 'EXIS / APEX' : getForgeName(hex.category)));
+    const forgeName = hex.forgedAt && hex.forgedAt.length > 0
+        ? hex.forgedAt.map(f => f.toUpperCase()).join(' / ') + (hex.forgedAt.length === 1 ? ' FORGE' : '')
+        : getForgeName(hex.category);
 
     return (
         <div style={{

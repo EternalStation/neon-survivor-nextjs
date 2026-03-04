@@ -18,7 +18,10 @@ import {
     canMergeBloodForgedCapacitor, performBloodForgedCapacitorMerge,
     canMergeGravityAnchor, performGravityAnchorMerge,
     canMergeTemporalMonolith, performTemporalMonolithMerge,
-    canMergeNeutronStar, performNeutronStarMerge
+    canMergeNeutronStar, performNeutronStarMerge,
+    canMergeGravitationalHarvest, performGravitationalHarvestMerge,
+    canMergeShatteredCapacitor, performShatteredCapacitorMerge,
+    canMergeChronoDevourer, performChronoDevourerMerge
 } from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 
@@ -687,6 +690,126 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 </button>
             )}
 
+            {/* PROTOCOL MERGE BUTTON (GRAVITATIONAL HARVEST) */}
+            {canMergeGravitationalHarvest(gameState) && (
+                <button
+                    onClick={() => {
+                        performGravitationalHarvestMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
+                        border: '2px solid #38bdf8',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(56, 189, 248, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(56, 189, 248, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+                    }}
+                >
+                    INITIATE GRAVITATIONAL HARVEST
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (SHATTERED CAPACITOR) */}
+            {canMergeShatteredCapacitor(gameState) && (
+                <button
+                    onClick={() => {
+                        performShatteredCapacitorMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0) + (canMergeGravitationalHarvest(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #7c2d12, #dc2626)',
+                        border: '2px solid #f97316',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(249, 115, 22, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(249, 115, 22, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(249, 115, 22, 0.4)';
+                    }}
+                >
+                    INITIATE SHATTERED CAPACITOR
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (CHRONO-DEVOURER) */}
+            {canMergeChronoDevourer(gameState) && (
+                <button
+                    onClick={() => {
+                        performChronoDevourerMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0) + (canMergeGravitationalHarvest(gameState) ? 55 : 0) + (canMergeShatteredCapacitor(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #312e81, #1e1b4b)',
+                        border: '2px solid #6366f1',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(99, 102, 241, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.4)';
+                    }}
+                >
+                    INITIATE CHRONO-DEVOURER
+                </button>
+            )}
+
             {/* Toggle Button */}
             <button
                 onClick={() => setView('bestiary')}
@@ -1278,77 +1401,83 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 }
                             }}
                         >
-                            {/* Rarity Glow Ring */}
-                            <circle
-                                r="32"
-                                fill="none"
-                                stroke={rarityColor}
-                                strokeWidth="2"
-                                style={{ opacity: 0.6, filter: `drop-shadow(0 0 5px ${rarityColor})` }}
-                                pointerEvents="none"
-                            />
+                            {/* Visual wrapper for "turned off" state */}
+                            <g style={{
+                                filter: (meteoriteEfficiencies[i] && meteoriteEfficiencies[i]!.totalBoost === 0) ? 'grayscale(1) opacity(0.5)' : 'none',
+                                transition: 'filter 0.3s ease'
+                            }}>
+                                {/* Rarity Glow Ring */}
+                                <circle
+                                    r="32"
+                                    fill="none"
+                                    stroke={rarityColor}
+                                    strokeWidth="2"
+                                    style={{ opacity: 0.6, filter: `drop-shadow(0 0 5px ${rarityColor})` }}
+                                    pointerEvents="none"
+                                />
 
-                            {/* The Meteorite Group (Animate this) */}
-                            <g
-                                className={`meteorite-visual-group ${isBoosted ? "is-boosted" : ""} ${isLevitating ? "is-levitating" : ""}`}
-                                style={{ '--glow-color': rarityColor, pointerEvents: 'none' } as any}
-                            >
-                                <g className="meteorite-inner-bob">
-                                    <image
-                                        href={getMeteoriteImage(meteorite)}
-                                        x={-35}
-                                        y={-35}
-                                        width="70"
-                                        height="70"
-                                        style={{ pointerEvents: 'auto' }}
-                                        onMouseMove={(e) => {
-                                            if (!movedItem) {
-                                                handleMouseEnterItem(meteorite, e.clientX, e.clientY, i);
-                                                if (meteorite.isNew) {
-                                                    meteorite.isNew = false;
-                                                    onSocketUpdate('diamond', i, meteorite);
+                                {/* The Meteorite Group (Animate this) */}
+                                <g
+                                    className={`meteorite-visual-group ${isBoosted ? "is-boosted" : ""} ${isLevitating ? "is-levitating" : ""}`}
+                                    style={{ '--glow-color': rarityColor, pointerEvents: 'none' } as any}
+                                >
+                                    <g className="meteorite-inner-bob">
+                                        <image
+                                            href={getMeteoriteImage(meteorite)}
+                                            x={-35}
+                                            y={-35}
+                                            width="70"
+                                            height="70"
+                                            style={{ pointerEvents: 'auto' }}
+                                            onMouseMove={(e) => {
+                                                if (!movedItem) {
+                                                    handleMouseEnterItem(meteorite, e.clientX, e.clientY, i);
+                                                    if (meteorite.isNew) {
+                                                        meteorite.isNew = false;
+                                                        onSocketUpdate('diamond', i, meteorite);
+                                                    }
                                                 }
-                                            }
-                                        }}
-                                        onMouseLeave={() => handleMouseLeaveItem(100)}
-                                    />
+                                            }}
+                                            onMouseLeave={() => handleMouseLeaveItem(100)}
+                                        />
 
-                                    {/* NEW Label - SVG Style */}
-                                    {meteorite.isNew && (
-                                        <g transform="translate(0, -35)">
-                                            <rect x="-12" y="-6" width="24" height="12" rx="4" fill="#ef4444" className="pulse-red" style={{ filter: 'drop-shadow(0 0 5px #ef4444)' }} />
-                                            <text x="0" y="3" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>NEW</text>
-                                        </g>
-                                    )}
-
-                                    {/* Status badge row: C → I → H → M */}
-                                    <g pointerEvents="none">
-                                        {(meteorite.isCorrupted || (meteorite.incubatorBoost && meteorite.incubatorBoost > 0) || meteorite.blueprintBoosted || isBuffActive(gameState, 'MATRIX_OVERDRIVE')) && (
-                                            <foreignObject x={-35} y={-47} width={70} height={16}>
-                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '2px', justifyContent: 'center' }}>
-                                                    {meteorite.isCorrupted && (
-                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(153,27,27,0.7)', flexShrink: 0 }}>
-                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
-                                                        </div>
-                                                    )}
-                                                    {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
-                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(14,165,233,0.6)', flexShrink: 0 }}>
-                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
-                                                        </div>
-                                                    )}
-                                                    {meteorite.blueprintBoosted && (
-                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(96,165,250,0.6)', flexShrink: 0 }}>
-                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
-                                                        </div>
-                                                    )}
-                                                    {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
-                                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(234,88,12,0.6)', flexShrink: 0 }}>
-                                                            <span style={{ fontSize: '7px', fontWeight: 900, color: '#f97316', lineHeight: 1 }}>M</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </foreignObject>
+                                        {/* NEW Label - SVG Style */}
+                                        {meteorite.isNew && (
+                                            <g transform="translate(0, -35)">
+                                                <rect x="-12" y="-6" width="24" height="12" rx="4" fill="#ef4444" className="pulse-red" style={{ filter: 'drop-shadow(0 0 5px #ef4444)' }} />
+                                                <text x="0" y="3" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" style={{ pointerEvents: 'none' }}>NEW</text>
+                                            </g>
                                         )}
+
+                                        {/* Status badge row: C → I → H → M */}
+                                        <g pointerEvents="none">
+                                            {(meteorite.isCorrupted || (meteorite.incubatorBoost && meteorite.incubatorBoost > 0) || meteorite.blueprintBoosted || isBuffActive(gameState, 'MATRIX_OVERDRIVE')) && (
+                                                <foreignObject x={-35} y={-47} width={70} height={16}>
+                                                    <div style={{ display: 'flex', flexDirection: 'row', gap: '2px', justifyContent: 'center' }}>
+                                                        {meteorite.isCorrupted && (
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(153,27,27,0.7)', flexShrink: 0 }}>
+                                                                <span style={{ fontSize: '7px', fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>C</span>
+                                                            </div>
+                                                        )}
+                                                        {meteorite.incubatorBoost && meteorite.incubatorBoost > 0 && (
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(14,165,233,0.6)', flexShrink: 0 }}>
+                                                                <span style={{ fontSize: '7px', fontWeight: 900, color: '#00d9ff', lineHeight: 1 }}>I</span>
+                                                            </div>
+                                                        )}
+                                                        {meteorite.blueprintBoosted && (
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(96,165,250,0.6)', flexShrink: 0 }}>
+                                                                <span style={{ fontSize: '7px', fontWeight: 900, color: '#60a5fa', lineHeight: 1 }}>H</span>
+                                                            </div>
+                                                        )}
+                                                        {isBuffActive(gameState, 'MATRIX_OVERDRIVE') && (
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1e293b', border: '1px solid #ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 5px rgba(234,88,12,0.6)', flexShrink: 0 }}>
+                                                                <span style={{ fontSize: '7px', fontWeight: 900, color: '#f97316', lineHeight: 1 }}>M</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </foreignObject>
+                                            )}
+                                        </g>
                                     </g>
                                 </g>
                             </g>
@@ -1358,7 +1487,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                 value={meteoriteEfficiencies[i]?.totalBoost || 0}
                                 x={0}
                                 y={35}
-                                color={rarityColor}
+                                color={(meteoriteEfficiencies[i]?.totalBoost || 0) > 0 ? rarityColor : '#64748b'}
                                 onLevitateChange={(lev) => {
                                     setLevitatingDiamonds(prev => ({ ...prev, [i]: lev }));
                                 }}

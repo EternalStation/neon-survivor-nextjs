@@ -10,7 +10,7 @@ import { getHexMultiplier, getHexLevel, calculateLegendaryBonus } from '../upgra
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { getDefenseReduction } from '../utils/MathUtils';
-import { triggerKineticBolt } from '../player/PlayerCombat';
+import { triggerKineticBolt, triggerStaticBolt } from '../player/PlayerCombat';
 
 export function updateProjectiles(state: GameState, onEvent?: (event: string, data?: any) => void, triggerDeath?: () => void) {
     const { bullets, enemyBullets } = state;
@@ -686,8 +686,10 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                     }
                 }
 
+
                 const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
-                if (bloodLevel >= 5 && !b.isShockwaveCircle && b.id !== -1) {
+                const shatteredLevel = getHexLevel(state, 'ShatteredCapacitor');
+                if (shatteredLevel >= 5 && !b.isShockwaveCircle && b.id !== -1) {
                     const boltDmg = calcStat(owner.arm, 0.2, state.assistant.history.curseIntensity || 1.0);
                     triggerKineticBolt(state, owner, { x: e.x, y: e.y }, 2, boltDmg, true);
                 }
