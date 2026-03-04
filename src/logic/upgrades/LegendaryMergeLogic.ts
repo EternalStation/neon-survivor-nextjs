@@ -444,7 +444,7 @@ export function performShatteredCapacitorMerge(state: GameState) {
     if (skillIdx !== -1) {
         state.player.activeSkills[skillIdx].type = 'ShatteredCapacitor';
         state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
-        state.player.activeSkills[skillIdx].cooldownMax = 8;
+        state.player.activeSkills[skillIdx].baseCD = 8;
     }
 }
 
@@ -490,8 +490,8 @@ export function performChronoDevourerMerge(state: GameState) {
     if (key) {
         state.player.activeSkills.push({
             type: 'ChronoDevourer',
-            cooldownMax: 15,
-            cooldown: 0,
+            baseCD: 15,
+            lastUsed: -999999,
             inUse: false,
             keyBind: key,
             icon: mergedHex.customIcon

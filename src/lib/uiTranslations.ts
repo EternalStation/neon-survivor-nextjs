@@ -374,7 +374,7 @@ export const UI_TRANSLATIONS = {
             TemporalMonolith: { name: 'THE TEMPORAL MONOLITH', desc: 'A timeless monolith forged from raw endurance. Converts kinetic energy into temporal acceleration.', skillDesc: 'Releases a wave of temporal energy. Freezes all enemies within 400px for 4s. Enemies that die while frozen shatter for 25% MAX HP AOE damage.' },
             NeutronStar: { name: 'THE NEUTRON STAR', desc: 'A stellar collapse between Essence Syphon and Radiation Core. [EVENT HORIZON] Radiation damage increased by 2% for every 100 Max HP. 0.01% Aura DMG increase for kills by your Radiant Aura and double souls for Essence Syphon.' },
             GravitationalHarvest: { name: 'THE GRAVITATIONAL HARVEST', desc: 'A stellar resonance between Essence Syphon and Epicenter. Kills within the well extend its duration. 10% of damage taken is reflected to trapped enemies.', skillDesc: 'Drops crystalline spikes (Radius: 500px) that pull enemies. Duration +0.1s on kill. Reflects 10% damage taken to trapped enemies. Recharges in 30s.' },
-            ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of your Armor dealt as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Static bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
+            ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Kinetic bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
             ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Active: Explodes all shields to deal AOE damage (Radius 600px) based on Armor + Shield value. Zombies have 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.' },
             perks: {
                 EcoDMG: ["+0.1 DMG per kill", "+0.1 ATC per kill", "+0.05% DMG per kill", "+0.05% ATC per kill"],
@@ -546,7 +546,7 @@ export const UI_TRANSLATIONS = {
                 ],
                 ShatteredCapacitor: [
                     "GROUP:THE SHATTERED CAPACITOR",
-                    "20% of your total Armor dealt to 2 nearby enemies on Projectile Hit",
+                    "20% of Contact/Projectile damage arcs to 2 nearby enemies on Projectile Hit",
                     "15% of total Armor as Bleed over 3 seconds to enemies hit by Kinetic Bolt",
                     "GROUP:SHATTERED FATE",
                     "+15% Crit Chance",
@@ -1261,8 +1261,8 @@ export const UI_TRANSLATIONS = {
             TemporalMonolith: { name: 'ТЕМПОРАЛЬНЫЙ МОНОЛИТ', desc: 'Вневременной монолит, выкованный из чистой выносливости. Преобразует кинетическую энергию в темпоральное ускорение.', skillDesc: 'Выпускает волну темпоральной энергии. Замораживает всех врагов в радиусе 400px на 4с. Враги, погибшие в заморозке, взрываются на 25% от макс. HP урона по области.' },
             NeutronStar: { name: 'НЕЙТРОННАЯ ЗВЕЗДА', desc: 'Звездный коллапс между Сифоном Эссенции и Радиационным Ядром. [ГОРИЗОНТ СОБЫТИЙ] Урон радиации увеличен на 2% за каждые 100 Макс. HP. Увеличение урона ауры на 0.01% за убийства Радиационной Аурой и двойные души для Сифона Эссенции.' },
             GravitationalHarvest: { name: 'ГРАВИТАЦИОННАЯ ЖАТВА', desc: 'Звездный резонанс между Сифоном Эссенции и Эпицентром. Убийства внутри воронки продлевают её действие. 10% полученного урона отражается на врагов внутри.', skillDesc: 'Выпускает кристаллические шипы (Радиус: 500px), притягивающие врагов. Длительность +0.1с за убийство. Отражает 10% полученного урона. Перезарядка: 30 сек.' },
-            ShatteredCapacitor: { name: 'РАЗБИТЫЙ КОНДЕНСАТОР', desc: '20% вашей Брони наносится как урон Кинетическим Разрядом 2 ближайшим врагам при попадании. Накладывает кровотечение в размере 15% Брони на 3 секунды.', skillDesc: '100% урона Брони — Кинетический заряд (Цепь) по 10 целям (8с КД). Кинетические разряды по 2 целям при попадании снаряда: 15% Брони как кровотечение 3с.' },
-            ChronoDevourer: { name: 'ХРОНО-ПОЖИРАТЕЛЬ', desc: 'Паразитическая аномалия, которая питается темпоральной энергией и биоматерией, ускоряя ваши системы с каждым успешным поглощением.', skillDesc: 'У зомби есть 10% шанс поглотить врага при первом укусе. Убийства зомби дают 20% ускорение перезарядки на 1с.' },
+            ShatteredCapacitor: { name: 'РАЗБИТЫЙ КОНДЕНСАТОР', desc: '20% от нанесенного урона рикошетит как Кинетический разряд по 2 целям при попадании. Накладывает кровотечение в размере 15% Брони на 3 секунды.', skillDesc: '100% урона Брони — Кинетический заряд (Цепь) по 10 целям (8с КД). Кинетические разряды по 2 целям при попадании снаряда: 15% Брони как кровотечение 3с.' },
+            ChronoDevourer: { name: 'ХРОНО-ПОЖИРАТЕЛЬ', desc: 'Паразитическая аномалия, которая питается темпоральной энергией и биоматерией, ускоряя ваши системы с каждым успешным поглощением.', skillDesc: 'Активно: Взрывает все щиты, нанося урон по области (радиус 600px) на основе значения Брони + Щита. У зомби есть 10% шанс поглотить врага при первом укусе. Убийства зомби дают 20% ускорение перезарядки на 1с.' },
             perks: {
                 EcoDMG: ["+0.1 УРОНА за убийство", "+0.1 ATC за убийство", "+0.05% УРОНА за убийство", "+0.05% ATC за убийство"],
                 EcoXP: ["+0.1 ОПЫТА за убийство", "+0.05 Пыли за убийство", "+0.1 Потока за убийство", "+0.1% ОПЫТА за убийство"],
@@ -1433,7 +1433,7 @@ export const UI_TRANSLATIONS = {
                 ],
                 ShatteredCapacitor: [
                     "GROUP:РАЗБИТЫЙ КОНДЕНСАТОР",
-                    "20% вашей Брони наносится 2 ближайшим врагам при попадании снаряда",
+                    "20% от нанесенного урона рикошетит как Кинетический разряд по 2 целям при попадании",
                     "15% от Брони как Кровотечение на 3с врагам, пораженным Кинетическим Разрядом",
                     "GROUP:ОСКОЛКИ СУДЬБЫ",
                     "+15% Шанс крита",

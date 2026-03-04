@@ -69,6 +69,7 @@ export const GAME_CONFIG = {
         COSMIC_COOLDOWN: 8,
         STORM_CIRCLE_MAX_CHARGE: 10,
         STORM_CIRCLE_RECHARGE_DELAY: 3,
+        CHRONO_DEVOURER_COOLDOWN: 15,
 
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,

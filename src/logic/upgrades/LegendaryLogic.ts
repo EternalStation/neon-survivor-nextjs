@@ -297,8 +297,8 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     ShatteredCapacitor: {
         id: 'shattered_capacitor',
         name: 'THE SHATTERED CAPACITOR',
-        desc: 'Combat / Defensive Fusion',
-        description: '20% of your Armor dealt as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
+        desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
+        description: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
         lore: 'The capacitor doesn’t just store energy; it refines it through the lens of critical impact. Every arc sent through the enemy ranks identifies a structural failure, letting the next strike tear them apart.',
         category: 'Fusion',
         categories: ['Combat', 'Defensive'],

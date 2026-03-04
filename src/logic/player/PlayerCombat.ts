@@ -631,7 +631,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
                 const player = state.player;
                 if (bloodLevel >= 5 && !player.healingDisabled) {
-                    const heal = zap.dmg * 0.03;
+                    const heal = zap.dmg * 0.01;
                     const maxHp = calcStat(player.hp);
                     player.curHp = Math.min(maxHp, player.curHp + heal);
                 }

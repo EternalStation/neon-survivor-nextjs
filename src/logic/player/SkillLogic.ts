@@ -154,8 +154,8 @@ export function castSkill(state: GameState, skillIndex: number) {
             }
         });
 
-        skill.cooldownMax = 15 * cdMod;
-        skill.cooldown = skill.cooldownMax;
+        skill.baseCD = GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN;
+        skill.lastUsed = now;
         skill.inUse = true;
         skill.duration = 0.5;
     }

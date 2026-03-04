@@ -21,6 +21,19 @@ Fusions are powerful legendary upgrades created by merging two specific Max Leve
 
 ---
 
+## ZOMBIE MECHANICS
+Zombies are friendly entities spawned through **Crimson Feast (Lvl 4+)** or specific Legendary Fusions (**Blood-Forged Capacitor**, **Chrono-Devourer**).
+
+### Life & Consumption
+- **Health System**: Zombies have **3 Hearts** (lives).
+- **Consumption Costs**:
+    - **Normal Enemies**: Consuming a normal enemy or legion unit costs **1 Heart**.
+    - **Elite/Boss Enemies**: Consuming an Elite or Boss costs **3 Hearts** (immediately spending the zombie).
+- **Interruption**: If a zombie is hit by another enemy while moving to a target or eating, it loses **1 Heart**.
+- **Regeneration**: Zombies reset to 3 Hearts whenever they rise from the ground.
+
+---
+
 ## THE GRAVITATIONAL HARVEST
 
 A stellar resonance between **Essence Syphon** (EcoHP) and **Epicenter**. It converts the life force of fallen enemies into gravitational stability.
