@@ -233,3 +233,118 @@ export function performBloodForgedCapacitorMerge(state: GameState) {
         state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
     }
 }
+
+export function canMergeGravityAnchor(state: GameState): boolean {
+    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'CombShield');
+    const defEpi = state.moduleSockets.hexagons.find(h => h?.type === 'DefEpi');
+    return (combShield?.level === 5 && defEpi?.level === 5);
+}
+
+export function performGravityAnchorMerge(state: GameState) {
+    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'CombShield');
+    const epiIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefEpi');
+    if (shieldIdx === -1 || epiIdx === -1) return;
+    const shieldHex = state.moduleSockets.hexagons[shieldIdx]!;
+    const epiHex = state.moduleSockets.hexagons[epiIdx]!;
+    const mergedHex: LegendaryHex = {
+        ...LEGENDARY_UPGRADES.GravityAnchor,
+        level: 5,
+        killsAtAcquisition: Math.min(shieldHex.killsAtAcquisition, epiHex.killsAtAcquisition),
+        timeAtAcquisition: Math.min(shieldHex.timeAtAcquisition || 0, epiHex.timeAtAcquisition || 0),
+        killsAtLevel: {
+            ...(shieldHex.killsAtLevel || {}),
+            ...(epiHex.killsAtLevel || {}),
+            5: state.killCount
+        },
+        timeAtLevel: {
+            ...(shieldHex.timeAtLevel || {}),
+            ...(epiHex.timeAtLevel || {}),
+            5: state.gameTime
+        },
+        statBonuses: {},
+        categories: ['Defensive', 'Defensive']
+    };
+    state.moduleSockets.hexagons[shieldIdx] = null;
+    state.moduleSockets.hexagons[epiIdx] = null;
+    state.moduleSockets.hexagons[epiIdx] = mergedHex;
+    syncLegendaryHex(state, mergedHex);
+    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'DefEpi');
+    if (skillIdx !== -1) {
+        state.player.activeSkills[skillIdx].type = 'GravityAnchor';
+        state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
+    }
+}
+
+export function canMergeTemporalMonolith(state: GameState): boolean {
+    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'CombShield');
+    const chronoPlating = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
+    return (combShield?.level === 5 && chronoPlating?.level === 5);
+}
+
+export function performTemporalMonolithMerge(state: GameState) {
+    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'CombShield');
+    const chronoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ChronoPlating');
+    if (shieldIdx === -1 || chronoIdx === -1) return;
+    const shieldHex = state.moduleSockets.hexagons[shieldIdx]!;
+    const chronoHex = state.moduleSockets.hexagons[chronoIdx]!;
+    const mergedHex: LegendaryHex = {
+        ...LEGENDARY_UPGRADES.TemporalMonolith,
+        level: 5,
+        killsAtAcquisition: Math.min(shieldHex.killsAtAcquisition, chronoHex.killsAtAcquisition),
+        timeAtAcquisition: Math.min(shieldHex.timeAtAcquisition || 0, chronoHex.timeAtAcquisition || 0),
+        killsAtLevel: {
+            ...(shieldHex.killsAtLevel || {}),
+            ...(chronoHex.killsAtLevel || {}),
+            5: state.killCount
+        },
+        timeAtLevel: {
+            ...(shieldHex.timeAtLevel || {}),
+            ...(chronoHex.timeAtLevel || {}),
+            5: state.gameTime
+        },
+        statBonuses: {},
+        categories: ['Defensive', 'Defensive']
+    };
+    state.moduleSockets.hexagons[shieldIdx] = null;
+    state.moduleSockets.hexagons[chronoIdx] = null;
+    state.moduleSockets.hexagons[chronoIdx] = mergedHex;
+    syncLegendaryHex(state, mergedHex);
+    state.player.temporalMonolithSouls = 0;
+}
+
+export function canMergeNeutronStar(state: GameState): boolean {
+    const ecoHp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoHP');
+    const radCore = state.moduleSockets.hexagons.find(h => h?.type === 'RadiationCore');
+    return (ecoHp?.level === 5 && radCore?.level === 5);
+}
+
+export function performNeutronStarMerge(state: GameState) {
+    const ecoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'EcoHP');
+    const radIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'RadiationCore');
+    if (ecoIdx === -1 || radIdx === -1) return;
+    const ecoHex = state.moduleSockets.hexagons[ecoIdx]!;
+    const radHex = state.moduleSockets.hexagons[radIdx]!;
+    const mergedHex: LegendaryHex = {
+        ...LEGENDARY_UPGRADES.NeutronStar,
+        level: 5,
+        killsAtAcquisition: Math.min(ecoHex.killsAtAcquisition, radHex.killsAtAcquisition),
+        timeAtAcquisition: Math.min(ecoHex.timeAtAcquisition || 0, radHex.timeAtAcquisition || 0),
+        killsAtLevel: {
+            ...(ecoHex.killsAtLevel || {}),
+            ...(radHex.killsAtLevel || {}),
+            5: state.killCount
+        },
+        timeAtLevel: {
+            ...(ecoHex.timeAtLevel || {}),
+            ...(radHex.timeAtLevel || {}),
+            5: state.gameTime
+        },
+        statBonuses: {},
+        categories: ['Economic', 'Combat']
+    };
+    state.moduleSockets.hexagons[ecoIdx] = null;
+    state.moduleSockets.hexagons[radIdx] = null;
+    state.moduleSockets.hexagons[radIdx] = mergedHex;
+    syncLegendaryHex(state, mergedHex);
+    state.player.neutronStarAuraKills = 0;
+}

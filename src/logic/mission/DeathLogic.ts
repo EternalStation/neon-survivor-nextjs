@@ -31,6 +31,38 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
+    if (e.temporalMonolithExplosive && e.hp <= 0 && !e.boss) {
+        const mult = getHexMultiplier(state, 'TemporalMonolith');
+        const aoeDmg = e.maxHp * 0.25 * mult;
+        const radius = 200 * mult;
+
+        state.player.temporalMonolithSouls = (state.player.temporalMonolithSouls || 0) + 1;
+
+        state.enemies.forEach(other => {
+            if (!other.dead && other.id !== e.id) {
+                const dist = Math.hypot(other.x - e.x, other.y - e.y);
+                if (dist <= radius) {
+                    other.hp -= aoeDmg;
+                    spawnFloatingNumber(state, other.x, other.y, Math.round(aoeDmg).toString(), '#38bdf8', true);
+                    if (other.hp <= 0) {
+                        state.player.temporalMonolithSouls = (state.player.temporalMonolithSouls || 0) + 1;
+                    }
+                }
+            }
+        });
+        spawnFloatingNumber(state, e.x, e.y, 'TEMPORAL SHATTER', '#38bdf8', true);
+        state.areaEffects.push({
+            id: Math.random(),
+            type: 'temporal_burst',
+            x: e.x,
+            y: e.y,
+            radius: radius,
+            duration: 0.2,
+            creationTime: state.gameTime,
+            level: 1
+        });
+    }
+
     e.dead = true; e.hp = 0;
 
     // Soul Reward Multipliers (Kill Count)

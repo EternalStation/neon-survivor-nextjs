@@ -12,7 +12,7 @@ export function triggerDash(state: GameState, keys: Record<string, boolean>, inp
     const player = overridePlayer || state.player;
 
     const isStunned = player.stunnedUntil && state.gameTime < player.stunnedUntil;
-    if (isStunned || player.immobilized) return;
+    if (isStunned) return;
 
     const dashCd = player.dashCooldown ?? 0;
     if (dashCd > 0) return;
@@ -93,34 +93,9 @@ export function handlePlayerMovement(
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
     const isStunned = (player.stunnedUntil && state.gameTime < player.stunnedUntil);
 
-    // Movement Cancel Logic for Channeling (Epicenter)
-    if (player.immobilized && !isStunned) {
-        let tryingToMove = false;
-        if (keys['keyw'] || keys['arrowup']) tryingToMove = true;
-        if (keys['keys'] || keys['arrowdown']) tryingToMove = true;
-        if (keys['keya'] || keys['arrowleft']) tryingToMove = true;
-        if (keys['keyd'] || keys['arrowright']) tryingToMove = true;
-        if (inputVector && (Math.abs(inputVector.x) > 0.1 || Math.abs(inputVector.y) > 0.1)) tryingToMove = true;
-
-        if (tryingToMove) {
-            player.immobilized = false;
-            // Find and remove the epicenter area effect
-            const epiIdx = state.areaEffects.findIndex(ae => ae.type === 'epicenter');
-            if (epiIdx !== -1) {
-                state.areaEffects.splice(epiIdx, 1);
-            }
-            // Clear shield if any
-            if (player.buffs) player.buffs.epicenterShield = 0;
-
-            // Skill icon inactive
-            const skill = player.activeSkills.find((s: any) => s.type === 'DefEpi');
-            if (skill) skill.inUse = false;
-        }
-    }
-
     const isInverted = player.invertedControlsUntil && state.gameTime < player.invertedControlsUntil;
 
-    if (!isStunned && !player.immobilized) {
+    if (!isStunned) {
         if (keys['keyw'] || keys['arrowup']) vy--;
         if (keys['keys'] || keys['arrowdown']) vy++;
         if (keys['keya'] || keys['arrowleft']) vx--;

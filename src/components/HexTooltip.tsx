@@ -141,18 +141,30 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                         }
 
                         let isStatic = false;
-                        if (hex.type === 'ChronoPlating' && p.includes('Double Armor')) {
-                            isStatic = true;
-                            if (gameState.player.chronoArmorBonus && gameState.player.chronoArmorBonus > 0) {
-                                isNumeric = true;
-                                baseValue = parseFloat(gameState.player.chronoArmorBonus.toFixed(1));
-                                displayValue = `+${baseValue}`;
-                            }
-                        }
+                        if (hex.type === 'ChronoPlating') {
+                            const isLvl1 = p.includes('DMG') || p.includes('Урон');
+                            const isLvl2 = p.includes('HP%') || p.includes('Здоровье%');
+                            const isLvl3 = p.includes('Cooldown') || p.includes('перезарядки');
+                            const isLvl4 = p.includes('HP/sec') || p.includes('Регенерацию');
 
-                        if (hex.type === 'ChronoPlating' && p.includes('Cooldown Reduction')) {
-                            const curCDR = (gameState.player.cooldownReduction || 0) * 100;
-                            cleanLabel = `Cooldown Reduction [${curCDR.toFixed(1)}%]`;
+                            if (isLvl1 || isLvl2 || isLvl4) {
+                                const armorStats = gameState.player.arm;
+                                const totalArmor = armorStats ? (armorStats.base + (armorStats.flat || 0) + (armorStats.hexFlat || 0)) * (1 + ((armorStats.mult || 0) + (armorStats.hexMult2 || 0) + (armorStats.hexMult || 0)) / 100) : 0;
+                                const actualAmount = totalArmor * 0.01 * multiplier;
+
+                                baseValue = 1;
+                                isNumeric = true;
+                                isStatic = false;
+                                displayValue = `+${actualAmount.toFixed(1)}%`;
+                                cleanLabel = `${cleanLabel} (${actualAmount.toFixed(1)}% actual)`;
+                            } else if (isLvl3) {
+                                const curCDR = (gameState.player.cooldownReduction || 0) * 100;
+                                const cdrLabel = cleanLabel.includes('Cooldown') ? 'Cooldown Reduction' : 'Снижение перезарядки';
+                                cleanLabel = `${cdrLabel} [${curCDR.toFixed(1)}%]`;
+                                baseValue = 0.25;
+                                isNumeric = true;
+                                displayValue = `+${(0.25 * multiplier).toFixed(1)}% / min`;
+                            }
                         }
 
                         return (

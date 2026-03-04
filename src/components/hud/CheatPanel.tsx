@@ -42,6 +42,7 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'y0', description: 'DefEpi — EPICENTER (Lv5)' },
             { code: 'y-', description: 'KineticBattery — KINETIC BATTERY (Lv5)' },
             { code: 'y=', description: 'ChronoPlating — CHRONO PLATING (Lv5)' },
+            { code: 'y[', description: 'GravityAnchor — THE GRAVITY ANCHOR (Lv5)' },
         ]
     },
     {

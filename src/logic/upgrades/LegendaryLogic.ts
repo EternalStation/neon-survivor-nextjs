@@ -5,7 +5,7 @@ import { getStoredLanguage } from '../../lib/LanguageContext';
 import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 
-export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'KineticBattery', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'BloodForgedCapacitor', 'SoulShatterCore'];
+export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'KineticBattery', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'BloodForgedCapacitor', 'SoulShatterCore', 'GravityAnchor', 'TemporalMonolith'];
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {
@@ -221,7 +221,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         id: 'blood_forged_capacitor',
         name: 'THE BLOOD-FORGED CAPACITOR',
         desc: 'Combat / Defensive Fusion',
-        description: 'A dark resonance between Crimson Feast and Kinetic Battery. Converts kinetic trauma into vital essence.',
+        description: '20% of your armour dealth to 2 nearby enemies on projectile hit. 15% dmg of your armour applied as bleeding to your enemeis on hit for 3 seconds.',
         lore: 'The capacitor doesn’t just store energy; it refines it through the lens of pain. Every shockwave sent through the enemy ranks carries a parasitic pulse, tearing life from their hulls and feeding it directly into your core.',
         category: 'Fusion',
         categories: ['Combat', 'Defensive'],
@@ -229,6 +229,45 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         level: 5,
         killsAtAcquisition: 0,
         customIcon: '/assets/hexes/BloodForgedCapacitor.png'
+    },
+    GravityAnchor: {
+        id: 'gravity_anchor',
+        name: 'THE GRAVITY ANCHOR',
+        desc: 'Defensive / Defensive Fusion',
+        description: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.',
+        lore: 'The shield is no longer just a barrier; it is a weight. It condenses the gravitational pull of your impact, anchoring it to your armor until the pressure shatters the very ground beneath you.',
+        category: 'Fusion',
+        categories: ['Defensive', 'Defensive'],
+        type: 'GravityAnchor',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/GravityAnchor.png'
+    },
+    TemporalMonolith: {
+        id: 'temporal_monolith',
+        name: 'THE TEMPORAL MONOLITH',
+        desc: 'Defensive / Defensive Fusion',
+        description: 'Taking any damage increases your Cooldown Recovery Speed by 20% for 1 sec. Active: Freezes enemies in 400px for 4s. Frozen enemies explode on death for 25% MAX HP.',
+        lore: 'A timeless monolith forged from raw endurance. It does not just absorb blows; it converts their kinetic energy into localized temporal accelerations, letting you move faster as the world slows down.',
+        category: 'Fusion',
+        categories: ['Defensive', 'Defensive'],
+        type: 'TemporalMonolith',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/DefChromo.png'
+    },
+    NeutronStar: {
+        id: 'neutron_star',
+        name: 'THE NEUTRON STAR',
+        desc: 'EcoHP / Combat Fusion',
+        description: 'A stellar collapse between Essence Syphon and Radiation Core. [EVENT HORIZON] Radiation damage increased by 2% for every 100 Max HP. 0.01% Aura DMG increase for kills by your Radiant Aura and double souls for Essence Syphon.',
+        lore: 'A collapsed star’s core, bound by biological essence. It pulls everything into its inescapable reach, converting matter into pure gravitational force.',
+        category: 'Fusion',
+        categories: ['Economic', 'Combat'],
+        type: 'NeutronStar',
+        level: 5,
+        killsAtAcquisition: 0,
+        customIcon: '/assets/hexes/ComRad.png'
     }
 };
 
@@ -248,7 +287,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
     const formatPerk = (p: string, lvl: number) => {
         let soulLvl = lvl;
 
-        if (type === 'XenoAlchemist' || type === 'NeuralSingularity' || type === 'IrradiatedMire' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor') {
+        if (type === 'XenoAlchemist' || type === 'NeuralSingularity' || type === 'IrradiatedMire' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar') {
             for (const key of Object.keys(perks)) {
                 if (key === type) continue;
                 const arr = perks[key];
@@ -264,7 +303,9 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         }
 
         const souls = getSouls(soulLvl);
-        const isNewFusionPerk = type === 'NeuralSingularity' && (p.toLowerCase().includes('fear') || p.toLowerCase().includes('cooldown') || p.toLowerCase().includes('страх') || p.toLowerCase().includes('перезарядк'));
+        const isNewFusionPerk = (type === 'NeuralSingularity' && (p.toLowerCase().includes('fear') || p.toLowerCase().includes('cooldown') || p.toLowerCase().includes('страх') || p.toLowerCase().includes('перезарядк'))) ||
+            (type === 'TemporalMonolith' && (p.toLowerCase().includes('frozen') || p.toLowerCase().includes('заморозк') || p.toLowerCase().includes('damage received') || p.toLowerCase().includes('снижения перезарядки'))) ||
+            (type === 'NeutronStar' && (p.toLowerCase().includes('horizon') || p.toLowerCase().includes('aura') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('аура')));
 
         if (type === 'SoulShatterCore') {
             if (p.includes('+5% Crit DMG') || p.includes('+5% Крит Урона')) {
@@ -279,6 +320,19 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
                     });
                 }
                 return `${p} (${totalSouls} total souls)`;
+            }
+        }
+
+        if (type === 'NeutronStar') {
+            if (p.toLowerCase().includes('100 max hp')) {
+                const maxHp = calcStat(state?.player.hp || { base: 100, flat: 0, mult: 1 }, state?.hpRegenBuffMult || 1.0);
+                const count100 = Math.floor(maxHp / 100);
+                const actualBoost = count100 * 2;
+                return `${p} (+${actualBoost.toFixed(0)}% actual)`;
+            }
+            if (p.toLowerCase().includes('0.01%')) {
+                const kills = state?.player.neutronStarAuraKills || 0;
+                return `${p} (${kills} kills)`;
             }
         }
 
@@ -297,7 +351,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         return formattedList;
     }
 
-    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor') {
+    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar') {
         return formattedList.flat();
     }
 
@@ -427,6 +481,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                     if (selection.type === 'DefEpi') cd = 30000;
                     if (selection.type === 'KineticBattery') cd = 5000;
                     if (selection.type === 'ComWave') cd = (selection.level >= 4 ? 20000 : 30000);
+                    if (selection.type === 'TemporalMonolith') cd = 30000;
 
                     state.player.activeSkills.push({
                         type: selection.type,
@@ -472,6 +527,18 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
     if (type === 'ComLife' || type === 'KineticBattery') {
         const blood = state.moduleSockets.hexagons.find(h => h?.type === 'BloodForgedCapacitor');
         if (blood) return 5;
+    }
+    if (type === 'DefEpi' || type === 'CombShield') {
+        const gravity = state.moduleSockets.hexagons.find(h => h?.type === 'GravityAnchor');
+        if (gravity) return 5;
+    }
+    if (type === 'ChronoPlating' || type === 'CombShield') {
+        const monolith = state.moduleSockets.hexagons.find(h => h?.type === 'TemporalMonolith');
+        if (monolith) return 5;
+    }
+    if (type === 'EcoHP' || type === 'RadiationCore') {
+        const neutron = state.moduleSockets.hexagons.find(h => h?.type === 'NeutronStar');
+        if (neutron) return 5;
     }
     return 0;
 }
@@ -550,12 +617,13 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.1;
         }
 
-        if (hex.type === 'EcoHP') {
-            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.1;
-            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.03;
-            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1;
+        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar') {
+            const multi = (hex.type === 'NeutronStar') ? 2.0 : 1.0;
+            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.1 * multi;
+            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.03 * multi;
+            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1 * multi;
             if (statKey === 'reg_pct_per_kill') {
-                total += getSoulsSinceLevel(4) * 0.03;
+                total += getSoulsSinceLevel(4) * 0.03 * multi;
             }
         }
 
@@ -579,7 +647,7 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             }
         }
 
-        if (hex.type === 'RadiationCore' || hex.type === 'IrradiatedMire') {
+        if (hex.type === 'RadiationCore' || hex.type === 'IrradiatedMire' || hex.type === 'NeutronStar') {
             if (statKey === 'aura_dmg_missing_hp' && hex.level >= 3) {
                 const missing = 1 - (player.curHp / Math.max(1, (player.hp as any).flat + (player.hp as any).base));
                 const pctMissing = Math.max(0, missing * 100);
@@ -589,19 +657,15 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
 
         if (hex.type === 'ChronoPlating') {
             const totalArmor = calcStat(player.arm);
-            const maxHp = calcStat(player.hp, (state as any).hpRegenBuffMult);
 
             if (hex.level >= 1 && statKey === 'dmg_pct_per_kill') {
                 total += totalArmor * 0.01 * multiplier;
             }
-            if (hex.level >= 2 && statKey === 'ats_pct_per_kill') {
-                total += maxHp * 0.01 * multiplier;
-            }
-            if (hex.level >= 3 && statKey === 'hp_pct_per_kill') {
+            if (hex.level >= 2 && statKey === 'hp_pct_per_kill') {
                 total += totalArmor * 0.01 * multiplier;
             }
             if (hex.level >= 4 && statKey === 'reg_pct_per_kill') {
-                total += totalArmor * 0.005 * multiplier;
+                total += totalArmor * 0.01 * multiplier;
             }
         }
     });

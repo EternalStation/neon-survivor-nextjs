@@ -339,18 +339,80 @@ export function useGameLogic({
                     }
                 });
             } else if (effect.type === 'epicenter') {
-                const range = 500;
+                const isGravity = getHexLevel(state, 'GravityAnchor') >= 1;
+                const meteoritesMult = getHexMultiplier(state, isGravity ? 'GravityAnchor' : 'DefEpi');
+                let range = 500;
+
+                // Level 3: Radius grows by 20% over 10s, multiplied by meteorites
+                if (effect.level >= 3) {
+                    const progress = 1 - (effect.duration / 10); // goes 0 to 1
+                    const growthFactor = 1 + (0.20 * meteoritesMult * progress);
+                    range *= Math.max(1, growthFactor);
+                }
+
+                // Apply continuous effects to enemies in range
+                state.enemies.forEach(e => {
+                    if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
+                    const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
+
+                    if (dist < range + e.size) {
+                        // 1. Level 1: Continuous 50% Slow
+                        e.slowFactor = Math.max(e.slowFactor || 0, 0.50);
+
+                        // 2. Level 2: Pull Effect
+                        if (effect.level >= 2) {
+                            const pullPct = 2 * meteoritesMult;
+                            const pullSpeed = 1000 * (pullPct / 100);
+                            const pullStrength = pullSpeed * step;
+
+                            const angle = Math.atan2(effect.y - e.y, effect.x - e.x);
+                            e.x += Math.cos(angle) * pullStrength;
+                            e.y += Math.sin(angle) * pullStrength;
+                        }
+                    }
+                });
+
+                // Damage Pulse (Every 0.5s)
                 effect.pulseTimer = (effect.pulseTimer || 0) + step;
-                if (effect.pulseTimer >= 1.0) {
+                if (effect.pulseTimer >= 0.5) {
                     effect.pulseTimer = 0;
-                    const pDmg = calcStat(state.player.dmg);
-                    const dmg = pDmg * (effect.level >= 4 ? 0.35 : 0.25);
+                    const pDmg = calcStat(state.player.dmg, state.dmgAtkBuffMult);
+                    let dmg = pDmg * 0.125 * meteoritesMult; // 25% per second = 12.5% per 0.5s pulse
+
+                    if (isGravity) {
+                        const armDmg = calcStat(state.player.arm) * 0.125 * meteoritesMult; // 25% of Armor per sec
+                        dmg += armDmg;
+                    }
+
+                    const executeThreshold = effect.level >= 4 ? 0.05 * meteoritesMult : 0;
+
                     state.enemies.forEach(e => {
                         if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                         if (Math.hypot(e.x - effect.x, e.y - effect.y) < range) {
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#0ea5e9', false);
+
+                            // Level 4 Execute
+                            if (executeThreshold > 0 && !e.boss && e.hp <= e.maxHp * executeThreshold && e.hp > 0) {
+                                state.player.damageDealt += e.hp;
+                                e.hp = 0;
+                                spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#0ea5e9', true);
+
+                                if (isGravity) {
+                                    // Gravity Anchor explosion: 10% max HP in 200 radius
+                                    const explodeDmg = e.maxHp * 0.10 * meteoritesMult;
+                                    spawnParticles(state, e.x, e.y, '#ef4444', 20, 3, 50, 'shockwave');
+                                    state.enemies.forEach(e2 => {
+                                        if (e2.dead || e2.id === e.id) return;
+                                        if (Math.hypot(e2.x - e.x, e2.y - e.y) <= 200) {
+                                            e2.hp -= explodeDmg;
+                                            state.player.damageDealt += explodeDmg;
+                                            spawnFloatingNumber(state, e2.x, e2.y, Math.round(explodeDmg).toString(), '#ef4444', false);
+                                        }
+                                    });
+                                }
+                            }
                         }
                     });
                     playSfx('ice-loop');
@@ -378,16 +440,17 @@ export function useGameLogic({
 
                     if (dist < range) {
                         // Pull Effect (Reverse Knockback)
-                        // Use configured pull strength (Default 5% of 1000px/s reference = 50px/s)
-                        const blackholeClass = PLAYER_CLASSES.find(c => c.id === 'eventhorizon');
-                        const pullPct = blackholeClass?.capabilityMetrics.find(m => m.label === 'Pull Strength')?.value || 5;
-                        const pullSpeed = 1000 * (pullPct / 100);
-                        const pullStrength = pullSpeed * step;
+                        // Use configured pull strength
+                        if (effect.level >= 2) {
+                            const blackholeClass = PLAYER_CLASSES.find(c => c.id === 'eventhorizon');
+                            const pullPct = blackholeClass?.capabilityMetrics.find(m => m.label === 'Pull Strength')?.value || 5;
+                            const pullSpeed = 1000 * (pullPct / 100);
+                            const pullStrength = pullSpeed * step;
 
-                        const angle = Math.atan2(effect.y - e.y, effect.x - e.x);
-                        e.x += Math.cos(angle) * pullStrength;
-                        e.y += Math.sin(angle) * pullStrength;
-
+                            const angle = Math.atan2(effect.y - e.y, effect.x - e.x);
+                            e.x += Math.cos(angle) * pullStrength;
+                            e.y += Math.sin(angle) * pullStrength;
+                        }
                         // Damage Logic
                         if (e.boss) {
                             const dmg = (e.maxHp * bossDps) * step;
@@ -474,7 +537,7 @@ export function useGameLogic({
                     }
                 }
 
-                if (effect.type === 'epicenter') state.player.immobilized = false;
+                // Epicenter no longer immobilizes
                 state.areaEffects.splice(i, 1);
             }
         }

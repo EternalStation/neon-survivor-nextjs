@@ -15,7 +15,10 @@ import {
     canMergeNeuralSingularity, performNeuralSingularityMerge,
     canMergeKineticTsunami, performKineticTsunamiMerge,
     canMergeSoulShatterCore, performSoulShatterCoreMerge,
-    canMergeBloodForgedCapacitor, performBloodForgedCapacitorMerge
+    canMergeBloodForgedCapacitor, performBloodForgedCapacitorMerge,
+    canMergeGravityAnchor, performGravityAnchorMerge,
+    canMergeTemporalMonolith, performTemporalMonolithMerge,
+    canMergeNeutronStar, performNeutronStarMerge
 } from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 
@@ -561,6 +564,126 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     }}
                 >
                     INITIATE BLOOD-FORGED CAPACITOR
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (GRAVITY ANCHOR) */}
+            {canMergeGravityAnchor(gameState) && (
+                <button
+                    onClick={() => {
+                        performGravityAnchorMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #1e3a8a, #111827)',
+                        border: '2px solid #3b82f6',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(59, 130, 246, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.4)';
+                    }}
+                >
+                    INITIATE GRAVITY ANCHOR
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (TEMPORAL MONOLITH) */}
+            {canMergeTemporalMonolith(gameState) && (
+                <button
+                    onClick={() => {
+                        performTemporalMonolithMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #1e293b, #0f172a)',
+                        border: '2px solid #94a3b8',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(148, 163, 184, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(148, 163, 184, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(148, 163, 184, 0.4)';
+                    }}
+                >
+                    INITIATE TEMPORAL MONOLITH
+                </button>
+            )}
+
+            {/* PROTOCOL MERGE BUTTON (NEUTRON STAR) */}
+            {canMergeNeutronStar(gameState) && (
+                <button
+                    onClick={() => {
+                        performNeutronStarMerge(gameState);
+                        playSfx('upgrade-confirm');
+                        onUpdate?.();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0)}px`,
+                        right: '190px',
+                        padding: '12px 24px',
+                        background: 'linear-gradient(45deg, #f59e0b, #d97706)',
+                        border: '2px solid #fbbf24',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 950,
+                        letterSpacing: '2px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        zIndex: 10,
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
+                        fontFamily: 'Orbitron, sans-serif'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 0 35px rgba(251, 191, 36, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.4)';
+                    }}
+                >
+                    INITIATE NEUTRON STAR
                 </button>
             )}
 

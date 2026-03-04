@@ -138,7 +138,7 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                 </div>
 
                 {/* CAPABILITY DESCRIPTION */}
-                {!isMerger && (
+                {hex.category !== 'Fusion' && (
                     <div style={{
                         display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px'
                     }}>
@@ -343,30 +343,56 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                             isStatic = true;
                             cleanLabel = cleanLabel.replace('(STATIC)', '').trim();
                         }
-                        if (hex.type === 'ChronoPlating' && (p.includes('Double Armor') || p.includes('Брони'))) {
-                            const interval = 300;
-                            const startTime = hex.timeAtLevel?.[3] ?? gameState.gameTime;
-                            const elapsed = gameState.gameTime - startTime;
-                            const remaining = interval - (elapsed % interval);
-                            const m = Math.floor(remaining / 60);
-                            const s = Math.floor(remaining % 60).toString().padStart(2, '0');
-                            baseValue = "X2";
-                            // Try to preserve language for the static timer label
-                            cleanLabel = cleanLabel.includes('Armour') ? `Armour every 5 min (${m}:${s})` : `Броня каждые 5 мин (${m}:${s})`;
-                            isNumeric = true;
-                            isStatic = true;
-                            hasPercent = false;
-                            displayValue = `+${(gameState.player.chronoArmorBonus || 0).toFixed(1)}`;
+                        if (hex.type === 'ChronoPlating' || hex.type === 'TemporalMonolith') {
+                            const lowerP = p.toLowerCase();
+                            const isChronoPerk = lowerP.includes('armor') || lowerP.includes('брон');
+
+                            const isLvl1 = isChronoPerk && (p.includes('DMG') || p.includes('Урон'));
+                            const isLvl2 = isChronoPerk && (p.includes('HP%') || p.includes('Здоровье%'));
+                            const isLvl3 = isChronoPerk && (p.includes('Cooldown') || p.includes('перезарядки'));
+                            const isLvl4 = isChronoPerk && (p.includes('HP/sec') || p.includes('Регенерацию'));
+
+                            if (isLvl1 || isLvl2 || isLvl4) {
+                                const armorStats = gameState.player.arm;
+                                const totalArmor = armorStats ? (armorStats.base + (armorStats.flat || 0) + (armorStats.hexFlat || 0)) * (1 + ((armorStats.mult || 0) + (armorStats.hexMult2 || 0) + (armorStats.hexMult || 0)) / 100) : 0;
+                                const actualAmount = totalArmor * 0.01 * multiplier;
+
+                                baseValue = 1;
+                                isNumeric = true;
+                                hasPercent = true;
+                                isStatic = false;
+                                displayValue = `+${actualAmount.toFixed(1)}%`;
+                                cleanLabel = `${cleanLabel} (${actualAmount.toFixed(1)}% actual)`;
+                            } else if (isLvl3) {
+                                const startTime = hex.timeAtLevel?.[3] ?? gameState.gameTime;
+                                const elapsed = gameState.gameTime - startTime;
+                                const minutes = Math.floor(elapsed / 60);
+                                const accumulatedCDR = minutes * 0.25 * multiplier;
+
+                                const curCDR = (gameState.player.cooldownReduction || 0) * 100;
+                                const cdrLabel = cleanLabel.includes('Cooldown') ? 'Cooldown Reduction' : 'Снижение перезарядки';
+                                cleanLabel = `${cdrLabel} [${accumulatedCDR.toFixed(1)}% accumulated]`;
+                                baseValue = 0.25;
+                                hasPercent = true;
+                                isNumeric = true;
+                                displayValue = `+${(0.25 * multiplier).toFixed(1)}% / min`;
+                            }
                         }
 
-                        if (hex.type === 'ChronoPlating' && (p.includes('Cooldown Reduction') || p.includes('перезарядки'))) {
-                            const curCDR = (gameState.player.cooldownReduction || 0) * 100;
-                            const cdrLabel = cleanLabel.includes('Cooldown') ? 'Cooldown Reduction' : 'Снижение перезарядки';
-                            cleanLabel = `[${curCDR.toFixed(1)}%] ${cdrLabel}`;
-                            baseValue = 0.25;
-                            hasPercent = true;
-                            isNumeric = true;
-                            displayValue = `+${(0.25 * multiplier).toFixed(1)}%`;
+                        if (hex.type === 'KineticBattery' || hex.type === 'BloodForgedCapacitor') {
+                            const lowerP = p.toLowerCase();
+                            if (lowerP.includes('cooldown') || lowerP.includes('перезарядки')) {
+                                const startTime = hex.timeAtLevel?.[4] ?? gameState.gameTime;
+                                const elapsed = gameState.gameTime - startTime;
+                                const minutes = Math.floor(elapsed / 60);
+                                const accumulatedCDR = minutes * 0.25 * multiplier;
+
+                                cleanLabel = `${cleanLabel} [${accumulatedCDR.toFixed(1)}% accumulated]`;
+                                baseValue = 0.25;
+                                hasPercent = true;
+                                isNumeric = true;
+                                displayValue = `+${(0.25 * multiplier).toFixed(1)}% / min`;
+                            }
                         }
 
                         if (hex.type === 'IrradiatedMire' && (p.includes('666px') || p.includes('Radius') || p.includes('Радиус'))) {
@@ -405,6 +431,8 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                                 cleanLabel += ` (${bonus.toFixed(1)}s actual)`;
                             }
                         }
+
+                        /* Specific check for Temporal Monolith removed as per user request */
 
                         return (
                             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

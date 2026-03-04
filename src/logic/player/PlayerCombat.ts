@@ -26,14 +26,27 @@ export function handlePlayerCombat(
 
     // RADIATION CORE (Combat - Arena 1)
     const mireLvl = getHexLevel(state, 'IrradiatedMire');
-    const radLvl = mireLvl > 0 ? 5 : getHexLevel(state, 'RadiationCore');
+    const neutronLvl = getHexLevel(state, 'NeutronStar');
+    const radLvl = (mireLvl > 0 || neutronLvl > 0) ? 5 : getHexLevel(state, 'RadiationCore');
     if (radLvl >= 1) {
         if (state.frameCount % 10 === 0) {
-            const m = getHexMultiplier(state, mireLvl > 0 ? 'IrradiatedMire' : 'RadiationCore');
+            const m = getHexMultiplier(state, neutronLvl > 0 ? 'NeutronStar' : (mireLvl > 0 ? 'IrradiatedMire' : 'RadiationCore'));
             const mireActive = mireLvl > 0;
-            const range = mireActive ? 666 : 500;
+            const neutronActive = neutronLvl > 0;
+            const range = (mireActive || neutronActive) ? 666 : 500;
             const maxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             let dmgAmp = 1.0 * m;
+
+            if (neutronActive) {
+                // Radiation Aura damage is increased by 2% for every 100 Max HP you have.
+                const hpBonus = (maxHp / 100) * 0.02;
+                dmgAmp *= (1 + hpBonus);
+
+                // 0.01% Aura DMG increase for kills by your Radiant Aura
+                const killBonus = (player.neutronStarAuraKills || 0) * 0.0001;
+                dmgAmp *= (1 + killBonus);
+            }
+
             if (radLvl >= 3) {
                 const missing = 1 - (player.curHp / maxHp);
                 if (missing > 0) dmgAmp += missing;
@@ -86,11 +99,16 @@ export function handlePlayerCombat(
                         const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (state.frameCount % 30 === 0);
 
                         if (shouldShowText) {
-                            const color = isAuraSource ? '#22c55e' : '#4ade80';
+                            const color = neutronActive ? '#facc15' : (isAuraSource ? '#22c55e' : '#4ade80');
                             spawnFloatingNumber(state, e.x, e.y, Math.round(tickDmg * 6).toString(), color, false);
                         }
 
-                        if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
+                        if (e.hp <= 0 && !e.dead) {
+                            if (neutronActive && isAuraSource) {
+                                player.neutronStarAuraKills = (player.neutronStarAuraKills || 0) + 1;
+                            }
+                            handleEnemyDeath(state, e, onEvent);
+                        }
                     }
                 }
             });
@@ -103,7 +121,7 @@ export function handlePlayerCombat(
         }
 
         if (state.frameCount % 10 === 0) {
-            const range = 500;
+            const range = (mireLvl > 0 || neutronLvl > 0) ? 666 : 500;
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.random() * range;
             state.particles.push({
@@ -111,7 +129,7 @@ export function handlePlayerCombat(
                 y: player.y + Math.sin(angle) * dist,
                 vx: (Math.random() - 0.5) * 0.4,
                 vy: (Math.random() - 0.5) * 0.4,
-                life: 60, maxLife: 60, color: '#bef264',
+                life: 60, maxLife: 60, color: (neutronLvl > 0) ? '#facc15' : '#bef264',
                 size: 6 + Math.random() * 8, type: 'bubble', alpha: 0.5
             });
         }
@@ -249,17 +267,8 @@ export function handleEnemyContact(
             player.damageBlockedByCollisionReduc += (dmgAfterArmor - reducedDmg);
             player.damageBlocked += (rawDmg - reducedDmg);
 
-            if (player.buffs?.epicenterShield && player.buffs.epicenterShield > 0) {
-                player.damageBlocked += reducedDmg;
-                reducedDmg = 0;
-            }
 
-            // Epicenter Level 2 (DMG reduction increased by 50% while channeling)
-            if (player.immobilized && getHexLevel(state, 'DefEpi') >= 2) {
-                const epiDmgRed = reducedDmg * 0.5;
-                player.damageBlocked += epiDmgRed;
-                reducedDmg *= 0.5;
-            }
+            // No longer checking for Epicenter shields/channeling since it's autonomous
 
             if (player.invincibleUntil && state.gameTime < player.invincibleUntil) {
                 player.damageBlocked += reducedDmg;
@@ -431,6 +440,42 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     }
 }
 
+export function triggerKineticBolt(state: GameState, player: Player, source: { x: number, y: number }, targets: number, dmg: number, applyBleed: boolean = false) {
+    const now = state.gameTime;
+
+    let first: Enemy | null = null;
+    let minD = Infinity;
+    state.enemies.forEach(target => {
+        if (target.dead || target.isNeutral || target.wormBurrowState === 'underground') return;
+        const d = Math.hypot(target.x - source.x, target.y - source.y);
+        if (d < minD) { minD = d; first = target; }
+    });
+
+    if (first) {
+        if (!state.pendingZaps) state.pendingZaps = [];
+        const targetIds: number[] = [(first as Enemy).id];
+        let currentInChain: Enemy = first;
+        for (let i = 0; i < targets - 1; i++) {
+            let best: Enemy | null = null;
+            let bestD = Infinity;
+            state.enemies.forEach((cand: Enemy) => {
+                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
+                const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
+                if (d < bestD) { bestD = d; best = cand; }
+            });
+            if (best) { targetIds.push((best as Enemy).id); currentInChain = best; }
+            else break;
+        }
+
+        state.pendingZaps.push({
+            targetIds, dmg, nextZapTime: now, currentIndex: 0,
+            sourcePos: { x: source.x, y: source.y }, history: [],
+            applyBleed
+        });
+        playSfx('impact');
+    }
+}
+
 function processPendingZaps(state: GameState, onEvent?: (type: string, data?: any) => void) {
     if (!state.pendingZaps || state.pendingZaps.length === 0) return;
     for (let i = state.pendingZaps.length - 1; i >= 0; i--) {
@@ -448,6 +493,14 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                     const heal = zap.dmg * 0.03;
                     const maxHp = calcStat(player.hp);
                     player.curHp = Math.min(maxHp, player.curHp + heal);
+                }
+
+                if (zap.applyBleed) {
+                    const armorValue = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0);
+                    // 15% Armor dmg over 3s = 6 ticks of 2.5% armor each (if dotFreq is 30 in EnemyIndividualUpdate)
+                    target.bleedDmg = armorValue * 0.025;
+                    target.bleedTimer = 180; // 3 seconds
+                    target.bleedAccumulator = 0;
                 }
                 // Increased life to 15 for better visibility
                 spawnLightning(state, zap.sourcePos.x, zap.sourcePos.y, target.x, target.y, '#60a5fa', false, true, 15);
@@ -489,26 +542,16 @@ export function spawnLightning(state: GameState, x1: number, y1: number, x2: num
             state.particles.push({
                 x: px, y: py, vx: 0, vy: 0,
                 life: lifeOverride || 6, color: '#fff',
-                size: 1.2, type: 'spark', alpha: 1.0
+                size: 0.5, type: 'spark', alpha: 1.0
             });
             // Outer glow
             state.particles.push({
                 x: px, y: py, vx: 0, vy: 0,
                 life: (lifeOverride ? lifeOverride + 2 : 8), color: color,
-                size: isBranch ? 2.5 : 4.5, type: 'spark', alpha: 0.6
+                size: isBranch ? 1.0 : 1.5, type: 'spark', alpha: 0.6
             });
         }
 
-        if (isStraight && !isBranch) {
-            const branchCount = Math.floor(Math.random() * 5) + 2;
-            for (let b = 0; b < branchCount; b++) {
-                if (Math.random() < 0.9) {
-                    const angle = Math.atan2(y2 - y1, x2 - x1) + (Math.random() - 0.5) * 4.0;
-                    const len = 15 + Math.random() * 45;
-                    spawnLightning(state, targetX, targetY, targetX + Math.cos(angle) * len, targetY + Math.sin(angle) * len, color, true, false, 6);
-                }
-            }
-        }
         lastX = targetX; lastY = targetY;
     }
 }
