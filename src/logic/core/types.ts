@@ -8,10 +8,12 @@ export interface Particle {
     life: number;
     color: string;
     size: number;
-    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle';
+    type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust';
     alpha?: number;
     decay?: number;
     maxLife?: number;
+    isTsunami?: boolean;
+    isSingularity?: boolean;
 }
 
 export interface FloatingNumber {
@@ -54,7 +56,7 @@ export interface ActiveSkill {
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -187,6 +189,9 @@ export interface Player {
     // Aigis Optimization
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
     kineticTsunamiWaveSouls?: number;
+    soulShatterSouls?: number;
+    temporalMonolithSouls?: number;
+    neutronStarAuraKills?: number;
     // Inventory
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
@@ -460,6 +465,7 @@ export interface Enemy {
     // Status Effects
     deathMarkExpiry?: number;
     fearedUntil?: number;
+    temporalMonolithExplosive?: boolean;
 
     // Friendly Zombie Props (Refined)
     isZombie?: boolean;
@@ -483,6 +489,10 @@ export interface Enemy {
     infectedUntil?: number;
     infectionDmg?: number;
     infectionAccumulator?: number;
+    // Kinetic Bleed Status (ComLife + Kinetic Battery Fusion)
+    bleedTimer?: number;
+    bleedDmg?: number;
+    bleedAccumulator?: number;
     // Turret Burn Status
     burnStack?: number;
     burnTimer?: number;
@@ -605,7 +615,8 @@ export type LegendaryType =
     | 'DefPuddle' | 'DefEpi' | 'CombShield'
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
-    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami';
+    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
+    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar';
 
 export interface LegendaryHex {
     id: string;
@@ -847,7 +858,7 @@ export interface GameState {
     levelUpTimer: number;
     pendingBossKills: number;
     bossKillTimer: number;
-    pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, history: { x1: number; y1: number; x2: number; y2: number }[] }>;
+    pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, applyBleed?: boolean, history: { x1: number; y1: number; x2: number; y2: number }[] }>;
 
     // Spawn Logic
     firstMeteoriteSpawned?: boolean;

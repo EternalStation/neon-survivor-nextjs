@@ -173,6 +173,42 @@ export function updateSingleEnemy(
         }
     }
 
+    if (e.bleedTimer && e.bleedTimer > 0) {
+        e.bleedTimer--;
+        const dotFreq = 30;
+        if (state.frameCount % dotFreq === 0) {
+            let dmgPerTick = e.bleedDmg || 0;
+            if (dmgPerTick > 0) {
+                e.bleedAccumulator = (e.bleedAccumulator || 0) + dmgPerTick;
+                if (e.bleedAccumulator >= 1) {
+                    const actualDmg = Math.floor(e.bleedAccumulator);
+                    let dmgDealt = actualDmg;
+                    if (e.legionId) {
+                        const lead = state.legionLeads?.[e.legionId];
+                        if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
+                            const absorbed = Math.min(dmgDealt, lead.legionShield || 0);
+                            lead.legionShield = (lead.legionShield || 0) - absorbed;
+                            dmgDealt -= absorbed;
+                            if (absorbed > 0) spawnFloatingNumber(state, e.x, e.y, Math.round(absorbed).toString(), '#60a5fa', false);
+                        }
+                    }
+                    if (dmgDealt > 0) {
+                        e.hp -= dmgDealt;
+                        e.lastHitTime = state.gameTime;
+                        state.player.damageDealt += dmgDealt;
+                        spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), '#dc2626', false);
+                        spawnParticles(state, e.x, e.y, '#dc2626', 1);
+                    }
+                    e.bleedAccumulator -= actualDmg;
+                    if (e.hp <= 0 && !e.dead) { handleEnemyDeath(state, e, onEvent); return; }
+                }
+            }
+        }
+    } else {
+        e.bleedDmg = 0;
+        e.bleedAccumulator = 0;
+    }
+
     if ((e as any).burnTimer && (e as any).burnTimer > 0) {
         (e as any).burnTimer--;
         if (state.frameCount % 30 === 0) {

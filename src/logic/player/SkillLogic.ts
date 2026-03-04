@@ -1,5 +1,5 @@
 import type { GameState } from '../core/types';
-import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -38,12 +38,6 @@ export function castSkill(state: GameState, skillIndex: number) {
 
     if (skill.type === 'DefEpi') {
         const level = getHexLevel(state, 'DefEpi');
-        state.player.immobilized = true;
-
-        if (level >= 3) {
-            state.player.buffs = state.player.buffs || {};
-            state.player.buffs.epicenterShield = 3; // 3 seconds shield
-        }
 
         state.areaEffects.push({
             id: Math.random(),
@@ -83,16 +77,51 @@ export function castSkill(state: GameState, skillIndex: number) {
         let baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
 
         if (singLvl > 0) {
-            baseCD -= (state.player.level * 0.1);
+            const mult = getHexMultiplier(state, 'NeuralSingularity');
+            baseCD -= (state.player.level * 0.02 * mult);
         }
         if (tsunamiLvl > 0) {
+            const mult = getHexMultiplier(state, 'KineticTsunami');
             const harvestedSouls = state.player.kineticTsunamiWaveSouls || 0;
-            baseCD -= (harvestedSouls * 0.01);
+            baseCD -= (harvestedSouls * 0.01 * mult);
         }
 
         if (baseCD < 5) baseCD = 5;
 
         skill.cooldownMax = baseCD * cdMod;
         skill.cooldown = skill.cooldownMax;
+    }
+
+    if (skill.type === 'TemporalMonolith') {
+        const mult = getHexMultiplier(state, 'TemporalMonolith');
+        const radius = 400 * mult;
+        const duration = 4 * mult;
+        let count = 0;
+        state.enemies.forEach(e => {
+            if (!e.dead && !e.boss && !e.isFriendly) {
+                const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
+                if (dist <= radius) {
+                    e.frozen = duration;
+                    e.temporalMonolithExplosive = true;
+                    count++;
+                }
+            }
+        });
+
+        state.areaEffects.push({
+            id: Math.random(),
+            type: 'temporal_burst',
+            x: state.player.x,
+            y: state.player.y,
+            radius,
+            duration: 0.5,
+            creationTime: state.gameTime,
+            level: 1
+        });
+
+        skill.cooldownMax = 30 * cdMod;
+        skill.cooldown = skill.cooldownMax;
+        skill.inUse = true;
+        skill.duration = duration;
     }
 }

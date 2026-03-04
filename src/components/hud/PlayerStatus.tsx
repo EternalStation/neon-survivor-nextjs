@@ -39,32 +39,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
             width: Math.min(CANVAS_WIDTH * 0.8, 300), display: 'flex', flexDirection: 'column', gap: 6, zIndex: 100,
             alignItems: 'center'
         }}>
-            {/* CHANNELING BAR (Epicenter) */}
-            {(() => {
-                const epi = gameState?.areaEffects?.find(ae => ae.type === 'epicenter');
-                if (!epi || epi.duration === undefined) return null;
-                const pct = Math.max(0, Math.min(100, (epi.duration / 10) * 100));
-                return (
-                    <div style={{
-                        width: '100%', height: 8, background: 'rgba(0,0,0,0.5)',
-                        border: '1px solid #22d3ee', borderRadius: 4, marginBottom: 4,
-                        position: 'relative', overflow: 'hidden'
-                    }}>
-                        <div style={{
-                            width: `${pct}%`, height: '100%',
-                            background: 'linear-gradient(90deg, #0ea5e9, #22d3ee)',
-                            transition: 'width 0.1s linear'
-                        }} />
-                        <div style={{
-                            position: 'absolute', top: 0, width: '100%', textAlign: 'center',
-                            fontSize: 6, fontWeight: 900, color: '#fff', letterSpacing: 1,
-                            textShadow: '0 0 2px #000', lineHeight: '8px'
-                        }}>
-                            {t.channeling}
-                        </div>
-                    </div>
-                );
-            })()}
+
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 8, justifyContent: 'center', alignItems: 'center' }}>
                 {/* DASH INDICATOR */}

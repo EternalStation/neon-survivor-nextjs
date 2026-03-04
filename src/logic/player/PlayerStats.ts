@@ -114,20 +114,24 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
             const startTime = kinHex?.timeAtLevel?.[4] ?? state.gameTime;
             const elapsed = state.gameTime - startTime;
             const minutes = Math.floor(elapsed / 60);
-            // 0.25% per minute
-            player.cooldownReduction = minutes * 0.0025;
-        } else {
-            if (!player.cooldownReduction) player.cooldownReduction = 0;
-            // Note: If Chrono also sets this, we need to be careful not to overwrite if they stack.
-            // Currently logic assumed one or the other. Let's make it additive if needed, but for now we set it.
-            // Actually, let's init it to 0 at start of update function if we want to be safe, but updatePlayerStats assumes it's building up.
-            // For safety: Logic below for Chrono might overwrite if we are not careful.
-            // Let's use a temporary accumulator or just let them overwrite if mutually exclusive (they are different legendary hexes, can have both).
+            const mult = kinHex ? getHexMultiplier(state, kinHex.type) : 1;
+            // 0.25% per minute * multiplier
+            player.cooldownReduction += minutes * 0.0025 * mult;
         }
     }
 
-    // CHRONO PLATING (Economic - Arena 0)
+    // CHRONO PLATING (Defensive - Arena 2) / TEMPORAL MONOLITH Inherited
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
+    const monolithIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'TemporalMonolith');
+    if (chronoLvl >= 3 || monolithIdx !== -1) {
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith');
+        const startTime = chronoHex?.timeAtLevel?.[3] ?? state.gameTime;
+        const elapsed = state.gameTime - startTime;
+        const minutes = Math.floor(elapsed / 60);
+        const mult = chronoHex ? getHexMultiplier(state, chronoHex.type) : 1;
+        // 0.25% per minute * efficiency multiplier
+        player.cooldownReduction += minutes * 0.0025 * mult;
+    }
 
     // Apply Regen
     if (player.healingDisabled) {

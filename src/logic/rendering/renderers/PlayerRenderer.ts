@@ -229,6 +229,31 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
 
             ctx.restore(); // STRICT ISOLATION END
         }
+
+        // --- SONIC SPEED EFFECTS (Level 4 ComWave / Singularity) ---
+        if (player.buffs?.waveSpeed && state.gameTime < player.buffs.waveSpeed) {
+            // Spawn localized particles (Sonic Dust) - Ejected from bottom edges
+            if (Math.random() > 0.8) {
+                const angle = Math.atan2(player.knockback.y, player.knockback.x) + Math.PI; // Opposite to movement
+                const scatter = (Math.random() - 0.5) * 1.2;
+                const pAngle = angle + scatter;
+                const speed = 1.5 + Math.random() * 2.5;
+
+                state.particles.push({
+                    x: player.x + (Math.random() - 0.5) * cellSize,
+                    y: player.y + cellSize * 0.8, // Spawn at the bottom area of the hex
+                    vx: Math.cos(pAngle) * speed,
+                    vy: Math.sin(pAngle) * speed,
+                    life: 12 + Math.random() * 8,
+                    maxLife: 20,
+                    color: Math.random() > 0.5 ? '#ef4444' : '#fbbf24',
+                    size: 0.8 + Math.random() * 1.2,
+                    type: 'dust',
+                    alpha: 0.5,
+                    decay: 0.04
+                });
+            }
+        }
     }
 
     ctx.restore();

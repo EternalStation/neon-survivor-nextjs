@@ -475,34 +475,77 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.save();
             ctx.translate(p.x, p.y);
 
-            // 1. Core Wave Line (Pulse Red)
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = p.color || '#ef4444';
+            if (p.isTsunami || p.isSingularity) {
+                // Fusion Synergy: Dual Waves (Red + Yellow/Purple)
+                const redColor = '#ef4444';
+                // Tsunami is Yellow/Amber, Singularity is White/Yellow (as per user request: красно желтый)
+                const secondaryColor = p.isTsunami ? '#fbbf24' : '#fff176';
 
-            // Thick Neon Glow (Red)
-            ctx.globalAlpha = alpha * 0.3;
-            ctx.lineWidth = 40 * (1 - progress * 0.7);
-            ctx.stroke();
-
-            // Sharp Wave Edge
-            ctx.globalAlpha = alpha;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // 2. Trailing Background (Wave filling effect)
-            if (radius > 10) {
-                const fillAlpha = alpha * 0.25; // More visible fill
-                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-                grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                grad.addColorStop(0.5, `rgba(0, 0, 0, 0)`);
-                grad.addColorStop(0.9, p.color ? p.color.replace(')', ', ' + fillAlpha + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${fillAlpha})`);
-                grad.addColorStop(1, p.color ? p.color.replace(')', ', ' + (alpha * 0.8) + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${alpha * 0.8})`);
-
-                ctx.fillStyle = grad;
+                // 1. Outer Wave (Red - Combat)
                 ctx.beginPath();
                 ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.strokeStyle = redColor;
+                ctx.globalAlpha = alpha * 0.4;
+                ctx.lineWidth = 30 * (1 - progress * 0.7);
+                ctx.stroke();
+                ctx.globalAlpha = alpha;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 2. Inner Wave (Secondary - Economic)
+                const secondaryRadius = radius * 0.96;
+                ctx.beginPath();
+                ctx.arc(0, 0, secondaryRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = secondaryColor;
+                ctx.globalAlpha = alpha * 0.35;
+                ctx.lineWidth = 20 * (1 - progress * 0.7);
+                ctx.stroke();
+                ctx.globalAlpha = alpha * 0.85;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Fill with a dual gradient
+                if (radius > 10) {
+                    const fillAlpha = alpha * 0.2;
+                    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                    grad.addColorStop(0.7, `rgba(239, 68, 68, 0)`);
+                    grad.addColorStop(0.85, `rgba(239, 68, 68, ${fillAlpha})`);
+                    grad.addColorStop(1, p.isTsunami ? `rgba(251, 191, 36, ${fillAlpha})` : `rgba(255, 241, 118, ${fillAlpha})`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+                }
+
+            } else {
+                // Standard Single-Color Wave
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.strokeStyle = p.color || '#ef4444';
+
+                // Thick Neon Glow
+                ctx.globalAlpha = alpha * 0.3;
+                ctx.lineWidth = 40 * (1 - progress * 0.7);
+                ctx.stroke();
+
+                // Sharp Wave Edge
+                ctx.globalAlpha = alpha;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 2. Trailing Background (Wave filling effect)
+                if (radius > 10) {
+                    const fillAlpha = alpha * 0.25;
+                    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                    grad.addColorStop(0.5, `rgba(0, 0, 0, 0)`);
+                    grad.addColorStop(0.9, p.color ? p.color.replace(')', ', ' + fillAlpha + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${fillAlpha})`);
+                    grad.addColorStop(1, p.color ? p.color.replace(')', ', ' + (alpha * 0.8) + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${alpha * 0.8})`);
+
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
             // 3. Inner Echo (Ripples inside the wave)
@@ -515,8 +558,6 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
-
-
 
             ctx.restore();
         } else if (p.type === 'bubble') {

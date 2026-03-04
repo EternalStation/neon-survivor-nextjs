@@ -27,6 +27,8 @@ export function updatePlayer(
         player.shieldChunks = player.shieldChunks.filter((c: any) => now < c.expiry && c.amount > 0);
     }
 
+    const hpAtStart = player.curHp;
+
     // Track player position history for laser prediction (last 60 frames = ~1 second at 60fps)
     if (!state.playerPosHistory) state.playerPosHistory = [];
     state.playerPosHistory.unshift({ x: player.x, y: player.y, timestamp: state.gameTime });
@@ -47,7 +49,11 @@ export function updatePlayer(
             if (skill.type === 'KineticBattery') return;
 
             if (skill.cooldown > 0) {
-                skill.cooldown -= 1 / 60;
+                let recoverySpeed = 1;
+                if ((player as any).temporalMonolithBuff && now < (player as any).temporalMonolithBuff) {
+                    recoverySpeed = 1.2;
+                }
+                skill.cooldown -= (1 / 60) * recoverySpeed;
                 if (skill.cooldown < 0) skill.cooldown = 0;
             }
 
@@ -75,6 +81,14 @@ export function updatePlayer(
 
     // 3. Combat & Aiming (Radiation Core, contact damage, death logic)
     handlePlayerCombat(state, mouseOffset, onEvent, player, triggerDamageTaken, triggerDeath);
+
+    // Temporal Monolith Buff
+    if (player.curHp < hpAtStart) {
+        const hasMonolith = state.moduleSockets.hexagons.some(h => h?.type === 'TemporalMonolith');
+        if (hasMonolith) {
+            (player as any).temporalMonolithBuff = now + 1;
+        }
+    }
 
     // Attach trigger function for other modules (Projectile/UniqueEnemy)
     if (!(state as any).triggerKineticBatteryZap) {

@@ -64,13 +64,13 @@ export const GAME_CONFIG = {
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,
         CRIT_BASE_MULT: 2.0,
-        CRIT_LVL4_CHANCE: 0.25,
-        CRIT_LVL4_MULT: 3.5,
         DEATH_MARK_DURATION: 3, // Seconds
         DEATH_MARK_COOLDOWN: 10,
         DEATH_MARK_MULT: 3.0,
-        EXECUTE_THRESHOLD: 0.5, // 50% HP
-        EXECUTE_CHANCE: 0.10,
+        EXECUTE_THRESHOLD: 0.5,
+        EXECUTE_CHANCE: 0.07,
+        BOSS_EXECUTE_THRESHOLD: 0.4,
+        BOSS_EXECUTE_CHANCE: 0.03,
 
         // ComLife (Lifesteal)
         LIFESTEAL_PERCENT: 0.03,
