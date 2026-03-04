@@ -8,6 +8,7 @@ import { handleEnemyDeath } from '../mission/DeathLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
 
@@ -398,8 +399,8 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     const kinLvl = getHexLevel(state, 'KineticBattery');
     if (kinLvl < 1) return;
     const now = state.gameTime;
-    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
-    if (player.lastKineticShockwave && now < player.lastKineticShockwave + (5.0 * cdMod)) return;
+    const cdMod = getCdMod(state, player);
+    if (isOnCooldown(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, now)) return;
 
     player.lastKineticShockwave = now;
     const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 1.0; // Updated to 100% Armor

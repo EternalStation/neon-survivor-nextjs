@@ -1,17 +1,18 @@
+
 import type { GameState } from '../core/types';
 import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
-import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
+import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 
 export function castSkill(state: GameState, skillIndex: number) {
-    // 0-indexed skill slot
     if (skillIndex < 0 || skillIndex >= state.player.activeSkills.length) return;
 
     const skill = state.player.activeSkills[skillIndex];
-    if (skill.cooldown > 0) return;
+    const now = state.gameTime;
+    const cdMod = getCdMod(state, state.player);
 
-    const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (state.player.cooldownReduction || 0));
+    if (isOnCooldown(skill.lastUsed, skill.baseCD, cdMod, now)) return;
 
     if (skill.type === 'DefPuddle' || skill.type === 'XenoAlchemist' || skill.type === 'IrradiatedMire') {
         const level = getHexLevel(state, 'DefPuddle');
@@ -24,16 +25,15 @@ export function castSkill(state: GameState, skillIndex: number) {
             x: state.player.x,
             y: state.player.y,
             radius,
-            duration: 10, // 10 seconds
+            duration: 10,
             creationTime: state.gameTime,
             level
         });
 
-        // Cooldown
-        skill.cooldownMax = 25 * cdMod;
-        skill.cooldown = skill.cooldownMax;
-        skill.inUse = true; // Visuals?
-        skill.duration = 10; // Track active duration for UI/Logic
+        skill.baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
+        skill.lastUsed = now;
+        skill.inUse = true;
+        skill.duration = 10;
     }
 
     if (skill.type === 'DefEpi') {
@@ -48,19 +48,15 @@ export function castSkill(state: GameState, skillIndex: number) {
             duration: 10,
             creationTime: state.gameTime,
             level,
-            casterId: -1, // Player
-            pulseTimer: 100 // Force immediate first pulse in update loop
+            casterId: -1,
+            pulseTimer: 100
         });
 
-        // playSfx('ice-loop'); // Handled by pulse logic now for consistency
-
-        skill.cooldownMax = 30 * cdMod;
-        skill.cooldown = skill.cooldownMax; // Start cooldown
+        skill.baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
+        skill.lastUsed = now;
         skill.inUse = true;
         skill.duration = 10;
     }
-
-
 
     if (skill.type === 'ComWave' || skill.type === 'NeuralSingularity' || skill.type === 'KineticTsunami') {
         const level = getHexLevel(state, 'ComWave');
@@ -70,10 +66,9 @@ export function castSkill(state: GameState, skillIndex: number) {
 
         if (level >= 4 || singLvl > 0 || tsunamiLvl > 0) {
             state.player.buffs = state.player.buffs || {};
-            state.player.buffs.waveSpeed = state.gameTime + 3; // 3 seconds
+            state.player.buffs.waveSpeed = state.gameTime + 3;
         }
 
-        // Cooldown: 30s base, 20s if Level 4
         let baseCD = level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN;
 
         if (singLvl > 0) {
@@ -88,22 +83,20 @@ export function castSkill(state: GameState, skillIndex: number) {
 
         if (baseCD < 5) baseCD = 5;
 
-        skill.cooldownMax = baseCD * cdMod;
-        skill.cooldown = skill.cooldownMax;
+        skill.baseCD = baseCD;
+        skill.lastUsed = now;
     }
 
     if (skill.type === 'TemporalMonolith') {
         const mult = getHexMultiplier(state, 'TemporalMonolith');
         const radius = 400 * mult;
         const duration = 4 * mult;
-        let count = 0;
         state.enemies.forEach(e => {
             if (!e.dead && !e.boss && !e.isFriendly) {
                 const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
                 if (dist <= radius) {
                     e.frozen = duration;
                     e.temporalMonolithExplosive = true;
-                    count++;
                 }
             }
         });
@@ -119,8 +112,8 @@ export function castSkill(state: GameState, skillIndex: number) {
             level: 1
         });
 
-        skill.cooldownMax = 30 * cdMod;
-        skill.cooldown = skill.cooldownMax;
+        skill.baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
+        skill.lastUsed = now;
         skill.inUse = true;
         skill.duration = duration;
     }

@@ -3,6 +3,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
@@ -127,17 +128,10 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
     // --- CLASS MODIFIERS: Cosmic Beam (formerly Storm-Strike) ---
     if (player.playerClass === 'stormstrike') {
-        const now = Date.now();
-        // Initialize if undefined
-        if (!player.lastCosmicStrikeTime) {
-            player.lastCosmicStrikeTime = 0; // Ready immediately? Or start on cooldown? Usually ready.
-        }
-
-        const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
-        const cooldown = 8000 * cdMod; // 8 Seconds Static * Reduction
-        if (now - player.lastCosmicStrikeTime >= cooldown) {
-            // Orbital Strike Trigger
-            playSfx('lock-on'); // Targeting sound
+        const now = state.gameTime;
+        const cdMod = getCdMod(state, player);
+        if (!isOnCooldown(player.lastCosmicStrikeTime ?? -999999, GAME_CONFIG.SKILLS.COSMIC_COOLDOWN, cdMod, now)) {
+            playSfx('lock-on');
             player.lastCosmicStrikeTime = now;
 
             // Determine Impact Point

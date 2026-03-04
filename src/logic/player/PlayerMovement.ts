@@ -5,6 +5,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { getCdMod } from '../utils/CooldownUtils';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
@@ -47,8 +48,9 @@ export function triggerDash(state: GameState, keys: Record<string, boolean>, inp
     player.dashVx = nx * speedPerFrame;
     player.dashVy = ny * speedPerFrame;
     player.dashUntil = state.gameTime + duration;
-    player.dashCooldown = GAME_CONFIG.DASH.COOLDOWN;
-    player.dashCooldownMax = GAME_CONFIG.DASH.COOLDOWN;
+    const dashCD = GAME_CONFIG.DASH.COOLDOWN * getCdMod(state, player);
+    player.dashCooldown = dashCD;
+    player.dashCooldownMax = dashCD;
     player.invincibleUntil = state.gameTime + GAME_CONFIG.DASH.INVINCIBLE_DURATION;
 
     spawnParticles(state, player.x, player.y, '#22d3ee', 8, 3, 30, 'spark');

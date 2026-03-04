@@ -2,6 +2,7 @@ import { isInMap, getHexDistToWall } from '../mission/MapLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
 import type { GameState, Enemy, Bullet } from '../core/types';
@@ -675,10 +676,8 @@ export function updateProjectiles(state: GameState, onEvent?: (event: string, da
                 // --- ComCrit Lvl 3: Apply Death Mark ---
                 const shatterForMark = getHexLevel(state, 'SoulShatterCore');
                 if (critLevel >= 3 || shatterForMark > 0) {
-                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
-                    const dmCooldown = 10 * cdMod;
-
-                    if (!owner.lastDeathMark || state.gameTime - owner.lastDeathMark > dmCooldown) {
+                    const cdMod = getCdMod(state, owner);
+                    if (!isOnCooldown(owner.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, state.gameTime)) {
                         e.deathMarkExpiry = state.gameTime + 3;
                         owner.lastDeathMark = state.gameTime;
                         spawnParticles(state, e.x, e.y, '#8800FF', 8);

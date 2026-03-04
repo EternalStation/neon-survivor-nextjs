@@ -61,6 +61,13 @@ export const GAME_CONFIG = {
         WAVE_COOLDOWN_LVL4: 20, // Seconds
 
 
+        PUDDLE_COOLDOWN: 25,
+        EPI_COOLDOWN: 30,
+        MONOLITH_COOLDOWN: 30,
+        KINETIC_ZAP_COOLDOWN: 5.0,
+        BLACKHOLE_COOLDOWN: 10,
+        COSMIC_COOLDOWN: 8,
+
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,
         CRIT_BASE_MULT: 2.0,

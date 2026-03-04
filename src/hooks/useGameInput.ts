@@ -6,6 +6,8 @@ import { castSkill } from '../logic/player/SkillLogic';
 import { triggerDash } from '../logic/player/PlayerMovement';
 import { getKeybinds } from '../logic/utils/Keybinds';
 import { dropBlueprint, isBuffActive } from '../logic/upgrades/BlueprintLogic';
+import { getCdMod, isOnCooldown } from '../logic/utils/CooldownUtils';
+import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { BlueprintType } from '../logic/core/types';
@@ -131,7 +133,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 const player = state.player;
                 if (!state.isPaused && !state.gameOver && player.playerClass === 'eventhorizon') {
                     const now = state.gameTime;
-                    const cdMod = isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0;
+                    const cdMod = getCdMod(state, player);
 
                     if (player.voidMarkerActive) {
                         const bx = player.voidMarkerX ?? player.x;
@@ -147,13 +149,13 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                             level: 1
                         });
                         player.voidMarkerActive = false;
-                        player.blackholeCooldown = now + 10 * cdMod;
+                        player.lastBlackholeUse = now;
                         playSfx('impact');
-                    } else if (!player.blackholeCooldown || now >= player.blackholeCooldown) {
+                    } else if (!isOnCooldown(player.lastBlackholeUse ?? -999999, GAME_CONFIG.SKILLS.BLACKHOLE_COOLDOWN, cdMod, now)) {
                         const dx = mousePos.current.x - window.innerWidth / 2;
                         const dy = mousePos.current.y - window.innerHeight / 2;
                         const angle = Math.atan2(dy, dx);
-                        const MARKER_SPEED = 500;
+                        const MARKER_SPEED = 1200;
                         player.voidMarkerActive = true;
                         player.voidMarkerX = player.x;
                         player.voidMarkerY = player.y;
@@ -517,13 +519,14 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     const state = gameState.current;
                     const base = LEGENDARY_UPGRADES[type];
                     if (base) {
+                        const pastTime = state.gameTime - 3600;
                         const selection: any = {
                             ...base,
                             level: 5,
                             killsAtAcquisition: state.killCount,
-                            timeAtAcquisition: state.gameTime,
+                            timeAtAcquisition: pastTime,
                             killsAtLevel: { 1: state.killCount, 2: state.killCount, 3: state.killCount, 4: state.killCount, 5: state.killCount },
-                            timeAtLevel: { 1: state.gameTime, 2: state.gameTime, 3: state.gameTime, 4: state.gameTime, 5: state.gameTime },
+                            timeAtLevel: { 1: pastTime, 2: pastTime, 3: pastTime, 4: pastTime, 5: pastTime },
                             statBonuses: {}
                         };
                         applyLegendarySelection(state, selection);
@@ -536,6 +539,18 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 }
             }
 
+
+            // CDR - Cooldown Reduction +20% per press (max 90%)
+            if (cheatBuffer.endsWith('cdr')) {
+                const state = gameState.current;
+                const cur = state.player.cooldownReductionBonus || 0;
+                const next = Math.min(0.9, cur + 0.2);
+                state.player.cooldownReductionBonus = next;
+                spawnFloatingNumber(state, state.player.x, state.player.y, `CDR ${(next * 100).toFixed(0)}%`, '#00ffff', true);
+                playSfx('power-up');
+                refreshUI();
+                cheatBuffer = '';
+            }
 
             // CS2 - Boost Chassis Resonance (x2 from current per press)
             if (cheatBuffer.endsWith('cs2')) {

@@ -2,211 +2,122 @@
 
 ## Обзор
 
-В проекте существуют **три несовместимых механизма** хранения состояния перезарядки. Это ключевая проблема при централизации. Документ описывает каждый механизм, формулу модификаторов и точки приложения, необходимые для рефакторинга.
+Все кулдауны работают через единый **timestamp-механизм** (`gameTime` в секундах) с централизованной функцией `getCdMod`. Утилиты находятся в [`CooldownUtils.ts`](../../src/logic/utils/CooldownUtils.ts).
 
 ---
 
-## Типы перезарядок
+## Унифицированный механизм (timestamp)
 
-### 1. Countdown-таймер (убывающий счётчик)
+**Все** скиллы и способности используют единый паттерн:
 
-**Используется в:** активные скиллы (`ActiveSkill`), турели (`POI`).
+- `lastUsed: number` — `gameTime` в момент использования.
+- `baseCD: number` — базовый кулдаун в секундах (из `GAME_CONFIG.SKILLS`).
+- Готовность: `isOnCooldown(lastUsed, baseCD, cdMod, now)` → `false` если готов.
 
-**Поля состояния:**
-- `ActiveSkill.cooldown` — текущее значение (секунды), убывает каждый кадр.
-- `ActiveSkill.cooldownMax` — максимальное значение, устанавливается при активации.
-- `POI.cooldown` — аналогичный счётчик турели.
-
-**Тик убывания:**
-
-```
-// PlayerLogic.ts:44–65 — для ActiveSkill
-skill.cooldown -= 1 / 60; // каждый кадр
-if (skill.cooldown < 0) skill.cooldown = 0;
-
-// TurretLogic.ts:48–50 — для POI
-turret.cooldown -= step;
-if (turret.cooldown < 0) turret.cooldown = 0;
-```
-
-**Проверка готовности:** `skill.cooldown <= 0`
-
-**Установка при активации:** `skill.cooldown = baseCD * cdMod` (см. [Снижение кулдауна](stats/cooldown-reduction.md)).
+**POI/турели** (`MapPOI.cooldown`) — используют countdown (секунды), это отдельная система, не затронутая централизацией.
 
 ---
 
-### 2. Timestamp-based (gameTime, секунды)
+## Функции CooldownUtils.ts
 
-**Используется в:** Kinetic Battery, Event Horizon (blackhole), Death Mark.
-
-**Поля состояния (тип `Player`):**
-- `player.lastKineticShockwave?: number` — gameTime последнего zap-удара.
-- `player.blackholeCooldown?: number` — gameTime, когда blackhole снова доступна (timestamp «готовности», не «последнего использования»).
-- `owner.lastDeathMark?: number` — gameTime последней метки смерти.
-
-**Единица измерения:** `state.gameTime` (секунды с начала игры).
-
-**Проверка готовности:**
 ```typescript
-// Kinetic Battery (PlayerCombat.ts:392)
-now < player.lastKineticShockwave + (5.0 * cdMod)  // NOT ready
+getCdMod(state, player): number
+// Возвращает множитель кулдауна: NEURAL_OVERCLOCK × (1 - cooldownReduction - temporalMonolithBonus)
+// Минимальный cdMod: 0.1 (10% базового CD)
 
-// Event Horizon blackhole (ProjectileLogic.ts:658)
-!owner.blackholeCooldown || now >= owner.blackholeCooldown  // ready
+isOnCooldown(lastUsed, baseCD, cdMod, now): boolean
+// true если кулдаун ещё не истёк
 
-// Death Mark (ProjectileLogic.ts:707)
-!owner.lastDeathMark || state.gameTime - owner.lastDeathMark > dmCooldown  // ready
+getRemainingCD(lastUsed, baseCD, cdMod, now): number
+// Оставшееся время в секундах (0 = готов)
+
+getCDProgress(lastUsed, baseCD, cdMod, now): number
+// 1.0 = только что использован, 0.0 = готов (для прогресс-баров HUD)
 ```
-
-**Установка при активации:**
-```typescript
-// Kinetic Battery — сохраняет gameTime активации
-player.lastKineticShockwave = now;
-
-// Event Horizon — сохраняет gameTime ГОТОВНОСТИ (now + duration * cdMod)
-owner.blackholeCooldown = now + cooldownDuration;  // cooldownDuration = 10 * cdMod
-```
-
-> **Внимание:** Kinetic Battery и blackhole используют разные паттерны хранения даже в одной системе координат.
-
----
-
-### 3. Timestamp-based (Date.now(), миллисекунды)
-
-**Используется в:** Cosmic Strike (класс `stormstrike`).
-
-**Поля состояния:**
-- `player.lastCosmicStrikeTime?: number` — `Date.now()` (мс) последнего удара.
-
-**Единица измерения:** системное время в миллисекундах.
-
-**Проверка готовности (ProjectileSpawning.ts:127):**
-```typescript
-const cooldown = 8000 * cdMod; // 8000 ms
-if (now - player.lastCosmicStrikeTime >= cooldown)
-```
-
-> **Проблема несоответствия:** эта система изолирована от `gameTime`. Не зависит от паузы игры. Применяет `cdMod` только частично (только `NEURAL_OVERCLOCK`, без `cooldownReduction`).
 
 ---
 
 ## Формула cdMod
 
-Документация компонентов и источников: [Снижение кулдауна](stats/cooldown-reduction.md).
-
 ```typescript
-const cdMod = (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - (player.cooldownReduction || 0));
+const monolithBonus = temporalMonolithBuff > gameTime ? 0.2 : 0;
+const totalReduction = Math.min(0.9, cooldownReduction + monolithBonus);
+cdMod = (NEURAL_OVERCLOCK ? 0.7 : 1.0) * (1 - totalReduction);
 ```
 
----
+**Источники `cooldownReduction`** (аккумулируются через `+=` в `PlayerStats.ts`):
+- KineticBattery lvl 4: `+0.25% * multiplier` за каждую минуту.
+- ChronoPlating lvl 3 / TemporalMonolith: `+0.25% * multiplier` за каждую минуту.
 
-## Места вычисления cdMod
-
-| Файл | Строка | Применение |
-|---|---|---|
-| `SkillLogic.ts` | 14 | Активные скиллы (DefPuddle, DefEpi, ComWave и вариации) |
-| `PlayerCombat.ts` | 391 | Kinetic Battery zap (triggerKineticBatteryZap) |
-| `ProjectileLogic.ts` | ~650 | Event Horizon blackhole |
-| `ProjectileLogic.ts` | ~705 | Death Mark (Shattered Fate) |
-| `ProjectileSpawning.ts` | 125 | Cosmic Strike — **только NEURAL_OVERCLOCK**, без cooldownReduction |
-| `PlayerStatus.tsx` | 75, 268 | HUD — отображение полос перезарядки |
-
-> **Проблема:** `cdMod` не является централизованной функцией. Дублируется в 5+ местах. Если добавить новый источник `cooldownReduction`, его нужно будет добавить в каждое место вручную.
+**Источники temporalMonolithBonus:**
+- TemporalMonolith пассивный: +20% CDR пока `player.temporalMonolithBuff > gameTime` (активируется при получении урона).
 
 ---
 
 ## Базовые значения перезарядок
 
-Значения документированы в соответствующих файлах способностей. Хранение в коде: часть вынесена в `GAME_CONFIG.SKILLS`, часть — хардкод в логике (известная архитектурная проблема, см. п. 4 ниже).
+Все базовые CD хранятся в `GAME_CONFIG.SKILLS`:
 
-| Скилл / Способность | Документация |
-|---|---|
-| DefPuddle (Toxic Swamp) | [defpuddle.md](legendary-upgrades/defpuddle.md) |
-| DefEpi (Epicenter) | [defepi.md](legendary-upgrades/defepi.md) |
-| ComWave (Terror Pulse) | [comwave.md](legendary-upgrades/comwave.md) |
-| Kinetic Battery zap | [kineticbattery.md](legendary-upgrades/kineticbattery.md) |
-| Event Horizon blackhole | [void-eventhorizon.md](../classes/void-eventhorizon.md) |
-| Cosmic Strike (stormstrike) | [ray-stormstrike.md](../classes/ray-stormstrike.md) |
+| Константа | Значение | Применение |
+|---|---|---|
+| `PUDDLE_COOLDOWN` | 25s | DefPuddle (Toxic Swamp) |
+| `EPI_COOLDOWN` | 30s | DefEpi (Epicenter) |
+| `MONOLITH_COOLDOWN` | 30s | TemporalMonolith |
+| `WAVE_COOLDOWN` | 30s | ComWave (Terror Pulse) |
+| `WAVE_COOLDOWN_LVL4` | 20s | ComWave lvl 4+ |
+| `KINETIC_ZAP_COOLDOWN` | 5.0s | Kinetic Battery zap |
+| `BLACKHOLE_COOLDOWN` | 10s | Event Horizon blackhole |
+| `COSMIC_COOLDOWN` | 8s | Cosmic Strike (stormstrike) |
+| `DEATH_MARK_COOLDOWN` | 10s | Death Mark (ComCrit lvl 3) |
 
 ---
 
-## Жизненный цикл активного скилла (countdown-тип)
+## Жизненный цикл активного скилла
 
 ```
 castSkill() вызван
-  └─ skill.cooldown > 0? → прерывание (не готов)
-  └─ cdMod вычисляется локально
+  └─ isOnCooldown(skill.lastUsed, skill.baseCD, getCdMod(), now)? → прерывание
   └─ эффект применяется
-  └─ skill.cooldownMax = baseCD * cdMod
-  └─ skill.cooldown = skill.cooldownMax
-  └─ skill.inUse = true
+  └─ skill.baseCD = GAME_CONFIG.SKILLS.X_COOLDOWN  (для ComWave — вычисляется динамически)
+  └─ skill.lastUsed = now
+  └─ skill.inUse = true  (если есть duration-эффект)
+  └─ skill.duration = X  (если есть duration-эффект)
 
 каждый кадр (PlayerLogic.ts)
-  └─ skill.type === 'KineticBattery'? → пропуск (своя логика)
-  └─ skill.cooldown -= 1/60
-  └─ skill.cooldown < 0 → 0
   └─ skill.duration > 0?
       └─ skill.duration -= 1/60
       └─ skill.duration <= 0 → skill.inUse = false
-  └─ skill.cooldown <= 0 && нет duration → skill.inUse = false
 ```
 
 ---
 
 ## Отображение в HUD (`PlayerStatus.tsx`)
 
-### Активные скиллы (countdown-тип)
-- Полоса заполнения: `skill.cooldown / skill.cooldownMax` (высота от низа иконки).
-- Текст: `Math.ceil(skill.cooldown)` секунд.
-- Иконка: непрозрачность 0.5 в перезарядке, 1.0 — готов.
+Все виджеты используют единые утилиты:
 
-### Класс-способность (Class Capability)
-- **stormstrike:** вычисляет `(nowMs - lastCosmicStrikeTime) / (8000 * cdMod)`. Применяет cdMod **без cooldownReduction**.
-- **eventhorizon:** вычисляет `(blackholeCooldown - nowSec) / (10 * cdMod)`. Применяет cdMod **без cooldownReduction**.
+```typescript
+const cdMod = getCdMod(gameState, player);
+const progress = getCDProgress(skill.lastUsed, skill.baseCD, cdMod, now);   // для высоты оверлея
+const remaining = getRemainingCD(skill.lastUsed, skill.baseCD, cdMod, now); // для текста
+```
 
-> **Проблема:** HUD заново вычисляет `cdMod` независимо от логики — ещё одна точка дублирования.
-
-### Kinetic Battery (отдельный виджет)
-- Также вычисляет `cdMod` локально с полной формулой (с `cooldownReduction`).
-
----
-
-## Известные архитектурные проблемы
-
-1. **Три системы времени:** countdown (секунды от 0), gameTime-timestamp (секунды от старта игры), Date.now()-timestamp (мс системного времени). Нельзя унифицировать проверки.
-
-2. **cdMod дублируется в 5+ местах.** Отсутствует функция `getCdMod(state, player)`.
-
-3. **Cosmic Strike не учитывает `cooldownReduction`.** Дополнительный источник снижения перезарядки на неё не влияет.
-
-4. **Базовые значения CD частично в конфиге, частично хардкод.** DefPuddle (25), DefEpi (30), KineticBattery zap (5.0), blackhole (10) — захардкожены в логике.
-
-5. **KineticBattery имеет особый статус** — исключена из стандартного тика countdown (`if (skill.type === 'KineticBattery') return;`), управляет своим cooldown через timestamp-механизм.
-
-6. **`cooldownReduction` накапливается за один кадр.** Сбрасывается в 0 в начале `updatePlayerStats()`, затем устанавливается источниками. При нескольких источниках последний перезапишет предыдущего (не суммируется).
+- **Активные скиллы:** `progress * 100%` высота оверлея, `Math.ceil(remaining)` текст.
+- **stormstrike:** `lastCosmicStrikeTime` + `COSMIC_COOLDOWN`.
+- **eventhorizon:** `lastBlackholeUse` + `BLACKHOLE_COOLDOWN`.
+- **Kinetic Battery виджет:** `lastKineticShockwave` + `KINETIC_ZAP_COOLDOWN`.
 
 ---
 
-## Что нужно для централизации
+## Решённые архитектурные проблемы
 
-### Минимальный набор для реализации:
+1. ~~Три системы времени~~ — всё на `gameTime` (секунды).
+2. ~~`cdMod` дублируется в 5+ местах~~ — единая `getCdMod()` в `CooldownUtils.ts`.
+3. ~~Cosmic Strike не учитывает `cooldownReduction`~~ — теперь через `getCdMod()`.
+4. ~~Базовые CD хардкод в логике~~ — вынесены в `GAME_CONFIG.SKILLS`.
+5. ~~KineticBattery особый статус~~ — убрано исключение `if (skill.type === 'KineticBattery') return`.
+6. ~~`cooldownReduction` не работало~~ — теперь учитывается везде через `getCdMod()`.
 
-**a) Функция `getCdMod(state: GameState, player: Player): number`**
-- Инкапсулирует: `NEURAL_OVERCLOCK` и `cooldownReduction`.
-- Вызывается везде вместо дублированного выражения.
-
-**b) Перевод `cooldownReduction` в аддитивное накопление**
-- Заменить прямое присваивание на `+=` и вынести сброс в начало кадра.
-
-**c) Вынести хардкод базовых CD в `GAME_CONFIG.SKILLS`**
-- DefPuddle: 25 → `GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN`
-- DefEpi: 30 → `GAME_CONFIG.SKILLS.EPI_COOLDOWN`
-- KineticBattery zap: 5.0 → `GAME_CONFIG.SKILLS.KINETIC_COOLDOWN`
-- Event Horizon: 10 → `GAME_CONFIG.SKILLS.BLACKHOLE_COOLDOWN`
-- Cosmic Strike: 8000 → `GAME_CONFIG.SKILLS.COSMIC_COOLDOWN_MS`
-
-**d) Применить `cooldownReduction` к Cosmic Strike**
-- Сейчас `ProjectileSpawning.ts:125` не использует `player.cooldownReduction`.
+**Остаётся:** `MapPOI.cooldown` (турели/оверклок) использует countdown — это сознательное решение, POI не взаимодействует с CDR игрока.
 
 ---
 

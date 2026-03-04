@@ -48,11 +48,11 @@ export interface ShieldChunk {
 
 export interface ActiveSkill {
     type: LegendaryType;
-    cooldownMax: number;
-    cooldown: number;
+    baseCD: number;
+    lastUsed: number;
     duration?: number;
     inUse: boolean;
-    keyBind: string; // '1', '2', '3', '4', '5'
+    keyBind: string;
     icon?: string;
 }
 
@@ -139,8 +139,8 @@ export interface Player {
     };
     playerClass?: import('./classes').PlayerClassId;
     classShotCount?: number; // For Storm-Strike Hyper-Pulse
-    lastCosmicStrikeTime?: number; // For Cosmic Beam class tracking
-    blackholeCooldown?: number; // Timestamp when next blackhole can be created (Event Horizon)
+    lastCosmicStrikeTime?: number;
+    lastBlackholeUse?: number;
     deathCause?: string; // Reason for game over
     lastHitDamage?: number; // Final hit damage that killed the player
     lastDamageTime?: number; // Timestamp when player took damage
@@ -184,6 +184,7 @@ export interface Player {
     lastKineticShockwave?: number;
     kineticShieldTimer?: number;
     cooldownReduction?: number;
+    cooldownReductionBonus?: number;
     lastChronoDoubleIndex?: number;
     chronoArmorBonus?: number;
     // Aigis Optimization
