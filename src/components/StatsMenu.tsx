@@ -195,22 +195,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                         {(() => {
                             return (
                                 <>
-                                    <StatRow label={t.statsMenu.labels.health} stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
-                                    <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
-                                    <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
-                                    <StatRow
-                                        label={t.statsMenu.labels.attackSpeed}
-                                        stat={player.atk}
-                                        legendaryBonusFlat={player.atk.hexFlat || 0}
-                                        legendaryBonusPct={player.atk.hexMult || 0}
-                                        arenaMult={gameState.dmgAtkBuffMult}
-                                        extraInfo={(() => {
-                                            // Updated formula: 300 atk = 1.65/s, 500 atk = 3/s, 20000 atk = ~10/s
-                                            const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
-                                            const sps = 2.64 * Math.log(score / 100) - 1.25;
-                                            return `(${sps.toFixed(2)} ${t.units.sps})`;
-                                        })()}
-                                    />
+                                    {/* 1. Armor */}
                                     <StatRow
                                         label={t.statsMenu.labels.armor}
                                         stat={player.arm}
@@ -218,18 +203,8 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         legendaryBonusPct={player.arm.hexMult || 0}
                                         extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
                                     />
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
-                                        <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
-                                            {player.speed.toFixed(1)}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
-                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {((1 - getCdMod(gameState, player)) * 100).toFixed(1)}%
-                                        </span>
-                                    </div>
+
+                                    {/* 2. Collision Reduction */}
                                     {(() => {
                                         const colRed = calculateLegendaryBonus(gameState, 'col_red_per_kill');
                                         return (
@@ -241,6 +216,8 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             </div>
                                         );
                                     })()}
+
+                                    {/* 3. Projectile Reduction */}
                                     {(() => {
                                         const projRed = calculateLegendaryBonus(gameState, 'proj_red_per_kill');
                                         return (
@@ -252,19 +229,8 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             </div>
                                         );
                                     })()}
-                                    {(() => {
-                                        const lifesteal = calculateLegendaryBonus(gameState, 'lifesteal');
-                                        if (lifesteal <= 0) return null;
-                                        return (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.lifesteal}</span>
-                                                <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        );
-                                    })()}
 
+                                    {/* 4. XP Gain */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.xpGain}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -318,6 +284,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
+                                    {/* 5. Meteorite Drop */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.meteoriteChance}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -364,12 +331,60 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
+                                    {/* 6. Cooldown Reduction */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
+                                            {((1 - getCdMod(gameState, player)) * 100).toFixed(1)}%
+                                        </span>
+                                    </div>
+
+                                    {/* 7. Movement Speed */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
+                                        <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
+                                            {player.speed.toFixed(1)}
+                                        </span>
+                                    </div>
+
+                                    {/* 8. Pierce */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {player.pierce}
                                         </span>
                                     </div>
+
+                                    {/* --- FUNDAMENTAL STATS --- */}
+                                    <StatRow label={t.statsMenu.labels.health} stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
+                                    <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
+                                    <StatRow
+                                        label={t.statsMenu.labels.attackSpeed}
+                                        stat={player.atk}
+                                        legendaryBonusFlat={player.atk.hexFlat || 0}
+                                        legendaryBonusPct={player.atk.hexMult || 0}
+                                        arenaMult={gameState.dmgAtkBuffMult}
+                                        extraInfo={(() => {
+                                            const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
+                                            const sps = 2.64 * Math.log(score / 100) - 1.25;
+                                            return `(${sps.toFixed(2)} ${t.units.sps})`;
+                                        })()}
+                                    />
+
+                                    {/* --- CONDITIONAL STATS --- */}
+                                    {(() => {
+                                        const lifesteal = calculateLegendaryBonus(gameState, 'lifesteal');
+                                        if (lifesteal <= 0) return null;
+                                        return (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.lifesteal}</span>
+                                                <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
+                                                    {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
+                                                </span>
+                                            </div>
+                                        );
+                                    })()}
                                     {(() => {
                                         const hasAOEPerk = gameState.moduleSockets.hexagons.some(h =>
                                             h && (h.type === 'EcoDMG' || h.type === 'KineticTsunami' || h.type === 'SoulShatterCore') && h.level >= 4

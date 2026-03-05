@@ -12,17 +12,17 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Quantum Ricochet Rounds'
         ],
         capabilityName: 'QUANTUM FRAGMENTATION',
-        capabilityDesc: 'Manual Targeting. Projectiles have 150% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage and 5% Speed.',
+        capabilityDesc: 'Manual Targeting. Projectiles have 100% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 5% Damage and 3% Speed.',
         capabilityMetrics: [
-            { label: 'RANGE', value: 150, unit: '%', isPercentage: true, description: 'Base projectile range multiplier' },
-            { label: 'DMG/WALL', value: 20, unit: '%', isPercentage: true, description: 'Damage gain per bounce' },
-            { label: 'SPD/WALL', value: 5, unit: '%', isPercentage: true, description: 'Speed gain per bounce' },
+            { label: 'RANGE', value: 100, unit: '%', isPercentage: true, isResonant: true, description: 'Base projectile range multiplier' },
+            { label: 'DMG/WALL', value: 5, unit: '%', isPercentage: true, isResonant: true, description: 'Damage gain per bounce' },
+            { label: 'SPD/WALL', value: 3, unit: '%', isPercentage: true, isResonant: true, description: 'Speed gain per bounce' },
         ],
         stats: {
             hpMult: -0.15,
-            bounceDmgMult: 0.2,
-            bounceSpeedBonus: 0.05,
-            projLifeMult: 1.5,
+            bounceDmgMult: 0.05,
+            bounceSpeedBonus: 0.03,
+            projLifeMult: 1.0,
             pierce: 1,
         },
         icon: '#d946ef', // Pink-Purple
@@ -65,10 +65,10 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         description: 'A heavy artillery frame with a chargeable orbital ring strike.',
         characteristics: [
             'Slow-firing heavy ordnance',
-            'Chargeable ring of laser strikes (E)'
+            'Chargeable ring of laser strikes (ACTIVE SKILL)'
         ],
         capabilityName: 'Storm Circle',
-        capabilityDesc: 'Press E to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.',
+        capabilityDesc: 'Press ACTIVE SKILL to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.',
         capabilityMetrics: [
             { label: 'Max Charge', value: 10, unit: 's', isPercentage: false, description: 'Full charge time' },
             { label: 'Max DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage per laser at full charge' },
@@ -87,22 +87,25 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         name: 'Aegis',
         title: 'THE GOLDEN BASTION',
         lore: 'The ultimate deterrent. By weaving a web of magnetic flux, Aigis creates a rotating perimeter of death that protects its pilot while devastating anything that enters its orbit.',
-        description: 'An experimental defensive unit maintaining an intense electromagnetic flux.',
+        description: 'Projectiles spawn in 4 orbits with different chances.',
         characteristics: [
-            'Short-range defensive perimeter',
-            'Projectile speed manipulation',
-            'Active Orbital Vortex (E)'
+            '4 Magnetic Orbits',
+            'Projectile course-correction',
+            'ACTIVE SKILL: Orbital Vortex'
         ],
         capabilityName: 'Magnetic Vortex',
-        capabilityDesc: 'Projectiles orbit in rings. ACTIVE (E): Spun at 4 multiplier for 5s. Pulls enemies clockwise and deflects projectiles. 20s CD.',
+        capabilityDesc: 'Projectiles spawn in 4 orbits with different chances. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.',
         capabilityMetrics: [
             { label: 'Active CD', value: 20, unit: 's', isPercentage: false, isStatic: true, description: 'Recharge time' },
-            { label: 'Duration', value: 5, unit: 's', isPercentage: false, isStatic: true, description: 'Active duration' },
-            { label: 'Speed Mult', value: 4, unit: 'x', isPercentage: false, isStatic: true, description: 'Projectile orbit speed' }
+            { label: 'Orbit II', value: 15, unit: '%', isPercentage: true, isResonant: true, description: 'Chance to spawn' },
+            { label: 'Duration', value: 2, unit: 's', isPercentage: false, isStatic: true, description: 'Active duration' },
+            { label: 'Orbit III', value: 10, unit: '%', isPercentage: true, isResonant: true, description: 'Chance to spawn' },
+            { label: 'Strength Pull', value: 1, unit: '%', isPercentage: true, isResonant: true, description: 'Vortex suction power' },
+            { label: 'Orbit IV', value: 5, unit: '%', isPercentage: true, isResonant: true, description: 'Chance to spawn' }
         ],
         stats: {
-            hpMult: 0.20,
-            regMult: 0.50,
+            hpMult: 0.50,
+            regMult: 0.30,
         },
         icon: '#f59e0b', // Amber/Gold
         themeColor: '#f59e0b',
@@ -117,10 +120,10 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         characteristics: [
             'Damage-over-time specialist',
             'Organic growth scaling',
-            'Active Nanite Spitter (E)'
+            'ACTIVE SKILL: Nanite Spitter'
         ],
         capabilityName: 'Nanite Swarm',
-        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE (E): Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.',
+        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.',
         capabilityMetrics: [
             { label: 'Active CD', value: 14, unit: 's', isPercentage: false, isStatic: true, description: 'Active Skill Cooldown' },
             { label: 'Infection Rate', value: 30, unit: '%', isPercentage: true, description: '' },

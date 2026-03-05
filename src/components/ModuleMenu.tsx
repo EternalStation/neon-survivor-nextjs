@@ -187,7 +187,12 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             clearTimeout(hoverTimeout.current);
             hoverTimeout.current = null;
         }
-        setHoveredItem({ item, x, y, index });
+        setHoveredItem(prev => {
+            if (prev && prev.item === item && prev.index === index) {
+                return prev;
+            }
+            return { item, x, y, index };
+        });
     };
 
 

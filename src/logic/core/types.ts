@@ -206,6 +206,7 @@ export interface Player {
     chronoArmorBonus?: number;
     // Aigis Optimization
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
+    vortexStrength: number; // Unique number that increases over time/progression (Vortex Power)
     kineticTsunamiWaveSouls?: number;
     soulShatterSouls?: number;
     temporalMonolithSouls?: number;
@@ -225,6 +226,7 @@ export interface ClassMetric {
     description: string;
     isPercentage: boolean;
     isStatic?: boolean;
+    isResonant?: boolean;
 }
 
 export interface PlayerClass {
@@ -457,6 +459,10 @@ export interface Enemy {
     smokeRushEndTime?: number; // Timestamp when smoke rush ends
     hidingStateEndTime?: number; // Timestamp when hiding behavior ends
     lastWallHit?: number; // Cooldown for boss wall collision damage
+    vortexRecoveryUntil?: number; // Timestamp for orbital vortex stun recovery
+    lastVortexVelX?: number;
+    lastVortexVelY?: number;
+    vortexExitInertiaUntil?: number;
     isNeutral?: boolean; // If true, ignored by auto-aim (e.g. Barrels)
     baseColor?: string; // Immutable spawn color for projectiles
     spiralDelay?: number; // Delay in seconds before starting spiral motion (Minions)

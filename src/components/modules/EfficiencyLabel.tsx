@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface EfficiencyLabelProps {
     value: number;
@@ -11,9 +11,15 @@ interface EfficiencyLabelProps {
 export const EfficiencyLabel: React.FC<EfficiencyLabelProps> = ({ value, x, y, color, onLevitateChange }) => {
     const [isHovered, setIsHovered] = useState(false);
 
-    useEffect(() => {
-        if (onLevitateChange) onLevitateChange(isHovered);
-    }, [isHovered, onLevitateChange]);
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+        if (onLevitateChange) onLevitateChange(true);
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        if (onLevitateChange) onLevitateChange(false);
+    };
 
     if (value === 0 && !isHovered) return null;
 
@@ -23,8 +29,8 @@ export const EfficiencyLabel: React.FC<EfficiencyLabelProps> = ({ value, x, y, c
     return (
         <g
             transform={`translate(${x}, ${y})`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{ cursor: 'help', pointerEvents: 'auto' }}
         >
             <rect

@@ -45,6 +45,7 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         playerClass: selectedClass?.id,
         kineticShieldTimer: 0,
         aigisRings: {},
+        vortexStrength: 1.0,
         spawnTimer: GAME_CONFIG.PLAYER.SPAWN_DURATION,
         inventory: Array(30).fill(null),
         rerolls: 3

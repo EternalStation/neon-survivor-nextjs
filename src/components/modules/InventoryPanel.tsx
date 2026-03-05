@@ -283,7 +283,6 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 }}
                 onMouseMove={(e) => {
                     if (item && !movedItem) {
-                        handleMouseEnterItem(item, e.clientX, e.clientY);
                         if (item.isNew) {
                             item.isNew = false;
                             onInventoryUpdate(idx, item);

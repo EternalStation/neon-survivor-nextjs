@@ -592,6 +592,34 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.save();
         ctx.translate(e.x, e.y);
 
+        // Apply visual jitter (used for stuns/vortex)
+        if (e.jitterX || e.jitterY) {
+            ctx.translate(e.jitterX || 0, e.jitterY || 0);
+        }
+
+        // VORTEX / SLINGSHOT STUN VISUAL
+        const pDistV = Math.hypot(e.x - state.player.x, e.y - state.player.y);
+        const isVortexSkillOn = !!(state.player.orbitalVortexUntil && state.player.orbitalVortexUntil > state.gameTime);
+        const isVortexStunned = isVortexSkillOn && pDistV < 800;
+        const isVortexRecovering = !!(e.vortexRecoveryUntil && e.vortexRecoveryUntil > state.gameTime);
+        if (isVortexStunned || isVortexRecovering) {
+            const t = state.gameTime;
+            const alpha = isVortexStunned ? 0.6 : 0.4 * Math.max(0, ((e.vortexRecoveryUntil || 0) - t) / 3.0);
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#fbbf24'; // Amber/Golden (Aigis Theme)
+            ctx.lineWidth = 2.5;
+            const spin = t * 15;
+            for (let i = 0; i < 3; i++) {
+                const rot = spin + i * (Math.PI * 2 / 3);
+                ctx.beginPath();
+                ctx.arc(0, 0, e.size * 1.6, rot, rot + 1.2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
         // SLOW VFX - Frosted Crystalline Shell
         if (e.slowFactor && e.slowFactor > 0.4) {
             ctx.save();

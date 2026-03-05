@@ -72,6 +72,21 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const [view, setView] = useState<'matrix' | 'bestiary' | 'fusions'>('matrix');
     const [fusionFocus, setFusionFocus] = useState<string | undefined>();
     const [levitatingDiamonds, setLevitatingDiamonds] = useState<Record<number, boolean>>({});
+    const [time, setTime] = useState(0);
+    const frameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        const animate = (t: number) => {
+            setTime(t * 0.001); // seconds
+            frameRef.current = requestAnimationFrame(animate);
+        };
+        const handle = requestAnimationFrame(animate);
+        frameRef.current = handle;
+        return () => {
+            if (frameRef.current) cancelAnimationFrame(frameRef.current);
+        };
+    }, []);
+
     const { language } = useLanguage();
     const t = getUiTranslation(language);
     const { moduleSockets } = gameState;
@@ -84,7 +99,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const INACTIVE_STROKE = "rgba(74, 85, 104, 0.2)";
 
     const level4Hexes = new Set<string>();
-    moduleSockets.hexagons.forEach(hex => {
+    moduleSockets.hexagons.forEach((hex: any) => {
         if (hex && hex.level >= 4) {
             level4Hexes.add(hex.type);
         }
@@ -104,7 +119,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
         const eff = meteoriteEfficiencies[i];
         if (!eff) return false;
 
-        return Object.values(eff.perkResults).some(pr => {
+        return Object.values(eff.perkResults).some((pr: any) => {
             if (!pr.connections) return false;
             if (lp.type === 'diamond') return pr.connections.diamonds.includes(lp.index);
             if (lp.type === 'hex') return pr.connections.hexagons.includes(lp.index);
@@ -116,11 +131,11 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const meteoriteEfficiencies = Array.from({ length: 12 }).map((_, i) => {
         if (!moduleSockets.diamonds[i]) return null;
         const result = calculateMeteoriteEfficiency(gameState, i);
-        Object.values(result.perkResults).forEach(pr => {
+        Object.values(result.perkResults).forEach((pr: any) => {
             if (pr.connections) {
-                pr.connections.diamonds.forEach(d => activeConnections.diamonds.add(d));
-                pr.connections.hexagons.forEach(h => activeConnections.hexagons.add(h));
-                pr.connections.sectors.forEach(s => activeConnections.sectors.add(s));
+                pr.connections.diamonds.forEach((d: number) => activeConnections.diamonds.add(d));
+                pr.connections.hexagons.forEach((h: number) => activeConnections.hexagons.add(h));
+                pr.connections.sectors.forEach((s: string) => activeConnections.sectors.add(s));
             }
         });
         return result;
@@ -236,6 +251,74 @@ export const HexGrid: React.FC<HexGridProps> = ({
             />
         );
     }
+
+    const isSocketActive = (item: any) => {
+        if (!item) return false;
+        if (item.status && item.status !== 'active' && item.status !== 'ready') return false;
+        if (item.isRuined) return false;
+        return true;
+    };
+
+    const getMetColor = (met: any) => {
+        if (!met) return "#4A5568";
+        // Convert rarity to key for RARITY_COLORS
+        const r = met.rarity?.toLowerCase() || 'common';
+        return RARITY_COLORS[r] || RARITY_COLORS['common'] || "#4A5568";
+    };
+
+    const getHexColors = (hex: any) => {
+        if (!hex) return ["#4A5568"];
+        const colors: string[] = [];
+        const cats = hex.categories || [hex.category];
+        cats.forEach((cat: string) => {
+            if (cat === 'Economic') colors.push('#fbbf24');
+            else if (cat === 'Combat') colors.push('#ef4444');
+            else if (cat === 'Defensive') colors.push('#3b82f6');
+        });
+        if (colors.length === 0) colors.push('#4A5568');
+        return colors;
+    };
+
+    const makeVineBundle = (x1: number, y1: number, x2: number, y2: number, seed: number = 0, colors: string[] = ["#EF4444"]) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const nx = -dy / dist || 0;
+        const ny = dx / dist || 0;
+
+        const strands = [];
+
+        // Stable, smooth snake-like strands
+        for (let i = 0; i < 4; i++) {
+            // Use deterministic wave patterns instead of random
+            const phase = i * 1.5 + seed;
+            const freq = 1.2 + i * 0.4;
+            const amp = 12 + i * 4;
+
+            // Time-based oscillation for "breathing" / "snake" movement
+            const wiggle1 = Math.sin(time * freq + phase) * amp;
+            const wiggle2 = Math.cos(time * freq * 0.8 + phase * 1.2) * amp;
+
+            // Control points with smooth wiggle
+            const cp1x = x1 + dx * 0.3 + nx * wiggle1;
+            const cp1y = y1 + dy * 0.3 + ny * wiggle1;
+            const cp2x = x1 + dx * 0.7 + nx * wiggle2;
+            const cp2y = y1 + dy * 0.7 + ny * wiggle2;
+
+            // Slightly offset start/end for fiber look
+            const startOff = Math.sin(phase) * 3;
+            const endOff = Math.cos(phase * 1.5) * 3;
+
+            strands.push({
+                d: `M ${x1 + nx * startOff} ${y1 + ny * startOff} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${x2 + nx * endOff} ${y2 + ny * endOff}`,
+                opacity: 0.2 + (i % 3) * 0.15,
+                width: 1.2 + (i % 2) * 1.2,
+                color: colors[i % colors.length]
+            });
+        }
+
+        return strands;
+    };
 
     return (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -402,37 +485,46 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* 2. MS LINES (Met-Met) */}
                 {/* 2.1 Inner-Inner Adjacent (6) */}
                 {innerDiamondPositions.map((pos, i) => {
-                    const nextPos = innerDiamondPositions[(i + 1) % 6];
-                    const active = moduleSockets.diamonds[i] && moduleSockets.diamonds[(i + 1) % 6];
-                    const v1 = pos;
-                    const v2 = nextPos;
+                    const nextIdx = (i + 1) % 6;
+                    const nextPos = innerDiamondPositions[nextIdx];
+                    const met1 = moduleSockets.diamonds[i];
+                    const met2 = moduleSockets.diamonds[nextIdx];
+                    const active = isSocketActive(met1) && isSocketActive(met2);
+                    if (!active) return null;
+
+                    const eff1 = meteoriteEfficiencies[i];
+                    const eff2 = meteoriteEfficiencies[nextIdx];
+                    const isPowered = (eff1?.totalBoost || 0) > 0 && (eff2?.totalBoost || 0) > 0;
+
+                    const colors = isPowered ? [getMetColor(met1), getMetColor(met2)] : ["#4A5568"];
+
                     return (
                         <g key={`ms-ii-adj-group-${i}`}>
-                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.6 : 1} className={active ? "pulse-crimson energy-flow-line" : ""} />
-                            {active && (
-                                <>
-                                    <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
+                            {makeVineBundle(pos.x, pos.y, nextPos.x, nextPos.y, i * 10, colors).map((strand, sIdx) => (
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "pulse-crimson" : ""} />
+                            ))}
                         </g>
                     );
                 })}
                 {/* 2.3 Inner-Outer Radial (6) */}
                 {edgeDiamondPositions.map((ePos, i) => {
                     const iPos = innerDiamondPositions[i];
-                    const active = moduleSockets.diamonds[i + 6] && moduleSockets.diamonds[i];
-                    const v1 = ePos;
-                    const v2 = iPos;
+                    const metOuter = moduleSockets.diamonds[i + 6];
+                    const metInner = moduleSockets.diamonds[i];
+                    const active = isSocketActive(metOuter) && isSocketActive(metInner);
+                    if (!active) return null;
+
+                    const effOuter = meteoriteEfficiencies[i + 6];
+                    const effInner = meteoriteEfficiencies[i];
+                    const isPowered = (effOuter?.totalBoost || 0) > 0 && (effInner?.totalBoost || 0) > 0;
+
+                    const colors = isPowered ? [getMetColor(metOuter), getMetColor(metInner)] : ["#4A5568"];
+
                     return (
                         <g key={`ms-io-rad-group-${i}`}>
-                            <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke={active ? "#EF4444" : INACTIVE_STROKE} strokeWidth={active ? "3" : "2"} opacity={active ? 0.6 : 1} className={active ? "pulse-crimson energy-flow-line" : ""} />
-                            {active && (
-                                <>
-                                    <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={v1.x} y1={v1.y} x2={v2.x} y2={v2.y} stroke="#F87171" strokeWidth="5" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
+                            {makeVineBundle(ePos.x, ePos.y, iPos.x, iPos.y, i * 20 + 50, colors).map((strand, sIdx) => (
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "pulse-crimson" : ""} />
+                            ))}
                         </g>
                     );
                 })}
@@ -440,18 +532,21 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* 3. XMS LINES (Hex-Met) */}
                 {/* 3.1 Center-Inner Perpendicular (6) */}
                 {innerDiamondPositions.map((pos, i) => {
-                    const active = moduleSockets.diamonds[i];
-                    const mid = centerSideMidpoints[i];
-                    const targetV = pos;
+                    const centerClass = gameState.moduleSockets.center;
+                    const met = moduleSockets.diamonds[i];
+                    const active = isSocketActive(centerClass) && isSocketActive(met);
+                    if (!active || !centerClass) return null;
+
+                    const pMet = meteoriteEfficiencies[i];
+                    const isPowered = (pMet?.totalBoost || 0) > 0;
+
+                    const colors = isPowered ? [centerClass.themeColor || "#6366F1", getMetColor(met)] : ["#4A5568"];
+
                     return (
                         <g key={`xms-ci-perp-group-${i}`}>
-                            <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke={active ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active ? "2" : "1"} opacity={active ? 0.6 : 1} className={active ? "synergy-trail energy-flow-line" : ""} />
-                            {active && (
-                                <>
-                                    <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={mid.x} y1={mid.y} x2={targetV.x} y2={targetV.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
+                            {makeVineBundle(centerSideMidpoints[i].x, centerSideMidpoints[i].y, pos.x, pos.y, i * 5 + 100, colors).map((strand, sIdx) => (
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "synergy-trail" : ""} />
+                            ))}
                         </g>
                     );
                 })}
@@ -459,63 +554,83 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {hexPositions.map((hPos, i) => {
                     const dIdx1 = i;
                     const dIdx2 = (i + 5) % 6;
-                    const active1 = moduleSockets.hexagons[i] && moduleSockets.diamonds[dIdx1];
-                    const active2 = moduleSockets.hexagons[i] && moduleSockets.diamonds[dIdx2];
-                    const dPos1 = innerDiamondPositions[dIdx1];
-                    const dPos2 = innerDiamondPositions[dIdx2];
-                    const pair1 = findClosestVertices(hPos.vertices, [dPos1]);
-                    const pair2 = findClosestVertices(hPos.vertices, [dPos2]);
-                    return [
-                        <g key={`xms-hi-group-${i}-1`}>
-                            <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke={active1 ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active1 ? "2" : "1"} opacity={active1 ? 0.3 : 1} className={active1 ? "synergy-trail" : ""} />
-                            {active1 && (
-                                <>
-                                    <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
-                        </g>,
-                        <g key={`xms-hi-group-${i}-2`}>
-                            <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke={active2 ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active2 ? "2" : "1"} opacity={active2 ? 0.3 : 1} className={active2 ? "synergy-trail" : ""} />
-                            {active2 && (
-                                <>
-                                    <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
-                        </g>
-                    ];
+                    const hex = moduleSockets.hexagons[i];
+                    const met1 = moduleSockets.diamonds[dIdx1];
+                    const met2 = moduleSockets.diamonds[dIdx2];
+                    const active1 = isSocketActive(hex) && isSocketActive(met1);
+                    const active2 = isSocketActive(hex) && isSocketActive(met2);
+                    const pair1 = findClosestVertices(hPos.vertices, [innerDiamondPositions[dIdx1]]);
+                    const pair2 = findClosestVertices(hPos.vertices, [innerDiamondPositions[dIdx2]]);
+
+                    const eff1 = meteoriteEfficiencies[dIdx1];
+                    const eff2 = meteoriteEfficiencies[dIdx2];
+                    const isPowered1 = (eff1?.totalBoost || 0) > 0;
+                    const isPowered2 = (eff2?.totalBoost || 0) > 0;
+
+                    const colors1 = isPowered1 ? [...getHexColors(hex), getMetColor(met1)] : ["#4A5568"];
+                    const colors2 = isPowered2 ? [...getHexColors(hex), getMetColor(met2)] : ["#4A5568"];
+
+                    const elems = [];
+                    if (active1) {
+                        elems.push(
+                            <g key={`xms-hi-group-${i}-1`}>
+                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 3, colors1).map((strand, sIdx) => (
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7} className={isPowered1 ? "synergy-trail" : ""} />
+                                ))}
+                            </g>
+                        );
+                    }
+                    if (active2) {
+                        elems.push(
+                            <g key={`xms-hi-group-${i}-2`}>
+                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 7 + 10, colors2).map((strand, sIdx) => (
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7} className={isPowered2 ? "synergy-trail" : ""} />
+                                ))}
+                            </g>
+                        );
+                    }
+                    return elems.length > 0 ? elems : null;
                 })}
                 {/* 3.3 OuterHex-EdgeMet (12) */}
                 {hexPositions.map((hPos, i) => {
                     const eIdx1 = i;
                     const eIdx2 = (i + 5) % 6;
-                    const active1 = moduleSockets.hexagons[i] && moduleSockets.diamonds[eIdx1 + 6];
-                    const active2 = moduleSockets.hexagons[i] && moduleSockets.diamonds[eIdx2 + 6];
-                    const ePos1 = edgeDiamondPositions[eIdx1];
-                    const ePos2 = edgeDiamondPositions[eIdx2];
-                    const pair1 = findClosestVertices(hPos.vertices, [ePos1]);
-                    const pair2 = findClosestVertices(hPos.vertices, [ePos2]);
-                    return [
-                        <g key={`xms-he-group-${i}-1`}>
-                            <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke={active1 ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active1 ? "2" : "1"} opacity={active1 ? 0.4 : 1} className={active1 ? "synergy-trail" : ""} />
-                            {active1 && (
-                                <>
-                                    <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={pair1.v1.x} y1={pair1.v1.y} x2={pair1.v2.x} y2={pair1.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
-                        </g>,
-                        <g key={`xms-he-group-${i}-2`}>
-                            <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke={active2 ? "#6366F1" : INACTIVE_STROKE} strokeWidth={active2 ? "2" : "1"} opacity={active2 ? "0.4" : 1} className={active2 ? "synergy-trail" : ""} />
-                            {active2 && (
-                                <>
-                                    <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-forward" />
-                                    <line x1={pair2.v1.x} y1={pair2.v1.y} x2={pair2.v2.x} y2={pair2.v2.y} stroke="#818CF8" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 120" className="energy-dot-reverse" />
-                                </>
-                            )}
-                        </g>
-                    ];
+                    const hex = moduleSockets.hexagons[i];
+                    const met1 = moduleSockets.diamonds[eIdx1 + 6];
+                    const met2 = moduleSockets.diamonds[eIdx2 + 6];
+                    const active1 = isSocketActive(hex) && isSocketActive(met1);
+                    const active2 = isSocketActive(hex) && isSocketActive(met2);
+                    const pair1 = findClosestVertices(hPos.vertices, [edgeDiamondPositions[eIdx1]]);
+                    const pair2 = findClosestVertices(hPos.vertices, [edgeDiamondPositions[eIdx2]]);
+
+                    const eff1 = meteoriteEfficiencies[eIdx1 + 6];
+                    const eff2 = meteoriteEfficiencies[eIdx2 + 6];
+                    const isPowered1 = (eff1?.totalBoost || 0) > 0;
+                    const isPowered2 = (eff2?.totalBoost || 0) > 0;
+
+                    const colors1 = isPowered1 ? [...getHexColors(hex), getMetColor(met1)] : ["#4A5568"];
+                    const colors2 = isPowered2 ? [...getHexColors(hex), getMetColor(met2)] : ["#4A5568"];
+
+                    const elems = [];
+                    if (active1) {
+                        elems.push(
+                            <g key={`xms-he-group-${i}-1`}>
+                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 4 + 20, colors1).map((strand, sIdx) => (
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8} className={isPowered1 ? "synergy-trail" : ""} />
+                                ))}
+                            </g>
+                        );
+                    }
+                    if (active2) {
+                        elems.push(
+                            <g key={`xms-he-group-${i}-2`}>
+                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 9 + 30, colors2).map((strand, sIdx) => (
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8} className={isPowered2 ? "synergy-trail" : ""} />
+                                ))}
+                            </g>
+                        );
+                    }
+                    return elems.length > 0 ? elems : null;
                 })}
 
                 <defs>

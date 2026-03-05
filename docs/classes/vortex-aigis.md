@@ -3,14 +3,21 @@
 ## Characteristics
 | Parameter | Meaning |
 |----------|----------|
-| HP | +20% |
-| HP Regeneration | +50% |
+| HP | +4% |
+| HP Regeneration | +10% |
+| Vortex Power | 1.0 (Scalable) |
 
 ---
 
-## Ability: Magnetic Vortex
-
-**Trigger:** each player's shot → chance check for each ring level independently.
+## Performance Metrics (UI)
+| Metric | Value | Type | Description |
+|--------|-------|------|-------------|
+| Active CD | 20s | Static | Recharge time |
+| Duration | 2s | Static | Active duration |
+| Strength Pull | 1% | Resonant | Vortex suction power (formerly Vortex Power) |
+| Orbit II | 15% | Resonant | Chance to spawn Ring II |
+| Orbit III | 10% | Resonant | Chance to spawn Ring III |
+| Orbit IV | 5% | Resonant | Chance to spawn Ring IV |
 
 ### Rings
 | Level | Radius | Base Chance | Chance formula |
@@ -56,7 +63,7 @@ The data is stored in `player.aigisRings[radius] = { count, totalDmg }`.
 ## Active Skill: Orbital Vortex
 
 **Cooldown:** 20 seconds  
-**Duration:** 5 seconds  
+**Duration:** 2 seconds  
 
 ### Mechanics
 
@@ -67,9 +74,12 @@ On activation, the player bends the environment around them, creating a massive 
    - If projectiles are merged into solid rings, they visually light up and pulsate instead of spinning faster.
    - **Visuals:** A wind-like aura swirls around the player, indicating the orbit space.
 
-2. **Environmental Bending (Enemies & Projectiles):**
-   - Applies a continuous **clockwise rotational pull** to all nearby enemies and enemy projectiles.
-   - **Pull Strength Scaling:** Starts slow and scales based on the player's **maximum meteorites**. 
-     - *Late-Game Cap:* The pull strength has a maximum cap so that in the late game it doesn't over-accelerate entities and become uncontrollably fast.
-   - **Wall Slam (Collision Damage):** Players can use this clockwise pull strategically near map boundaries. If an orbiting enemy is dragged into a wall, they take massive collision damage based on their orbital velocity.
-   - **Projectile Deflection:** Bends the trajectories of enemy projectiles (like diamonds), forcing them into orbit and protecting the player from direct hits.
+2. **Meteorite Slingshot Physics:**
+   - The vortex functions as a gravitational slingshot. Enemies are no longer just spun in place; they are pulled into the field and then slung outwards at high velocities.
+   - **Inward Pull:** When far from the player (>180px), enemies are rapidly pulled towards the center of the vortex.
+   - **Outward Sling:** Once enemies reach the inner proximity threshold, the radial force flips to push them away. This creates a high-energy "swing" maneuver.
+    - **Inertial Drift:** Enemies maintain their built-up kinetic energy for 1.5 seconds after leaving the 800px vortex field, gradually fading out before regaining control.
+    - **Wall Slam:** Orbiting enemies dragged into walls take massive damage (10% of Max HP for high-speed impacts).
+    - **Projectile Deflection (Active):** Enemy bullets entering the 800px field are bent into the clockwise orbit, with intensity scaling based on **Vortex Power**.
+    - **Passive Deflection:** The magnetic rings (180px - 330px) provide a subtle course-correction for enemy projectiles even when the skill is inactive.
+    - **Vortex Progression:** Every kill permanently increases **Vortex Power** by 0.0003, ensuring the pull and spin forces scale into the late game.

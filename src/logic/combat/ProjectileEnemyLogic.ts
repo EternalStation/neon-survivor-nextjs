@@ -20,18 +20,32 @@ export function updateSingleEnemyBullet(
     eb.life--;
 
     const player = state.player;
-    if (player.orbitalVortexUntil && player.orbitalVortexUntil > state.gameTime) {
+    if (player.playerClass === 'aigis') {
         const vdx = eb.x - player.x;
         const vdy = eb.y - player.y;
         const vdist = Math.hypot(vdx, vdy);
-        if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
-            const perpX = -vdy / vdist;
-            const perpY = vdx / vdist;
-            eb.vx += perpX * 0.8;
-            eb.vy += perpY * 0.8;
-            const speed = Math.hypot(eb.vx, eb.vy);
-            const cap = 14;
-            if (speed > cap) { eb.vx = (eb.vx / speed) * cap; eb.vy = (eb.vy / speed) * cap; }
+        const vPower = player.vortexStrength || 1.0;
+
+        if (player.orbitalVortexUntil && player.orbitalVortexUntil > state.gameTime) {
+            // ACTIVE VORTEX: Strong Bending (800px)
+            if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
+                const perpX = -vdy / vdist;
+                const perpY = vdx / vdist;
+                eb.vx += perpX * 0.15 * vPower;
+                eb.vy += perpY * 0.15 * vPower;
+                const speed = Math.hypot(eb.vx, eb.vy);
+                const cap = 14;
+                if (speed > cap) { eb.vx = (eb.vx / speed) * cap; eb.vy = (eb.vy / speed) * cap; }
+            }
+        } else {
+            // PASSIVE DEFLECTION: Orbits 2, 3, 4 (180px to 330px)
+            if (vdist > 180 && vdist < 330) {
+                const perpX = -vdy / vdist;
+                const perpY = vdx / vdist;
+                // Subtle passive nudge
+                eb.vx += perpX * 0.05 * vPower;
+                eb.vy += perpY * 0.05 * vPower;
+            }
         }
     }
 

@@ -123,6 +123,16 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                                     <span className="metric-base-val">{m.value}{m.unit}</span>
                                                     <span className="metric-label">{metricLabel}</span>
                                                 </div>
+                                                <div className="metric-calculation">
+                                                    {m.isStatic && (
+                                                        <span className="final-val" style={{ color: '#94a3b8' }}>{tChassis.static}</span>
+                                                    )}
+                                                    {m.isResonant && (
+                                                        <span className="final-val" style={{ color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.3)' }}>
+                                                            +{Number((m.value * totalResonance).toFixed(2))}{m.unit} | <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.3)' }}>{Number((m.value * (1 + totalResonance)).toFixed(2))}{m.unit}</span>
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );

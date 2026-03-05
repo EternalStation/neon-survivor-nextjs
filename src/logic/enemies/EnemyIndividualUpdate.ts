@@ -20,7 +20,8 @@ export function updateSingleEnemy(
     state: GameState,
     step: number,
     bhPullSpeed: number,
-    onEvent?: (event: string, data?: any) => void
+    onEvent?: (event: string, data?: any) => void,
+    resonance: number = 0
 ) {
     if (e.dead) return;
 
@@ -185,7 +186,6 @@ export function updateSingleEnemy(
                             dmgDealt -= shieldAbsorp;
                             if (shieldAbsorp > 0) {
                                 spawnFloatingNumber(state, e.x, e.y, Math.round(shieldAbsorp).toString(), '#60a5fa', false);
-                                spawnParticles(state, e.x, e.y, '#60a5fa', 1);
                             }
                         }
                     }
@@ -361,9 +361,22 @@ export function updateSingleEnemy(
 
     // Stagger enemy if they are experiencing significant physical knockback
     const knockbackMag = e.knockback ? Math.hypot(e.knockback.x, e.knockback.y) : 0;
-    if (knockbackMag > e.spd * 0.5) {
+    const vortexActive = !!(state.player.orbitalVortexUntil && state.player.orbitalVortexUntil > state.gameTime);
+    const isRecoveringFromVortex = !!(e.vortexRecoveryUntil && e.vortexRecoveryUntil > state.gameTime);
+    const isInInertia = !!(e.vortexExitInertiaUntil && state.gameTime < e.vortexExitInertiaUntil);
+    // Localized Vortex Check: Only enemies within the 800px radius are truly suppressed/jittered
+    const isInVortexField = vortexActive && dist < 800;
+
+    if (knockbackMag > e.spd * 0.5 || isInVortexField || isRecoveringFromVortex) {
         currentSpd = 0;
+        // Visual shake for stunned enemies
+        if (isInVortexField || isRecoveringFromVortex) {
+            e.jitterX = (Math.random() - 0.5) * 6;
+            e.jitterY = (Math.random() - 0.5) * 6;
+        }
     } else {
+        e.jitterX = 0;
+        e.jitterY = 0;
         if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
         if (e.slowFactor) {
             currentSpd *= (1 - e.slowFactor);
@@ -411,7 +424,7 @@ export function updateSingleEnemy(
     } else {
         switch (e.shape) {
             case 'circle': v = updateNormalCircle(e, state, dx, dy, currentSpd, pushX, pushY); break;
-            case 'triangle': v = updateNormalTriangle(e, state, dx, dy, pushX, pushY); break;
+            case 'triangle': v = updateNormalTriangle(e, state, dx, dy, currentSpd, pushX, pushY); break;
             case 'square': v = updateNormalSquare(currentSpd, dx, dy, pushX, pushY); break;
             case 'hexagon': v = updateNormalSquare(currentSpd, dx, dy, pushX, pushY); break;
             case 'diamond': v = updateNormalDiamond(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
@@ -445,31 +458,75 @@ export function updateSingleEnemy(
         });
     }
 
-    const vortexActive = state.player.orbitalVortexUntil && state.player.orbitalVortexUntil > state.gameTime;
     if (vortexActive) {
         const vdx = e.x - state.player.x;
         const vdy = e.y - state.player.y;
         const vdist = Math.hypot(vdx, vdy);
         if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
-            // Cap the pull based on max meteorites
-            const maxMets = Math.max(1, (state.player.inventory || []).filter(s => s !== null).length);
-
-            // MULTIPLIED BY 50 FOR TESTING
-            const rawPull = (0.4 + (maxMets * 0.15)) * 50;
-            const pullStrength = Math.min(rawPull, 175.0) * (e.boss ? 0.3 : 1.0); // Bosses resist the pull
+            // VORTEX POWER: Scaled by the unique vortexStrength number and Meteorite Resonance
+            const pullBase = 1 * (1 + resonance) * (state.player.vortexStrength || 1.0);
+            const pullStrength = pullBase * (e.boss ? 0.35 : 1.0);
 
             // To pull enemies in a clockwise orbit, we calculate the perpendicular (tangent) vector.
-            // Vector to player is (vdx, vdy). Tangent clockwise is (-vdy, vdx) normalized.
             const perpX = -vdy / vdist;
             const perpY = vdx / vdist;
 
-            vx += perpX * pullStrength;
-            vy += perpY * pullStrength;
+            // TANGENTIAL force (Spin - Meteorite kinetic energy)
+            // Assist Logic: The closer they are, the faster they spin (Slingshot Effect)
+            const proximityBonus = 1.0 + (1.0 - Math.min(1.0, vdist / 400)) * 2.0;
+            const tangentialStrength = pullStrength * 1.5 * proximityBonus;
+            const vortexVx = perpX * tangentialStrength;
+            const vortexVy = perpY * tangentialStrength;
 
-            // We also add a slight outward centrifugal force (20% of pull strength)
-            // so they spiral outwards and eventually hit the walls.
-            vx += (vdx / vdist) * (pullStrength * 0.2);
-            vy += (vdy / vdist) * (pullStrength * 0.2);
+            vx += vortexVx;
+            vy += vortexVy;
+
+            // RADIAL force (Orbital Resistance)
+            // Hold them in orbit: Inward pull is weaker, balanced against the spin
+            // We want them to drift slowly in until ~200px, then sling out violently below 150px
+            let radialForceFactor = 0;
+            if (vdist > 250) {
+                radialForceFactor = -0.3; // Gentle inward pull (Resistance)
+            } else if (vdist > 150) {
+                radialForceFactor = -0.1; // Holding zone
+            } else {
+                radialForceFactor = 2.5; // AGGRESSIVE SLINGSHOT OUT
+            }
+
+            const radialVx = (vdx / vdist) * (pullStrength * radialForceFactor);
+            const radialVy = (vdy / vdist) * (pullStrength * radialForceFactor);
+
+            vx += radialVx;
+            vy += radialVy;
+
+            // TRACK INERTIA: Capture last move direction to use when they leave
+            e.lastVortexVelX = vortexVx + radialVx;
+            e.lastVortexVelY = vortexVy + radialVy;
+            e.vortexExitInertiaUntil = state.gameTime + 1.5; // Extended flight time
+
+            // STUN & RECOVERY: Adjusted buffer to 1.4s
+            e.vortexRecoveryUntil = (state.player.orbitalVortexUntil || 0) + 1.4;
+
+            // Add persistent kinetic momentum if needed (using knockback for physics interactions)
+            if (e.knockback) {
+                e.knockback.x += (e.lastVortexVelX || 0) * 0.3; // 0.3 Slingshot Multiplier
+                e.knockback.y += (e.lastVortexVelY || 0) * 0.3;
+            }
+        } else {
+            // EXIT INERTIA: If they just left the radius or skill ended, fade out vortex move
+            // EXIT INERTIA: If they just left the radius or skill ended, fade out vortex move
+            if (e.vortexExitInertiaUntil && state.gameTime < e.vortexExitInertiaUntil) {
+                const decay = Math.max(0, (e.vortexExitInertiaUntil - state.gameTime) / 1.5);
+                vx += (e.lastVortexVelX || 0) * decay;
+                vy += (e.lastVortexVelY || 0) * decay;
+            }
+        }
+    } else {
+        // EXIT INERTIA: Also apply if the skill duration ended while they were inside
+        if (e.vortexExitInertiaUntil && state.gameTime < e.vortexExitInertiaUntil) {
+            const decay = Math.max(0, (e.vortexExitInertiaUntil - state.gameTime) / 1.5);
+            vx += (e.lastVortexVelX || 0) * decay;
+            vy += (e.lastVortexVelY || 0) * decay;
         }
     }
 
@@ -552,6 +609,11 @@ export function updateSingleEnemy(
 
     const { pulseDef } = getProgressionParams(state.gameTime);
     e.pulsePhase = (e.pulsePhase + (Math.PI * 2) / pulseDef.interval * (state.gameSpeedMult ?? 1)) % (Math.PI * 2);
-    e.rotationPhase = (e.rotationPhase || 0) + 0.01;
+
+    // Rapid rotation while under the effects of the vortex (active, recovery, or inertial flight)
+    const isSpinning = isInVortexField || isRecoveringFromVortex || isInInertia;
+    const rotBase = isSpinning ? 0.25 : 0.01;
+    e.rotationPhase = (e.rotationPhase || 0) + rotBase;
+
     if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
 }

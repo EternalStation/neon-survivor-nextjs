@@ -39,7 +39,7 @@ export function updateSinglePlayerBullet(
     if (!isInMap(b.x, b.y)) {
         if (owner.playerClass === 'malware') {
             b.bounceCount = (b.bounceCount || 0) + 1;
-            const dmgMult = 1 + (b.bounceDmgMult || 0.2);
+            const dmgMult = 1 + (b.bounceDmgMult || 0.05);
             b.dmg *= dmgMult;
 
             if (b.bounceCount === 1) b.color = '#fb923c';
@@ -53,7 +53,7 @@ export function updateSinglePlayerBullet(
             const dot = b.vx * normal.x + b.vy * normal.y;
 
             if (dot < 0) {
-                const speedMult = 1 + (b.bounceSpeedBonus || 0.2);
+                const speedMult = 1 + (b.bounceSpeedBonus || 0.03);
                 b.vx = (b.vx - 2 * dot * normal.x) * speedMult;
                 b.vy = (b.vy - 2 * dot * normal.y) * speedMult;
                 b.x += normal.x * (Math.abs(dist) + 5);

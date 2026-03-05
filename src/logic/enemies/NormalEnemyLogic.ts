@@ -6,18 +6,17 @@ import { spawnEnemyBullet } from '../combat/ProjectileSpawning';
 export function updateNormalCircle(e: Enemy, state: GameState, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     if (e.timer && state.gameTime < e.timer) return { vx: 0, vy: 0 };
 
-
     const a = Math.atan2(dy, dx);
     const vx = Math.cos(a) * currentSpd + pushX;
     const vy = Math.sin(a) * currentSpd + pushY;
     return { vx, vy };
 }
 
-export function updateNormalTriangle(e: Enemy, state: GameState, dx: number, dy: number, pushX: number, pushY: number) {
+export function updateNormalTriangle(e: Enemy, state: GameState, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     if (!e.timer) e.timer = state.gameTime;
 
     // Dash Trigger Check
-    if (e.dashState !== 1 && state.gameTime - (e.lastAttack || 0) > 5.0) {
+    if (e.dashState !== 1 && state.gameTime - (e.lastAttack || 0) > 5.0 && currentSpd > 0) {
         e.dashState = 1;
         e.timer = state.gameTime + 0.2; // 0.2s Dash Duration
         e.lastAttack = state.gameTime;
@@ -28,24 +27,21 @@ export function updateNormalTriangle(e: Enemy, state: GameState, dx: number, dy:
     if (e.dashState === 1) {
         if (state.gameTime < e.timer) {
             // Dash Speed: Cover ~150px in 0.2s (approx 12 frames) -> ~12.5 px/frame
-            const dashSpeed = 12.5 * (state.gameSpeedMult ?? 1);
+            // Dash speed should be affected by stun/stasis too
+            const dashSpeed = 12.5 * (state.gameSpeedMult ?? 1) * (currentSpd > 0 ? 1 : 0);
             const angle = e.dashAngle || Math.atan2(dy, dx);
             const vx = Math.cos(angle) * dashSpeed + pushX;
             const vy = Math.sin(angle) * dashSpeed + pushY;
             return { vx, vy };
         } else {
-            // End Dash
             e.dashState = 0;
-            e.lastAttack = state.gameTime; // Reset cooldown from end of dash? Or start? usually start.
-            // Resetting here means 5s AFTER dash. Previous code was 5s from START.
-            // I'll keep the start time tracking (managed by Trigger Check above), but simple reset here is fine.
+            e.lastAttack = state.gameTime;
         }
     }
 
     const a = Math.atan2(dy, dx);
-    // Standard movement
-    const vx = Math.cos(a) * e.spd + pushX;
-    const vy = Math.sin(a) * e.spd + pushY;
+    const vx = Math.cos(a) * currentSpd + pushX;
+    const vy = Math.sin(a) * currentSpd + pushY;
     return { vx, vy };
 }
 

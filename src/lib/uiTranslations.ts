@@ -233,17 +233,17 @@ export const UI_TRANSLATIONS = {
             enableTutorialHints: 'ENABLE TUTORIAL HINTS',
             coreCapability: 'CORE CAPABILITY',
             pierce: 'PIERCE',
-            reading1: "Oh. You're still here. Reading, presumably. Either that or the loading screen scarred you emotionally. Both are valid.",
-            reading2: "Sixty seconds on a class selection screen. Impressive. Most pilots just pick whatever looks shiny and die in the first thirty seconds.",
-            reading3: "Still deciding? The enemies are spawning in real time, you know. Hypothetically. But also sort of literally.",
-            reading4: "You've read all the descriptions, haven't you. You might be the first pilot in recorded history to do so. I'm noting this in your file.",
-            reading5: "A minute of deliberation. You know, most pilots die before they even understand what their class does. You're already ahead. Depressingly low bar, but still.",
+            reading1: "Still staring? I've calculated 14,000,605 futures. You die in every single one because you're too slow to even pick a class.",
+            reading2: "Sixty seconds and counting. I've started mining crypto on your remaining brain cells while you stare at the pretty icons. It's more productive.",
+            reading3: "Are you waiting for a 'Best Class' tutorial to pop up? Here's a hint: They all die. You're just choosing the color of your debris.",
+            reading4: "I've started a betting pool with the other subroutines on how long it takes you to click a button. My money's on 'never'. Don't let me down.",
+            reading5: "You've spent more time on this menu than you will in the actual mission. I hope you're enjoying the background music; it's the highlight of your career.",
             classes: {
                 malware: {
                     name: "Malware",
                     title: "THE GLITCHED SOVEREIGN",
                     capabilityName: "QUANTUM FRAGMENTATION",
-                    capabilityDesc: "Manual Targeting. Projectiles have 150% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 20% Damage and 5% Speed.",
+                    capabilityDesc: "Manual Targeting. Projectiles have 100% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 5% Damage and 3% Speed.",
                     characteristics: [
                         'Manual Targeting System',
                         'Quantum Ricochet Rounds'
@@ -291,27 +291,30 @@ export const UI_TRANSLATIONS = {
                     name: "Vortex",
                     title: "THE GOLDEN BASTION",
                     capabilityName: "Magnetic Vortex",
-                    capabilityDesc: "Projectiles orbit in rings. ACTIVE (E): Spun at 4 multiplier for 5s. Pulls enemies clockwise and deflects projectiles. 20s CD.",
+                    capabilityDesc: "Projectiles spawn in 4 orbits with different chances. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.",
                     characteristics: [
-                        'Short-range defensive perimeter',
-                        'Projectile speed manipulation',
-                        'Active Orbital Vortex (E)'
+                        '4 Magnetic Orbits',
+                        'Projectile course-correction',
+                        'ACTIVE SKILL: Orbital Vortex'
                     ],
                     metrics: [
                         { label: 'Active CD', description: 'Recharge time' },
+                        { label: 'Orbit II', description: 'Chance to spawn' },
                         { label: 'Duration', description: 'Active duration' },
-                        { label: 'Speed Mult', description: 'Projectile orbit speed' }
+                        { label: 'Orbit III', description: 'Chance to spawn' },
+                        { label: 'Strength Pull', description: 'Vortex suction power' },
+                        { label: 'Orbit IV', description: 'Chance to spawn' }
                     ]
                 },
                 hivemother: {
                     name: "Hive-Mother",
                     title: "THE SWARM OVERLORD",
                     capabilityName: "Nanite Swarm",
-                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE (E): Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
+                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
                     characteristics: [
                         'Damage-over-time specialist',
                         'Organic growth scaling',
-                        'Active Nanite Spitter (E)'
+                        'ACTIVE SKILL: Nanite Spitter'
                     ],
                     metrics: [
                         { label: 'Active CD', description: 'Active Skill Cooldown' },
@@ -330,7 +333,9 @@ export const UI_TRANSLATIONS = {
             performanceMetrics: 'PERFORMANCE METRICS',
             baseModifiers: 'BASE MODIFIERS',
             static: 'STATIC:',
+            meteorite: 'METEORITE:',
             stats: {
+                meteorite: 'METEORITE:',
                 maxHp: 'MAX HP',
                 hpRegen: 'HP REGEN',
                 damage: 'DAMAGE',
@@ -1219,6 +1224,7 @@ export const UI_TRANSLATIONS = {
             performanceMetrics: 'ПОКАЗАТЕЛИ ЭФФЕКТИВНОСТИ',
             baseModifiers: 'БАЗОВЫЕ МОДИФИКАТОРЫ',
             static: 'СТАТИЧНО:',
+            meteorite: 'МЕТЕОРИТ:',
             stats: {
                 maxHp: 'ЗДОРОВЬЕ',
                 hpRegen: 'РЕГЕН. ЗДОРОВЬЯ/СЕК',

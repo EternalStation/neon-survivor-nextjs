@@ -64,7 +64,7 @@ export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx
             e.eliteState = 1; e.timer = state.gameTime + 2.5; // 2.5s Berserk Duration
         }
         const a = Math.atan2(dy, dx);
-        vx = Math.cos(a) * e.spd + pushX; vy = Math.sin(a) * e.spd + pushY;
+        vx = Math.cos(a) * currentSpd + pushX; vy = Math.sin(a) * currentSpd + pushY;
     } else {
         e.rotationPhase = (e.rotationPhase || 0) + 0.5;
         const a = Math.atan2(dy, dx) + Math.sin(state.gameTime * 20) * 0.5;

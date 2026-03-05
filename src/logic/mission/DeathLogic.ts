@@ -89,6 +89,11 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     state.score += soulCount;
     recordLegendarySouls(state, soulCount);
 
+    // --- AIGIS PROGRESSION: Increase Vortex Strength on Kill ---
+    if (state.player.playerClass === 'aigis') {
+        state.player.vortexStrength = (state.player.vortexStrength || 1.0) + (baseSouls * 0.0003);
+    }
+
     // --- GRAVITATIONAL HARVEST: Duration Extension ---
     const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
     if (harvestLvl > 0) {
