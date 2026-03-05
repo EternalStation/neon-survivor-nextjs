@@ -1,48 +1,48 @@
-# CHRONO PLATING (ChronoPlating)
+# CHRONO PLATING (Chrono Plating)
 
-**Категория:** Defensive | **Арена:** 2 (пул: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
+**Category:** Defensive | **Arena:** 2 (pool: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк |
+| Level | Perk |
 |---------|------|
-| 1 | 1% of your armour incresed your DMG% |
-| 2 | 1% of your armour incresed your HP% |
+| 1 | 1% of your armor increased your DMG% |
+| 2 | 1% of your armor increased your HP% |
 | 3 | 0.25% Coldon reduction every minute |
-| 4 | 1% of your armour incresed your HP/sec% |
+| 4 | 1% of your armor increased your HP/sec% |
 | 5 | MAX LEVEL |
 
-## Механика
+## Mechanics
 
-**L1 — Armor → Damage:**
+**L1 - Armor → Damage:**
 ```
-dmg.hexMult += totalArmor × 0.01 × HexMultiplier   (добавляется к dmg_pct_per_kill)
+dmg.hexMult += totalArmor × 0.01 × HexMultiplier (added to dmg_pct_per_kill)
 ```
 
-**L2 — Armor → HP:**
+**L2 - Armor → HP:**
 ```
-hp.hexMult += totalArmor × 0.01 × HexMultiplier   (добавляется к hp_pct_per_kill)
+hp.hexMult += totalArmor × 0.01 × HexMultiplier (added to hp_pct_per_kill)
 ```
 
 **L3 — 0.25% Cooldown reduction every minute:**
-Каждую минуту с момента L3 параметр `player.cooldownReduction` увеличивается на 0.0025.
+Every minute since L3, the `player.cooldownReduction` parameter is increased by 0.0025.
 ```
 player.cooldownReduction += minutes * 0.0025;
 ```
 
-**L4 — Armor → HP/sec:**
+**L4 - Armor → HP/sec:**
 ```
-reg.hexMult += totalArmor × 0.01 × HexMultiplier   (добавляется к reg_pct_per_kill)
+reg.hexMult += totalArmor × 0.01 × HexMultiplier (added to reg_pct_per_kill)
 ```
 
-## Затронутые характеристики
+## Features affected
 
-- [Урон](../stats/damage.md) — L1 (`dmg.hexMult` через armor)
-- [Здоровье](../stats/health.md) — L2 (`hp.hexMult` через armor)
-- [Перезарядка](../stats/cooldown.md) — L3: время-scaling CDR
-- [Регенерация HP](../stats/regen.md) — L4: процентная регенерация через armor
+- [Damage](../stats/damage.md) — L1 (`dmg.hexMult` via armor)
+- [Health](../stats/health.md) - L2 (`hp.hexMult` via armor)
+- [Recharge](../stats/cooldown.md) — L3: time-scaling CDR
+- [HP Regeneration](../stats/regen.md) - L4: percentage regeneration through armor
 
-## UI Improvements
+##UI Improvements
 
 - **L3: Accumulated CDR** — The UI now displays the total accumulated cooldown reduction since reaching Level 3. Example: `0.25% Cooldown reduction every minute (1.25% total)`.
 - **L1, L2, L4: Actual Armor Bonus** — The UI now shows the exact percentage bonus being granted based on your current armor. Example: `1% of your Armor increased your DMG% (+15.0% actual)`.

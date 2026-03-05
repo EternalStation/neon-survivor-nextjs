@@ -1,134 +1,132 @@
-# Универсальная формула характеристик (PlayerStats)
+# Universal stat formula (PlayerStats)
 
-## Структура PlayerStats
+## PlayerStats structure
 
-Боевые характеристики (`hp`, `dmg`, `atk`, `reg`, `arm`) хранятся в формате `PlayerStats`:
+Combat characteristics (`hp`, `dmg`, `atk`, `reg`, `arm`) are stored in the `PlayerStats` format:
 
-| Поле | Тип | Источник |
+| Field | Type | Source |
 |------|-----|---------|
-| `base` | число | Базовое значение класса |
-| `flat` | число | Аддитивные бонусы от обычных улучшений |
-| `mult` | % | Процентные бонусы от обычных улучшений |
-| `hexFlat` | число | Аддитивные бонусы от легендарных улучшений |
-| `hexMult` | % | Первый процентный бонус от легендарных улучшений |
-| `hexMult2` | % | Второй процентный бонус от легендарных улучшений |
+| `base` | number | Base class value |
+| `flat` | number | Additive bonuses from regular upgrades |
+| `mult` | % | Percentage bonuses from regular upgrades |
+| `hexFlat` | number | Additive Bonuses from Legendary Upgrades |
+| `hexMult` | % | First Percentage Bonus from Legendary Upgrades |
+| `hexMult2` | % | Second percentage bonus from legendary upgrades |
 
-## Формула расчёта
+## Calculation formula
 
 ```
-Итог = (base + flat + hexFlat) × (1 + mult/100) × (1 + (hexMult + hexMult2)/100) × arenaMult × curseMult
+Total = (base + flat + hexFlat) × (1 + mult/100) × (1 + (hexMult + hexMult2)/100) × arenaMult × curseMult
 ```
 
-- `hexMult` и `hexMult2` суммируются аддитивно внутри одного тира перед применением к базе.
-- `arenaMult` и `curseMult` — внешние глобальные множители.
+- `hexMult` and `hexMult2` are summed additively within one tier before being applied to the base.
+- `arenaMult` and `curseMult` are external global multipliers.
 
-## arenaMult по характеристикам
+## arenaMult by characteristics
 
-`arenaMult` применяется только если игрок **находится в соответствующей арене** И эта арена **разблокирована** (blueprint `SECTOR_UPGRADE_*` был применён хотя бы раз).
+`arenaMult` is only applied if the player **is in the corresponding arena** AND that arena is **unlocked** (blueprint `SECTOR_UPGRADE_*` has been applied at least once).
 
-| Характеристика | Переменная | Только SECTOR_UPGRADE_* | SECTOR_UPGRADE_* + ARENA_SURGE |
+| Characteristics | Variable | SECTOR_UPGRADE_* only | SECTOR_UPGRADE_* + ARENA_SURGE |
 |---|---|---|---|
 | [HP](stats/hp.md), [Regen](stats/regen.md) | `hpRegenBuffMult` (Arena 2, DEF) | 1.3 (+30%) | 1.6 (+60%) |
-| [Урон](stats/damage.md), [Скорость атаки](stats/attack-speed.md) | `dmgAtkBuffMult` (Arena 1, COM) | 1.3 (+30%) | 1.6 (+60%) |
+| [Damage](stats/damage.md), [Attack speed](stats/attack-speed.md) | `dmgAtkBuffMult` (Arena 1, COM) | 1.3 (+30%) | 1.6 (+60%) |
 | [XP](stats/xp-gain.md), Soul Yield | `xpSoulBuffMult` (Arena 0, ECO) | 1.3 (+30%) | 1.6 (+60%) |
 
-> **ARENA_SURGE** — отдельный Blueprint (стоимость 50 dust, длительность 300 с / 5 мин), который **удваивает бонус арены**: базовые +30% превращаются в +60%. Не является частью SECTOR_UPGRADE_* — это временный усилитель поверх уже разблокированной арены.
+> **ARENA_SURGE** - a separate Blueprint (cost 50 dust, duration 300 s / 5 min), which **doubles the arena bonus**: base +30% turns into +60%. Not part of SECTOR_UPGRADE_* - this is a temporary booster on top of an already unlocked arena.
 
-### Как повышается уровень арены
+### How the arena level increases
 
-`state.arenaLevels` — счётчик `Record<number, number>`, стартует `{ 0: 0, 1: 0, 2: 0 }`.
-Повышается только применением blueprints:
+`state.arenaLevels` - counter `Record<number, number>`, starts `{ 0: 0, 1: 0, 2: 0 }`.
+It can only be improved by using blueprints:
 
-| Blueprint | Арена | Эффект |
+| Blueprint | Arena | Effect |
 |---|---|---|
 | `SECTOR_UPGRADE_ECO` | [0] Economic | `arenaLevels[0] += 1` |
 | `SECTOR_UPGRADE_COM` | [1] Combat | `arenaLevels[1] += 1` |
 | `SECTOR_UPGRADE_DEF` | [2] Defense | `arenaLevels[2] += 1` |
 
-### Кап уровня арены
+### Arena level cap
 
-**Капа нет** — счётчик растёт неограниченно. Однако в логике используется только проверка `>= 1`:
+**No cap** - the counter grows unlimitedly. However, the logic only uses the `>= 1` check:
 
 ```ts
 // PlayerStats.ts
-state.hpRegenBuffMult = (state.currentArena === 2 && currentArenaLevel >= 1) ? activeArenaMult : 1.0;
+state.hpRegenBuffMult = (state.currentArena === 2 && currentArenaLevel >= 1) ? activeArenaMult: 1.0;
 ```
 
-Уровни 2, 3 и выше **не дают никакого дополнительного эффекта**. Повторное применение одного и того же `SECTOR_UPGRADE_*` — пустая трата blueprint.
+Levels 2, 3 and above **do not provide any additional effect**. Reusing the same `SECTOR_UPGRADE_*` is a waste of blueprint.
 
 ## curseMult
 
-`curseMult = state.assistant.history.curseIntensity` (по умолчанию 1.0).
-Задаётся системой прогрессии на основе диалогов с ИИ-ассистентом.
+`curseMult = state.assistant.history.curseIntensity` (default 1.0).
+Set by a progression system based on dialogues with an AI assistant.
 
-## HexMultiplier (масштабирование через метеориты)
+## HexMultiplier (scaling through meteorites)
 
-Kill-scaling бонусы легендарных улучшений умножаются на HexMultiplier данного улучшения:
+Kill-scaling bonuses of legendary upgrades are multiplied by the HexMultiplier of that upgrade:
 
 ```
-HexMultiplier = 1 + суммарная_эффективность_4_связанных_слотов_метеоритов
+HexMultiplier = 1 + total_efficiency_of_4_linked_meteorite_slots
 ```
 
-Это значение динамически пересчитывается для каждого легендарного улучшения отдельно, в зависимости от состава и качества подключённых метеоритов.
+This value is dynamically recalculated for each legendary upgrade separately, depending on the composition and quality of the connected meteorites.
 
-## Механика Souls (убийства как ресурс масштабирования)
+## Souls mechanics (kills as a scaling resource)
 
-### Что такое Souls
+### What is Souls
 
-`state.killCount` — глобальный счётчик, который растёт при каждом убийстве врага. Это и есть «souls». Он **общий для всей игры**, не сбрасывается и не разделён между легендарными улучшениями.
+`state.killCount` is a global counter that increases every time an enemy is killed. This is “souls”. It is **game-wide**, does not reset, and is not shared between legendary upgrades.
 
-Сколько souls даёт враг при смерти:
+How many souls does an enemy give upon death:
 
-| Тип врага | Souls |
+| Enemy Type | Souls |
 |---|---|
-| Обычный | +1 |
+| Regular | +1 |
 | Elite (Pentagon) | +5 |
-| Elite (другие) | +10 |
+| Elite (others) | +10 |
 | Worm Head | +50 |
-| Все × Eco Buff | `× xpSoulBuffMult` |
+| All × Eco Buff | `× xpSoulBuffMult` |
 
-### Как Souls отсчитываются для каждого уровня hex
+### How Souls are counted for each hex level
 
-Каждый hex хранит `killsAtLevel: Record<number, number>` — снимок `state.killCount` в момент получения каждого уровня:
+Each hex stores `killsAtLevel: Record<number, number>` - a snapshot of `state.killCount` at the time each level was obtained:
 
-- `killsAtLevel[1]` фиксируется когда **игрок выбирает hex** (первое получение)
-- `killsAtLevel[N]` фиксируется когда **игрок повышает hex до уровня N**
+- `killsAtLevel[1]` is fixed when **player selects hex** (first gain)
+- `killsAtLevel[N]` is fixed when **player raises hex to level N**This means souls for level N are counted **from scratch from the moment this level is taken**, and not from the beginning of the game.
 
-Это значит souls для уровня N считаются **с нуля с момента взятия этого уровня**, а не с начала игры.
-
-### Формула расчёта бонуса
+### Bonus calculation formula
 
 ```
-rawSouls   = state.killCount - killsAtLevel[lvl]
-souls      = rawSouls × soulDrainMult
-bonus      = souls × HexMultiplier × coefficient
+rawSouls = state.killCount - killsAtLevel[lvl]
+souls = rawSouls × soulDrainMult
+bonus = souls × HexMultiplier × coefficient
 ```
 
-- `killsAtLevel[lvl]` — снимок killCount в момент получения уровня `lvl`
-- `soulDrainMult` — дебафф от Circle Boss Lvl 4 (по умолчанию 1.0, сбрасывается каждый фрейм)
-- `HexMultiplier` — бонус от метеоритов в слотах данного hex
-- `coefficient` — уникален для каждого hex и уровня (например EcoDMG lvl1 = 0.1 урона за soul)
+- `killsAtLevel[lvl]` — snapshot of killCount at the moment of obtaining level `lvl`
+- `soulDrainMult` - debuff from Circle Boss Lvl 4 (default 1.0, reset every frame)
+- `HexMultiplier` - bonus from meteorites in the slots of a given hex
+- `coefficient` - unique for each hex and level (for example EcoDMG lvl1 = 0.1 damage per soul)
 
-### Fallback логика (защита от ошибок)
+### Fallback logic (error protection)
 
 ```ts
 // LegendaryLogic.ts
 const startKills = kl[lvl] ?? hex.killsAtAcquisition ?? state.killCount;
 ```
 
-Приоритет: `killsAtLevel[lvl]` → `killsAtAcquisition` → `state.killCount` (=0 souls, last resort).
+Priority: `killsAtLevel[lvl]` → `killsAtAcquisition` → `state.killCount` (=0 souls, last resort).
 
-### soulDrainMult
+###soulDrainMult
 
-Сбрасывается в `1.0` каждый игровой фрейм хостом. Circle Boss Lvl 4 во время жизни перезаписывает его значением < 1.0, снижая накопление souls. После гибели босса возвращается к 1.0.
+Reset to `1.0` every game frame by the host. Circle Boss Lvl 4 during life overwrites it with a value of < 1.0, reducing the accumulation of souls. After the boss is killed, it returns to 1.0.
 
-## Связанные файлы
+## Related files
 
-- [HP](stats/hp.md) — Максимальное здоровье
-- [Броня](stats/armor.md) — Броня и Damage Reduction
-- [Урон](stats/damage.md) — Базовый урон снарядов
-- [Скорость атаки](stats/attack-speed.md) — Частота выстрелов
-- [Регенерация](stats/regen.md) — Восстановление HP
-- [Опыт за убийство](stats/xp-gain.md) — Накопление XP
-- [Снижение урона от столкновений](stats/collision-reduction.md) — Защита от контактного урона
-- [Снижение кулдауна](stats/cooldown-reduction.md) — Ускорение активных навыков
+- [HP](stats/hp.md) — Maximum health
+- [Armor](stats/armor.md) - Armor and Damage Reduction
+- [Damage](stats/damage.md) — Base damage of projectiles
+- [Attack speed](stats/attack-speed.md) — Shot frequency
+- [Regeneration](stats/regen.md) - HP recovery
+- [Experience per kill](stats/xp-gain.md) - XP accumulation
+- [Collision Damage Reduction](stats/collision-reduction.md) - Protection against contact damage
+- [Cooldown reduction](stats/cooldown-reduction.md) - Acceleration of active skills

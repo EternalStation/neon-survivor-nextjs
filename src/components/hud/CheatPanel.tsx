@@ -17,6 +17,7 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'ko', description: '+5100 Dust' },
             { code: 'kp', description: '+1000 Void Flux' },
             { code: 'rmo', description: '+100 Armor base / +10 Armor mult' },
+            { code: 'ks5', description: '+500 Souls (No XP)' },
         ]
     },
     {
@@ -31,19 +32,19 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
     {
         name: 'LEGENDARY',
         entries: [
-            { code: 'y1', description: 'EcoDMG — STORM OF STEEL (Lv5)' },
-            { code: 'y2', description: 'EcoXP — NEURAL HARVEST (Lv5)' },
-            { code: 'y3', description: 'EcoHP — ESSENCE SYPHON (Lv5)' },
-            { code: 'y4', description: 'CombShield — AEGIS PROTOCOL (Lv5)' },
-            { code: 'y5', description: 'ComLife — CRIMSON FEAST (Lv5)' },
-            { code: 'y6', description: 'ComCrit — SHATTERED FATE (Lv5)' },
-            { code: 'y7', description: 'ComWave — TERROR PULSE (Lv5)' },
-            { code: 'y8', description: 'RadiationCore — RADIATION CORE (Lv5)' },
-            { code: 'y9', description: 'DefPuddle — TOXIC SWAMP (Lv5)' },
-            { code: 'y0', description: 'DefEpi — EPICENTER (Lv5)' },
-            { code: 'y-', description: 'KineticBattery — KINETIC BATTERY (Lv5)' },
-            { code: 'y=', description: 'ChronoPlating — CHRONO PLATING (Lv5)' },
-            { code: 'y[', description: 'GravityAnchor — THE GRAVITY ANCHOR (Lv5)' },
+            { code: 'y1', description: 'EcoDMG — STORM OF STEEL (Lv4)' },
+            { code: 'y2', description: 'EcoXP — NEURAL HARVEST (Lv4)' },
+            { code: 'y3', description: 'EcoHP — ESSENCE SYPHON (Lv4)' },
+            { code: 'y4', description: 'CombShield — AEGIS PROTOCOL (Lv4)' },
+            { code: 'y5', description: 'ComLife — CRIMSON FEAST (Lv4)' },
+            { code: 'y6', description: 'ComCrit — SHATTERED FATE (Lv4)' },
+            { code: 'y7', description: 'ComWave — TERROR PULSE (Lv4)' },
+            { code: 'y8', description: 'RadiationCore — RADIATION CORE (Lv4)' },
+            { code: 'y9', description: 'DefPuddle — TOXIC SWAMP (Lv4)' },
+            { code: 'y0', description: 'DefEpi — EPICENTER (Lv4)' },
+            { code: 'y-', description: 'KineticBattery — KINETIC BATTERY (Lv4)' },
+            { code: 'y=', description: 'ChronoPlating — CHRONO PLATING (Lv4)' },
+            { code: 'y[', description: 'GravityAnchor — THE GRAVITY ANCHOR (Lv4)' },
         ]
     },
     {

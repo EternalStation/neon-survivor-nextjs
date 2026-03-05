@@ -5,6 +5,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getHexLevel, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { triggerKineticBatteryZap } from '../player/PlayerCombat';
+import { GAME_CONFIG } from '../core/GameConfig';
 
 export function updateSingleEnemyBullet(
     state: GameState,
@@ -17,6 +18,22 @@ export function updateSingleEnemyBullet(
     eb.x += eb.vx;
     eb.y += eb.vy;
     eb.life--;
+
+    const player = state.player;
+    if (player.orbitalVortexUntil && player.orbitalVortexUntil > state.gameTime) {
+        const vdx = eb.x - player.x;
+        const vdy = eb.y - player.y;
+        const vdist = Math.hypot(vdx, vdy);
+        if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
+            const perpX = -vdy / vdist;
+            const perpY = vdx / vdist;
+            eb.vx += perpX * 0.8;
+            eb.vy += perpY * 0.8;
+            const speed = Math.hypot(eb.vx, eb.vy);
+            const cap = 14;
+            if (speed > cap) { eb.vx = (eb.vx / speed) * cap; eb.vy = (eb.vy / speed) * cap; }
+        }
+    }
 
     if (!isInMap(eb.x, eb.y)) {
         enemyBullets.splice(index, 1);

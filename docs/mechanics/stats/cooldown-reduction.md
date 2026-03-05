@@ -1,48 +1,48 @@
-# Снижение кулдауна (Cooldown Reduction)
+# Cooldown Reduction
 
-**Тип:** `player.cooldownReduction` — plain number (0.0 … 1.0)
+**Type:** `player.cooldownReduction` — plain number (0.0 … 1.0)
 
-## Применение
+## Application
 
-Применяется как множитель кулдаунов активных навыков:
+Used as a multiplier for cooldowns of active skills:
 
 ```
 cdMod = (neuralOverclockActive ? 0.7 : 1.0) × (1 - player.cooldownReduction)
 effectiveCooldown = baseCooldown × cdMod
 ```
 
-`cdMod` = 1.0 при отсутствии обоих источников.
+`cdMod` = 1.0 if both sources are missing.
 
-## Легендарный источник
+## Legendary source
 
-### [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md) — уровень 4
+### [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md) - level 4
 
-**Триггер:** каждую минуту с момента достижения L4
+**Trigger:** every minute since reaching L4
 
-| Формула |
+| Formula |
 |---------|
 | `player.cooldownReduction = minutesSinceL4 × 0.0025` |
 
-| Время от L4 | Cooldown Reduction | cdMod |
+| Time from L4 | Cooldown Reduction | cdMod |
 |---|---|---|
-| 0 мин | 0% | 1.00 |
-| 10 мин | 2.5% | 0.975 |
-| 40 мин | 10% | 0.90 |
-| 100 мин | 25% | 0.75 |
+| 0 min | 0% | 1.00 |
+| 10 min | 2.5% | 0.975 |
+| 40 min | 10% | 0.90 |
+| 100 min | 25% | 0.75 |
 
-Значение накапливается неограниченно, но практически ограничено длиной игровой сессии.
+The value accumulates indefinitely, but is practically limited by the length of the gaming session.
 
-## Область действия
+## Scope
 
-Снижение кулдауна действует на все активные навыки:
-- [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md): кулдаун шоквейва (5s base)
-- [TOXIC SWAMP (DefPuddle)](../legendary-upgrades/defpuddle.md): кулдаун лужи (25s base)
-- [EPICENTER (DefEpi)](../legendary-upgrades/defepi.md): кулдаун шипов (30s base)
-- [TERROR PULSE (ComWave)](../legendary-upgrades/comwave.md): кулдаун волны (30s / 20s)
+Cooldown reduction affects all active skills:
+- [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md): shockwave cooldown (5s base)
+- [TOXIC SWAMP (DefPuddle)](../legendary-upgrades/defpuddle.md): puddle cooldown (25s base)
+- [EPICENTER (DefEpi)](../legendary-upgrades/defepi.md): cooldown of spikes (30s base)
+- [TERROR PULSE (ComWave)](../legendary-upgrades/comwave.md): wave cooldown (30s / 20s)
 
-Blueprint NEURAL_OVERCLOCK (`neuralOverclockActive`) снижает дополнительно на 30% (множитель 0.7), независимо от `cooldownReduction`.
+Blueprint NEURAL_OVERCLOCK(`neuralOverclockActive`) reduces by an additional 30% (0.7 multiplier), regardless of `cooldownReduction`.
 
-## Связанные функции и сущности
+## Related functions and entities
 
 - [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md)
 - [TOXIC SWAMP](../legendary-upgrades/defpuddle.md)

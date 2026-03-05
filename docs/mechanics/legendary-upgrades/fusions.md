@@ -75,8 +75,7 @@ Inherits all perks from **Essence Syphon** (Lvl 1-4) and **Radiation Core** (Lvl
     - +1% Aura DMG per 1% of your Missing HP
     - 2.0% of MAX HP/sec enemies lose map-wide
 
-### Fusion Mechanics: [EVENT HORIZON]
-- **Gravitational Intensity**: Radiation Aura damage is increased by **2% for every 100 Max HP** you have. (Multiplicative: e.g., 5% * 1.02, not 5% + 2%).
+### Fusion Mechanics: [EVENT HORIZON]- **Gravitational Intensity**: Radiation Aura damage is increased by **2% for every 100 Max HP** you have. (Multiplicative: e.g., 5% * 1.02, not 5% + 2%).
 - **Stellar Harvest**: 0.01% Aura DMG increase for every enemy killed by your Radiant Aura.
 - **Double Souls**: Essence Syphon soul counts are doubled for the purpose of its scaling perks.
 
@@ -168,9 +167,7 @@ Releases a massive wave of fear.
 - **Enlightenment Scaling**: **0.1s additional fear to wave for every 500xp/kill stat**.
 - **Veteran Scaling**: Wave cooldown is reduced by **0.02s for every 1 Player Level**.
 
----
-
-## THE SOUL-SHATTER CORE
+---## THE SOUL-SHATTER CORE
 
 A critical fusion of **Shattered Fate** and **Storm of Steel**. Extends critical lethality through soul harvesting.
 
@@ -233,4 +230,3 @@ Inherits all perks from **Aegis Protocol** (Lvl 1-4) and **Chrono Plating** (Lvl
 Releases a wave of temporal energy that freezes time itself around you.
 - **Frozen Prison**: Freezes all enemies within a **400px radius for 4.0 seconds**.
 - **Temporal Shatter**: If an enemy dies while frozen by this skill, it violently shatters, dealing **25% of its Maximum HP as AOE damage** to all other enemies within a 200px radius.
-

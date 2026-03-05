@@ -1,37 +1,37 @@
-# TERROR PULSE (ComWave)
+#TERROR PULSE (ComWave)
 
-**Категория:** Combat | **Арена:** 1 (пул: RadiationCore, ComLife, ComCrit, ComWave)
+**Category:** Combat | **Arena:** 1 (pool: RadiationCore, ComLife, ComCrit, ComWave)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк |
+| Level | Perk |
 |---------|------|
-| 1 | Активный навык: 200% Wave DMG, радиус 1500px, кулдаун 30s |
-| 2 | Волна вызывает Fear у врагов на 1.5s |
-| 3 | 350% Wave DMG (радиус 1500px) |
-| 4 | Кулдаун снижается до 20s |
+| 1 | Active skill: 200% Wave DMG, radius 1500px, cooldown 30s |
+| 2 | Wave causes Fear on enemies for 1.5s |
+| 3 | 350% Wave DMG (radius 1500px) |
+| 4 | Cooldown reduced to 20s |
 | 5 | MAX LEVEL |
 
-## Механика
+## Mechanics
 
-**Активный навык** (клавиша 1–5): при активации мгновенно наносит урон всем врагам в радиусе.
+**Active Skill** (key 1-5): When activated, instantly deals damage to all enemies in a radius.
 
 ```
 waveDmg = calcStat(player.dmg) × damageMult
 ```
 
-| Условие | damageMult |
+| Condition | damageMult |
 |---------|-----------|
 | L1–L2 | 2.0 (200%) |
 | L3+ | 3.5 (350%) |
 
-Урон применяется hitscan'ом (мгновенно) ко всем врагам в `distance < 1500px`.
+Damage is applied by hitscan (instantly) to all enemies within `distance < 1500px`.
 
-**L2 — Fear:** каждый враг в радиусе получает `fearedUntil = gameTime + 1.5s`. Боятся = не атакуют / бегут.
+**L2 - Fear:** Each enemy in radius gets `fearedUntil = gameTime + 1.5s`. Afraid = don't attack/flee.
 
-**Кулдаун:** базовый 30s. С L4 — 20s. Дополнительно масштабируется [Cooldown Reduction](../stats/cooldown-reduction.md).
+**Cooldown:** base 30s. From L4 - 20s. [Cooldown Reduction](../stats/cooldown-reduction.md) is further scaled.
 
-## Затронутые характеристики
+## Features affected
 
-- [Урон](../stats/damage.md) — `calcStat(dmg)` является базой урона волны
-- [Снижение кулдауна](../stats/cooldown-reduction.md) — применяется к кулдауну волны
+- [Damage](../stats/damage.md) — `calcStat(dmg)` is the base damage of the wave
+- [Cooldown reduction](../stats/cooldown-reduction.md) - applies to wave cooldown

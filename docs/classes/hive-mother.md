@@ -1,43 +1,43 @@
 # Hive-Mother `hivemother`
 
-## Характеристики
-| Параметр | Значение |
+## Characteristics
+| Parameter | Meaning |
 |----------|----------|
-| Опыт | +15% |
-| Урон | +10% |
+| Experience | +15% |
+| Damage | +10% |
 
 ---
 
-## Способность: Nanite Swarm
+## Ability: Nanite Swarm
 
-**Триггер:** попадание снаряда (кроме нанитов, `isNanite ≠ true`) по врагу → враг получает `isInfected = true`.
+**Trigger:** a projectile (except for nanites, `isNanite ≠ true`) hits an enemy → the enemy gets `isInfected = true`.
 
-### Инфекция (DoT)
-| Параметр | Значение |
+### Infection (DoT)
+| Parameter | Meaning |
 |----------|----------|
-| Урон/сек | `player.dmg × 5% × (1 + resonance) × classCurseMult` |
-| Тик | каждые 30 кадров (0.5 сек при 60 FPS) |
-| Урон за тик | `infectionDmg / 2` |
-| Дробный остаток | буферизуется в `infectionAccumulator`, применяется при ≥1 |
+| Damage/sec | `player.dmg × 5% × (1 + resonance) × classCurseMult` |
+| Tick ​​| every 30 frames (0.5 sec at 60 FPS) |
+| Damage per tick | `infectionDmg/2` |
+| Fractional balance | buffered in `infectionAccumulator`, applied when ≥1 |
 
-### Прыжок нанита при смерти носителя
-| Параметр                 | Значение |
-|--------------------------|----------|
-| Шанс                     | 30% |
-| Радиус поиска цели       | 400px |
-| Скорость нанита          | 12 ед./кадр |
-| Дрожание (Jitter)        | ±4.0 |
-| Время жизни нанита       | ≈2 сек |
-| Смерть цели до попадания | нанит уничтожается (`life = 0`) |
+### Nanite jumps when the host dies
+| Parameter | Meaning |
+|-------------------------|----------|
+| Chance | 30% |
+| Target search radius | 400px |
+| Nanite Speed ​​| 12 units/frame |
+| Jitter | ±4.0 |
+| Nanite Lifetime | ≈2 sec |
+| Death of the target before hitting | nanite is destroyed (`life = 0`) |
 
 ---
 
-## Масштабирование
-| Параметр | Формула | Фиксировано |
+## Scaling
+| Parameter | Formula | Fixed |
 |----------|---------|:-----------:|
-| Урон инфекции/сек | `player.dmg × 5% × (1+resonance) × classCurseMult` | |
-| Шанс прыжка | | 30% |
-| Радиус прыжка | | 400px |
-| Частота тиков | | 30 кадров |
-| Скорость нанита | | 12 ед./кадр |
-| Время жизни нанита | | ≈2 сек |
+| Infection Damage/sec | `player.dmg × 5% × (1+resonance) × classCurseMult` | |
+| Jump Chance | | 30% |
+| Jump radius | | 400px |
+| Tick ​​frequency | | 30 frames |
+| Nanite Speed ​​| | 12 units/frame |
+| Nanite Lifetime | | ≈2 sec |

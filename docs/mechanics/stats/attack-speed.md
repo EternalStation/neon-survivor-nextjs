@@ -1,58 +1,58 @@
-# Скорость атаки (Attack Speed)
+# Attack Speed
 
-**Тип:** [PlayerStats](../stat-formula.md) (`player.atk`)
+**Type:** [PlayerStats](../stat-formula.md) (`player.atk`)
 
-## Формула
+## Formula
 
 ```
 atkValue = (base + flat + hexFlat) × (1 + mult/100) × (1 + (hexMult + hexMult2)/100) × dmgAtkBuffMult × curseMult
 ```
 
-`dmgAtkBuffMult` = 1.3 в Arena 1 при уровне арены ≥ 1 (1.6 с Surge).
+`dmgAtkBuffMult` = 1.3 in Arena 1 at arena level ≥ 1 (1.6 with Surge).
 
-## Конвертация в частоту выстрелов
+## Convert to shot frequency
 
-Итоговое `atkValue` преобразуется в количество выстрелов в секунду:
+The resulting `atkValue` is converted to the number of shots per second:
 
 ```
 shotsPerSec = max(0.1, 2.64 × ln(atkValue / 100) - 1.25)
 ```
 
-| atkValue | shotsPerSec (прим.) |
+| atkValue | shotsPerSec (approx.) |
 |----------|-------------------|
-| 100 | ~0.1 (минимум) |
+| 100 | ~0.1 (minimum) |
 | 150 | ~1.07 |
 | 200 | ~1.58 |
 | 400 | ~2.73 |
-| 1 000 | ~4.57 |
+| 1,000 | ~4.57 |
 
-Интервал между выстрелами: `atkDelay = 1 / shotsPerSec` (в секундах).
+Interval between shots: `atkDelay = 1 / shotsPerSec` (in seconds).
 
-## Легендарные источники
+## Legendary sources
 
 ### [STORM OF STEEL (EcoDMG)](../legendary-upgrades/ecodmg.md)
 
-| Уровень | Поле | Формула |
+| Level | Field | Formula |
 |---------|------|---------|
 | 2 | `hexFlat` | `souls_since_L2 × 0.1 × HexMultiplier` |
-| 4 | `hexMult` | `souls_since_L4 × 0.05 × HexMultiplier` (в %) |
+| 4 | `hexMult` | `souls_since_L4 × 0.05 × HexMultiplier` (in %) |
 
-### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) — уровень 1
+### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) - level 1
 
-| Уровень | Поле | Формула |
+| Level | Field | Formula |
 |---------|------|---------|
-| 1 | `hexMult` | `totalArmor × 0.01 × HexMultiplier` (в %) |
+| 1 | `hexMult` | `totalArmor × 0.01 × HexMultiplier` (in %) |
 
-При Armor=500 и L1: `atk.hexMult += 5%`.
+With Armor=500 and L1: `atk.hexMult += 5%`.
 
-## Дополнительно
+## Additional
 
-Буфф `player.buffs.systemSurge` (классовый буфф Storm-Strike) добавляет к `atk.hexMult` значение `surge.atk` на время действия баффа.
+The buff `player.buffs.systemSurge` (Storm-Strike class buff) adds the value `surge.atk` to `atk.hexMult` for the duration of the buff.
 
-## Связанные функции и сущности
+## Related functions and entities
 
-- [Формула PlayerStats](../stat-formula.md)
-- [Урон](damage.md) — применяется при каждом выстреле
-- [Броня](armor.md) — ChronoPlating L1 использует Armor как источник для atk.hexMult
+- [Formula PlayerStats](../stat-formula.md)
+- [Damage](damage.md) - applied with each shot
+- [Armor](armor.md) - ChronoPlating L1 uses Armor as a source for atk.hexMult
 - [STORM OF STEEL](../legendary-upgrades/ecodmg.md)
 - [CHRONO PLATING](../legendary-upgrades/chronoplating.md)

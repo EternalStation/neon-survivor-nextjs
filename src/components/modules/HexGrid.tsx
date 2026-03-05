@@ -9,21 +9,25 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 
 import type { BestiaryEntry } from '../../data/BestiaryData';
-import {
-    canMergeXenoAlchemist, performXenoAlchemistMerge,
-    canMergeIrradiatedMire, performIrradiatedMireMerge,
-    canMergeNeuralSingularity, performNeuralSingularityMerge,
-    canMergeKineticTsunami, performKineticTsunamiMerge,
-    canMergeSoulShatterCore, performSoulShatterCoreMerge,
-    canMergeBloodForgedCapacitor, performBloodForgedCapacitorMerge,
-    canMergeGravityAnchor, performGravityAnchorMerge,
-    canMergeTemporalMonolith, performTemporalMonolithMerge,
-    canMergeNeutronStar, performNeutronStarMerge,
-    canMergeGravitationalHarvest, performGravitationalHarvestMerge,
-    canMergeShatteredCapacitor, performShatteredCapacitorMerge,
-    canMergeChronoDevourer, performChronoDevourerMerge
-} from '../../logic/upgrades/LegendaryMergeLogic';
+import { FusionMenu } from './FusionMenu';
 import { playSfx } from '../../logic/audio/AudioLogic';
+import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
+import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryLogic';
+
+export const FUSIONS = [
+    { id: 'XenoAlchemist', result: 'XenoAlchemist', bases: ['EcoXP', 'DefPuddle'], perform: MergeLogic.performXenoAlchemistMerge },
+    { id: 'IrradiatedMire', result: 'IrradiatedMire', bases: ['DefPuddle', 'RadiationCore'], perform: MergeLogic.performIrradiatedMireMerge },
+    { id: 'NeuralSingularity', result: 'NeuralSingularity', bases: ['EcoXP', 'ComWave'], perform: MergeLogic.performNeuralSingularityMerge },
+    { id: 'KineticTsunami', result: 'KineticTsunami', bases: ['EcoDMG', 'ComWave'], perform: MergeLogic.performKineticTsunamiMerge },
+    { id: 'SoulShatterCore', result: 'SoulShatterCore', bases: ['ComCrit', 'EcoDMG'], perform: MergeLogic.performSoulShatterCoreMerge },
+    { id: 'BloodForgedCapacitor', result: 'BloodForgedCapacitor', bases: ['ComLife', 'KineticBattery'], perform: MergeLogic.performBloodForgedCapacitorMerge },
+    { id: 'GravityAnchor', result: 'GravityAnchor', bases: ['CombShield', 'DefEpi'], perform: MergeLogic.performGravityAnchorMerge },
+    { id: 'TemporalMonolith', result: 'TemporalMonolith', bases: ['CombShield', 'ChronoPlating'], perform: MergeLogic.performTemporalMonolithMerge },
+    { id: 'NeutronStar', result: 'NeutronStar', bases: ['EcoHP', 'RadiationCore'], perform: MergeLogic.performNeutronStarMerge },
+    { id: 'GravitationalHarvest', result: 'GravitationalHarvest', bases: ['EcoHP', 'DefEpi'], perform: MergeLogic.performGravitationalHarvestMerge },
+    { id: 'ShatteredCapacitor', result: 'ShatteredCapacitor', bases: ['ComCrit', 'KineticBattery'], perform: MergeLogic.performShatteredCapacitorMerge },
+    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge }
+];
 
 interface HexGridProps {
     gameState: GameState;
@@ -45,122 +49,7 @@ interface HexGridProps {
     onUpdate?: () => void;
 }
 
-interface EfficiencyLabelProps {
-    value: number;
-    x: number;
-    y: number;
-    color: string;
-    onLevitateChange?: (isLevitating: boolean) => void;
-}
-
-const EfficiencyLabel: React.FC<EfficiencyLabelProps> = ({ value, x, y, color, onLevitateChange }) => {
-    const [displayValue, setDisplayValue] = React.useState(value);
-    const [pulseId, setPulseId] = React.useState(0);
-    const [dir, setDir] = React.useState<'up' | 'down'>('up');
-    const [isCounting, setIsCounting] = React.useState(false);
-    const [vibeFactor, setVibeFactor] = React.useState(0); // 0 to 1
-    const prevValueRef = React.useRef(value);
-    const animRef = React.useRef<number | null>(null);
-
-    React.useEffect(() => {
-        if (value !== prevValueRef.current) {
-            if (animRef.current) cancelAnimationFrame(animRef.current);
-
-            const startVal = displayValue;
-            const targetVal = value;
-            const isIncreasing = targetVal > startVal;
-            const diffPct = Math.abs(targetVal - startVal) * 100;
-            // 1% per 4 frames
-            const totalFrames = Math.max(1, Math.round(diffPct * 4));
-
-            let frame = 0;
-            let lastPulsePct = Math.round(startVal * 100);
-            setIsCounting(true);
-            onLevitateChange?.(true);
-
-            const animate = () => {
-                frame++;
-                const progress = Math.min(frame / totalFrames, 1);
-                const current = startVal + (targetVal - startVal) * progress;
-                setDisplayValue(current);
-
-                // Intensity grows with progress and total delta (maxed at 100% change)
-                const intensity = progress * Math.min(1, diffPct / 100);
-                setVibeFactor(intensity);
-
-                // Pulse every 5% growth or drop
-                const currentWholePct = Math.round(current * 100);
-                const startBucket = Math.floor(lastPulsePct / 5);
-                const currentBucket = Math.floor(currentWholePct / 5);
-
-                if (currentBucket !== startBucket) {
-                    setDir(isIncreasing ? 'up' : 'down');
-                    setPulseId(id => id + 1);
-                    lastPulsePct = currentWholePct;
-                }
-
-                if (frame < totalFrames) {
-                    animRef.current = requestAnimationFrame(animate);
-                } else {
-                    setIsCounting(false);
-                    setVibeFactor(0);
-                    onLevitateChange?.(false);
-                }
-            };
-
-            animRef.current = requestAnimationFrame(animate);
-            prevValueRef.current = value;
-            return () => {
-                if (animRef.current) cancelAnimationFrame(animRef.current);
-            };
-        }
-    }, [value]);
-
-    const labelColor = color || '#ffffff';
-    const animClass = pulseId > 0 ? `animate-${dir}-${pulseId % 2}` : "";
-
-    // Scale from 1.15 to 1.55 based on intensity
-    const currentScale = 1.15 + (vibeFactor * 0.4);
-    const currentBright = 1.2 + (vibeFactor * 0.8);
-
-    return (
-        <g
-            transform={`translate(${x}, ${y})`}
-            className={animClass}
-            style={{
-                '--glow-color': labelColor,
-                '--vibe-scale': currentScale,
-                '--vibe-bright': currentBright,
-                pointerEvents: 'none'
-            } as any}
-        >
-            <rect
-                x={-32}
-                y={-9}
-                width="64"
-                height="18"
-                rx="4"
-                fill="rgba(15, 23, 42, 0.98)"
-                stroke={labelColor}
-                strokeWidth="1.5"
-                style={{ filter: `drop-shadow(0 0 8px ${labelColor}66)` }}
-            />
-            <text
-                x={0}
-                y={4}
-                textAnchor="middle"
-                fill={labelColor}
-                fontSize="11"
-                fontWeight="900"
-                className={isCounting ? "animate-vibe" : ""}
-                style={{ letterSpacing: '0.5px' }}
-                pointerEvents="none"
-            >
-                +{Math.round(displayValue * 100)}%
-            </text>
-        </g>
-    );
-};
+import { EfficiencyLabel } from './EfficiencyLabel';
 
 export const HexGrid: React.FC<HexGridProps> = ({
     gameState,
@@ -180,7 +69,8 @@ export const HexGrid: React.FC<HexGridProps> = ({
     onSelectBestiaryEnemy,
     onUpdate
 }) => {
-    const [view, setView] = useState<'matrix' | 'bestiary'>('matrix');
+    const [view, setView] = useState<'matrix' | 'bestiary' | 'fusions'>('matrix');
+    const [fusionFocus, setFusionFocus] = useState<string | undefined>();
     const [levitatingDiamonds, setLevitatingDiamonds] = useState<Record<number, boolean>>({});
     const { language } = useLanguage();
     const t = getUiTranslation(language);
@@ -192,6 +82,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const edgeRadius = 350;
 
     const INACTIVE_STROKE = "rgba(74, 85, 104, 0.2)";
+
+    const level4Hexes = new Set<string>();
+    moduleSockets.hexagons.forEach(hex => {
+        if (hex && hex.level >= 4) {
+            level4Hexes.add(hex.type);
+        }
+    });
 
     const activeConnections = {
         diamonds: new Set<number>(),
@@ -328,520 +225,93 @@ export const HexGrid: React.FC<HexGridProps> = ({
         );
     }
 
+    // If fusions view is active, render it
+    if (view === 'fusions') {
+        return (
+            <FusionMenu
+                gameState={gameState}
+                onClose={() => { setView('matrix'); setFusionFocus(undefined); }}
+                initialHighlightType={fusionFocus}
+                onUpdate={onUpdate}
+            />
+        );
+    }
+
     return (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            {/* PROTOCOL MERGE BUTTON (XENO-ALCHEMIST) */}
-            {canMergeXenoAlchemist(gameState) && (
+            {/* BOTTOM RIGHT CONTROLS */}
+            <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                right: '20px',
+                display: 'flex',
+                gap: '16px',
+                zIndex: 10
+            }}>
+                {/* FUSIONS BUTTON */}
                 <button
                     onClick={() => {
-                        performXenoAlchemistMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
+                        setView('fusions');
+                        playSfx('ui-click');
                     }}
                     style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        right: '190px', // Positioned to the left of Bestiary button
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #065f46, #059669)',
-                        border: '2px solid #10b981',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(16, 185, 129, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4)';
-                    }}
-                >
-                    INITIATE XENO-ALCHEMIST
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (IRRADIATED MIRE) */}
-            {canMergeIrradiatedMire(gameState) && (
-                <button
-                    onClick={() => {
-                        performIrradiatedMireMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: canMergeXenoAlchemist(gameState) ? '75px' : '20px',
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #0e7490, #0891b2)',
-                        border: '2px solid #22d3ee',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(34, 211, 238, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(34, 211, 238, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.4)';
-                    }}
-                >
-                    INITIATE IRRADIATED MIRE
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (NEURAL SINGULARITY) */}
-            {canMergeNeuralSingularity(gameState) && (
-                <button
-                    onClick={() => {
-                        performNeuralSingularityMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #7c3aed, #9333ea)',
-                        border: '2px solid #a855f7',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(168, 85, 247, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(168, 85, 247, 0.4)';
-                    }}
-                >
-                    INITIATE NEURAL SINGULARITY
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (KINETIC TSUNAMI) */}
-            {canMergeKineticTsunami(gameState) && (
-                <button
-                    onClick={() => {
-                        performKineticTsunamiMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #b45309, #d97706)',
-                        border: '2px solid #fbbf24',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(251, 191, 36, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.4)';
-                    }}
-                >
-                    INITIATE KINETIC TSUNAMI
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (SOUL-SHATTER CORE) */}
-            {canMergeSoulShatterCore(gameState) && (
-                <button
-                    onClick={() => {
-                        performSoulShatterCoreMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #7f1d1d, #450a0a)',
-                        border: '2px solid #ef4444',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(239, 68, 68, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.4)';
-                    }}
-                >
-                    INITIATE SOUL-SHATTER CORE
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (BLOOD-FORGED CAPACITOR) */}
-            {canMergeBloodForgedCapacitor(gameState) && (
-                <button
-                    onClick={() => {
-                        performBloodForgedCapacitorMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #831843, #4c0519)',
-                        border: '2px solid #be123c',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(190, 18, 60, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(190, 18, 60, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(190, 18, 60, 0.4)';
-                    }}
-                >
-                    INITIATE BLOOD-FORGED CAPACITOR
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (GRAVITY ANCHOR) */}
-            {canMergeGravityAnchor(gameState) && (
-                <button
-                    onClick={() => {
-                        performGravityAnchorMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #1e3a8a, #111827)',
-                        border: '2px solid #3b82f6',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(59, 130, 246, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.4)';
-                    }}
-                >
-                    INITIATE GRAVITY ANCHOR
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (TEMPORAL MONOLITH) */}
-            {canMergeTemporalMonolith(gameState) && (
-                <button
-                    onClick={() => {
-                        performTemporalMonolithMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0)}px`,
-                        right: '190px',
                         padding: '12px 24px',
                         background: 'linear-gradient(45deg, #1e293b, #0f172a)',
-                        border: '2px solid #94a3b8',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(148, 163, 184, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(148, 163, 184, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(148, 163, 184, 0.4)';
-                    }}
-                >
-                    INITIATE TEMPORAL MONOLITH
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (NEUTRON STAR) */}
-            {canMergeNeutronStar(gameState) && (
-                <button
-                    onClick={() => {
-                        performNeutronStarMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #f59e0b, #d97706)',
-                        border: '2px solid #fbbf24',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(251, 191, 36, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.4)';
-                    }}
-                >
-                    INITIATE NEUTRON STAR
-                </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (GRAVITATIONAL HARVEST) */}
-            {canMergeGravitationalHarvest(gameState) && (
-                <button
-                    onClick={() => {
-                        performGravitationalHarvestMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
                         border: '2px solid #38bdf8',
                         borderRadius: '6px',
-                        color: '#fff',
+                        color: '#38bdf8',
                         fontSize: '11px',
                         fontWeight: 950,
                         letterSpacing: '2px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                        zIndex: 10,
                         textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(56, 189, 248, 0.4)',
+                        boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)',
                         fontFamily: 'Orbitron, sans-serif'
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(56, 189, 248, 0.6)';
+                        e.currentTarget.style.boxShadow = '0 0 25px rgba(56, 189, 248, 0.6)';
+                        e.currentTarget.style.background = 'linear-gradient(45deg, #0f172a, #1e293b)';
                     }}
                     onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+                        e.currentTarget.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.4)';
+                        e.currentTarget.style.background = 'linear-gradient(45deg, #1e293b, #0f172a)';
                     }}
                 >
-                    INITIATE GRAVITATIONAL HARVEST
+                    FUSIONS
                 </button>
-            )}
 
-            {/* PROTOCOL MERGE BUTTON (SHATTERED CAPACITOR) */}
-            {canMergeShatteredCapacitor(gameState) && (
+                {/* BESTIARY BUTTON */}
                 <button
-                    onClick={() => {
-                        performShatteredCapacitorMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
+                    onClick={() => setView('bestiary')}
                     style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0) + (canMergeGravitationalHarvest(gameState) ? 55 : 0)}px`,
-                        right: '190px',
                         padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #7c2d12, #dc2626)',
-                        border: '2px solid #f97316',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '2px solid #ef4444',
                         borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
+                        color: '#ef4444',
+                        fontSize: '12px',
+                        fontWeight: 900,
+                        letterSpacing: '1px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(249, 115, 22, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
+                        textShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
+                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(249, 115, 22, 0.6)';
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                        e.currentTarget.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.4)';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(249, 115, 22, 0.4)';
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                        e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.2)';
                     }}
                 >
-                    INITIATE SHATTERED CAPACITOR
+                    {t.matrix.viewBestiary}
                 </button>
-            )}
-
-            {/* PROTOCOL MERGE BUTTON (CHRONO-DEVOURER) */}
-            {canMergeChronoDevourer(gameState) && (
-                <button
-                    onClick={() => {
-                        performChronoDevourerMerge(gameState);
-                        playSfx('upgrade-confirm');
-                        onUpdate?.();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        bottom: `${20 + (canMergeXenoAlchemist(gameState) ? 55 : 0) + (canMergeIrradiatedMire(gameState) ? 55 : 0) + (canMergeNeuralSingularity(gameState) ? 55 : 0) + (canMergeKineticTsunami(gameState) ? 55 : 0) + (canMergeSoulShatterCore(gameState) ? 55 : 0) + (canMergeBloodForgedCapacitor(gameState) ? 55 : 0) + (canMergeGravityAnchor(gameState) ? 55 : 0) + (canMergeTemporalMonolith(gameState) ? 55 : 0) + (canMergeNeutronStar(gameState) ? 55 : 0) + (canMergeGravitationalHarvest(gameState) ? 55 : 0) + (canMergeShatteredCapacitor(gameState) ? 55 : 0)}px`,
-                        right: '190px',
-                        padding: '12px 24px',
-                        background: 'linear-gradient(45deg, #312e81, #1e1b4b)',
-                        border: '2px solid #6366f1',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 950,
-                        letterSpacing: '2px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        zIndex: 10,
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)',
-                        fontFamily: 'Orbitron, sans-serif'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 0 35px rgba(99, 102, 241, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.4)';
-                    }}
-                >
-                    INITIATE CHRONO-DEVOURER
-                </button>
-            )}
-
-            {/* Toggle Button */}
-            <button
-                onClick={() => setView('bestiary')}
-                style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    right: '20px',
-                    padding: '12px 24px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '2px solid #ef4444',
-                    borderRadius: '6px',
-                    color: '#ef4444',
-                    fontSize: '12px',
-                    fontWeight: 900,
-                    letterSpacing: '1px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    zIndex: 10,
-                    textShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
-                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                    e.currentTarget.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.2)';
-                }}
-            >
-                {t.matrix.viewBestiary}
-            </button>
+            </div>
             <svg width="100%" height="100%" viewBox="0 0 864 1080">
                 <text x={centerX} y={centerY - 485} textAnchor="middle" fill="#22d3ee" fontSize="38" fontWeight="900" style={{ letterSpacing: '10px', opacity: 0.9 }}>{t.matrix.title}</text>
                 <text x={centerX} y={centerY - 455} textAnchor="middle" fill="#94a3b8" fontSize="11" style={{ letterSpacing: '1.5px', opacity: 0.6 }}>{t.matrix.synergyText}</text>
@@ -1062,6 +532,33 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         <stop offset="0%" stopColor="rgb(15, 23, 42)" />
                         <stop offset="100%" stopColor="rgb(2, 6, 23)" />
                     </radialGradient>
+
+                    {/* FUSION GRADIENTS */}
+                    <linearGradient id="grad-eco-com" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#fbbf24" />
+                        <stop offset="80%" stopColor="#ef4444" />
+                    </linearGradient>
+                    <linearGradient id="grad-eco-def" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#fbbf24" />
+                        <stop offset="80%" stopColor="#3b82f6" />
+                    </linearGradient>
+                    <linearGradient id="grad-com-def" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#ef4444" />
+                        <stop offset="80%" stopColor="#3b82f6" />
+                    </linearGradient>
+                    <linearGradient id="grad-com-eco" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#ef4444" />
+                        <stop offset="80%" stopColor="#fbbf24" />
+                    </linearGradient>
+                    <linearGradient id="grad-def-com" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#3b82f6" />
+                        <stop offset="80%" stopColor="#ef4444" />
+                    </linearGradient>
+                    <linearGradient id="grad-def-eco" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="20%" stopColor="#3b82f6" />
+                        <stop offset="80%" stopColor="#fbbf24" />
+                    </linearGradient>
+
                     <filter id="rugged-rim">
                         <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" result="noise" />
                         <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
@@ -1155,77 +652,118 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {hexPositions.map((pos, i) => {
                     const hex = gameState.moduleSockets.hexagons[i];
                     const info = hex ? getLegendaryInfo(hex.category, hex.type) : null;
+                    const isHexFusable = hex && hex.level === 4 && FUSIONS.some(f => f.bases.includes(hex.type) && level4Hexes.has(f.bases[0]) && level4Hexes.has(f.bases[1]) && !(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])));
                     return (
                         <g key={`hex-socket-${i}`}
                             onClick={() => {
                                 if (gameState.pendingLegendaryHex && !hex) {
                                     onSocketUpdate('hex', i, { ...gameState.pendingLegendaryHex });
+                                } else if (gameState.pendingFusionHex) {
+                                    if (gameState.pendingFusionHex.validHexIndices.includes(i)) {
+                                        onSocketUpdate('hex', i, { ...gameState.pendingFusionHex.hex });
+                                        playSfx('power-up');
+                                    }
+                                } else if (hex && hex.level === 4) {
+                                    setFusionFocus(hex.type);
+                                    setView('fusions');
+                                    playSfx('ui-click');
                                 }
                             }}
                             onMouseMove={(e) => {
-                                if (hex && !movedItem) {
+                                if (hex && !movedItem && !gameState.pendingFusionHex) {
                                     setHoveredHex({ hex, index: i, x: e.clientX, y: e.clientY });
                                 }
                             }}
                             onMouseLeave={() => setHoveredHex(null)}
                             onDragOver={(e) => e.preventDefault()}
-                            style={{ cursor: (gameState.pendingLegendaryHex && !hex) ? 'copy' : (hex ? 'help' : 'default') }}
+                            style={{
+                                cursor: (gameState.pendingLegendaryHex && !hex) || (gameState.pendingFusionHex && gameState.pendingFusionHex.validHexIndices.includes(i)) ? 'copy' : (!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexFusable ? 'pointer' : 'default'),
+                                opacity: gameState.pendingFusionHex && !gameState.pendingFusionHex.validHexIndices.includes(i) ? 0.3 : 1
+                            }}
                         >
-                            <polygon
-                                points={getHexPoints(pos.x, pos.y, 60)}
-                                fill="url(#core-grad)"
-                                stroke={hex ? info?.color : "rgba(250, 204, 21, 0.5)"}
-                                strokeWidth={hex ? "4" : "2"}
-                                className={hex ? "glow-hex" : "glow-yellow"}
-                                style={{ '--hex-color': info?.color, '--glow-color': info?.color || '#fbbf24' } as any}
-                            />
-                            {hex && (
-                                <g>
-                                    {hex.customIcon ? (
-                                        <image
-                                            href={hex.customIcon}
-                                            x={pos.x - 60}
-                                            y={pos.y - 60}
-                                            width="120"
-                                            height="120"
-                                            style={{ imageRendering: 'pixelated', filter: `drop-shadow(0 0 15px ${info?.color}88)` }}
-                                            pointerEvents="none"
+                            {(() => {
+                                let stroke: string = hex ? info?.color || "rgba(250, 204, 21, 0.5)" : "rgba(250, 204, 21, 0.5)";
+                                let glowColor: string = info?.color || '#fbbf24';
+                                if (hex && hex.level >= 5) {
+                                    const fusion = FUSIONS.find(f => f.result === hex.type);
+                                    if (fusion) {
+                                        const cat1 = LEGENDARY_UPGRADES[fusion.bases[0]]?.category;
+                                        const cat2 = LEGENDARY_UPGRADES[fusion.bases[1]]?.category;
+                                        if (cat1 && cat2) {
+                                            const c1 = cat1.substring(0, 3).toLowerCase();
+                                            const c2 = cat2.substring(0, 3).toLowerCase();
+                                            stroke = `url(#grad-${c1}-${c2})`;
+
+                                            // Make glow match the first base component for fusions instead of default purple
+                                            const catColors: Record<string, string> = {
+                                                Economic: '#fbbf24',
+                                                Combat: '#ef4444',
+                                                Defensive: '#3b82f6'
+                                            };
+                                            glowColor = catColors[cat1] || glowColor;
+                                        }
+                                    }
+                                }
+                                return (
+                                    <>
+                                        <polygon
+                                            points={getHexPoints(pos.x, pos.y, 60)}
+                                            fill="url(#core-grad)"
+                                            stroke={stroke}
+                                            strokeWidth={hex ? "4" : "2"}
+                                            className={hex ? "glow-hex" : "glow-yellow"}
+                                            style={{ '--hex-color': glowColor, '--glow-color': glowColor } as any}
                                         />
-                                    ) : (
-                                        <text x={pos.x} y={pos.y - 5} textAnchor="middle" fill={info?.color} fontSize="28" style={{ filter: `drop-shadow(0 0 8px ${info?.color})`, fontWeight: 900 }} pointerEvents="none">
-                                            {info?.icon}
-                                        </text>
-                                    )}
-                                    <rect x={pos.x - 28} y={pos.y + 40} width="56" height="18" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke={info?.color} strokeWidth="2" pointerEvents="none" />
-                                    <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level === 5 ? "#FCD34D" : info?.color} fontSize={hex.level === 5 ? "8" : "12"} fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
-                                        {hex.level === 5 ? "MERGEABLE" : `LVL ${hex.level}`}
-                                    </text>
-                                    {gameState.upgradingHexIndex === i && gameState.upgradingHexTimer > 0 && (
-                                        <g>
-                                            <polygon
-                                                points={getHexPoints(pos.x, pos.y, 52.5)}
-                                                fill="none"
-                                                stroke="#fbbf24"
-                                                strokeWidth="3"
-                                                className="pulse-upgrade-ring"
-                                                style={{ pointerEvents: 'none' }}
-                                            />
-                                            <text
-                                                x={pos.x}
-                                                y={pos.y - 80}
-                                                textAnchor="middle"
-                                                fill="#fbbf24"
-                                                fontSize="24"
-                                                fontWeight="900"
-                                                className="float-up-fade"
-                                                style={{ textShadow: '0 0 10px #fbbf24' }}
-                                            >
-                                                UPGRADED!
-                                            </text>
-                                        </g>
-                                    )}
-                                </g>
-                            )}
+                                        {hex && (
+                                            <g>
+                                                {hex.customIcon ? (
+                                                    <image
+                                                        href={hex.customIcon}
+                                                        x={pos.x - 60}
+                                                        y={pos.y - 60}
+                                                        width="120"
+                                                        height="120"
+                                                        style={{ imageRendering: 'pixelated', filter: `drop-shadow(0 0 15px ${glowColor}88)` }}
+                                                        pointerEvents="none"
+                                                    />
+                                                ) : (
+                                                    <text x={pos.x} y={pos.y - 5} textAnchor="middle" fill={info?.color} fontSize="28" style={{ filter: `drop-shadow(0 0 8px ${info?.color})`, fontWeight: 900 }} pointerEvents="none">
+                                                        {info?.icon}
+                                                    </text>
+                                                )}
+                                                <rect x={pos.x - 28} y={pos.y + 40} width="56" height="18" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke={hex.level >= 5 ? stroke : info?.color} strokeWidth="2" pointerEvents="none" />
+                                                <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level >= 4 ? "#FCD34D" : info?.color} fontSize={hex.level >= 4 ? "10" : "12"} fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
+                                                    {hex.level >= 5 ? "MAX" : `LVL ${hex.level}`}
+                                                </text>
+                                                {gameState.upgradingHexIndex === i && gameState.upgradingHexTimer > 0 && (
+                                                    <g>
+                                                        <polygon
+                                                            points={getHexPoints(pos.x, pos.y, 52.5)}
+                                                            fill="none"
+                                                            stroke="#fbbf24"
+                                                            strokeWidth="3"
+                                                            className="pulse-upgrade-ring"
+                                                            style={{ pointerEvents: 'none' }}
+                                                        />
+                                                        <text
+                                                            x={pos.x}
+                                                            y={pos.y - 80}
+                                                            textAnchor="middle"
+                                                            fill="#fbbf24"
+                                                            fontSize="24"
+                                                            fontWeight="900"
+                                                            className="float-up-fade"
+                                                            style={{ textShadow: '0 0 10px #fbbf24' }}
+                                                        >
+                                                            UPGRADED!
+                                                        </text>
+                                                    </g>
+                                                )}
+                                            </g>
+                                        )}
+                                    </>
+                                );
+                            })()}
                             {gameState.pendingLegendaryHex && !hex && (
                                 <polygon
                                     points={getHexPoints(pos.x, pos.y, 68)}
@@ -1236,7 +774,32 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     className="pulse-legendary-glow"
                                 />
                             )}
-                        </g>
+                            {!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexFusable && (
+                                <polygon
+                                    points={getHexPoints(pos.x, pos.y, 68)}
+                                    fill="rgba(56, 189, 248, 0.05)"
+                                    stroke="#38bdf8"
+                                    strokeWidth="2"
+                                    style={{ pointerEvents: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
+                                    className="pulse-cyan-glow"
+                                />
+                            )}
+                            {gameState.pendingFusionHex && gameState.pendingFusionHex.validHexIndices.includes(i) && (
+                                <g>
+                                    <polygon
+                                        points={getHexPoints(pos.x, pos.y, 68)}
+                                        fill="rgba(56, 189, 248, 0.2)"
+                                        stroke="#38bdf8"
+                                        strokeWidth="4"
+                                        style={{ pointerEvents: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
+                                        className="pulse-attention"
+                                    />
+                                    <text x={pos.x} y={pos.y + 10} textAnchor="middle" fill="#38bdf8" fontSize="14" fontWeight="900" pointerEvents="none" className="pulse-attention" style={{ textShadow: '0 0 10px #38bdf8', letterSpacing: '2px' }}>
+                                        SELECT
+                                    </text>
+                                </g>
+                            )}
+                        </g >
                     );
                 })}
 
@@ -1248,9 +811,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                     return (
                         <g key={`diamond-socket-${i}`}
-                            style={{ pointerEvents: gameState.pendingLegendaryHex ? 'none' : 'auto' }}
+                            style={{ pointerEvents: (gameState.pendingLegendaryHex || gameState.pendingFusionHex) ? 'none' : 'auto' }}
                             onMouseDown={(e) => {
-                                if (gameState.pendingLegendaryHex) return; // Disable during placement
+                                if (gameState.pendingLegendaryHex || gameState.pendingFusionHex) return; // Disable during placement
                                 if (!movedItem && moduleSockets.diamonds[i]) {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1363,9 +926,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     return (
                         <g key={`meteorite-foreground-${i}`}
                             transform={`translate(${pos.x}, ${pos.y})`}
-                            style={{ cursor: movedItem ? 'copy' : 'help' }}
+                            style={{ cursor: movedItem ? 'copy' : 'help', pointerEvents: gameState.pendingFusionHex ? 'none' : 'auto' }}
                             onMouseDown={(e) => {
-                                if (gameState.pendingLegendaryHex) return;
+                                if (gameState.pendingLegendaryHex || gameState.pendingFusionHex) return;
                                 if (!movedItem && meteorite) {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1496,6 +1059,6 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     )
                 })}
             </svg>
-        </div>
+        </div >
     );
 };

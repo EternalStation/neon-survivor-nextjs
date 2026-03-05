@@ -1,46 +1,46 @@
-# Чит-коды (Cheat Codes)
+# Cheat Codes
 
-## Назначение
+## Purpose
 
-Система отладочных кодов для тестирования игрового состояния без прохождения. Позволяет вызывать боссов, получать ресурсы, спавнить легендарные улучшения и управлять временем.
+Debug code system for testing game state without passing. Allows you to summon bosses, obtain resources, spawn legendary upgrades and manage time.
 
-## Триггеры
+## Triggers
 
-- Коды вводятся посимвольно через клавиатуру во время активной игровой сессии.
-- Буфер накапливает последние 40 символов; проверка выполняется по суффиксу (`endsWith`).
-- **`kkk`** — открывает **Cheat Panel** (графический интерфейс с поиском и историей).
-- **`bug`** — открывает **Admin Console** (админ-консоль).
-- Ввод блокируется при открытых окнах: настройки, feedback modal, admin console, а также во время диалога экстракции (`extractionStatus: 'requested' | 'waiting'`).
-- Коды регистронезависимы (все символы приводятся к нижнему регистру).
-- После распознавания кода буфер сбрасывается.
-
----
-
-## Ресурсы
-
-| Код | Эффект |
-|-----|--------|
-| `yy` или `ko` | +5100 Dust |
-| `kp` | +1000 Void Flux (с плавающим числом и звуком) |
-| `rmo` | +100 к базовой броне (`arm.base`) и +10 к множителю брони (`arm.mult`) |
+- Codes are entered character by character through the keyboard during an active gaming session.
+- The buffer accumulates the last 40 characters; the check is performed on the suffix (`endsWith`).
+- **`kkk`** - opens **Cheat Panel** (graphical interface with search and history).
+- **`bug`** - opens **Admin Console** (admin console).
+- Input is blocked when windows are open: settings, feedback modal, admin console, as well as during the extraction dialog (`extractionStatus: 'requested' | 'waiting'`).
+- Codes are case-insensitive (all characters are converted to lowercase).
+- After the code is recognized, the buffer is reset.
 
 ---
 
-## Прогресс игрока
+## Resources
 
-| Код | Эффект |
-|-----|--------|
-| `lvl`, `l1`, `lp` | XP → до следующего уровня (level up), разблокирует порталы (`portalsUnlocked = true`), открывает предупреждение о портале через 0.5 с |
-| `k1` | Убивает игрока (HP → 0, `gameOver = true`), причина смерти: `SIMULATION TERMINATED (DEBUG)` |
-| `cs2` | Удваивает текущий `chassisResonanceBonus`: 1-е нажатие → 0.5, затем 0.5→1→2→4→... Эффекты резонанса: EventHorizon — Pull Strength; Malware — bounce DMG/Speed/Range; StormStrike — AOE radius; HiveMother — Infection Rate и Swarm DMG. |
+| Code | Effect |
+|----------|--------|
+| `yy` or `ko` | +5100 Dust |
+| `kp` | +1000 Void Flux (with floating number and sound) |
+| `rmo` | +100 to base armor (`arm.base`) and +10 to armor multiplier (`arm.mult`) |
 
 ---
 
-## Легендарные улучшения (`Y`-серия)
+## Player progress
 
-Коды применяют легендарное улучшение на уровне 5, открывают Matrix-меню для размещения.
+| Code | Effect |
+|----------|--------|
+| `lvl`, `l1`, `lp` | XP → to the next level (level up), unlocks portals (`portalsUnlocked = true`), opens a warning about the portal after 0.5 s |
+| `k1` | Kills the player (HP → 0, `gameOver = true`), cause of death: `SIMULATION TERMINATED (DEBUG)` |
+| `cs2` | Doubles the current `chassisResonanceBonus`: 1st press → 0.5, then 0.5→1→2→4→... Resonance effects: EventHorizon - Pull Strength; Malware - bounce DMG/Speed/Range; StormStrike - AOE radius; HiveMother - Infection Rate and Swarm DMG. |
 
-| Код | Тип улучшения | Название |
+---
+
+## Legendary improvements (`Y`-series)
+
+Codes apply the legendary upgrade at level 5, open the Matrix menu for placement.
+
+| Code | Upgrade Type | Title |
 |-----|--------------|---------|
 | `y1` | EcoDMG | [STORM OF STEEL](./legendary-upgrades/ecodmg.md) |
 | `y2` | EcoXP | [NEURAL HARVEST](./legendary-upgrades/ecoxp.md) |
@@ -53,16 +53,16 @@
 | `y9` | DefPuddle | [TOXIC SWAMP](./legendary-upgrades/defpuddle.md) |
 | `y0` | DefEpi | [EPICENTER](./legendary-upgrades/defepi.md) |
 | `y-` | KineticBattery | [KINETIC BATTERY](./legendary-upgrades/kineticbattery.md) |
-| `y=` | ChronoPlating | [CHRONO PLATING](./legendary-upgrades/chronoplating.md) |
+| `y=` | Chrono Plating | [CHRONO PLATING](./legendary-upgrades/chronoplating.md) |
 
 ---
 
-## Чертежи (`O`-серия)
+## Drawings (`O`-series)
 
-Код `o1`–`o12` — выбрасывает чертёж в радиусе 300 px от игрока.
+Code `o1`–`o12` - throws out a blueprint within a radius of 300 px from the player.
 
-| Код | Тип чертежа |
-|-----|------------|
+| Code | Drawing Type |
+|-----|-----------|
 | `o1` | METEOR_SHOWER |
 | `o2` | NEURAL_OVERCLOCK |
 | `o3` | STASIS_FIELD |
@@ -76,31 +76,31 @@
 | `o11` | SECTOR_UPGRADE_COM |
 | `o12` | SECTOR_UPGRADE_DEF |
 
-`o20` — добавляет в инвентарь уже исследованный чертёж `DIMENSIONAL_GATE` (status: `ready`).
+`o20` - adds the already researched drawing `DIMENSIONAL_GATE` (status: `ready`) to the inventory.
 
 ---
 
-## Метеориты (`M`-серия)
+## Meteorites (`M`-series)
 
-| Код | Редкость | Действие |
-|-----|---------|---------|
-| `m1` | anomalous | Спавн в мире (100 px от игрока) |
-| `m2` | radiant | Спавн в мире |
-| `m3` | abyss | Спавн в мире |
-| `m4` | eternal | Спавн в мире |
-| `m5` | divine | Спавн в мире |
-| `m6` | singularity | Спавн в мире |
-| `mi1`–`mi6` | те же редкости | Помещает метеорит прямо в инвентарь (`isNew = true`) |
+| Code | Rarity | Action |
+|----------|---------|---------|
+| `m1` | abnormal | Spawn in the world (100 px from the player) |
+| `m2` | radiant | Spawn in the world |
+| `m3` | abyss | Spawn in the world |
+| `m4` | eternal | Spawn in the world |
+| `m5` | divine | Spawn in the world |
+| `m6` | singularity | Spawn in the world |
+| `mi1`–`mi6` | the same rarities | Places the meteorite directly into inventory (`isNew = true`) |
 
-> **Примечание:** Скриншот документации указывает `m1...m9`, но в коде реализованы только 6 редкостей (m1–m6).
+> **Note:** The documentation screenshot indicates `m1...m9`, but only 6 rarities (m1–m6) are implemented in the code.
 
 ---
 
-## Боссы (`B`-серия)
+## Bosses (`B`-series)
 
-Формат: `b[номер_формы][уровень]`
+Format: `b[form_number][level]`
 
-| Форма | Номер |
+| Form | Number |
 |-------|-------|
 | circle | 1 |
 | triangle | 2 |
@@ -108,99 +108,98 @@
 | diamond | 4 |
 | pentagon | 5 |
 
-Уровни: 1–5.
+Levels: 1–5.
 
-**Примеры:**
-- `b11` — Boss Circle Lvl 1
+**Examples:**- `b11` — Boss Circle Lvl 1
 - `b15` — Boss Circle Lvl 5
 - `b51` — Boss Pentagon Lvl 1
 - `b55` — Boss Pentagon Lvl 5
 
-**Быстрый спавн (максимальный уровень):** `v1`–`v5` — спавн босса соответствующей формы на уровне 4 (Max Tier).
+**Fast spawn (maximum level):** `v1`–`v5` - spawns a boss of the corresponding form at level 4 (Max Tier).
 
-**Устаревший формат:** `v[форма]-[уровень]` (например, `v1-1`) — аналогично b-серии, поддерживается.
-
----
-
-## Враги (`E`-серия)
-
-| Код | Эффект |
-|-----|--------|
-| `e1` | Спавн 5 врагов-кругов (circle) |
-| `e2` | Спавн 5 врагов-треугольников (triangle) |
-| `e3` | Спавн 5 врагов-квадратов (square) |
-| `e4` | Спавн 5 врагов-ромбов (diamond) |
-| `e5` | Спавн 5 врагов-пятиугольников (pentagon) |
-| `e6` или `sni` | Спавн редкого врага Snitch |
-| `z3` | Спавн Void Burrower (червь) |
-| `gli` | Спавн Prism Glitcher (только если не существует) |
+**Legacy format:** `v[form]-[level]` (e.g. `v1-1`) - similar to b-series, supported.
 
 ---
 
-## События (`Z`-серия)
+## Enemies (`E`-series)
 
-| Код | Событие |
-|-----|--------|
-| `z1` | Legion Formation — активирует событие `legion_formation` на 600 с |
-| `z2` | Necrotic Surge (Horde) — активирует событие `necrotic_surge` на 30 с |
+| Code | Effect |
+|----------|--------|
+| `e1` | Spawn 5 circle enemies (circle) |
+| `e2` | Spawn 5 triangle enemies |
+| `e3` | Spawn 5 square enemies |
+| `e4` | Spawn 5 diamond enemies |
+| `e5` | Spawn 5 pentagon enemies |
+| `e6` or `sni` | Rare enemy Snitch spawn |
+| `z3` | Spawn Void Burrower (worm) |
+| `gli` | Spawn Prism Glitcher (only if does not exist) |
 
 ---
 
-## Турели (`TUR`-серия)
+## Events (`Z`-series)
 
-Формат: `turf[N]`, `turi[N]`, `turh[N]` или сокращённо `tf[N]`, `ti[N]`, `th[N]`.
+| Code | Event |
+|----------|--------|
+| `z1` | Legion Formation - activates the `legion_formation` event for 600 seconds |
+| `z2` | Necrotic Surge (Horde) - activates the `necrotic_surge` event for 30 sec |
 
-| Тип | Ключ |
+---
+
+## Turrets (`TUR`-series)
+
+Format: `turf[N]`, `turi[N]`, `turh[N]` or abbreviated `tf[N]`, `ti[N]`, `th[N]`.
+
+| Type | Key |
 |-----|------|
-| Огонь (fire) | `f` |
-| Лёд (ice) | `i` |
-| Лечение (heal) | `h` |
+| Fire | `f` |
+| Ice | `i` |
+| Treatment (heal) | `h` |
 
-Уровень: 1–6. Радиус турели: `120 × (1 + (level − 1) × 0.1)`.
+Level: 1–6. Turret radius: `120 × (1 + (level − 1) × 0.1)`.
 
-**Пример:** `turf3` или `tf3` — огненная турель уровня 3.
-
----
-
-## Прыжок по времени (`T`-серия)
-
-Формат: `t[минуты]`. Доступные значения: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60.
-
-**Пример:** `t20` — прыгнуть вперёд на 20 минут игрового времени.
+**Example:** `turf3` or `tf3` is a level 3 fire turret.
 
 ---
 
-## Порталы
+## Time jump (`T`-series)
 
-| Код | Эффект |
-|-----|--------|
-| `por` | Сбрасывает портал в состояние `closed`, таймер → 10.1 с (быстрое переоткрытие) |
-| `lvl` / `l1` / `lp` | Дополнительно открывает порталы (`portalsUnlocked = true`) |
+Format: `t[minutes]`. Available values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60.
 
----
-
-## Служебные
-
-| Код | Эффект |
-|-----|--------|
-| `bug` | Открывает Admin Console |
-| `i15` | Запускает тестовый сценарий «Fake Portal Troll» (записывает `fakePortalTriggerTime` в историю ассистента) |
+**Example:** `t20` - jump forward 20 minutes of game time.
 
 ---
 
-## Альтернативы и ошибки
+## Portals
 
-- Если буфер не совпадает ни с одним суффиксом — ничего не происходит, буфер продолжает накапливаться.
-- Для `gli`: если Glitcher уже живёт среди врагов — спавн пропускается, буфер сбрасывается.
-- Для `o20`: если в инвентаре нет свободного слота — чертёж не добавляется (без уведомления пользователя).
-- Для `mi1–mi6`: если инвентарь полон — метеорит не добавляется.
-- Для легендарных улучшений: если тип не найден в `LEGENDARY_UPGRADES` — ничего не применяется.
+| Code | Effect |
+|----------|--------|
+| `por` | Resets the portal to the `closed` state, timer → 10.1 s (fast re-opening) |
+| `lvl` / `l1` / `lp` | Additionally opens portals (`portalsUnlocked = true`) |
 
 ---
 
-## Связанные функции и сущности
+## Service
 
-- [Легендарные улучшения (список)](./legendary-upgrades/) — все 12 улучшений, применяемых через Y-серию
-- [Броня](./stats/armor.md) — затрагивается кодом `rmo`
-- [HP](./stats/hp.md) — затрагивается кодом `k1`
-- [XP](./stats/xp-gain.md) — затрагивается кодом `lvl`
+| Code | Effect |
+|----------|--------|
+| `bug` | Opens Admin Console |
+| `i15` | Runs the "Fake Portal Troll" test script (writes `fakePortalTriggerTime` to the assistant's history) |
+
+---
+
+## Alternatives and errors
+
+- If the buffer does not match any suffix, nothing happens, the buffer continues to accumulate.
+- For `gli`: if Glitcher already lives among enemies, spawn is skipped and the buffer is reset.
+- For `o20`: if there is no free slot in the inventory, the drawing is not added (without notifying the user).
+- For `mi1–mi6`: if the inventory is full, the meteorite is not added.
+- For legendary upgrades: if the type is not found in `LEGENDARY_UPGRADES`, nothing is applied.
+
+---
+
+## Related functions and entities
+
+- [Legendary upgrades (list)](./legendary-upgrades/) - all 12 upgrades applied through the Y-series
+- [Armor](./stats/armor.md) - affected by the `rmo` code
+- [HP](./stats/hp.md) - affected by code `k1`
+- [XP](./stats/xp-gain.md) - affected by the `lvl` code

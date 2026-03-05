@@ -1,101 +1,101 @@
-# Броня (Armor)
+# Armor
 
-**Тип:** [PlayerStats](../stat-formula.md) (`player.arm`)
+**Type:** [PlayerStats](../stat-formula.md) (`player.arm`)
 
-## Формула расчёта
+## Calculation formula
 
-### Шаг 1 — суммарная броня
+### Step 1 - total armor
 
 ```
 Armor = (base + flat + hexFlat) × (1 + mult/100) × (1 + (hexMult + hexMult2)/100) × curseMult
 ```
 
-`arenaMult` = 1.0 (броня не усиливается баффом арены).
+`arenaMult` = 1.0 (armor is not enhanced by the arena buff).
 
-### Шаг 2 — конвертация в Damage Reduction
+### Step 2 - Convert to Damage Reduction
 
 ```
 DR = min(0.95, 0.0945 × log10(Armor / 2 + 1) ^ 1.4)
 ```
 
-| Armor | DR (прим.) | Входящий урон (%) |
-|-------|-----------|-----------------|
+| Armor | DR (approx.) | Incoming Damage (%) |
+|-------|----------|-----------------|
 | 16 | ~9% | ~91% |
 | 100 | ~19% | ~81% |
-| 1 000 | ~39% | ~61% |
-| 10 000 | ~62% | ~38% |
-| 50 000 | ~82% | ~18% |
-| 200 000 | ~90% | ~10% |
-| 328 000 | 95% (кап) | 5% |
+| 1,000 | ~39% | ~61% |
+| 10,000 | ~62% | ~38% |
+| 50,000 | ~82% | ~18% |
+| 200,000 | ~90% | ~10% |
+| 328,000 | 95% (cap) | 5% |
 
-### Шаг 3 — применение к входящему урону
+### Step 3 - Apply to Incoming Damage
 
 ```
 DamageAfterArmor = RawDamage × (1 - DR)
 ```
 
-Броня применяется к контактному урону от врагов, от стен (10% MaxHP) и к любому физическому урону без флага True Damage.
+Armor applies to contact damage from enemies, from walls (10% MaxHP) and to any physical damage without the True Damage flag.
 
-## Легендарные источники
+## Legendary sources
 
 ### [AEGIS PROTOCOL (CombShield)](../legendary-upgrades/combshield.md)
 
-| Уровень | Поле | Формула |
+| Level | Field | Formula |
 |---------|------|---------|
 | 1 | `hexFlat` | `souls_since_L1 × 0.1 × HexMultiplier` |
-| 4 | `hexMult` | `souls_since_L4 × 0.05 × HexMultiplier` (в %) |
+| 4 | `hexMult` | `souls_since_L4 × 0.05 × HexMultiplier` (in %) |
 
-При 1 000 убийств с L1 и HexMult=1.0: +100 к базе брони.
+With 1,000 kills with L1 and HexMult=1.0: +100 to armor base.
 
-### [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md) — уровень 3
+### [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md) - level 3
 
-**Триггер:** `player.curHp < MaxHP × 0.5`
+**Trigger:** `player.curHp < MaxHP × 0.5`
 
-| Поле | Значение |
-|------|---------|
-| `hexMult2` | +100% (условно) |
+| Field | Meaning |
+|-----------|---------|
+| `hexMult2` | +100% (conditional) |
 
-Добавляется аддитивно к `hexMult` в формуле второго тира. Деактивируется, как только HP ≥ 50%.
+Added additively to `hexMult` in the second tier formula. Deactivated as soon as HP ≥ 50%.
 
-### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) — уровень 3
+### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) - level 3
 
-**Триггер:** каждые 5 минут с момента достижения L3
+**Trigger:** every 5 minutes since reaching L3
 
-Каждые 5 минут текущее значение `Armor` (после calcStat) добавляется в `player.chronoArmorBonus`, которое входит в `hexFlat` следующего кадра:
+Every 5 minutes, the current `Armor` value (after calcStat) is added to `player.chronoArmorBonus`, which is included in the `hexFlat` of the next frame:
 
 ```
 arm.hexFlat = souls×0.1 (CombShield) + player.chronoArmorBonus
 ```
 
-Это создаёт накопительное удвоение брони:
+This creates a cumulative armor doubling:
 
-| Время от L3 | Множитель Armor (к начальному значению на момент L3) |
+| Time from L3 | Armor multiplier (to initial value at L3) |
 |---|---|
-| 0 мин | ×1.0 |
-| 5 мин | ×2.0 |
-| 10 мин | ×4.0 |
-| 15 мин | ×8.0 |
+| 0 min | ×1.0 |
+| 5 min | ×2.0 |
+| 10 min | ×4.0 |
+| 15 min | ×8.0 |
 
-Реальный рост выше из-за параллельного накопления CombShield и KineticBattery бонусов.
+The actual growth is higher due to the parallel accumulation of CombShield and KineticBattery bonuses.
 
-## Производные эффекты Armor
+## Armor derivative effects
 
-Броня используется как база для нескольких других механик:
+Armor is used as a base for several other mechanics:
 
-| Механика | Формула |
+| Mechanics | Formula |
 |---------|---------|
-| [Kinetic Battery L1: шоквейв](../legendary-upgrades/kineticbattery.md) | `shockDmg = calcStat(arm) × 1.0` |
-| [Kinetic Battery L2: щит](../legendary-upgrades/kineticbattery.md) | `shieldAmount = calcStat(arm) × 1.0` |
-| [Chrono Plating L1: Урон и ATS](../legendary-upgrades/chronoplating.md) | `dmg.hexMult += totalArmor × 0.01`, `atk.hexMult += totalArmor × 0.01` |
+| [Kinetic Battery L1: shockwave](../legendary-upgrades/kineticbattery.md) | `shockDmg = calcStat(arm) × 1.0` |
+| [Kinetic Battery L2: shield](../legendary-upgrades/kineticbattery.md) | `shieldAmount = calcStat(arm) × 1.0` |
+| [Chrono Plating L1: Damage and ATS](../legendary-upgrades/chronoplating.md) | `dmg.hexMult += totalArmor × 0.01`, `atk.hexMult += totalArmor × 0.01` |
 | [Chrono Plating L4: Regen](../legendary-upgrades/chronoplating.md) | `regenAmount += totalArmor × 0.005 / 60` |
 
-## Связанные функции и сущности
+## Related functions and entities
 
-- [Формула PlayerStats](../stat-formula.md)
-- [Снижение урона от столкновений](collision-reduction.md) — применяется после DR от брони
-- [Регенерация HP](regen.md) — ChronoPlating L4 конвертирует Armor в Regen
-- [Урон](damage.md) — ChronoPlating L1 конвертирует Armor в Damage%
-- [Скорость атаки](attack-speed.md) — ChronoPlating L1 конвертирует Armor в ATS%
+- [Formula PlayerStats](../stat-formula.md)
+- [Collision damage reduction](collision-reduction.md) - applied after armor DR
+- [HP Regeneration](regen.md) - ChronoPlating L4 converts Armor to Regen
+- [Damage](damage.md) - ChronoPlating L1 converts Armor to Damage%
+- [Attack speed](attack-speed.md) - ChronoPlating L1 converts Armor to ATS%
 - [AEGIS PROTOCOL](../legendary-upgrades/combshield.md)
 - [KINETIC BATTERY](../legendary-upgrades/kineticbattery.md)
 - [CHRONO PLATING](../legendary-upgrades/chronoplating.md)

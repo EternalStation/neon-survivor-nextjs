@@ -4,6 +4,7 @@ import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
 import { triggerDash } from '../logic/player/PlayerMovement';
+import { triggerHiveMotherCone } from '../logic/player/PlayerCombat';
 import { getKeybinds } from '../logic/utils/Keybinds';
 import { dropBlueprint, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../logic/utils/CooldownUtils';
@@ -212,6 +213,23 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         playSfx('spawn');
                     }
                 }
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'hivemother') {
+                    const now = state.gameTime;
+                    const cdMod = getCdMod(state, player);
+                    if (!isOnCooldown(player.lastHiveMotherSkill ?? -999999, 14, cdMod, now)) {
+                        player.lastHiveMotherSkill = now;
+                        triggerHiveMotherCone(state, player);
+                    }
+                }
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'aigis') {
+                    const now = state.gameTime;
+                    const cdMod = getCdMod(state, player);
+                    if (!isOnCooldown(player.orbitalVortexUntil ? player.orbitalVortexUntil - GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION : -999999, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now)) {
+                        player.orbitalVortexUntil = now + GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION;
+                        spawnFloatingNumber(state, player.x, player.y - 40, 'ORBITAL VORTEX', '#f59e0b', true);
+                        playSfx('power-up');
+                    }
+                }
             }
 
             // PORTAL TRIGGER
@@ -316,6 +334,17 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "+1000 FLUX", '#a855f7', true);
                 playSfx('power-up');
                 console.log('[CHEAT] Added 1000 Void Flux. New Total:', gameState.current.player.isotopes);
+                refreshUI(); // Force Update
+                cheatBuffer = '';
+            }
+
+            // KS5 - 500 Souls (Kills)
+            if (cheatBuffer.endsWith('ks5')) {
+                gameState.current.killCount += 500;
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "+500 SOULS", '#fbbf24', true);
+                playSfx('power-up');
+                console.log('[CHEAT] Added 500 Kills (Souls). New Total:', gameState.current.killCount);
+                import('../logic/upgrades/LegendaryLogic').then(mod => mod.syncAllLegendaries(gameState.current));
                 refreshUI(); // Force Update
                 cheatBuffer = '';
             }
@@ -569,11 +598,11 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         const pastTime = state.gameTime - 3600;
                         const selection: any = {
                             ...base,
-                            level: 5,
+                            level: 4,
                             killsAtAcquisition: state.killCount,
                             timeAtAcquisition: pastTime,
-                            killsAtLevel: { 1: state.killCount, 2: state.killCount, 3: state.killCount, 4: state.killCount, 5: state.killCount },
-                            timeAtLevel: { 1: pastTime, 2: pastTime, 3: pastTime, 4: pastTime, 5: pastTime },
+                            killsAtLevel: { 1: state.killCount, 2: state.killCount, 3: state.killCount, 4: state.killCount },
+                            timeAtLevel: { 1: pastTime, 2: pastTime, 3: pastTime, 4: pastTime },
                             statBonuses: {}
                         };
                         applyLegendarySelection(state, selection);

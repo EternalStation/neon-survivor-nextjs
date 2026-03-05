@@ -178,6 +178,14 @@ export interface Player {
     phaseShiftUntil?: number; // Timestamp for ghost state (no dmg dealt/taken)
     spawnTimer?: number; // Individual spawn animation timer
 
+    // Hive Mother Skill
+    queuedNanites?: number;
+    naniteFrameCounter?: number;
+    naniteDoubleDmgUntil?: number;
+    lastHiveMotherSkill?: number;
+
+    orbitalVortexUntil?: number;
+
     // Boss Capabilities
     kineticBattery?: boolean; // Arena 2 Boss Drop
     radCore?: boolean;        // Arena 1 Boss Drop
@@ -200,6 +208,7 @@ export interface Player {
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
     rerolls: number;
+    consumedLegendaries?: string[];
 }
 
 export interface ClassMetric {
@@ -268,6 +277,9 @@ export interface Bullet {
     // Nanite Swarm
     isNanite?: boolean;
     naniteTargetId?: number;
+    isWobbly?: boolean;
+    isHiveMotherSkill?: boolean;
+    hiveMotherSpitId?: number;
     // Malware Props
     bounceDmgMult?: number;
     bounceSpeedBonus?: number;
@@ -494,6 +506,9 @@ export interface Enemy {
     infectedUntil?: number;
     infectionDmg?: number;
     infectionAccumulator?: number;
+    activeNaniteCount?: number;
+    activeNaniteDmg?: number;
+    lastSpitHitId?: number;
     // Kinetic Bleed Status (ComLife + Kinetic Battery Fusion)
     bleedTimer?: number;
     bleedDmg?: number;
@@ -809,6 +824,7 @@ export interface GameState {
     showFeedbackModal: boolean;
     legendaryOptions: LegendaryHex[] | null;
     pendingLegendaryHex: LegendaryHex | null; // Hex waiting to be placed
+    pendingFusionHex?: { hex: LegendaryHex, validHexIndices: number[] } | null; // Fusion waiting to be placed
     upgradingHexIndex: number | null; // For auto-upgrade animation
     upgradingHexTimer: number; // Duration of animation
     unseenMeteorites: number;

@@ -146,6 +146,19 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             isReady = remaining <= 0;
                             if (!isReady) remainingDisplay = remaining.toFixed(1);
                         }
+                    } else if (player.playerClass === 'hivemother') {
+                        show = true;
+                        const remaining = getRemainingCD(player.lastHiveMotherSkill ?? -999999, 14, cdMod, now);
+                        cdPct = getCDProgress(player.lastHiveMotherSkill ?? -999999, 14, cdMod, now);
+                        isReady = remaining <= 0;
+                        if (!isReady) remainingDisplay = remaining.toFixed(1);
+                    } else if (player.playerClass === 'aigis') {
+                        show = true;
+                        const lastUsed = player.orbitalVortexUntil ? player.orbitalVortexUntil - GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION : -999999;
+                        const remaining = getRemainingCD(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
+                        cdPct = getCDProgress(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
+                        isReady = remaining <= 0;
+                        if (!isReady) remainingDisplay = remaining.toFixed(1);
                     }
 
                     if (!show) return null;
@@ -225,7 +238,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 </div>
                             </div>
 
-                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike') && (
+                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike' || player.playerClass === 'hivemother' || player.playerClass === 'aigis') && (
                                 <div style={{
                                     position: 'absolute', top: -4, right: -4,
                                     background: '#0f172a', border: '1px solid #475569',

@@ -291,29 +291,30 @@ export const UI_TRANSLATIONS = {
                     name: "Vortex",
                     title: "THE GOLDEN BASTION",
                     capabilityName: "Magnetic Vortex",
-                    capabilityDesc: "Projectiles orbit the player in a ring until they hit an enemy. Chance to create up to 4 orbits.",
+                    capabilityDesc: "Projectiles orbit in rings. ACTIVE (E): Spun at 4 multiplier for 5s. Pulls enemies clockwise and deflects projectiles. 20s CD.",
                     characteristics: [
                         'Short-range defensive perimeter',
-                        'Delay-based burst patterns',
-                        'Enhanced vitality systems'
+                        'Projectile speed manipulation',
+                        'Active Orbital Vortex (E)'
                     ],
                     metrics: [
-                        { label: 'Ring II', description: 'Chance for 2nd Layer' },
-                        { label: 'Ring III', description: 'Chance for 3rd Layer' },
-                        { label: 'Ring IV', description: 'Chance for 4th Layer' }
+                        { label: 'Active CD', description: 'Recharge time' },
+                        { label: 'Duration', description: 'Active duration' },
+                        { label: 'Speed Mult', description: 'Projectile orbit speed' }
                     ]
                 },
                 hivemother: {
                     name: "Hive-Mother",
                     title: "THE SWARM OVERLORD",
                     capabilityName: "Nanite Swarm",
-                    capabilityDesc: "On hit, bullets dissolve into nanites that deal continuous damage until death. On death, the nanite jumps to the next host within 400px.",
+                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE (E): Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
                     characteristics: [
                         'Damage-over-time specialist',
                         'Organic growth scaling',
-                        'Viral spread mechanics'
+                        'Active Nanite Spitter (E)'
                     ],
                     metrics: [
+                        { label: 'Active CD', description: 'Active Skill Cooldown' },
                         { label: 'Infection Rate', description: '' },
                         { label: 'Swarm DMG / sec', description: '' },
                         { label: 'Jump Range', description: 'Static jump distance' }
@@ -369,7 +370,7 @@ export const UI_TRANSLATIONS = {
             NeuralSingularity: { name: 'THE NEURAL SINGULARITY', desc: 'A mind-bending fusion of Neural Harvest and Terror Pulse. Extends fear based on your enlightenment.', skillDesc: 'Releases a massive wave of fear. Fear duration increased by 0.1s per 500 XP per kill. Cooldown reduced by 0.1s per level.' },
             KineticTsunami: { name: 'THE KINETIC TSUNAMI', desc: 'A devastating fusion of Storm of Steel and Terror Pulse. Sonic avalanches harvest kinetic trauma to amplify your power.', skillDesc: 'Releases a devastating sonic wave. Wave damage is increased by 1% for every 100 souls harvested by Storm of Steel. Wave cooldown permanently reduced by 0.01s for every enemy killed by the wave.' },
             SoulShatterCore: { name: 'THE SOUL-SHATTER CORE', desc: 'A critical fusion of Shattered Fate and Storm of Steel. Extends critical lethality through soul harvesting.' },
-            BloodForgedCapacitor: { name: 'THE BLOOD-FORGED CAPACITOR', desc: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.', skillDesc: 'Zombie consumption has a 10% chance to cast a Green Kinetic Bolt that deals 20% Armor DMG and chains to 3 targets.' },
+            BloodForgedCapacitor: { name: 'THE NECRO-KINETIC ENGINE', desc: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.', skillDesc: 'Zombie consumption has a 10% chance to cast a Green Kinetic Bolt that deals 20% Armor DMG and chains to 3 targets.' },
             GravityAnchor: { name: 'THE GRAVITY ANCHOR', desc: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.' },
             TemporalMonolith: { name: 'THE TEMPORAL MONOLITH', desc: 'A timeless monolith forged from raw endurance. Converts kinetic energy into temporal acceleration.', skillDesc: 'Releases a wave of temporal energy. Freezes all enemies within 400px for 4s. Enemies that die while frozen shatter for 25% MAX HP AOE damage.' },
             NeutronStar: { name: 'THE NEUTRON STAR', desc: 'A stellar collapse between Essence Syphon and Radiation Core. [EVENT HORIZON] Radiation damage increased by 2% for every 100 Max HP. 0.01% Aura DMG increase for kills by your Radiant Aura and double souls for Essence Syphon.' },
@@ -377,7 +378,7 @@ export const UI_TRANSLATIONS = {
             ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Kinetic bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
             ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Active: Explodes all shields to deal AOE damage (Radius 600px) based on Armor + Shield value. Zombies have 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.' },
             perks: {
-                EcoDMG: ["+0.1 DMG per kill", "+0.1 ATC per kill", "+0.05% DMG per kill", "+0.05% ATC per kill"],
+                EcoDMG: ["+0.1 DMG per kill", "+0.1 ATC per kill", "+0.05% DMG per kill", "+AOE chance on hit from souls (Max 100%)"],
                 EcoXP: ["+0.1 XP per kill", "+0.05 Dust per kill", "+0.1 Flux per kill", "+0.1% XP per kill"],
                 EcoHP: ["+0.1 Max HP per kill", "+0.03 HP/sec per kill", "+0.1% Max HP per kill", "+0.03% HP/sec per kill"],
                 ComLife: ["3% Lifesteal of DMG dealt by your Projectiles", "5s Overheal becomes Shield", "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)", "10% Zombie Spawn Chance (5s Delay, Feasters)"],
@@ -447,7 +448,7 @@ export const UI_TRANSLATIONS = {
                     "+0.1 DMG per kill",
                     "+0.1 ATC per kill",
                     "+0.05% DMG per kill",
-                    "+0.05% ATC per kill",
+                    "+AOE chance on hit from souls (Max 100%)",
                     "GROUP:TERROR PULSE",
                     "LVL 1 75% of players DMG released in a massive wave around player in 1000 radius",
                     "LVL 2 1.5s Fear to enemies that are hit by Terror Pulse (STATIC)",
@@ -467,7 +468,7 @@ export const UI_TRANSLATIONS = {
                     "+0.1 DMG per kill",
                     "+0.1 ATC per kill",
                     "+0.05% DMG per kill",
-                    "+0.05% ATC per kill"
+                    "+AOE chance on hit from souls (Max 100%)"
                 ],
                 BloodForgedCapacitor: [
                     "GROUP:THE BLOOD-FORGED CAPACITOR",
@@ -683,7 +684,8 @@ export const UI_TRANSLATIONS = {
                 lifesteal: 'Lifesteal',
                 xpGain: 'XP Gain per kill',
                 meteoriteChance: 'Meteorite Drop Chance',
-                pierce: 'Pierce'
+                pierce: 'Pierce',
+                knockback: 'AOE Chance'
             },
             threat: {
                 hpGrowth: 'Enemy Health Growth',
@@ -1194,13 +1196,14 @@ export const UI_TRANSLATIONS = {
                     name: "Матерь Роя",
                     title: "ВЛАДЫКА РОЯ",
                     capabilityName: "Рой Нанитов",
-                    capabilityDesc: "При попадании пули распадаются на нанитов, наносящих постоянный урон. После смерти нанит перескакивает на следующую цель в радиусе 400px.",
+                    capabilityDesc: "При попадании пули распадаются на нанитов, наносящих урон. После смерти нанит скачет на цель в 400px. АКТИВНО (E): Плюет нанитов конусом в 40 градусов на 800px. Замедляет врагов и заражает их 3 нанитами (+1 за 10 ур). КД 14сек.",
                     characteristics: [
                         'Специалист по периодическому урону',
                         'Органическое масштабирование',
-                        'Механика вирусного распространения'
+                        'Активный Плеватель Нанитов (E)'
                     ],
                     metrics: [
+                        { label: 'Активный КД', description: 'Перезарядка активного навыка' },
                         { label: 'Шанс Заражения', description: '' },
                         { label: 'Урон Роя / сек', description: '' },
                         { label: 'Дальность Прыжка', description: 'Постоянная дальность прыжка' }
@@ -1256,7 +1259,7 @@ export const UI_TRANSLATIONS = {
             NeuralSingularity: { name: 'НЕЙРОННАЯ СИНГУЛЯРНОСТЬ', desc: 'Завораживающее слияние Нейрожатвы и Волны Ужаса. Продлевает страх на основе вашего просвещения.', skillDesc: 'Выпускает массивную волну страха. Длительность страха увеличена на 0.1 сек за каждые 500 ОПЫТА за убийство. Перезарядка сокращается на 0.1 сек за уровень.' },
             KineticTsunami: { name: 'КИНЕТИЧЕСКОЕ ЦУНАМИ', desc: 'Разрушительное слияние Стального Шторма и Импульса Ужаса. Звуковые лавины поглощают кинетическую энергию, увеличивая вашу мощь.', skillDesc: 'Выпускает разрушительную звуковую волну. Урон волны увеличивается на 1% за каждые 100 душ, собранных Стальным Штормом. Перезарядка навсегда снижается на 0.01с за каждого врага, убитого волной.' },
             SoulShatterCore: { name: 'ЯДРО СОКРУШЕНИЯ ДУШ', desc: 'Критическое слияние Осколков Судьбы и Стального Шторма. Увеличивает критическую летальность через сбор душ.' },
-            BloodForgedCapacitor: { name: 'КРОВОКОВАННЫЙ КОНДЕНСАТОР', desc: 'Кинетические ударные волны вызывают вампиризм от нанесенного урона. Каждый раз, когда зомби поглощает врага, есть шанс выпустить один зеленый кинетический разряд.', skillDesc: 'При поглощении врага зомби, 10% шанс выпустить зеленый кинетический разряд, наносящий 100% урона от Брони 10 целям. КД 8с.' },
+            BloodForgedCapacitor: { name: 'НЕКРО-КИНЕТИЧЕСКИЙ ДВИГАТЕЛЬ', desc: 'Кинетические ударные волны вызывают вампиризм от нанесенного урона. Каждый раз, когда зомби поглощает врага, есть шанс выпустить один зеленый кинетический разряд.', skillDesc: 'При поглощении врага зомби, 10% шанс выпустить зеленый кинетический разряд, наносящий 100% урона от Брони 10 целям. КД 8с.' },
             GravityAnchor: { name: 'ГРАВИТАЦИОННЫЙ ЯКОРЬ', desc: 'Структурный коллапс между Протоколом Эгиды и Эпицентром. Раздавливает врагов под тяжестью вашей брони.' },
             TemporalMonolith: { name: 'ТЕМПОРАЛЬНЫЙ МОНОЛИТ', desc: 'Вневременной монолит, выкованный из чистой выносливости. Преобразует кинетическую энергию в темпоральное ускорение.', skillDesc: 'Выпускает волну темпоральной энергии. Замораживает всех врагов в радиусе 400px на 4с. Враги, погибшие в заморозке, взрываются на 25% от макс. HP урона по области.' },
             NeutronStar: { name: 'НЕЙТРОННАЯ ЗВЕЗДА', desc: 'Звездный коллапс между Сифоном Эссенции и Радиационным Ядром. [ГОРИЗОНТ СОБЫТИЙ] Урон радиации увеличен на 2% за каждые 100 Макс. HP. Увеличение урона ауры на 0.01% за убийства Радиационной Аурой и двойные души для Сифона Эссенции.' },
@@ -1264,7 +1267,7 @@ export const UI_TRANSLATIONS = {
             ShatteredCapacitor: { name: 'РАЗБИТЫЙ КОНДЕНСАТОР', desc: '20% от нанесенного урона рикошетит как Кинетический разряд по 2 целям при попадании. Накладывает кровотечение в размере 15% Брони на 3 секунды.', skillDesc: '100% урона Брони — Кинетический заряд (Цепь) по 10 целям (8с КД). Кинетические разряды по 2 целям при попадании снаряда: 15% Брони как кровотечение 3с.' },
             ChronoDevourer: { name: 'ХРОНО-ПОЖИРАТЕЛЬ', desc: 'Паразитическая аномалия, которая питается темпоральной энергией и биоматерией, ускоряя ваши системы с каждым успешным поглощением.', skillDesc: 'Активно: Взрывает все щиты, нанося урон по области (радиус 600px) на основе значения Брони + Щита. У зомби есть 10% шанс поглотить врага при первом укусе. Убийства зомби дают 20% ускорение перезарядки на 1с.' },
             perks: {
-                EcoDMG: ["+0.1 УРОНА за убийство", "+0.1 ATC за убийство", "+0.05% УРОНА за убийство", "+0.05% ATC за убийство"],
+                EcoDMG: ["+0.1 УРОНА за убийство", "+0.1 ATC за убийство", "+0.05% УРОНА за убийство", "+Шанс AOE от душ (Макс 100%)"],
                 EcoXP: ["+0.1 ОПЫТА за убийство", "+0.05 Пыли за убийство", "+0.1 Потока за убийство", "+0.1% ОПЫТА за убийство"],
                 EcoHP: ["+0.1 Макс HP за убийство", "+0.03 HP/сек за убийство", "+0.1% Макс HP за убийство", "+0.03% HP/сек за убийство"],
                 ComLife: ["3% Вампиризм от урона ваших снарядов", "5s Перелечение становится щитом", "2% доп. урона снарядов от макс. ОЗ врага (не боссы)", "10% шанс спавна зомби (задержка 5 сек, Пожиратели)"],
@@ -1334,7 +1337,7 @@ export const UI_TRANSLATIONS = {
                     "+0.1 Урона за убийство",
                     "+0.1 ATC за убийство",
                     "+0.05% Урона за убийство",
-                    "+0.05% ATC за убийство",
+                    "+Шанс AOE от душ (Макс 100%)",
                     "GROUP:ИМПУЛЬС УЖАСА",
                     "75% урона игрока выпускается в массивной волне радиусом 1000",
                     "1.5 сек Страха пораженным Волной врагам (STATIC)",
@@ -1354,7 +1357,7 @@ export const UI_TRANSLATIONS = {
                     "+0.1 УРОНА за убийство",
                     "+0.1 ATC за убийство",
                     "+0.05% УРОНА за убийство",
-                    "+0.05% ATC за убийство"
+                    "+Шанс AOE от душ (Макс 100%)"
                 ],
                 BloodForgedCapacitor: [
                     "GROUP:КРОВОКОВАННЫЙ КОНДЕНСАТОР",
@@ -1570,7 +1573,8 @@ export const UI_TRANSLATIONS = {
                 lifesteal: 'Вампиризм',
                 xpGain: 'Опыт за убийство',
                 meteoriteChance: 'Шанс выпадения метеорита',
-                pierce: 'Пробитие'
+                pierce: 'Пробитие',
+                knockback: 'Шанс AOE'
             },
             threat: {
                 hpGrowth: 'Рост здоровья врагов',

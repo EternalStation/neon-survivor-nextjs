@@ -10,3 +10,4 @@ This document contains the core rules that the AI assistant must follow for ever
 ## 2. Do not leave any comments in the code, and delete any you find!
 ## 3. Describe all changes and new functionality in the docs folder in the project root.
 ## 4. Avoid any and unknown typization in the code.
+## 5. Do NOT edit Russian translations (ru) in any file until explicitly told otherwise by the user. Leave all existing Russian translation strings as they are.

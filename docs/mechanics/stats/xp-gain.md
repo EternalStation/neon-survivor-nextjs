@@ -1,35 +1,35 @@
-# Опыт за убийство (XP Gain)
+# Experience per kill (XP Gain)
 
-**Тип:** `{ base: number; flat: number; mult: number }` (без hexFlat/hexMult)
+**Type:** `{ base: number; flat: number; mult: number }` (without hexFlat/hexMult)
 
-## Отличие от PlayerStats
+## Difference from PlayerStats
 
-В отличие от боевых характеристик, `player.xp_per_kill` не является полным `PlayerStats` (нет полей `hexFlat`, `hexMult`). Бонусы от легендарных улучшений применяются через отдельный механизм в логике убийств.
+Unlike combat stats, `player.xp_per_kill` is not the full `PlayerStats` (there are no `hexFlat`, `hexMult` fields). Bonuses from legendary upgrades are applied through a separate mechanism in the kill logic.
 
-## Масштабирование арены
+## Arena scaling
 
-В Arena 0 при уровне арены ≥ 1 действует `xpSoulBuffMult`:
-- Базовое значение: 1.3 (+30%)
-- С Surge: 1.6 (+60%)
+In Arena 0, when arena level ≥ 1, `xpSoulBuffMult` works:
+- Base value: 1.3 (+30%)
+- With Surge: 1.6 (+60%)
 
-`xpSoulBuffMult` применяется к числу soul-очков, начисляемых за убийство (`state.killCount`), что косвенно ускоряет kill-scaling всех легендарных улучшений.
+`xpSoulBuffMult` is applied to the number of soul points awarded per kill (`state.killCount`), which indirectly speeds up the kill-scaling of all legendary upgrades.
 
-## Легендарные источники
+## Legendary sources
 
-### [NEURAL HARVEST (EcoXP)](../legendary-upgrades/ecoxp.md) — уровни 1 и 4
+### [NEURAL HARVEST (EcoXP)](../legendary-upgrades/ecoxp.md) - levels 1 and 4
 
-| Уровень | Эффект | Ключ расчёта |
-|---------|--------|-------------|
-| 1 | +0.1 XP за каждое убийство × HexMultiplier | `xp_per_kill` |
-| 4 | +0.1% XP за каждое убийство × HexMultiplier | `xp_pct_per_kill` |
+| Level | Effect | Calculation Key |
+|---------|--------|------------|
+| 1 | +0.1 XP per kill × HexMultiplier | `xp_per_kill` |
+| 4 | +0.1% XP per kill × HexMultiplier | `xp_pct_per_kill` |
 
-Формула бонуса: `souls_since_Lx × 0.1 × HexMultiplier`.
+Bonus formula: `souls_since_Lx × 0.1 × HexMultiplier`.
 
-## Открытые вопросы
+## Open questions
 
-Точная точка применения бонусов `xp_per_kill` и `xp_pct_per_kill` из `calculateLegendaryBonus` к `player.xp.current` требует верификации в логике начисления XP.
+The exact point of application of bonuses `xp_per_kill` and `xp_pct_per_kill` from `calculateLegendaryBonus` to `player.xp.current` requires verification in the XP calculation logic.
 
-## Связанные функции и сущности
+## Related functions and entities
 
-- [Формула PlayerStats](../stat-formula.md)
+- [Formula PlayerStats](../stat-formula.md)
 - [NEURAL HARVEST](../legendary-upgrades/ecoxp.md)

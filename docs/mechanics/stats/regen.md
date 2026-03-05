@@ -1,58 +1,58 @@
-# Регенерация HP (Regen)
+# HP regeneration (Regen)
 
-**Тип:** [PlayerStats](../stat-formula.md) (`player.reg`)
+**Type:** [PlayerStats](../stat-formula.md) (`player.reg`)
 
-## Формула
+## Formula
 
 ```
 Regen = (base + flat + hexFlat) × (1 + mult/100) × (1 + (hexMult + hexMult2)/100) × hpRegenBuffMult × curseMult
 ```
 
-`hpRegenBuffMult` = 1.3 в Arena 2 при уровне арены ≥ 1 (1.6 с Surge).
+`hpRegenBuffMult` = 1.3 in Arena 2 at arena level ≥ 1 (1.6 with Surge).
 
-## Применение
+## Application
 
-Каждый игровой кадр (60 FPS):
+Each game frame (60 FPS):
 
 ```
 regenAmount = calcStat(player.reg, hpRegenBuffMult, curseMult) / 60
 player.curHp = Math.min(maxHp, player.curHp + regenAmount)
 ```
 
-Регенерация полностью отключается при активном дебаффе `player.healingDisabled` (накладывается боссом Circle Boss Lvl 4). В этом случае `regenAmount = 0`.
+Regeneration is completely disabled when the `player.healingDisabled` debuff is active (applied by Circle Boss Lvl 4). In this case `regenAmount = 0`.
 
-## Легендарные источники
+## Legendary sources
 
 ### [ESSENCE SYPHON (EcoHP)](../legendary-upgrades/ecohp.md)
 
-| Уровень | Поле | Формула |
+| Level | Field | Formula |
 |---------|------|---------|
 | 2 | `hexFlat` | `souls_since_L2 × 0.03 × HexMultiplier` (HP/sec) |
-| 4 | `hexMult` | `souls_since_L4 × 0.03 × HexMultiplier` (в %) |
+| 4 | `hexMult` | `souls_since_L4 × 0.03 × HexMultiplier` (in %) |
 
-### [TOXIC SWAMP (DefPuddle)](../legendary-upgrades/defpuddle.md) — уровень 3
+### [TOXIC SWAMP (DefPuddle)](../legendary-upgrades/defpuddle.md) - level 3
 
-**Триггер:** `player.buffs.puddleRegen === true` (игрок в зоне кислоты)
+**Trigger:** `player.buffs.puddleRegen === true` (player in acid zone)
 
-| Поле | Значение |
-|------|---------|
+| Field | Meaning |
+|-----------|---------|
 | `hexMult` += | +25% Regen |
 
-### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) — уровень 4
+### [CHRONO PLATING](../legendary-upgrades/chronoplating.md) - level 4
 
-**Применяется вне формулы** — добавляется непосредственно к `regenAmount` после вычисления:
+**Applies outside of formula** - added directly to `regenAmount` after calculation:
 
 ```
 regenAmount += totalArmor × 0.005 / 60
 ```
 
-Где `totalArmor = calcStat(player.arm)`. Этот бонус **не** учитывается в `hpRegenBuffMult` и `curseMult`, так как добавляется после их применения.
+Where `totalArmor = calcStat(player.arm)`. This bonus is **not** taken into account in `hpRegenBuffMult` and `curseMult`, as it is added after they are applied.
 
-## Связанные функции и сущности
+## Related functions and entities
 
-- [Формула PlayerStats](../stat-formula.md)
-- [HP](hp.md) — regeneration ограничена maxHp
-- [Броня](armor.md) — ChronoPlating L4 конвертирует Armor в Regen
+- [Formula PlayerStats](../stat-formula.md)
+- [HP](hp.md) - regeneration is limited to maxHp
+- [Armor](armor.md) - ChronoPlating L4 converts Armor to Regen
 - [ESSENCE SYPHON](../legendary-upgrades/ecohp.md)
 - [TOXIC SWAMP](../legendary-upgrades/defpuddle.md)
 - [CHRONO PLATING](../legendary-upgrades/chronoplating.md)

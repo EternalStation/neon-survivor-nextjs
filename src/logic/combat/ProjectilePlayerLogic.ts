@@ -3,7 +3,7 @@ import { isInMap, getHexDistToWall } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
-import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
@@ -96,19 +96,30 @@ export function updateSinglePlayerBullet(
         } else {
             b.life = 0;
         }
+    } else if (b.isNanite && b.isWobbly) {
+        // Wobbly straight moving nanites
+        const speed = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
+        const currentAngle = Math.atan2(b.vy, b.vx);
+        // Add a wobble based on gameTime and its ID to offset phases
+        const wobble = Math.sin(state.gameTime * 15 + b.id) * 0.1;
+        b.vx = Math.cos(currentAngle + wobble) * speed;
+        b.vy = Math.sin(currentAngle + wobble) * speed;
     }
 
     // Aigis Orbiting
     if (b.vortexState === 'orbiting') {
-        b.orbitAngle = (b.orbitAngle || 0) + 0.05 * (state.gameSpeedMult ?? 1);
+        const vortexActive = owner.orbitalVortexUntil && owner.orbitalVortexUntil > now;
+        const orbitSpeedMult = vortexActive ? GAME_CONFIG.SKILLS.ORBITAL_VORTEX_SPEED_MULT : 1.0;
+        b.orbitAngle = (b.orbitAngle || 0) + 0.05 * (state.gameSpeedMult ?? 1) * orbitSpeedMult;
         const dist = b.orbitDist || 125;
         b.x = owner.x + Math.cos(b.orbitAngle) * dist;
         b.y = owner.y + Math.sin(b.orbitAngle) * dist;
         b.vx = 0; b.vy = 0;
     }
 
-    // Aigis Ring Logic
     if (b.isRing) {
+        const vortexActive = owner.orbitalVortexUntil && owner.orbitalVortexUntil > now;
+        b.ringVisualIntensity = vortexActive ? (0.6 + Math.abs(Math.sin(now * 8)) * 0.4) : undefined;
         b.x = owner.x;
         b.y = owner.y;
         const currentCount = owner.aigisRings?.[b.ringRadius!]?.count || 0;
@@ -235,6 +246,20 @@ export function updateSinglePlayerBullet(
                 continue;
             }
 
+            const aoeChance = calculateLegendaryBonus(state, 'aoe_chance_per_kill', false, owner);
+            if (aoeChance > 0 && Math.random() < aoeChance / 100) {
+                const aoeRadius = 100;
+                const aoeDmg = damageAmount;
+                spawnParticles(state, e.x, e.y, b.color || '#fff', 15);
+                state.spatialGrid.query(e.x, e.y, aoeRadius).forEach(t => {
+                    if (t.id !== e.id && !t.dead && !t.isFriendly && Math.hypot(t.x - e.x, t.y - e.y) <= aoeRadius) {
+                        t.hp -= aoeDmg;
+                        owner.damageDealt += aoeDmg;
+                        if (t.hp <= 0 && !t.dead) handleEnemyDeath(state, t, onEvent);
+                    }
+                });
+            }
+
             const lifeLevel = getHexLevel(state, 'ComLife');
             if (lifeLevel >= 3 && !e.boss) damageAmount += e.maxHp * 0.02;
 
@@ -257,10 +282,29 @@ export function updateSinglePlayerBullet(
             }
 
             if (b.isNanite) {
-                damageAmount = 0;
-                e.isInfected = true;
-                e.infectedUntil = 999999999;
-                e.infectionDmg = Math.max(e.infectionDmg || 0, b.dmg);
+                if (b.isHiveMotherSkill) {
+                    damageAmount = 0;
+                    b.life = 0;
+
+                    if (e.lastSpitHitId !== b.hiveMotherSpitId) {
+                        const nanitesToApply = 3 + Math.floor(owner.level / 10);
+
+                        e.slowFactor = Math.max(e.slowFactor || 0, 0.5); // 50% slow
+                        e.slowUntil = Math.max(e.slowUntil || 0, state.gameTime + 3); // 3 seconds
+
+                        e.activeNaniteCount = (e.activeNaniteCount || 0) + nanitesToApply;
+                        // Since b.dmg is the base dmgPerNanite, we add (b.dmg * nanitesToApply) for the payload.
+                        e.activeNaniteDmg = (e.activeNaniteDmg || 0) + (b.dmg * nanitesToApply);
+                        e.isInfected = true;
+                        e.infectedUntil = 999999999;
+                        e.lastSpitHitId = b.hiveMotherSpitId;
+                    }
+                } else {
+                    damageAmount = 0;
+                    e.isInfected = true;
+                    e.infectedUntil = 999999999;
+                    e.infectionDmg = Math.max(e.infectionDmg || 0, b.dmg);
+                }
             }
 
             if (e.legionId) {
