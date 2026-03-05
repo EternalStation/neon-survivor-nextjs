@@ -472,9 +472,11 @@ export function updateSingleEnemy(
             const perpY = vdx / vdist;
 
             // TANGENTIAL force (Spin - Meteorite kinetic energy)
-            // Assist Logic: The closer they are, the faster they spin (Slingshot Effect)
+            // Spin Logic: "Spin them but not hard" at start. 
+            // When empowered (pullBase > 1.4), spin becomes more violent.
             const proximityBonus = 1.0 + (1.0 - Math.min(1.0, vdist / 400)) * 2.0;
-            const tangentialStrength = pullStrength * 1.5 * proximityBonus;
+            const spinMultiplier = pullBase > 1.4 ? 2.2 : 1.2;
+            const tangentialStrength = pullStrength * spinMultiplier * proximityBonus;
             const vortexVx = perpX * tangentialStrength;
             const vortexVy = perpY * tangentialStrength;
 
@@ -483,14 +485,19 @@ export function updateSingleEnemy(
 
             // RADIAL force (Orbital Resistance)
             // Hold them in orbit: Inward pull is weaker, balanced against the spin
-            // We want them to drift slowly in until ~200px, then sling out violently below 150px
+            // FLY OUT only happens if the skill is empowered by meteorites (high resonance)
             let radialForceFactor = 0;
             if (vdist > 250) {
-                radialForceFactor = -0.3; // Gentle inward pull (Resistance)
-            } else if (vdist > 150) {
+                radialForceFactor = -0.4; // Gentle inward pull (Resistance)
+            } else if (vdist > 120) {
                 radialForceFactor = -0.1; // Holding zone
             } else {
-                radialForceFactor = 2.5; // AGGRESSIVE SLINGSHOT OUT
+                // Inner proximity behavior
+                if (pullBase > 1.4) {
+                    radialForceFactor = 3.5; // AGGRESSIVE SLINGSHOT OUT (Empowered)
+                } else {
+                    radialForceFactor = 0.8; // Gentle push to keep them in the 'inner rim' orbit
+                }
             }
 
             const radialVx = (vdx / vdist) * (pullStrength * radialForceFactor);
