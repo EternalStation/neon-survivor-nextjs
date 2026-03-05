@@ -309,7 +309,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         const normalMult = 1 + (state.player.xp_per_kill.mult / 100);
         const hexMult = 1 + (hexPct / 100);
         const finalXp = totalFlat * normalMult * hexMult;
-        state.player.xp.current += finalXp;
+        if (!state.xpDisabled) state.player.xp.current += finalXp;
 
         if (onEvent) onEvent('boss_kill');
     }
@@ -358,7 +358,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
             const finalXp = totalFlat * normalMult * hexMult * refineryBonus;
 
-            state.player.xp.current += finalXp;
+            if (!state.xpDisabled) state.player.xp.current += finalXp;
         }
     }
 

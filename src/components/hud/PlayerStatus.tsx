@@ -159,6 +159,12 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         cdPct = getCDProgress(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
                         isReady = remaining <= 0;
                         if (!isReady) remainingDisplay = remaining.toFixed(1);
+                    } else if (player.playerClass === 'malware') {
+                        show = true;
+                        const remaining = getRemainingCD(player.sandboxCooldownStart ?? -999999, GAME_CONFIG.SKILLS.SANDBOX_COOLDOWN, cdMod, now);
+                        cdPct = getCDProgress(player.sandboxCooldownStart ?? -999999, GAME_CONFIG.SKILLS.SANDBOX_COOLDOWN, cdMod, now);
+                        isReady = remaining <= 0;
+                        if (!isReady) remainingDisplay = remaining.toFixed(1);
                     }
 
                     if (!show) return null;
@@ -238,7 +244,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 </div>
                             </div>
 
-                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike' || player.playerClass === 'hivemother' || player.playerClass === 'aigis') && (
+                            {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike' || player.playerClass === 'hivemother' || player.playerClass === 'aigis' || player.playerClass === 'malware') && (
                                 <div style={{
                                     position: 'absolute', top: -4, right: -4,
                                     background: '#0f172a', border: '1px solid #475569',

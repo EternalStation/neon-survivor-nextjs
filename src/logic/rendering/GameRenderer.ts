@@ -8,6 +8,7 @@ import { renderEnemies } from './renderers/EnemyRenderer';
 import { renderDrones, renderAllies, renderMeteorites, renderBossIndicator, renderExtractionShip } from './renderers/EntityRenderer';
 import { renderProjectiles } from './renderers/ProjectileRenderer';
 import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloatingNumbers, renderScreenEffects, renderVignette } from './renderers/EffectRenderer';
+import { renderSandbox } from './renderers/SandboxRenderer';
 
 export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1, language: Language = 'en') {
     // Universal damage detection for red danger vignette
@@ -89,6 +90,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         // 3. Ground Effects (Area Effects)
         renderAreaEffects(ctx, state);
         renderVoidMarker(ctx, state);
+        renderSandbox(ctx, state);
 
         // 4. Portals
         renderPortals(ctx, state);

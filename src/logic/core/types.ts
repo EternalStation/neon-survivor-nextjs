@@ -186,6 +186,13 @@ export interface Player {
 
     orbitalVortexUntil?: number;
 
+    // Malware Sandbox (Active Ability)
+    sandboxActive?: boolean;
+    sandboxX?: number;
+    sandboxY?: number;
+    sandboxUntil?: number;
+    sandboxCooldownStart?: number;
+
     // Boss Capabilities
     kineticBattery?: boolean; // Arena 2 Boss Drop
     radCore?: boolean;        // Arena 1 Boss Drop
@@ -288,6 +295,8 @@ export interface Bullet {
     ringRadius?: number;
     ringVisualIntensity?: number;
     ringAmmo?: number; // Count of fused bullets
+    // Malware Sandbox
+    insideSandbox?: boolean;
     // Turret Props
     isTrace?: boolean;
     slowPercent?: number;
@@ -849,6 +858,7 @@ export interface GameState {
     xpSoulBuffMult: number; // For Economic Arena
     meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
     gameSpeedMult: number; // Global speed multiplier (0.1 - 5.0, default 1.0)
+    xpDisabled?: boolean;
     chassisResonanceBonus?: number;
 
     // Extraction System
