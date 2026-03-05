@@ -76,6 +76,10 @@ export const GAME_CONFIG = {
         ORBITAL_VORTEX_RADIUS: 500,
         ORBITAL_VORTEX_SPEED_MULT: 4.0,
 
+        SANDBOX_COOLDOWN: 15,
+        SANDBOX_DURATION: 3,
+        SANDBOX_RADIUS: 220,
+
         // ComCrit (Critical Hit)
         CRIT_BASE_CHANCE: 0.15,
         CRIT_BASE_MULT: 2.0,

@@ -1,113 +1,106 @@
 ---
-trigger: manual
-description: Анализировать существующий код и создавать базу знаний по функциональности в Markdown-файлах внутри docs. Использовать, когда нужно задокументировать текущее поведение системы для безопасного рефакторинга без потери возможностей, а также при запросах на полное или поэтапное описание модулей, сценариев, правил и зависимостей на русском языке.
+name: making-docs-for-void-nexus
+
+description: Analyze existing code and create a knowledge base describing system functionality in Markdown files inside the docs directory. Use when the goal is to document the current behavior of the system to enable safe refactoring without losing functionality, as well as when requests involve full or incremental descriptions of modules, scenarios, rules, and dependencies.
 ---
 
 # Making Docs For Void Nexus
 
-## Цель
+## Goal
 
-Собирать и поддерживать документацию о фактической функциональности системы так, чтобы по ней можно было выполнить глубокий рефакторинг без функциональных регрессий.
+Collect and maintain documentation of the actual system behavior so that deep refactoring can be performed without functional regressions.
 
-## Ограничения
+## Constraints
 
-- Создавать и изменять только `.md` файлы в директории `docs`.
-- Не менять код, конфиги и любые файлы вне `docs`.
-- Писать всю документацию на русском языке.
-- Описывать поведение и правила предметной области, а не технические детали конкретной реализации.
-- Избегать привязки к именам файлов, фреймворкам и внутренней структуре проекта, кроме случаев, когда без этого невозможно снять неоднозначность.
-- В каждой итерации обязательно обновлять `docs/INDEX.md`.
+- Only create or modify `.md` files inside the `docs` directory.
+- Do not modify code, configs, or any files outside `docs`.
+- Write all documentation in Russian.
+- Describe domain behavior and rules, not technical implementation details.
+- Avoid referencing file names, frameworks, or internal project structure unless necessary to remove ambiguity.
+- In every iteration, `docs/INDEX.md` must be updated.
 
-## Рабочий процесс (итеративный, по модулю/функции)
+## Workflow (Iterative, per module/function)
 
-1. Принять узкий фокус текущей итерации:
-- Работать только с функцией или модулем, указанным в запросе.
-- Не пытаться покрыть весь проект за один проход.
+1. Accept a narrow focus for the current iteration:
+- Work only with the function or module specified in the request.
+- Do not attempt to document the entire project in a single pass.
 
-2. Провести ресерч целевого поведения:
-- Выявить фактическое поведение, предусловия, триггеры, основной поток, альтернативы и ошибки.
-- Отделить подтвержденные факты от допущений.
+2. Research the target behavior:
+- Identify the actual behavior, preconditions, triggers, main flow, alternatives, and error cases.
+- Separate confirmed facts from assumptions.
 
-3. Обновить соответствующий файл в `docs`:
-- Если тема уже описана, дописать и уточнить существующий файл.
-- Если темы нет, создать новый релевантный файл без дублирования существующих разделов.
+3. Update the corresponding file in `docs`:
+- If the topic already exists, extend and refine the existing file.
+- If the topic does not exist, create a new relevant file without duplicating existing sections.
 
-4. Проставить связи с существующей базой знаний:
-- Добавить ссылки на связанные функции, сущности и сценарии из уже существующих файлов `docs`.
-- Добавить обратные ссылки в связанные документы, если это нужно для трассируемости.
+4. Link to the existing knowledge base:
+- Add links to related functions, entities, and scenarios described in other `docs` files.
+- Add back-links in related documents when necessary for traceability.
 
-5. Обновить `docs/INDEX.md`:
-- Добавить новый файл в оглавление или скорректировать описание существующего.
-- Сохранить древовидную структуру разделов.
-- Дать четкое и краткое описание назначения каждого файла (1 строка).
+5. Update `docs/INDEX.md`:
+- Add the new file to the table of contents or adjust the description of an existing entry.
+- Preserve the hierarchical tree structure of sections.
+- Provide a clear and concise one-line description of each file’s purpose.
 
-6. Завершить итерацию проверкой качества:
-- Проверить, что описание достаточно для сохранения поведения при рефакторинге.
-- Явно отметить блок `Допущения` и `Открытые вопросы`, если данные неполные.
+6. Finish the iteration with a quality check:
+- Verify that the description is sufficient to preserve behavior during refactoring.
+- Explicitly include `Assumptions` and `Open Questions` sections if information is incomplete.
 
-## Правила связывания документов
+## Document Linking Rules
 
-- Использовать сквозные Markdown-гиперссылки на уровне текста.
-- Если слово или фраза обозначает сущность/функцию, уже описанную в другом файле `docs`, оформлять это слово или фразу ссылкой на соответствующий файл и раздел.
-- Ссылаться только на реально существующие файлы и якоря разделов.
-- Использовать единые имена сущностей во всех файлах и единый формат ссылок.
-- При появлении новой сущности добавить на нее ссылки из связанных документов в ближайшей итерации.
-- В конце документа сохранять раздел `Связанные функции и сущности` как список ключевых ссылок для быстрого перехода.
+- Use Markdown hyperlinks directly within the text.
+- If a word or phrase refers to an entity/function already documented in another `docs` file, convert that word or phrase into a link to the corresponding file and section.
+- Link only to files and anchors that actually exist.
+- Use consistent entity names across all files and maintain a unified link format.
+- When a new entity appears, add links to it from related documents in the next iteration.
+- At the end of each document, keep a section called `Related Functions and Entities` containing key navigation links.
 
-## INDEX.md (обязательно)
+## INDEX.md (Required)
 
-- Поддерживать файл `docs/INDEX.md` как единое оглавление всей базы знаний.
-- Строить оглавление в виде дерева по разделам/темам.
-- Для каждого файла указывать:
-  - ссылку на файл;
-  - краткое и однозначное описание назначения (одна короткая строка).
-- Обновлять `INDEX.md` в каждой итерации, даже если изменен только один документ.
+- Maintain `docs/INDEX.md` as the single table of contents for the entire knowledge base.
+- Structure the table of contents as a hierarchical tree by sections/topics.
+- For every file include:
+  - a link to the file;
+  - a short and unambiguous description of its purpose (one short line).
+- Update `INDEX.md` in every iteration, even if only one document was modified.
 
-## Формат гиперссылок
+## Hyperlink Format
 
-- Для ссылок внутри `docs` использовать относительные пути Markdown: `[Термин](./имя-файла.md#якорь-раздела)`.
-- Предпочитать ссылку на конкретный раздел, а не только на файл.
-- Если раздел еще не создан, временно ссылаться на файл без якоря и помечать это в `Открытые вопросы`.
+- Use relative Markdown paths for links within `docs`:
+- Prefer linking to a specific section, not just the file.
+- If the section does not yet exist, temporarily link to the file without an anchor and mark this in `Open Questions`.
 
-## Стандарт описания каждой функции
+## Standard Structure for Describing Each Function
 
-Для каждого функционального блока использовать единый шаблон:
-
+Use the following template for every functional block:
 ```md
-## <Название функции>
-
-### Назначение
-Кратко: какую задачу решает и для кого.
-
-### Триггеры
-Что запускает поведение (действие пользователя, событие системы, изменение состояния).
-
-### Предусловия
-Какие условия должны выполняться до старта.
-
-### Основной поток
-Нумерованная последовательность шагов от старта до результата.
-
-### Альтернативы и ошибки
-Пограничные случаи, отмены, невалидные данные, поведение при сбоях.
-
-### Результат и побочные эффекты
-Что меняется после завершения, какие области затрагиваются.
-
-### Связанные функции
-Ссылки на другие разделы docs, от которых зависит поведение.
+## <Function Name>
+### Purpose
+Briefly: what problem it solves and for whom.
+### Triggers
+What initiates the behavior (user action, system event, state change).
+### Preconditions
+Conditions that must be satisfied before execution.
+### Main Flow
+Numbered sequence of steps from start to result.
+### Alternatives and Errors
+Edge cases, cancellations, invalid data, and failure behavior.
+### Result and Side Effects
+What changes after completion and which areas are affected.
+### Related Functions
+Links to other sections in docs that this behavior depends on.
 ```
 
-## Критерии качества
+## Quality Criteria
 
-- Полнота: можно восстановить поведение модуля без чтения кода.
-- Проверяемость: по тексту можно составить чеклист регрессионных тестов.
-- Непротиворечивость: одинаковые сущности описаны одинаковыми терминами.
-- Трассируемость: у каждого важного сценария есть ссылка на связанные правила и состояния.
-- Актуализация: при новых проходах обновлять существующие документы, не плодить дубли.
+- Completeness: behavior of the module can be reconstructed without reading the code.
+- Verifiability: the text can be used to derive regression test checklists.
+- Consistency: the same entities are described using consistent terminology.
+- Traceability: every important scenario links to related rules and states.
+- Maintainability: future iterations should update existing documents instead of creating duplicates.
 
-## Формат ответа при выполнении задач skill
+## Response Format When Executing the Skill
 
-- Кратко перечислить созданные/обновленные файлы в `docs`.
-- Указать, какие функциональные области покрыты.
-- Отдельно перечислить открытые вопросы и допущения, если они остались.
+- Briefly list the files created or updated in `docs`.
+- Specify which functional areas are now covered.
+- Separately list open questions and assumptions, if any remain.

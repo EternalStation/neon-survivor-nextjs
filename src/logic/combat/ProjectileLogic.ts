@@ -27,6 +27,24 @@ export function updateProjectiles(
     const { bullets, enemyBullets } = state;
     const now = state.gameTime;
 
+    // --- SANDBOX EXPIRY (Malware Active Ability) ---
+    const player = state.player;
+    if (player.sandboxActive && player.sandboxUntil && now >= player.sandboxUntil) {
+        player.sandboxActive = false;
+        const scatterX = player.sandboxX ?? player.x;
+        const scatterY = player.sandboxY ?? player.y;
+        for (const b of bullets) {
+            if (b.insideSandbox) {
+                const speed = Math.max(Math.hypot(b.vx, b.vy), GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED);
+                const angle = Math.random() * Math.PI * 2;
+                b.vx = Math.cos(angle) * speed;
+                b.vy = Math.sin(angle) * speed;
+                b.insideSandbox = false;
+            }
+        }
+        spawnParticles(state, scatterX, scatterY, '#fb923c', 30);
+    }
+
     // --- PLAYER BULLETS ---
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];

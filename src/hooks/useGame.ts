@@ -130,6 +130,7 @@ export function useGameLoop(gameStarted: boolean) {
     });
 
     // Input Hook
+    const windowScaleFactor = useRef(1);
     const { inputVector, mousePos, handleJoystickInput } = useGameInput({
         gameState,
         keys,
@@ -141,11 +142,11 @@ export function useGameLoop(gameStarted: boolean) {
         setGameOver,
         triggerPortal,
         refreshUI: () => setUiState(p => p + 1),
-        skipTime
+        skipTime,
+        windowScaleFactor
     });
 
     // Logic Hook
-    const windowScaleFactor = useRef(1);
     const { updateLogic } = useGameLogic({
         gameState,
         keys,

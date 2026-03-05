@@ -60,6 +60,10 @@ export function updateSinglePlayerBullet(
                 b.y += normal.y * (Math.abs(dist) + 5);
                 spawnParticles(state, b.x, b.y, b.color, 12);
             }
+            if (b.life <= 0 || b.pierce < 0) {
+                bullets.splice(index, 1);
+                return true;
+            }
             return false;
         }
 
@@ -73,6 +77,59 @@ export function updateSinglePlayerBullet(
         }
         bullets.splice(index, 1);
         return true;
+    }
+
+    // Sandbox Containment (Malware Active Ability)
+    if (owner.playerClass === 'malware' && owner.sandboxActive && owner.sandboxUntil && now < owner.sandboxUntil && !b.isNanite) {
+        const sbx = owner.sandboxX ?? 0;
+        const sby = owner.sandboxY ?? 0;
+        const R = GAME_CONFIG.SKILLS.SANDBOX_RADIUS;
+        const apothem = R * Math.cos(Math.PI / 5);
+        const dx = b.x - sbx;
+        const dy = b.y - sby;
+
+        let inside = true;
+        for (let i = 0; i < 5 && inside; i++) {
+            const midAngle = -Math.PI / 2 + Math.PI / 5 + (2 * Math.PI * i) / 5;
+            if (dx * Math.cos(midAngle) + dy * Math.sin(midAngle) > apothem) inside = false;
+        }
+
+        if (inside) {
+            b.insideSandbox = true;
+        } else if (b.insideSandbox) {
+            let maxOvershoot = 0;
+            let rnx = 0;
+            let rny = 0;
+            for (let i = 0; i < 5; i++) {
+                const midAngle = -Math.PI / 2 + Math.PI / 5 + (2 * Math.PI * i) / 5;
+                const enx = Math.cos(midAngle);
+                const eny = Math.sin(midAngle);
+                const overshoot = dx * enx + dy * eny - apothem;
+                if (overshoot > maxOvershoot) {
+                    maxOvershoot = overshoot;
+                    rnx = enx;
+                    rny = eny;
+                }
+            }
+            b.x -= rnx * (maxOvershoot + 2);
+            b.y -= rny * (maxOvershoot + 2);
+            const outDot = b.vx * rnx + b.vy * rny;
+            if (outDot > 0) {
+                b.vx -= 2 * outDot * rnx;
+                b.vy -= 2 * outDot * rny;
+                const speedMult = 1 + (b.bounceSpeedBonus || 0.05);
+                b.vx *= speedMult;
+                b.vy *= speedMult;
+                b.dmg *= 1 + (b.bounceDmgMult || 0.2);
+                b.bounceCount = (b.bounceCount || 0) + 1;
+                if (b.bounceCount === 1) b.color = '#fb923c';
+                else {
+                    const redProgress = Math.min(1, (b.bounceCount - 1) / 6);
+                    b.color = `rgb(255, ${Math.floor(146 * (1 - redProgress))}, 0)`;
+                }
+                spawnParticles(state, b.x, b.y, b.color, 6);
+            }
+        }
     }
 
     // Malware Trail

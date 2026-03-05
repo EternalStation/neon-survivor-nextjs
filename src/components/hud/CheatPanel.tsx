@@ -27,6 +27,7 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'k1', description: 'Suicide (DEBUG)' },
             { code: 'cs2', description: 'Class Skill Resonance x2 per press (0→0.5→1→2→4...)' },
             { code: 'cdr', description: 'Cooldown Reduction +20% per press (0→20→40→60→80→90%)' },
+            { code: 'nxp', description: 'Toggle XP Gain ON/OFF' },
         ]
     },
     {

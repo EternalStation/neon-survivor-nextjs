@@ -29,9 +29,10 @@ interface GameInputProps {
     triggerPortal: () => boolean;
     refreshUI: () => void;
     skipTime: (min: number) => void;
+    windowScaleFactor: React.MutableRefObject<number>;
 }
 
-export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime }: GameInputProps) {
+export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime, windowScaleFactor }: GameInputProps) {
     const localKeys = useRef<Record<string, boolean>>({});
     const keys = providedKeys || localKeys;
     const inputVector = useRef({ x: 0, y: 0 });
@@ -230,6 +231,24 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         playSfx('power-up');
                     }
                 }
+                if (!state.isPaused && !state.gameOver && player.playerClass === 'malware') {
+                    const now = state.gameTime;
+                    const cdMod = getCdMod(state, player);
+                    if (!isOnCooldown(player.sandboxCooldownStart ?? -999999, GAME_CONFIG.SKILLS.SANDBOX_COOLDOWN, cdMod, now)) {
+                        const dpr = window.devicePixelRatio || 1;
+                        const zoom = windowScaleFactor.current * 0.58 * dpr;
+                        const camera = state.camera;
+                        const worldX = camera.x + (mousePos.current.x - window.innerWidth / 2) / zoom;
+                        const worldY = camera.y + (mousePos.current.y - window.innerHeight / 2) / zoom;
+                        player.sandboxActive = true;
+                        player.sandboxX = worldX;
+                        player.sandboxY = worldY;
+                        player.sandboxUntil = now + GAME_CONFIG.SKILLS.SANDBOX_DURATION;
+                        player.sandboxCooldownStart = now;
+                        spawnFloatingNumber(state, player.x, player.y - 40, 'SANDBOX', '#fb923c', true);
+                        playSfx('power-up');
+                    }
+                }
             }
 
             // PORTAL TRIGGER
@@ -346,6 +365,15 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 console.log('[CHEAT] Added 500 Kills (Souls). New Total:', gameState.current.killCount);
                 import('../logic/upgrades/LegendaryLogic').then(mod => mod.syncAllLegendaries(gameState.current));
                 refreshUI(); // Force Update
+                cheatBuffer = '';
+            }
+
+            // NXP - Toggle XP gain on/off
+            if (cheatBuffer.endsWith('nxp')) {
+                gameState.current.xpDisabled = !gameState.current.xpDisabled;
+                const status = gameState.current.xpDisabled ? 'DISABLED' : 'ENABLED';
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, `XP GAIN ${status}`, '#4ade80', true);
+                console.log('[CHEAT] XP gain toggled:', status);
                 cheatBuffer = '';
             }
 
