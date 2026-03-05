@@ -20,6 +20,7 @@ import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/m
 import { calcStat } from '../logic/utils/MathUtils';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { spawnBullet } from '../logic/combat/ProjectileSpawning';
+import { spawnNanitesFromCloud } from '../logic/player/PlayerCombat';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import { updateTurrets, updateAllies, relocateTurretsToArena } from '../logic/mission/TurretLogic';
 
@@ -270,6 +271,28 @@ export function useGameLogic({
                 if (Math.random() < 0.4) {
                     spawnParticles(state, effect.x + (Math.random() - 0.5) * effect.radius * 0.6, effect.y + (Math.random() - 0.5) * effect.radius * 0.6, '#06b6d4', 1, 2, 15, 'spark');
                 }
+            } else if (effect.type === 'nanite_cloud') {
+                const cloudElapsed = state.gameTime - effect.creationTime;
+                if (Math.random() < 0.5) {
+                    if (cloudElapsed < 0.4) {
+                        const owner = effect.ownerId
+                            ? (state.players?.[effect.ownerId] || state.player)
+                            : state.player;
+                        const ox = owner.x;
+                        const oy = owner.y;
+                        const facing = Math.atan2(effect.y - oy, effect.x - ox);
+                        const sprayLen = Math.hypot(effect.x - ox, effect.y - oy);
+                        const frac = Math.random();
+                        const spread = effect.radius * 0.4 * frac;
+                        const px = ox + Math.cos(facing) * sprayLen * frac + Math.cos(facing + Math.PI / 2) * (Math.random() - 0.5) * spread * 2;
+                        const py = oy + Math.sin(facing) * sprayLen * frac + Math.sin(facing + Math.PI / 2) * (Math.random() - 0.5) * spread * 2;
+                        spawnParticles(state, px, py, '#22c55e', 1, 2, 40, 'bubble');
+                    } else {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * effect.radius;
+                        spawnParticles(state, effect.x + Math.cos(angle) * dist, effect.y + Math.sin(angle) * dist, '#22c55e', 1, 2, 40, 'bubble');
+                    }
+                }
             } else if (effect.type === 'blackhole') {
                 // Blackhole visuals (Event Horizon)
                 if (Math.random() < 0.3) {
@@ -288,9 +311,18 @@ export function useGameLogic({
                 players.forEach(p => {
                     const dist = Math.hypot(p.x - effect.x, p.y - effect.y);
                     if (dist < range + p.size) {
-                        p.invertedControlsUntil = state.gameTime + 0.5; // Short duration that refreshes
+                        p.invertedControlsUntil = state.gameTime + 0.5;
                     }
                 });
+            }
+
+            if (effect.type === 'nanite_cloud') {
+                const elapsed = state.gameTime - effect.creationTime;
+                if (elapsed >= 0.4 && !effect.naniteSpawned) {
+                    effect.naniteSpawned = true;
+                    spawnNanitesFromCloud(state, effect);
+                    spawnParticles(state, effect.x, effect.y, '#22c55e', 30, 4, 60, 'spark');
+                }
             }
 
             if (effect.type === 'puddle') {

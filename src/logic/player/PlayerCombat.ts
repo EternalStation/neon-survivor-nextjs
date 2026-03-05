@@ -375,57 +375,75 @@ export function handleEnemyContact(
     });
 }
 
-export function triggerHiveMotherCone(state: GameState, player: Player) {
-    const coneAngle = 40 * (Math.PI / 180); // 40 degrees
-    const facing = player.targetAngle;
-    const baseBulletSpeed = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED * 0.9;
+export function triggerHiveMotherCone(state: GameState, player: Player, cursorX: number, cursorY: number) {
+    const cloudX = cursorX;
+    const cloudY = cursorY;
+    const facing = Math.atan2(cloudY - player.y, cloudX - player.x);
 
+    const cloudRadius = 150;
     const numProjectiles = 20 + player.level;
-    const nanitesToApply = 3 + Math.floor(player.level / 10);
     const dmgPerNanite = calcStat(player.dmg, state.dmgAtkBuffMult);
-    const totalDmgApply = nanitesToApply * dmgPerNanite;
-
     const spitCastId = Math.random();
 
-    for (let i = 0; i < numProjectiles; i++) {
-        // Randomize angle within cone
-        const angleOffset = (Math.random() - 0.5) * coneAngle;
-        const angle = facing + angleOffset;
+    state.areaEffects.push({
+        id: Date.now() + Math.random(),
+        type: 'nanite_cloud',
+        x: cloudX,
+        y: cloudY,
+        radius: cloudRadius,
+        duration: 3.0,
+        creationTime: state.gameTime,
+        level: player.level,
+        naniteSpawned: false,
+        naniteCount: numProjectiles,
+        naniteDmg: dmgPerNanite,
+        ownerId: player.id,
+        naniteSpitId: spitCastId,
+        facingAngle: facing,
+        originX: player.x,
+        originY: player.y
+    });
 
-        // Randomize speed so they clump together (from 60% to 110%)
-        const speed = baseBulletSpeed * (0.6 + Math.random() * 0.5);
+    playSfx('shoot');
+}
 
-        // Ensure they travel roughly 800 range, varying a bit
-        const expectedRange = 750 + Math.random() * 100;
-        const bulletLife = expectedRange / speed;
+export function spawnNanitesFromCloud(state: GameState, effect: import('../core/types').AreaEffect) {
+    const owner = state.players?.[effect.ownerId!] || state.player;
+    const count = effect.naniteCount || 20;
+    const dmg = effect.naniteDmg || 1;
+    const spitId = effect.naniteSpitId || Math.random();
 
-        // Spread starting position slightly so it looks like a wide vomit/spit
-        const spreadRadius = Math.random() * 25;
-        const spreadAngle = Math.random() * Math.PI * 2;
-        const startX = player.x + Math.cos(spreadAngle) * spreadRadius;
-        const startY = player.y + Math.sin(spreadAngle) * spreadRadius;
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * effect.radius * 0.8;
+        const startX = effect.x + Math.cos(angle) * dist;
+        const startY = effect.y + Math.sin(angle) * dist;
+
+        const driftAngle = Math.random() * Math.PI * 2;
+        const driftSpeed = 0.3 + Math.random() * 0.7;
 
         state.bullets.push({
             id: Math.random(),
-            ownerId: player.id,
+            ownerId: owner.id,
             x: startX,
             y: startY,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            dmg: dmgPerNanite, // Pass base damage instead of multiplied damage!
+            vx: Math.cos(driftAngle) * driftSpeed,
+            vy: Math.sin(driftAngle) * driftSpeed,
+            dmg,
             pierce: 0,
-            life: bulletLife,
+            life: 180,
             isEnemy: false,
             hits: new Set<number>(),
             color: '#22c55e',
-            size: 4 + Math.random() * 4, // 4 to 8 size
+            size: 4 + Math.random() * 4,
             isNanite: true,
             isHiveMotherSkill: true,
-            hiveMotherSpitId: spitCastId
+            hiveMotherSpitId: spitId,
+            cloudCenterX: effect.x,
+            cloudCenterY: effect.y,
+            cloudRadius: effect.radius,
         });
     }
-
-    playSfx('shoot');
 }
 
 function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: string, data?: any) => void, triggerDeath?: () => void) {

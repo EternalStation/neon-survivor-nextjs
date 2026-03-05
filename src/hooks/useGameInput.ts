@@ -219,7 +219,12 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     const cdMod = getCdMod(state, player);
                     if (!isOnCooldown(player.lastHiveMotherSkill ?? -999999, 14, cdMod, now)) {
                         player.lastHiveMotherSkill = now;
-                        triggerHiveMotherCone(state, player);
+                        const dpr = window.devicePixelRatio || 1;
+                        const zoom = windowScaleFactor.current * 0.58 * dpr;
+                        const camera = state.camera;
+                        const cursorX = camera.x + (mousePos.current.x - window.innerWidth / 2) / zoom;
+                        const cursorY = camera.y + (mousePos.current.y - window.innerHeight / 2) / zoom;
+                        triggerHiveMotherCone(state, player, cursorX, cursorY);
                     }
                 }
                 if (!state.isPaused && !state.gameOver && player.playerClass === 'aigis') {

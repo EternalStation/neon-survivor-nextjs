@@ -56,7 +56,7 @@ export interface ActiveSkill {
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'storm_laser' | 'storm_zone' | 'storm_hit';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -71,6 +71,15 @@ export interface AreaEffect {
     casterId?: number;
     pulseTimer?: number;
     dmgMult?: number;
+    // Nanite Cloud props
+    naniteSpawned?: boolean;
+    naniteCount?: number;
+    naniteDmg?: number;
+    ownerId?: string;
+    naniteSpitId?: number;
+    facingAngle?: number;
+    originX?: number;
+    originY?: number;
 }
 
 export interface Player {
@@ -289,6 +298,9 @@ export interface Bullet {
     isWobbly?: boolean;
     isHiveMotherSkill?: boolean;
     hiveMotherSpitId?: number;
+    cloudCenterX?: number;
+    cloudCenterY?: number;
+    cloudRadius?: number;
     // Malware Props
     bounceDmgMult?: number;
     bounceSpeedBonus?: number;

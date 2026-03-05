@@ -402,6 +402,127 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.stroke();
 
             ctx.restore();
+        } else if (effect.type === 'nanite_cloud') {
+            const elapsed = state.gameTime - effect.creationTime;
+            const t = state.gameTime;
+            const facing = effect.facingAngle ?? 0;
+            const baseRadius = effect.radius || 150;
+
+            const sprayDuration = 0.4;
+
+            const owner = effect.ownerId
+                ? (state.players?.[effect.ownerId] || state.player)
+                : state.player;
+            const px = owner.x;
+            const py = owner.y;
+
+            ctx.save();
+
+            if (elapsed < sprayDuration) {
+                const sprayProgress = elapsed / sprayDuration;
+                const sprayLen = Math.hypot(effect.x - px, effect.y - py);
+                const currentLen = sprayLen * sprayProgress;
+                const tipSpread = baseRadius * 0.4 * sprayProgress;
+
+                ctx.translate(px, py);
+                const liveAngle = Math.atan2(effect.y - py, effect.x - px);
+                ctx.rotate(liveAngle);
+                ctx.globalCompositeOperation = 'lighter';
+
+                const grad = ctx.createLinearGradient(0, 0, currentLen, 0);
+                grad.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
+                grad.addColorStop(0.4, 'rgba(74, 222, 128, 0.35)');
+                grad.addColorStop(1, 'rgba(34, 197, 94, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                for (let i = 0; i <= 16; i++) {
+                    const frac = i / 16;
+                    const x = currentLen * frac;
+                    const spread = tipSpread * frac;
+                    const wobble = Math.sin(frac * 10 + t * 6 + i) * spread * 0.2;
+                    ctx.lineTo(x, -spread - wobble);
+                }
+                for (let i = 16; i >= 0; i--) {
+                    const frac = i / 16;
+                    const x = currentLen * frac;
+                    const spread = tipSpread * frac;
+                    const wobble = Math.sin(frac * 8 + t * 5 + i * 2) * spread * 0.2;
+                    ctx.lineTo(x, spread + wobble);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                for (let i = 0; i < 14; i++) {
+                    const frac = (i / 14) * sprayProgress;
+                    const dotX = currentLen * frac;
+                    const spread = tipSpread * frac;
+                    const dotY = Math.sin(i * 7.3 + t * 8) * spread * 0.8;
+                    const sz = 2 + Math.sin(i * 3 + t * 10) * 1.5;
+                    ctx.globalAlpha = 0.5 + Math.sin(i + t * 12) * 0.3;
+                    ctx.fillStyle = i % 3 === 0 ? '#86efac' : '#4ade80';
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, sz, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.globalCompositeOperation = 'source-over';
+            } else {
+                const cloudElapsed = elapsed - sprayDuration;
+                const totalCloudTime = (effect.duration + elapsed) - sprayDuration;
+                const remainingTime = effect.duration;
+                const dissipateStart = totalCloudTime * 0.5;
+                const isDissipating = cloudElapsed > dissipateStart;
+
+                let expandMult = 1.0;
+                let alpha = 0.4;
+                if (isDissipating) {
+                    const dissipateProgress = Math.min(1, (cloudElapsed - dissipateStart) / (totalCloudTime - dissipateStart));
+                    expandMult = 1.0 + dissipateProgress * 1.2;
+                    alpha = 0.4 * (1 - dissipateProgress);
+                }
+
+                const currentRadius = baseRadius * expandMult;
+
+                ctx.translate(effect.x, effect.y);
+                ctx.globalCompositeOperation = 'lighter';
+
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, currentRadius);
+                grad.addColorStop(0, `rgba(34, 197, 94, ${alpha})`);
+                grad.addColorStop(0.5, `rgba(74, 222, 128, ${alpha * 0.6})`);
+                grad.addColorStop(1, `rgba(34, 197, 94, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = `rgba(34, 197, 94, ${alpha * 0.6})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let a = 0; a < Math.PI * 2; a += 0.25) {
+                    const wobble = Math.sin(a * 5 + t * 3) * currentRadius * 0.06;
+                    const r = currentRadius + wobble;
+                    if (a === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                    else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                for (let i = 0; i < 16; i++) {
+                    const a = (i / 16) * Math.PI * 2 + t * 1.5;
+                    const d = currentRadius * (0.2 + Math.sin(i * 5 + t * 3) * 0.5);
+                    const sz = 2 + Math.sin(i * 3 + t * 8) * 1.5;
+                    ctx.globalAlpha = Math.max(0, (0.5 + Math.sin(i + t * 10) * 0.3) * (alpha / 0.4));
+                    ctx.fillStyle = i % 3 === 0 ? '#86efac' : '#4ade80';
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(a) * d, Math.sin(a) * d, sz, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            ctx.restore();
         } else if (effect.type === 'afk_strike') {
             const elapsed = state.gameTime - effect.creationTime;
             const total = elapsed + effect.duration;
