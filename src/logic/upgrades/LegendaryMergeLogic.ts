@@ -1,5 +1,6 @@
 import type { GameState, LegendaryHex } from '../core/types';
 import { LEGENDARY_UPGRADES, syncLegendaryHex } from './LegendaryLogic';
+import { GAME_CONFIG } from '../core/GameConfig';
 
 function combineForgedAt(h1: LegendaryHex, h2: LegendaryHex): string[] {
     const combined = [...(h1.forgedAt || []), ...(h2.forgedAt || [])];
@@ -514,7 +515,7 @@ export function performChronoDevourerMerge(state: GameState) {
     if (key) {
         state.player.activeSkills.push({
             type: 'ChronoDevourer',
-            baseCD: 15,
+            baseCD: GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN,
             lastUsed: -999999,
             inUse: false,
             keyBind: key,

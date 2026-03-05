@@ -573,8 +573,8 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                     if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
                     if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
                     if (selection.type === 'TemporalMonolith') baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
-                    if (selection.type === 'GravitationalHarvest') baseCD = 30000;
-                    if (selection.type === 'ChronoDevourer') baseCD = 15000;
+                    if (selection.type === 'GravitationalHarvest') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
+                    if (selection.type === 'ChronoDevourer') baseCD = GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN;
 
                     state.player.activeSkills.push({
                         type: selection.type,

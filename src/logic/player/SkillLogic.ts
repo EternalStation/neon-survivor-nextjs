@@ -127,9 +127,8 @@ export function castSkill(state: GameState, skillIndex: number) {
 
         const damage = (totalArmor + totalShield) * mult;
 
-        // Remove all shields
         state.player.shieldChunks = [];
-        state.player.shield = 0; // Legacy
+        state.player.shield = 0;
 
         const radius = 600 * mult;
 
@@ -144,7 +143,6 @@ export function castSkill(state: GameState, skillIndex: number) {
             level: 5
         });
 
-        // Deal damage
         state.enemies.forEach(e => {
             if (!e.dead && !e.boss && !e.isFriendly) {
                 const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
