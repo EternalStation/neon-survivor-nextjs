@@ -1,42 +1,42 @@
 # KINETIC BATTERY (KineticBattery)
 
-**Категория:** Defensive | **Арена:** 2 (пул: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
+**Category:** Defensive | **Arena:** 2 (pool: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк |
+| Level | Perk |
 |---------|------|
-| 1 | Шоквейв при контакте: 100% Armor DMG на 10 целей, кулдаун 8s |
-| 2 | Щит = 100% от суммарной Armor. Обновляется каждую минуту |
-| 3 | HP < 50%: Armor увеличивается на 100% |
-| 4 | Враги, пораженные Шоквейвом (L1), оглушаются на 0.5 сек |
+| 1 | Shockwave on Contact: 100% Armor DMG on 10 targets, cooldown 8s |
+| 2 | Shield = 100% of total Armor. Updated every minute |
+| 3 | HP < 50%: Armor increases by 100% |
+| 4 | Enemies hit by Shockwave (L1) are stunned for 0.5 sec |
 | 5 | MAX LEVEL |
 
-## Механика
+## Mechanics
 
-**L1 — Шоквейв при контакте (и при ударе о стену):**
+**L1 - Shockwave on contact (and when hitting a wall):**
 ```
-shockDmg = calcStat(player.arm) × 1.0   (100% суммарной Armor)
+shockDmg = calcStat(player.arm) × 1.0 (100% total Armor)
 ```
-Цепной: поражает до 10 ближайших врагов последовательно. Кулдаун: `8s × cdMod`.
+Chain: Hit up to 10 nearby enemies in succession. Cooldown: `8s × cdMod`.
 
-**L2 — Щит:**
+**L2 - Shield:**
 ```
 shieldAmount = calcStat(player.arm) × 1.0
 ```
-Щит обновляется каждые 60 секунд игрового времени (`kineticShieldTimer`). При получении урона щит поглощает его первым. Хранится в `player.shieldChunks` с `source: 'kinetic'`.
+The shield is updated every 60 seconds of game time (`kineticShieldTimer`). When receiving damage, the shield absorbs it first. Stored in `player.shieldChunks` with `source: 'kinetic'`.
 
-**L3 — Условная Armor:**
-- Если `player.curHp < MaxHP × 0.5`:
+**L3 - Conditional Armor:**
+- If `player.curHp < MaxHP × 0.5`:
   ```
   arm.hexMult2 += 100 × HexMultiplier
   ```
-- Добавляется в hexMult2 (второй тир множителя Armor).
+- Added to hexMult2 (second tier of the Armor multiplier).
 
-**L4 — Оглушение (Stun):**
-При достижении L4, все враги, пораженные цепной молнией (L1), получают эффект оглушения на 0.5 секунды. Эффект накладывается на каждую из 10 целей цепочки.
+**L4 - Stun:**
+Upon reaching L4, all enemies hit by chain lightning (L1) are stunned for 0.5 seconds. The effect is applied to each of the 10 targets in the chain.
 
-## Затронутые характеристики
+## Features affected
 
-- [Броня](../stats/armor.md) — L3: `arm.hexMult2 += 100%` при HP < 50%; L2 и L1 используют `calcStat(arm)` как базу щита и урона
-- Снижение кулдауна — Влияет на частоту срабатывания L1 (Shockwave)
+- [Armor](../stats/armor.md) - L3: `arm.hexMult2 += 100%` at HP < 50%; L2 and L1 use `calcStat(arm)` as shield and damage base
+- Cooldown Reduction - Affects L1 (Shockwave) trigger frequency

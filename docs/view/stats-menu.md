@@ -1,45 +1,45 @@
-# Модальное окно статов (StatsMenu)
+# Modal stat window (StatsMenu)
 
-## Назначение
-Отображает текущие характеристики игрока и прогноз сложности прямо в ходе игровой сессии. Позволяет оценить эффект накопленных апгрейдов и посмотреть динамику угрозы.
-
----
-
-## Когда отображается
-- Открывается вручную игроком в паузе или в специальном меню внутри игры.
-- Недоступен на экране выбора класса и вне активной сессии.
+## Purpose
+Displays the player's current characteristics and difficulty forecast directly during the game session. Allows you to evaluate the effect of accumulated upgrades and see the dynamics of the threat.
 
 ---
 
-## Структура окна
-
-Окно разделено на две вкладки: **System** и **Threat**.
+## When displayed
+- Opened manually by the player during a pause or in a special menu within the game.
+- Not available on the class selection screen and outside the active session.
 
 ---
 
-## Вкладка System
+## Window structure
 
-Отображает все текущие характеристики игрока с учётом всех апгрейдов и бонусов класса.
+The window is divided into two tabs: **System** and **Threat**.
 
-### Отображаемые характеристики
+---
 
-| Параметр | Условие показа |
-|----------|---------------|
-| Health (HP) | Всегда |
-| Regeneration | Всегда |
-| Damage | Всегда |
-| Attack Speed | Всегда; дополнительно показывается расчёт выстрелов в секунду |
-| Armor | Всегда; дополнительно показывается % редукции урона |
-| Movement Speed | Всегда |
-| Cooldown Reduction | Всегда |
-| Collision Reduction | Всегда |
-| Projectile Reduction | Всегда |
-| Lifesteal | Только если активен (значение > 0) |
-| XP Gain | Всегда |
-| Meteorite Chance | Всегда |
-| Pierce | Всегда (включая бонус класса [Malware](../classes/malware.md)) |
+## System tab
 
-### Формула расчёта характеристик
+Displays all the current characteristics of the player, taking into account all upgrades and class bonuses.
+
+### Features displayed
+
+| Parameter | Display condition |
+|----------|--------------|
+| Health (HP) | Always |
+| Regeneration | Always |
+| Damage | Always |
+| Attack Speed ​​| Always; additionally shows the calculation of shots per second |
+| Armor | Always; additionally shows % damage reduction |
+| Movement Speed ​​| Always |
+| Cooldown Reduction | Always |
+| Collision Reduction | Always |
+| Projectile Reduction | Always |
+| Lifesteal | Only if active (value > 0) |
+| XP Gain | Always |
+| Meteorite Chance | Always |
+| Pierce | Always (including class bonus [Malware](../classes/malware.md)) |
+
+### Formula for calculating characteristics
 ```
 Total = (Base + Flat + HexFlat)
         × (1 + NormalMult%)
@@ -47,61 +47,61 @@ Total = (Base + Flat + HexFlat)
         × (1 + HexMult2%)
         × ArenaMult
 ```
-Где:
-- **Base** — базовое значение характеристики.
-- **Flat** — абсолютные прибавки от апгрейдов.
-- **HexFlat** — абсолютные прибавки от гексагональных апгрейдов.
-- **NormalMult** — суммарный процентный бонус от обычных апгрейдов.
-- **HexMult / HexMult2** — процентные бонусы от гексагональных апгрейдов (два независимых множителя).
-- **ArenaMult** — модификатор от условий арены.
+Where:
+- **Base** — base value of the characteristic.
+- **Flat** - absolute increases from upgrades.
+- **HexFlat** - absolute increases from hexagonal upgrades.
+- **NormalMult** - total percentage bonus from normal upgrades.
+- **HexMult / HexMult2** - percentage bonuses from hexagonal upgrades (two independent multipliers).
+- **ArenaMult** - modifier depending on the arena conditions.
 
-### Радар-диаграмма (RadarChart)
-- Визуализирует основные характеристики в виде многоугольника.
-- Отображается рядом с таблицей характеристик.
-- Точный набор осей диаграммы и их нормировка требуют уточнения.
+### Radar Chart (RadarChart)
+- Visualizes the main characteristics in the form of a polygon.
+- Displayed next to the characteristics table.
+- The exact set of chart axes and their normalization require clarification.
 
 ---
 
-## Вкладка Threat
+## Threat tab
 
-Отображает прогноз роста сложности игры во времени.
+Displays a forecast for the growth of game difficulty over time.
 
-### Содержимое
+### Contents
 
-| Секция | Описание |
+| Section | Description |
 |--------|---------|
-| HP врагов во времени | Логарифмическая шкала: как растёт здоровье врагов по ходу игры |
-| Скорость спавна | Линейная шкала: как растёт частота появления врагов |
-| Следующий босс | Информация о том, когда появится следующий босс и какого типа |
+| HP of enemies in time | Logarithmic scale: how the health of enemies grows as the game progresses |
+| Spawn speed | Linear scale: how the frequency of enemy spawns increases |
+| Next Boss | Information about when the next boss will appear and what type |
 
 ---
 
-## Связь с данными класса
+## Communication with class data
 
-- Окно отражает **финальные значения** характеристик с учётом всех модификаторов класса.
-- Базовые бонусы каждого класса применяются автоматически и видны в StatMenu без специальных пометок.
-- Пример: [Malware](../classes/malware.md) покажет `Pierce: 1` (от класса) + дополнительное пробивание от апгрейдов.
-- Пример: [Void](../classes/void-eventhorizon.md) покажет `Armor` с учётом +30% от класса.
+- The window reflects the **final values** of characteristics, taking into account all class modifiers.
+- Basic bonuses of each class are applied automatically and are visible in StatMenu without special marks.
+- Example: [Malware](../classes/malware.md) will show `Pierce: 1` (from class) + additional penetration from upgrades.
+- Example: [Void](../classes/void-eventhorizon.md) will show `Armor` taking into account +30% of the class.
 
-Классовые механики (рикошеты, сингулярность, кольца) **не отображаются** в этом окне — они описаны в карточке класса на [экране выбора](class-selection.md).
-
----
-
-## Допущения
-- Вкладки System и Threat переключаются внутри одного модального окна.
-- RadarChart — отдельный компонент, встроенный в вкладку System.
-
-## Открытые вопросы
-- Какой набор осей у RadarChart? Совпадает ли он с перечнем характеристик или является подмножеством?
-- Есть ли кнопка закрытия модального окна или оно закрывается только клавишей?
-- Отображается ли название и иконка текущего класса в заголовке окна?
+Class mechanics (ricochets, singularity, rings) **do not appear** in this window - they are described in the class card on the [selection screen](class-selection.md).
 
 ---
 
-## Связанные функции и сущности
-- [Экран выбора класса](class-selection.md) — первоначальный выбор класса и отображение его описания.
-- [Malware](../classes/malware.md) — класс, добавляющий Pierce в характеристики.
-- [Void](../classes/void-eventhorizon.md) — класс с бонусами Armor и Speed.
-- [Ray](../classes/ray-stormstrike.md) — класс с бонусами Damage и штрафом Attack Speed.
-- [Vortex](../classes/vortex-aigis.md) — класс с бонусами HP и Regeneration.
-- [Hive-Mother](../classes/hive-mother.md) — класс с бонусами XP и Damage.
+## Assumptions
+- The System and Threat tabs are switched within the same modal window.
+- RadarChart is a separate component built into the System tab.
+
+## Open questions
+- What set of axes does RadarChart have? Does it match the list of characteristics or is it a subset?
+- Is there a button to close the modal window or is it closed only by a key?
+- Are the name and icon of the current class displayed in the window title?
+
+---
+
+## Related functions and entities
+- [Class selection screen](class-selection.md) - initial selection of a class and display of its description.
+- [Malware](../classes/malware.md) - a class that adds Pierce to the characteristics.
+- [Void](../classes/void-eventhorizon.md) - a class with Armor and Speed ​​bonuses.
+- [Ray](../classes/ray-stormstrike.md) - a class with Damage bonuses and an Attack Speed ​​penalty.
+- [Vortex](../classes/vortex-aigis.md) - class with HP and Regeneration bonuses.
+- [Hive-Mother](../classes/hive-mother.md) - a class with XP and Damage bonuses.

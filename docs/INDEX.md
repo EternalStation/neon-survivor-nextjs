@@ -1,116 +1,114 @@
-# Neon Survivor — База знаний (docs_v3)
+# Neon Survivor - Knowledge Base (docs_v3)
 
-Единое оглавление документации по фактическому поведению системы.
-Источник истины: исходный код. Комментарии в коде не используются.
-
----
-
-## Классы персонажа
-
-> Описание каждого класса: характеристики, основная способность, что улучшается, что фиксировано.
-
-| Файл | Описание |
-|------|---------|
-| [classes/malware.md](classesalware.md) | Malware — ручное прицеливание, бесконечные рикошеты, нарастающий урон. |
-| [classes/void-eventhorizon.md](classesoid-eventhorizon.md) | Void — сингулярность с притяжением и уроном в % от максимального HP врага. |
-| [classes/ray-stormstrike.md](classesay-stormstrike.md) | Ray — периодический орбитальный удар по площади, высокий базовый урон. |
-| [classes/vortex-aigis.md](classesortex-aigis.md) | Vortex — орбитальные кольца из снарядов, многослойный пассивный урон. |
-| [classes/hive-mother.md](classesive-mother.md) | Hive-Mother — цепная инфекция с нанитами, DoT и прыжок при смерти носителя. |
+A single table of contents of documentation on the actual behavior of the system.
+Source of truth: source code. Comments are not used in the code.
 
 ---
 
-## Представления (View)
+## Character classes
 
-> Экраны и модальные окна, в которых отображаются данные о классах.
+> Description of each class: characteristics, main ability, what improves, what is fixed.
 
-| Файл | Описание |
-|------|---------|
-| [view/class-selection.md](viewlass-selection.md) | Экран выбора класса до старта сессии: карточки, бейджи, навигация. |
-| [view/stats-menu.md](viewtats-menu.md) | Модальное окно статов в игре: характеристики, радар, прогноз угрозы. |
-
----
-
-## Механики
-
-### Характеристики (Stats)
-
-> Формулы расчёта, источники бонусов и легендарные улучшения, влияющие на каждую характеристику.
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/stat-formula.md](mechanicstat-formula.md) | Универсальная формула PlayerStats: поля, множители, HexMultiplier, Souls. |
-| [mechanics/stats/hp.md](mechanicstats/hp.md) | Максимальное HP: формула, EcoHP, DefPuddle L3. |
-| [mechanics/stats/armor.md](mechanicstats/armor.md) | Броня: формула DR, кап 95%, CombShield, KineticBattery L3, ChronoPlating L3. |
-| [mechanics/stats/damage.md](mechanicstats/damage.md) | Урон снарядов: формула, EcoDMG, ChronoPlating L1 и L2. |
-| [mechanics/stats/attack-speed.md](mechanicstats/attack-speed.md) | Скорость атаки: логарифмическая конвертация в shots/sec, EcoDMG, ChronoPlating L1. |
-| [mechanics/stats/regen.md](mechanicstats/regen.md) | Регенерация HP: формула, EcoHP, DefPuddle L3, ChronoPlating L4 (вне формулы). |
-| [mechanics/stats/xp-gain.md](mechanicstats/xp-gain.md) | Опыт за убийство: структура, Arena 0 буфф, EcoXP. |
-| [mechanics/stats/collision-reduction.md](mechanicstats/collision-reduction.md) | Снижение урона от столкновений: кап 80%, CombShield L2. |
-| [mechanics/stats/cooldown-reduction.md](mechanicstats/cooldown-reduction.md) | Снижение кулдауна навыков: KineticBattery L4, время-scaling. |
-
-### Перезарядки
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/cooldown.md](mechanics/cooldown.md) | Три системы перезарядок: countdown, gameTime-timestamp, Date.now(). Формула cdMod, жизненный цикл скилла, HUD, архитектурные проблемы и план централизации. |
-
-### Чит-коды
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | Все отладочные коды: ресурсы, боссы, улучшения, время, турели, события. |
+| File | Description |
+|-----------|---------|
+| [classes/malware.md](classesalware.md) | Malware - manual aiming, endless ricochets, increasing damage. |
+| [classes/void-eventhorizon.md](classesoid-eventhorizon.md) | Void - a singularity with attraction and damage as a % of the enemy's maximum HP. |
+| [classes/ray-stormstrike.md](classesay-stormstrike.md) | Ray - periodic orbital strike over an area, high base damage. |
+| [classes/vortex-aigis.md](classesortex-aigis.md) | Vortex - orbital rings of projectiles, multi-layered passive damage. |
+| [classes/hive-mother.md](classesive-mother.md) | Hive-Mother - chain infection with nanites, DoT and jump when the host dies. |
 
 ---
 
-### Легендарные улучшения
+## Views
 
-> Каждое улучшение: категория, арена, перки по уровням, механика работы, ссылки на затронутые характеристики.
+> Screens and modals that display class data.
 
-**Арена 0 (Economic):**
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/legendary-upgrades/ecodmg.md](mechanicsegendary-upgrades/ecodmg.md) | STORM OF STEEL — kill-scaling Damage и Attack Speed (flat L1/L2, % L3/L4). |
-| [mechanics/legendary-upgrades/ecoxp.md](mechanicsegendary-upgrades/ecoxp.md) | NEURAL HARVEST — kill-scaling XP, пороговые Dust (L2) и Flux (L3). |
-| [mechanics/legendary-upgrades/ecohp.md](mechanicsegendary-upgrades/ecohp.md) | ESSENCE SYPHON — kill-scaling MaxHP и Regen (flat L1/L2, % L3/L4). |
-| [mechanics/legendary-upgrades/combshield.md](mechanicsegendary-upgrades/combshield.md) | AEGIS PROTOCOL — kill-scaling Armor + Collision/Projectile Reduction. |
-
-**Арена 1 (Combat):**
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/legendary-upgrades/comlife.md](mechanicsegendary-upgrades/comlife.md) | CRIMSON FEAST — Lifesteal 3% (L1), Overheal-щит (L2), HP%-урон (L3), Zombie (L4). |
-| [mechanics/legendary-upgrades/comcrit.md](mechanicsegendary-upgrades/comcrit.md) | SHATTERED FATE — крит 15%/×2 (L1), Execute (L2), Death Mark (L3), Mega-Crit 25%/×3.5 (L4). |
-| [mechanics/legendary-upgrades/comwave.md](mechanicsegendary-upgrades/comwave.md) | TERROR PULSE — активный AoE шоквейв 200/350% урона, Fear (L2), кулдаун 30→20s. |
-| [mechanics/legendary-upgrades/radiationcore.md](mechanicsegendary-upgrades/radiationcore.md) | RADIATION CORE — постоянная аура 500px (5–10% MaxHP/sec), хил (L2), missing HP scaling (L3), global decay (L4). |
-
-**Арена 2 (Defense):**
-
-| Файл | Описание |
-|------|---------|
-| [mechanics/legendary-upgrades/defpuddle.md](mechanicsegendary-upgrades/defpuddle.md) | TOXIC SWAMP — кислотная лужа DoT 5% HP/sec, замедление (L2), +25% HP и Regen в луже (L3). |
-| [mechanics/legendary-upgrades/defepi.md](mechanicsegendary-upgrades/defepi.md) | EPICENTER — канал шипов 10s с иммобилизацией, -50% урона (L2), неуязвимость 3s (L3). |
-| [mechanics/legendary-upgrades/kineticbattery.md](mechanicsegendary-upgrades/kineticbattery.md) | KINETIC BATTERY — шоквейв 100% Armor (L1), щит = Armor (L2), +100% Armor при HP<50% (L3), CDR (L4). |
-| [mechanics/legendary-upgrades/chronoplating.md](mechanicsegendary-upgrades/chronoplating.md) | CHRONO PLATING — Armor→DMG+ATS (L1), HP→DMG (L2), удвоение Armor каждые 5 мин (L3), Armor→Regen (L4). |
+| File | Description |
+|-----------|---------|
+| [view/class-selection.md](viewlass-selection.md) | Class selection screen before the start of the session: cards, badges, navigation. |
+| [view/stats-menu.md](viewtats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
 
 ---
 
-## Враги
+## Mechanics
 
-> Уникальные враги: поведение, фазы, триггеры, взаимодействие с механиками.
+### Characteristics (Stats)
 
-| Файл | Описание |
-|------|---------|
-| [enemies/snitch.md](enemies/snitch.md) | Quantum Snitch — уклончивая редкая цель, 1 HP, орбитальное поведение, тактические телепорты, цикл спауна каждые 2 минуты. |
+> Calculation formulas, sources of bonuses and legendary improvements that affect each characteristic.
+
+| File | Description |
+|-----------|---------|
+| [mechanics/stat-formula.md](mechanicstat-formula.md) | Universal formula PlayerStats: fields, multipliers, HexMultiplier, Souls. |
+| [mechanics/stats/hp.md](mechanicstats/hp.md) | Max HP: Formula, EcoHP, DefPuddle L3. |
+| [mechanics/stats/armor.md](mechanicstats/armor.md) | Armor: DR formula, cap 95%, CombShield, KineticBattery L3, ChronoPlating L3. |
+| [mechanics/stats/damage.md](mechanicstats/damage.md) | Projectile Damage: Formula, EcoDMG, ChronoPlating L1 and L2. |
+| [mechanics/stats/attack-speed.md](mechanicstats/attack-speed.md) | Attack speed: logarithmic conversion to shots/sec, EcoDMG, ChronoPlating L1. |
+| [mechanics/stats/regen.md](mechanicstats/regen.md) | HP regeneration: formula, EcoHP, DefPuddle L3, ChronoPlating L4 (outside formula). |
+| [mechanics/stats/xp-gain.md](mechanicstats/xp-gain.md) | Experience per kill: structure, Arena 0 buff, EcoXP. |
+| [mechanics/stats/collision-reduction.md](mechanicstats/collision-reduction.md) | Collision damage reduction: cap 80%, CombShield L2. |
+| [mechanics/stats/cooldown-reduction.md](mechanicstats/cooldown-reduction.md) | Skill cooldown reduction: KineticBattery L4, time-scaling. |
+
+### Cooldowns
+
+| File | Description |
+|-----------|---------|
+| [mechanics/cooldown.md](mechanics/cooldown.md) | Three cooldown systems: countdown, gameTime-timestamp, Date.now(). cdMod formula, skill life cycle, HUD, architectural issues and centralization plan. |
+
+### Cheat codes
+
+| File | Description |
+|-----------|---------|
+| [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | All debug codes: resources, bosses, improvements, time, turrets, events. |
 
 ---
 
-## Статус базы знаний
+### Legendary upgrades
 
-| Статус | Значение |
+> Each improvement: category, arena, perks by level, mechanics of work, links to affected characteristics.
+
+**Arena 0 (Economic):**
+
+| File | Description |
+|-----------|---------|
+| [mechanics/legendary-upgrades/ecodmg.md](mechanicsegendary-upgrades/ecodmg.md) | STORM OF STEEL - kill-scaling Damage and Attack Speed ​​(flat L1/L2, % L3/L4). |
+| [mechanics/legendary-upgrades/ecoxp.md](mechanicsegendary-upgrades/ecoxp.md) | NEURAL HARVEST - kill-scaling XP, threshold Dust (L2) and Flux (L3). |
+| [mechanics/legendary-upgrades/ecohp.md](mechanicsegendary-upgrades/ecohp.md) | ESSENCE SYPHON - kill-scaling MaxHP and Regen (flat L1/L2, % L3/L4). |
+| [mechanics/legendary-upgrades/combshield.md](mechanicsegendary-upgrades/combshield.md) | AEGIS PROTOCOL - kill-scaling Armor + Collision/Projectile Reduction. |**Arena 1 (Combat):**
+
+| File | Description |
+|-----------|---------|
+| [mechanics/legendary-upgrades/comlife.md](mechanicsegendary-upgrades/comlife.md) | CRIMSON FEAST - Lifesteal 3% (L1), Overheal shield (L2), HP% damage (L3), Zombie (L4). |
+| [mechanics/legendary-upgrades/comcrit.md](mechanicsegendary-upgrades/comcrit.md) | SHATTERED FATE - crit 15%/×2 (L1), Execute (L2), Death Mark (L3), Mega-Crit 25%/×3.5 (L4). |
+| [mechanics/legendary-upgrades/comwave.md](mechanicsegendary-upgrades/comwave.md) | TERROR PULSE - active AoE shockwave 200/350% damage, Fear (L2), cooldown 30→20s. |
+| [mechanics/legendary-upgrades/radiationcore.md](mechanicsegendary-upgrades/radiationcore.md) | RADIATION CORE - constant aura 500px (5–10% MaxHP/sec), healing (L2), missing HP scaling (L3), global decay (L4). |
+
+**Arena 2 (Defense):**
+
+| File | Description |
+|-----------|---------|
+| [mechanics/legendary-upgrades/defpuddle.md](mechanicsegendary-upgrades/defpuddle.md) | TOXIC SWAMP - acid puddle DoT 5% HP/sec, slow (L2), +25% HP and Regen in the puddle (L3). |
+| [mechanics/legendary-upgrades/defepi.md](mechanicsegendary-upgrades/defepi.md) | EPICENTER - 10s spike channel with immobilization, -50% damage (L2), 3s invulnerability (L3). |
+| [mechanics/legendary-upgrades/kineticbattery.md](mechanicsegendary-upgrades/kineticbattery.md) | KINETIC BATTERY - shockwave 100% Armor (L1), shield = Armor (L2), +100% Armor at HP<50% (L3), CDR (L4). |
+| [mechanics/legendary-upgrades/chronoplating.md](mechanicsegendary-upgrades/chronoplating.md) | CHRONO PLATING - Armor→DMG+ATS (L1), HP→DMG (L2), double Armor every 5 min (L3), Armor→Regen (L4). |
+
+---
+
+##Enemies
+
+> Unique enemies: behavior, phases, triggers, interaction with mechanics.
+
+| File | Description |
+|-----------|---------|
+| [enemies/snitch.md](enemies/snitch.md) | Quantum Snitch - evasive rare target, 1 HP, orbital behavior, tactical teleports, spawn cycle every 2 minutes. |
+
+---
+
+## Knowledge base status
+
+| Status | Meaning |
 |--------|---------|
-| ✅ Задокументировано | Поведение подтверждено чтением исходного кода |
-| ⚠️ Допущение | Поведение предположено; требует верификации |
-| 🔲 Запланировано | Файл планируется, содержимого ещё нет |
+| ✅ Documented | Behavior confirmed by reading source code |
+| ⚠️ Assumption | The behavior is assumed; requires verification |
+| 🔲 Scheduled | File planned, no content yet |
 
-Текущее покрытие: классы (5/5), представления классов (2/2), характеристики (9 файлов), легендарные улучшения (12/12), перезарядки (1 файл), чит-коды (1 файл), враги (1 файл).
+Current coverage: classes (5/5), class representations (2/2), stats (9 files), legendary upgrades (12/12), cooldowns (1 file), cheat codes (1 file), enemies (1 file).

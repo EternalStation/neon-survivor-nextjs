@@ -201,7 +201,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'NeuralSingularity',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/NeuralSingularity.png'
+        customIcon: '/assets/Fusions/THE NEURAL SINGULARITY.png'
     },
     KineticTsunami: {
         id: 'kinetic_tsunami',
@@ -214,7 +214,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'KineticTsunami',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/KineticTsunami.png'
+        customIcon: '/assets/Fusions/THE KINETIC TSUNAMI.png'
     },
     SoulShatterCore: {
         id: 'soul_shatter_core',
@@ -227,11 +227,11 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'SoulShatterCore',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/SoulShatterCore.png'
+        customIcon: '/assets/Fusions/THE SOUL-SHATTER CORE.png'
     },
     BloodForgedCapacitor: {
         id: 'blood_forged_capacitor',
-        name: 'THE BLOOD-FORGED CAPACITOR',
+        name: 'THE NECRO-KINETIC ENGINE',
         desc: 'Combat / Defensive Fusion',
         description: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.',
         lore: 'The capacitor doesn’t just store energy; it refines it through the lens of pain. Every shockwave sent through the enemy ranks carries a parasitic pulse, tearing life from their hulls and feeding it directly into your core.',
@@ -240,7 +240,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'BloodForgedCapacitor',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/BloodForgedCapacitor.png'
+        customIcon: '/assets/Fusions/THE NECRO-KINETIC ENGINE.png'
     },
     GravityAnchor: {
         id: 'gravity_anchor',
@@ -253,7 +253,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'GravityAnchor',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/GravityAnchor.png'
+        customIcon: '/assets/Fusions/THE GRAVITY ANCHOR.png'
     },
     TemporalMonolith: {
         id: 'temporal_monolith',
@@ -266,7 +266,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'TemporalMonolith',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefChromo.png'
+        customIcon: '/assets/Fusions/THE TEMPORAL MONOLITH.png'
     },
     NeutronStar: {
         id: 'neutron_star',
@@ -279,7 +279,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'NeutronStar',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComRad.png'
+        customIcon: '/assets/Fusions/THE NEUTRON STAR.png'
     },
     GravitationalHarvest: {
         id: 'gravitational_harvest',
@@ -292,13 +292,13 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'GravitationalHarvest',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoHP.png'
+        customIcon: '/assets/Fusions/THE GRAVITATIONAL HARVEST.png'
     },
     ShatteredCapacitor: {
         id: 'shattered_capacitor',
         name: 'THE SHATTERED CAPACITOR',
-        desc: 'Combat / Defensive Fusion',
-        description: '20% of your Armor dealt as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
+        desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
+        description: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.',
         lore: 'The capacitor doesn’t just store energy; it refines it through the lens of critical impact. Every arc sent through the enemy ranks identifies a structural failure, letting the next strike tear them apart.',
         category: 'Fusion',
         categories: ['Combat', 'Defensive'],
@@ -318,7 +318,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ChronoDevourer',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComLife.png'
+        customIcon: '/assets/Fusions/THE CHRONO-DEVOURER.png'
     }
 };
 
@@ -462,13 +462,20 @@ export function getLegendaryOptions(state: GameState): LegendaryHex[] {
         pool = ['KineticBattery', 'DefPuddle', 'DefEpi', 'ChronoPlating'];
     }
 
+    pool = pool.filter(typeKey => {
+        if (state.player.consumedLegendaries?.includes(typeKey)) return false;
+        const existingInfo = state.moduleSockets.hexagons.find(h => h?.type === typeKey);
+        if (existingInfo && existingInfo.level >= 4) return false;
+        return true;
+    });
+
     const lang = getStoredLanguage();
     const t = getUiTranslation(lang);
     return pool.map(typeKey => {
         const base = LEGENDARY_UPGRADES[typeKey];
         const existing = state.moduleSockets.hexagons.find(h => h?.type === base.type);
 
-        const level = existing ? Math.min(5, existing.level + 1) : 1;
+        const level = existing ? Math.min(4, existing.level + 1) : 1;
         const killsAtAcquisition = existing ? existing.killsAtAcquisition : state.killCount;
         const timeAtAcquisition = existing ? existing.timeAtAcquisition : state.gameTime;
 
@@ -689,7 +696,13 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.1;
             if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.1;
             if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05;
-            if (statKey === 'ats_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
+            if (statKey === 'aoe_chance_per_kill') {
+                const souls = getSoulsSinceLevel(4);
+                if (souls > 0) {
+                    // Logarithmic scaling: 100% at 500,000 souls
+                    total += (Math.log(souls + 1) / Math.log(500001)) * 100;
+                }
+            }
         }
 
         if (hex.type === 'SoulShatterCore') {

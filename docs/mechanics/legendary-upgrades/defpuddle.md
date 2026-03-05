@@ -1,35 +1,35 @@
 # TOXIC SWAMP (DefPuddle)
 
-**Категория:** Defensive | **Арена:** 2 (пул: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
+**Category:** Defensive | **Arena:** 2 (pool: KineticBattery, DefPuddle, DefEpi, ChronoPlating)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк |
+| Level | Perk |
 |---------|------|
-| 1 | Активный навык: кислотная лужа наносит 5% MaxHP врага/sec, длительность 10s |
-| 2 | Кислота замедляет врагов на 20%, +20% к получаемому ими урону |
-| 3 | Пока игрок в луже: +25% MaxHP и +25% Regen/sec |
-| 4 | Замедление увеличивается до 40%, +40% к получаемому урону |
+| 1 | Active Skill: Acid Pool deals 5% of enemy's MaxHP/sec, duration 10s |
+| 2 | Acid slows enemies by 20%, +20% damage taken |
+| 3 | While the player is in a puddle: +25% MaxHP and +25% Regen/sec |
+| 4 | Slow increases to 40%, +40% damage taken |
 | 5 | MAX LEVEL |
 
-## Механика
+## Mechanics
 
-**Кулдаун:** 25s base (масштабируется [Cooldown Reduction](../stats/cooldown-reduction.md)).
+**Cooldown:** 25s base (scaled by [Cooldown Reduction](../stats/cooldown-reduction.md)).
 
-**L1 — DoT луж:**
-- Лужа создаётся в позиции игрока.
-- Каждый враг в зоне получает: `5% × enemy.maxHp / sec` тик-урона.
-- Длительность: 10 секунд.
+**L1 - DoT of puddles:**
+- A puddle is created in the player's position.
+- Each enemy in the zone receives: `5% × enemy.maxHp/sec` tick damage.
+- Duration: 10 seconds.
 
-**L3 — Buff игрока:**
-Пока `player.buffs.puddleRegen === true` (игрок находится в луже):
-- `hp.hexMult += 25` → MaxHP увеличивается на 25%
-- `reg.hexMult += 25` → Regen увеличивается на 25%
+**L3 - Player Buff:**
+While `player.buffs.puddleRegen === true` (player is in a puddle):
+- `hp.hexMult += 25` → MaxHP increases by 25%
+- `reg.hexMult += 25` → Regen increases by 25%
 
-Эти бонусы временные: применяются только в кадрах, когда буфф активен.
+These bonuses are temporary: only applied in frames when the buff is active.
 
-## Затронутые характеристики
+## Features affected
 
-- [HP](../stats/hp.md) — L3: `hp.hexMult += 25%` (пока в луже)
-- [Регенерация HP](../stats/regen.md) — L3: `reg.hexMult += 25%` (пока в луже)
-- [Снижение кулдауна](../stats/cooldown-reduction.md) — применяется к кулдауну лужи
+- [HP](../stats/hp.md) — L3: `hp.hexMult += 25%` (while in a puddle)
+- [HP Regeneration](../stats/regen.md) — L3: `reg.hexMult += 25%` (while in a puddle)
+- [Cooldown reduction](../stats/cooldown-reduction.md) - applies to the cooldown of the puddle

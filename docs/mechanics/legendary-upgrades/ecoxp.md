@@ -1,29 +1,29 @@
 # NEURAL HARVEST (EcoXP)
 
-**Категория:** Economic | **Арена:** 0 (пул: CombShield, EcoDMG, EcoXP, EcoHP)
+**Category:** Economic | **Arena:** 0 (pool: CombShield, EcoDMG, EcoXP, EcoHP)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк | Ключ |
+| Level | Perk | Key |
 |---------|------|------|
-| 1 | +0.1 XP за каждое убийство | `xp_per_kill` |
-| 2 | +1 Dust каждые 50 убийств | (threshold, DeathLogic) |
-| 3 | +5 Flux каждые 10 убийств | (threshold, DeathLogic) |
-| 4 | +0.1% XP за каждое убийство | `xp_pct_per_kill` |
+| 1 | +0.1 XP per kill | `xp_per_kill` |
+| 2 | +1 Dust every 50 kills | (threshold, DeathLogic) |
+| 3 | +5 Flux every 10 kills | (threshold, DeathLogic) |
+| 4 | +0.1% XP per kill | `xp_pct_per_kill` |
 | 5 | MAX LEVEL | — |
 
-## Механика
+## Mechanics
 
-**L1 и L4** — kill-scaling: `souls_since_Lx × 0.1 × HexMultiplier`.
+**L1 and L4** - kill-scaling: `souls_since_Lx × 0.1 × HexMultiplier`.
 
-**L2 — Dust Extraction** (пороговый):
-- Каждые 50 душ накопленных с момента L2 → +1 Dust × HexMultiplier
-- Начисляется в момент убийства при пересечении порога
+**L2 — Dust Extraction** (threshold):
+- Every 50 souls accumulated since L2 → +1 Dust × HexMultiplier
+- Accrued at the moment of killing when crossing the threshold
 
-**L3 — Flux Extraction** (пороговый):
-- Каждые 10 душ накопленных с момента L3 → +5 Flux × HexMultiplier
-- Начисляется в момент убийства при пересечении порога
+**L3 - Flux Extraction** (threshold):
+- Every 10 souls accumulated since L3 → +5 Flux × HexMultiplier
+- Accrued at the moment of killing when crossing the threshold
 
-## Затронутые характеристики
+## Features affected
 
-- [Опыт за убийство](../stats/xp-gain.md) — L1 (flat) и L4 (%)
+- [Experience per kill](../stats/xp-gain.md) — L1 (flat) and L4 (%)

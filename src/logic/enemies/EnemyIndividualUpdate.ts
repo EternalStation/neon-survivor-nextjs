@@ -6,6 +6,7 @@ import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
+import { GAME_CONFIG } from '../core/GameConfig';
 import { updateNormalCircle, updateNormalTriangle, updateNormalSquare, updateNormalDiamond, updateNormalPentagon, updateUniquePentagon } from './NormalEnemyLogic';
 import { updateEliteCircle, updateEliteTriangle, updateEliteSquare, updateEliteDiamond, updateElitePentagon } from './EliteEnemyLogic';
 import { updateBossEnemy } from './BossEnemyLogic';
@@ -142,6 +143,30 @@ export function updateSingleEnemy(
     }
 
     if (!e.boss) e.takenDamageMultiplier = 1.0;
+
+    if (e.activeNaniteCount && e.activeNaniteCount > 0) {
+        const dotFreq = 30; // twice per second
+        if (state.frameCount % dotFreq === 0) {
+            const totalDns = (e.activeNaniteDmg || 0);
+            const dmgPerTick = totalDns / 2; // tick 2 times a sec
+            if (dmgPerTick > 0) {
+                e.hp -= dmgPerTick;
+                state.player.damageDealt += dmgPerTick;
+                // max shov 3 nubmers for ech enemy
+                const rawNumToShow = Math.min(3, e.activeNaniteCount);
+                // If there is no health anymore, just handle death
+                if (e.hp <= 0 && !e.dead) { handleEnemyDeath(state, e, onEvent); return; }
+
+                const dmgPerNumber = dmgPerTick / rawNumToShow;
+                for (let n = 0; n < rawNumToShow; n++) {
+                    // offset them slightly using random
+                    const rx = e.x + (Math.random() - 0.5) * 30;
+                    const ry = e.y + (Math.random() - 0.5) * 30;
+                    spawnFloatingNumber(state, rx, ry, Math.round(dmgPerNumber).toString(), '#22c55e', false);
+                }
+            }
+        }
+    }
 
     if (e.isInfected) {
         const dotFreq = 30;
@@ -333,12 +358,19 @@ export function updateSingleEnemy(
     let pushY = e.lastPushY || 0;
 
     let currentSpd = e.spd * (state.gameSpeedMult ?? 1);
-    if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
-    if (e.slowFactor) {
-        currentSpd *= (1 - e.slowFactor);
-        e.slowFactor = 0;
+
+    // Stagger enemy if they are experiencing significant physical knockback
+    const knockbackMag = e.knockback ? Math.hypot(e.knockback.x, e.knockback.y) : 0;
+    if (knockbackMag > e.spd * 0.5) {
+        currentSpd = 0;
+    } else {
+        if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
+        if (e.slowFactor) {
+            currentSpd *= (1 - e.slowFactor);
+            e.slowFactor = 0;
+        }
+        if (e.slowUntil && e.slowUntil > state.gameTime) currentSpd *= (1 - (e.slowPercentVal || 0));
     }
-    if (e.slowUntil && e.slowUntil > state.gameTime) currentSpd *= (1 - (e.slowPercentVal || 0));
 
     let v = { vx: 0, vy: 0 };
     const isFeared = e.fearedUntil && e.fearedUntil > state.gameTime;
@@ -411,6 +443,34 @@ export function updateSingleEnemy(
                 e.voidAmplified = true;
             }
         });
+    }
+
+    const vortexActive = state.player.orbitalVortexUntil && state.player.orbitalVortexUntil > state.gameTime;
+    if (vortexActive) {
+        const vdx = e.x - state.player.x;
+        const vdy = e.y - state.player.y;
+        const vdist = Math.hypot(vdx, vdy);
+        if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
+            // Cap the pull based on max meteorites
+            const maxMets = Math.max(1, (state.player.inventory || []).filter(s => s !== null).length);
+
+            // MULTIPLIED BY 50 FOR TESTING
+            const rawPull = (0.4 + (maxMets * 0.15)) * 50;
+            const pullStrength = Math.min(rawPull, 175.0) * (e.boss ? 0.3 : 1.0); // Bosses resist the pull
+
+            // To pull enemies in a clockwise orbit, we calculate the perpendicular (tangent) vector.
+            // Vector to player is (vdx, vdy). Tangent clockwise is (-vdy, vdx) normalized.
+            const perpX = -vdy / vdist;
+            const perpY = vdx / vdist;
+
+            vx += perpX * pullStrength;
+            vy += perpY * pullStrength;
+
+            // We also add a slight outward centrifugal force (20% of pull strength)
+            // so they spiral outwards and eventually hit the walls.
+            vx += (vdx / vdist) * (pullStrength * 0.2);
+            vy += (vdy / vdist) * (pullStrength * 0.2);
+        }
     }
 
     if (e.legionId && e.legionSlot && e.legionLeadId) {

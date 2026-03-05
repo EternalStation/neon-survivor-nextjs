@@ -1,10 +1,10 @@
-# Снижение урона от столкновений (Collision Reduction)
+# Reducing damage from collisions (Collision Reduction)
 
-**Тип:** вычисляется inline (не PlayerStats)
+**Type:** calculated inline (not PlayerStats)
 
-## Применение
+## Application
 
-Снижение урона от столкновений применяется **после** [брони](armor.md) при каждом контакте с врагом:
+Collision damage reduction is applied **after** [armor](armor.md) every time you make contact with an enemy:
 
 ```ts
 colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill')
@@ -12,37 +12,37 @@ colRedMult = 1 - getDefenseReduction(colRedRaw, 0.80)
 reducedDmg = dmgAfterArmor × colRedMult
 ```
 
-Используется та же логарифмическая функция, что и для [брони](armor.md), но с капом **80%**.
+The same logarithmic function is used as for [armor](armor.md), but with a cap of **80%**.
 
-Кап: **80%**.
+Cap: **80%**.
 
-## Легендарный источник
+## Legendary source
 
-### [AEGIS PROTOCOL (CombShield)](../legendary-upgrades/combshield.md) — уровень 2
+### [AEGIS PROTOCOL (CombShield)](../legendary-upgrades/combshield.md) - level 2
 
-| Уровень | Формула |
+| Level | Formula |
 |---------|---------|
 | 2 | `souls_since_L2 × 0.15 × HexMultiplier` |
 
-При 500 000 убийствах с L2 и HexMultiplier = 1.0:
+At 500,000 kills with L2 and HexMultiplier = 1.0:
 - `colRedRaw = 75,000`
-- `Reduction ≈ 80% (Кап)`
+- `Reduction ≈ 80% (Cap)`
 
-## Пример прогрессии (с L2 AEGIS PROTOCOL, Multiplier = 1.0)
+## Progression example (with L2 AEGIS PROTOCOL, Multiplier = 1.0)
 
-| Убийства (souls) | Коэффициент (colRedRaw) | Снижение урона (%) |
-|------------------|------------------------|-------------------|
-| 1,000            | 150                    | ~22%              |
-| 10,000           | 1,500                  | ~41%              |
-| 50,000           | 7,500                  | ~55%              |
-| 100,000          | 15,000                 | ~62%              |
-| 250,000          | 37,500                 | ~72%              |
-| 500,000          | 75,000                 | **80% (Кап)**     |
-| 1,000,000        | 150,000                | 80%               |
+| Murders (souls) | Ratio(colRedRaw) | Damage reduction (%) |
+|------------------|-----------------------|-------------------|
+| 1,000 | 150 | ~22% |
+| 10,000 | 1,500 | ~41% |
+| 50,000 | 7,500 | ~55% |
+| 100,000 | 15,000 | ~62% |
+| 250,000 | 37,500 | ~72% |
+| 500,000 | 75,000 | **80% (Cap)** |
+| 1,000,000 | 150,000 | 80% |
 
-*Примечание: Метеориты (HexMultiplier) значительно ускоряют этот процесс.*
+*Note: Meteorites (HexMultiplier) greatly speed up this process.*
 
-## Связанные функции и сущности
+## Related functions and entities
 
-- [Броня](armor.md) — применяется до Collision Reduction
+- [Armor](armor.md) - applied before Collision Reduction
 - [AEGIS PROTOCOL](../legendary-upgrades/combshield.md)

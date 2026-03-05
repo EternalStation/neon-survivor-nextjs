@@ -1,80 +1,80 @@
 # Void `eventhorizon`
 
-## Характеристики
-| Параметр | Значение |
+## Characteristics
+| Parameter | Meaning |
 |----------|----------|
-| Броня | +30% |
-| Скорость передвижения | +10% |
+| Armor | +30% |
+| Movement speed | +10% |
 
 ---
 
-## Активная способность: Void Singularity (Чёрная дыра)
+## Active ability: Void Singularity (Black Hole)
 
-**Клавиша:** `E` (настраивается через `classAbility` в keybinds)
+**Key:** `E` (configurable via `classAbility` in keybinds)
 
-### Двухфазный механизм (стиль Ancient Apparition из Dota 2)
+### Two-phase mechanism (Ancient Apparition style from Dota 2)
 
-**Фаза 1 — первое нажатие:**
-- Если кулдаун завершён, запускается **маркер** (Void Marker) в направлении курсора со скоростью 500 px/с
-- Маркер летит в мировом пространстве, видим как мини-сингулярность с фиолетовым свечением
-- Максимальное время жизни маркера: 6 секунд, затем он исчезает без активации
+**Phase 1 - first press:**
+- If the cooldown is complete, a **marker** (Void Marker) is launched in the direction of the cursor at a speed of 500 px/s
+- The marker flies in outer space, we see it as a mini-singularity with a purple glow
+- Maximum marker lifetime: 6 seconds, then it disappears without activation
 
-**Фаза 2 — повторное нажатие:**
-- Пока маркер в полёте → нажатие `E` спауниет **чёрную дыру** на текущей позиции маркера
-- Маркер исчезает, начинается кулдаун
+**Phase 2 - press again:**
+- While the marker is in flight → pressing `E` will spawn a **black hole** at the current marker position
+- The marker disappears, the cooldown begins
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |----------|----------|
-| Кулдаун | 10 сек (начинается после спауна чёрной дыры) |
-| Кулдаун с NEURAL_OVERCLOCK | 7 сек (×0.7) |
-| Скорость маркера | 800 px/с |
-| Макс. жизнь маркера | 6 сек |
-| Длительность чёрной дыры | 3 сек |
-| Радиус чёрной дыры | 400px |
+| Cooldown | 10 sec (starts after black hole spawns) |
+| Cooldown with NEURAL_OVERCLOCK | 7 sec (×0.7) |
+| Marker speed | 800 px/s |
+| Max. life marker | 6 sec |
+| Black hole duration | 3 sec |
+| Black hole radius | 400px |
 
-### Урон чёрной дыры в секунду по типу врага
-| Тип | Условие | Урон |
+### Black hole damage per second by enemy type
+| Type | Condition | Damage |
 |-----|---------|------|
-| Обычный | >80px от центра | 50% maxHP/сек |
-| Обычный | ≤80px (ядро) | мгновенное уничтожение |
-| Сегмент червя | ≤80px (ядро) | мгновенное уничтожение |
-| Элита / Редкий (не Snitch) | — | 25% maxHP/сек |
-| [Snitch](../enemies/snitch.md) | >80px | нет урона (только притяжение) |
-| [Snitch](../enemies/snitch.md) | ≤80px (ядро) | мгновенное уничтожение |
-| Босс | — | 10% maxHP/сек |
+| Regular | >80px from center | 50% maxHP/sec |
+| Regular | ≤80px (core) | instant destruction |
+| Worm segment | ≤80px (core) | instant destruction |
+| Elite/Rare (not Snitch) | — | 25% maxHP/sec |
+| [Snitch](../enemies/snitch.md) | >80px | no damage (pull only) |
+| [Snitch](../enemies/snitch.md) | ≤80px (core) | instant destruction |
+| Boss | — | 10% maxHP/sec |
 
-Все враги в зоне получают флаг `voidAmplified = true`.
-
----
-
-## HUD-индикатор
-
-| Состояние | Цвет иконки | Подсказка |
-|-----------|-------------|-----------|
-| Готово (нажми E) | Фиолетовый (themeColor) | свечение |
-| Маркер летит (нажми E снова) | Ярко-фиолетовый (#a855f7) | пульсирование |
-| Кулдаун | Серый | таймер в секундах |
+All enemies in the zone receive the `voidAmplified = true` flag.
 
 ---
 
-## Изменённые файлы
-- `src/logic/core/types.ts` — поля `voidMarkerActive`, `voidMarkerX/Y/Vx/Vy`, `voidMarkerSpawnTime` на Player
-- `src/logic/utils/Keybinds.ts` — `classAbility: 'KeyE'`
-- `src/logic/combat/ProjectileLogic.ts` — удалён пассивный триггер на попадании
-- `src/hooks/useGameInput.ts` — обработка нажатия `classAbility`
-- `src/hooks/useGameLogic.ts` — обновление позиции маркера каждый кадр
-- `src/logic/rendering/renderers/PlayerRenderer.ts` — `renderVoidMarker()`
-- `src/logic/rendering/GameRenderer.ts` — вызов `renderVoidMarker`
-- `src/components/hud/PlayerStatus.tsx` — обновлён статус HUD
+## HUD indicator
+
+| State | Color icons | Hint |
+|-----------|------------|-----------|
+| Done (press E) | Purple (themeColor) | glow |
+| The marker flies (press E again) | Bright Purple (#a855f7) | pulsating |
+| Cooldown | Gray | timer in seconds |
 
 ---
 
-## Масштабирование
-| Параметр | Формула | Фиксировано |
+## Changed files
+- `src/logic/core/types.ts` — fields `voidMarkerActive`, `voidMarkerX/Y/Vx/Vy`, `voidMarkerSpawnTime` on Player
+- `src/logic/utils/Keybinds.ts` - `classAbility: 'KeyE'`
+- `src/logic/combat/ProjectileLogic.ts` - passive hit trigger removed
+- `src/hooks/useGameInput.ts` - handling of pressing `classAbility`
+- `src/hooks/useGameLogic.ts` - updating the marker position every frame
+- `src/logic/rendering/renderers/PlayerRenderer.ts` - `renderVoidMarker()`
+- `src/logic/rendering/GameRenderer.ts` - call `renderVoidMarker`
+- `src/components/hud/PlayerStatus.tsx` — updated HUD status
+
+---
+
+## Scaling
+| Parameter | Formula | Fixed |
 |----------|---------|:-----------:|
-| Притяжение | `(0.66 + resonance×0.85) × classCurseMult` | |
-| Кулдаун (NEURAL_OVERCLOCK) | ×0.7 | |
-| Радиус поля | | 400px |
-| Длительность | | 3 сек |
-| Радиус ядра (мгновенное уничтожение) | | 80px |
-| Урон % по типам врагов | | фиксирован |
+| Attraction | `(0.66 + resonance×0.85) × classCurseMult` | |
+| Cooldown (NEURAL_OVERCLOCK) | ×0.7 | |
+| Field radius | | 400px |
+| Duration | | 3 sec |
+| Core Radius (Instant Kill) | | 80px |
+| Damage % by enemy type | | fixed |

@@ -1,29 +1,29 @@
 # ESSENCE SYPHON (EcoHP)
 
-**Категория:** Economic | **Арена:** 0 (пул: CombShield, EcoDMG, EcoXP, EcoHP)
+**Category:** Economic | **Arena:** 0 (pool: CombShield, EcoDMG, EcoXP, EcoHP)
 
-## Перки по уровням
+## Perks by level
 
-| Уровень | Перк | Ключ |
+| Level | Perk | Key |
 |---------|------|------|
-| 1 | +0.1 Max HP за каждое убийство (flat) | `hp_per_kill` |
-| 2 | +0.03 HP/sec за каждое убийство (flat) | `reg_per_kill` |
-| 3 | +0.1% Max HP за каждое убийство (%) | `hp_pct_per_kill` |
-| 4 | +0.03% HP/sec за каждое убийство (%) | `reg_pct_per_kill` |
+| 1 | +0.1 Max HP per kill (flat) | `hp_per_kill` |
+| 2 | +0.03 HP/sec per kill (flat) | `reg_per_kill` |
+| 3 | +0.1% Max HP per kill (%) | `hp_pct_per_kill` |
+| 4 | +0.03% HP/sec per kill (%) | `reg_pct_per_kill` |
 | 5 | MAX LEVEL | — |
 
-## Механика
+## Mechanics
 
-Kill-scaling: бонусы пересчитываются каждый кадр:
+Kill-scaling: bonuses are recalculated every frame:
 
 ```
-hp.hexFlat   += souls_since_L1 × 0.1 × HexMultiplier
-reg.hexFlat  += souls_since_L2 × 0.03 × HexMultiplier
-hp.hexMult   += souls_since_L3 × 0.1 × HexMultiplier   (в %)
-reg.hexMult  += souls_since_L4 × 0.03 × HexMultiplier  (в %)
+hp.hexFlat += souls_since_L1 × 0.1 × HexMultiplier
+reg.hexFlat += souls_since_L2 × 0.03 × HexMultiplier
+hp.hexMult += souls_since_L3 × 0.1 × HexMultiplier (in %)
+reg.hexMult += souls_since_L4 × 0.03 × HexMultiplier (in %)
 ```
 
-## Затронутые характеристики
+## Features affected
 
-- [HP](../stats/hp.md) — hexFlat (L1) и hexMult (L3)
-- [Регенерация HP](../stats/regen.md) — hexFlat (L2) и hexMult (L4)
+- [HP](../stats/hp.md) - hexFlat (L1) and hexMult (L3)
+- [HP Regeneration](../stats/regen.md) - hexFlat (L2) and hexMult (L4)

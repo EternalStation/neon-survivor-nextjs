@@ -1,57 +1,57 @@
-# Dash Ability (Рывок)
+# Dash Ability
 
-Базовая способность, доступная всем классам. Активируется клавишей **Пробел** (Space).
+A basic ability available to all classes. Activated by the **Space** key.
 
-## Механика
+## Mechanics
 
-- Игрок совершает рывок в направлении движения (WASD / стик). Если игрок стоит — рывок происходит по `lastAngle` (последнее направление взгляда).
-- Во время рывка стандартное управление движением заблокировано.
-- Короткий период неуязвимости во время рывка (`INVINCIBLE_DURATION = 0.15s`).
-- Если цель рывка выходит за границу карты, рывок прерывается.
+- The player makes a dash in the direction of movement (WASD / stick). If the player is standing, the dash occurs in `lastAngle` (last direction of view).
+- During a dash, standard movement controls are locked.
+- Short period of invulnerability during a dash (`INVINCIBLE_DURATION = 0.15s`).
+- If the target of the dash goes beyond the border of the map, the dash is interrupted.
 
-## Параметры (GameConfig.DASH)
+## Parameters (GameConfig.DASH)
 
-| Параметр            | Значение |
+| Parameter | Meaning |
 |---------------------|----------|
-| DISTANCE            | 240 px   |
-| DURATION            | 0.18 s   |
-| COOLDOWN            | 4.0 s    |
-| INVINCIBLE_DURATION | 0.15 s   |
+| DISTANCE | 240px |
+| DURATION | 0.18s |
+| COOLDOWN | 4.0s |
+| INVINCIBLE_DURATION | 0.15s |
 
-## Состояние игрока (Player)
+## Player state
 
-| Поле           | Тип    | Описание                                  |
-|----------------|--------|-------------------------------------------|
-| dashCooldown   | number | Текущий кулдаун (countdown в секундах)    |
-| dashCooldownMax| number | Максимальный кулдаун                      |
-| dashUntil      | number | gameTime когда рывок заканчивается        |
-| dashVx / dashVy| number | Скорость рывка по осям (px/frame)         |
+| Field | Type | Description |
+|----------------|--------|------------------------------------------|
+| dashCooldown | number | Current cooldown (countdown in seconds) |
+| dashCooldownMax| number | Max cooldown |
+| dashUntil | number | gameTime when the dash ends |
+| dashVx / dashVy| number | Axes jerk speed (px/frame) |
 
-## Визуал
+## Visual
 
-- В начале рывка: 8 cyan-частиц (`spawnParticles` тип `'spark'`)
-- Во время рывка: 2 blue-частицы на каждый кадр
+- At the beginning of the dash: 8 cyan particles (`spawnParticles` type `'spark'`)
+- During dash: 2 blue particles per frame
 - SFX: `'dash'` (aliased to `'sonic-wave'`)
 
 ## HUD
 
-В `PlayerStatus.tsx` отображается отдельная шестиугольная иконка с иконкой ⚡:
-- Светится голубым когда готов к использованию
-- Показывает countdown (цифры) во время кулдауна
-- Лейбл `SPC` в углу
+`PlayerStatus.tsx` displays a separate hexagonal icon with a ⚡ icon:
+- Glows blue when ready to use
+- Shows countdown (numbers) during cooldown
+- `SPC` label in the corner
 
-## Настройки
+## Settings
 
-Биндинг dash доступен в KeybindSettings (ключ `dash`, по умолчанию `Space`).
+The dash binding is available in KeybindSettings (key `dash`, default `Space`).
 
-## Файлы
+## Files
 
-| Файл | Роль |
+| File | Role |
 |------|------|
-| `src/logic/player/PlayerMovement.ts` | `triggerDash()` и обработка активного рывка в `handlePlayerMovement` |
-| `src/logic/core/GameConfig.ts` | Константы `GAME_CONFIG.DASH` |
-| `src/logic/core/types.ts` | Поля dash в интерфейсе `Player` |
-| `src/logic/utils/Keybinds.ts` | Добавлен биндинг `dash: 'Space'` |
-| `src/hooks/useGameInput.ts` | Обработка нажатия Space → вызов `triggerDash` |
-| `src/components/hud/PlayerStatus.tsx` | HUD индикатор кулдауна |
-| `src/components/KeybindSettings.tsx` | Строка настройки в меню биндов |
+| `src/logic/player/PlayerMovement.ts` | `triggerDash()` and handling active dash in `handlePlayerMovement` |
+| `src/logic/core/GameConfig.ts` | Constants `GAME_CONFIG.DASH` |
+| `src/logic/core/types.ts` | Dash fields in the `Player` interface |
+| `src/logic/utils/Keybinds.ts` | Added `dash: 'Space'` binding |
+| `src/hooks/useGameInput.ts` | Handling the Space press → calling `triggerDash` |
+| `src/components/hud/PlayerStatus.tsx` | HUD cooldown indicator |
+| `src/components/KeybindSettings.tsx` | Settings line in the binds menu |

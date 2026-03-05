@@ -188,6 +188,7 @@ export function useGameUIHandlers({
         if (type === 'hex') {
             gameState.current.moduleSockets.hexagons[index] = item;
             gameState.current.pendingLegendaryHex = null;
+            gameState.current.pendingFusionHex = null;
         } else {
             gameState.current.moduleSockets.diamonds[index] = item;
         }

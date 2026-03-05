@@ -19,8 +19,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             { label: 'SPD/WALL', value: 5, unit: '%', isPercentage: true, description: 'Speed gain per bounce' },
         ],
         stats: {
-            hpMult: -0.30,
-            atkMult: 0.50,
+            hpMult: -0.15,
             bounceDmgMult: 0.2,
             bounceSpeedBonus: 0.05,
             projLifeMult: 1.5,
@@ -91,15 +90,15 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         description: 'An experimental defensive unit maintaining an intense electromagnetic flux.',
         characteristics: [
             'Short-range defensive perimeter',
-            'Delay-based burst patterns',
-            'Enhanced vitality systems'
+            'Projectile speed manipulation',
+            'Active Orbital Vortex (E)'
         ],
         capabilityName: 'Magnetic Vortex',
-        capabilityDesc: 'Projectiles orbit the player in a ring until they hit an enemy. Chance to create up to 4 orbits.',
+        capabilityDesc: 'Projectiles orbit in rings. ACTIVE (E): Spun at 4 multiplier for 5s. Pulls enemies clockwise and deflects projectiles. 20s CD.',
         capabilityMetrics: [
-            { label: 'Ring II', value: 15, unit: '%', isPercentage: true, description: 'Chance for 2nd Layer' },
-            { label: 'Ring III', value: 10, unit: '%', isPercentage: true, description: 'Chance for 3rd Layer' },
-            { label: 'Ring IV', value: 5, unit: '%', isPercentage: true, description: 'Chance for 4th Layer' }
+            { label: 'Active CD', value: 20, unit: 's', isPercentage: false, isStatic: true, description: 'Recharge time' },
+            { label: 'Duration', value: 5, unit: 's', isPercentage: false, isStatic: true, description: 'Active duration' },
+            { label: 'Speed Mult', value: 4, unit: 'x', isPercentage: false, isStatic: true, description: 'Projectile orbit speed' }
         ],
         stats: {
             hpMult: 0.20,
@@ -118,11 +117,12 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         characteristics: [
             'Damage-over-time specialist',
             'Organic growth scaling',
-            'Viral spread mechanics'
+            'Active Nanite Spitter (E)'
         ],
         capabilityName: 'Nanite Swarm',
-        capabilityDesc: 'On hit, bullets dissolve into nanites that deal continuous damage until death. On death, the nanite jumps to the next host within 400px.',
+        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE (E): Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.',
         capabilityMetrics: [
+            { label: 'Active CD', value: 14, unit: 's', isPercentage: false, isStatic: true, description: 'Active Skill Cooldown' },
             { label: 'Infection Rate', value: 30, unit: '%', isPercentage: true, description: '' },
             { label: 'Swarm DMG / sec', value: 5, unit: '%', isPercentage: true, description: '' },
             { label: 'Jump Range', value: 400, unit: 'px', isPercentage: false, isStatic: true, description: 'Static jump distance' }

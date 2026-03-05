@@ -3,6 +3,7 @@ import { RadarChart } from './RadarChart';
 export { RadarChart };
 import type { GameState, PlayerStats } from '../logic/core/types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
+import { getCdMod } from '../logic/utils/CooldownUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { getArenaIndex } from '../logic/mission/MapLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
@@ -226,7 +227,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {((player.cooldownReduction || 0) * 100).toFixed(1)}%
+                                            {((1 - getCdMod(gameState, player)) * 100).toFixed(1)}%
                                         </span>
                                     </div>
                                     {(() => {
@@ -363,12 +364,28 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {player.pierce}
                                         </span>
                                     </div>
+                                    {(() => {
+                                        const hasAOEPerk = gameState.moduleSockets.hexagons.some(h =>
+                                            h && (h.type === 'EcoDMG' || h.type === 'KineticTsunami' || h.type === 'SoulShatterCore') && h.level >= 4
+                                        );
+                                        if (!hasAOEPerk) return null;
+
+                                        const aoeChance = calculateLegendaryBonus(gameState, 'aoe_chance_per_kill');
+                                        return (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.knockback}</span>
+                                                <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
+                                                    {aoeChance.toFixed(1)}%
+                                                </span>
+                                            </div>
+                                        );
+                                    })()}
                                 </>
                             );
                         })()}

@@ -4,6 +4,7 @@ import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
+import { triggerZombieZap } from '../player/PlayerCombat';
 
 export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, count: number) {
     const existingMinions = state.enemies.filter(m => m.parentId === parent.id && !m.dead && m.shape === 'minion');
@@ -407,17 +408,18 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         // 6. Completion Logic
         if (now >= (e.timer || 0)) {
             if (target.boss) {
-                // Boss: Finish eating (5s passed). Zombie dies (spent).
+                // Boss Completion: Kill target and spend all 3 zombie lives
+                target.hp = 0;
+                handleEnemyDeath(state, target, onEvent);
                 takeZombieDamage(3);
             } else if (target.isElite) {
-                // Elite: Consume (5s passed). Kill Target. Zombie Dies (Cost 3).
+                // Elite Completion: Kill target and spend all 3 zombie lives
                 target.hp = 0;
                 handleEnemyDeath(state, target, onEvent);
 
                 const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
                 if (bloodLvl >= 5 && Math.random() < 0.10) {
-                    const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
-                    if (triggerZap) triggerZap(state, player, e);
+                    triggerZombieZap(state, state.player, e);
                 }
 
                 const devLvl = getHexLevel(state, 'ChronoDevourer');
@@ -427,7 +429,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
                 takeZombieDamage(3);
             } else {
-                // Normal & Legion Completion Logic
+                // Normal & Legion Completion Logic: Consume 1 heart
                 let canKill = true;
                 if (target.legionId) {
                     const lead = state.legionLeads?.[target.legionId];
@@ -447,8 +449,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
                     const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
                     if (bloodLvl >= 5 && Math.random() < 0.10) {
-                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
-                        if (triggerZap) triggerZap(state, player, e);
+                        triggerZombieZap(state, state.player, e);
                     }
 
                     const devLvl = getHexLevel(state, 'ChronoDevourer');

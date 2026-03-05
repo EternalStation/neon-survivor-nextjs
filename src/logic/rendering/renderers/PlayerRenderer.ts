@@ -307,6 +307,38 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.restore();
     }
 
+    // --- ORBITAL VORTEX AURA ---
+    if (player.orbitalVortexUntil && now < player.orbitalVortexUntil) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+
+        const vPulse = 0.8 + Math.sin(now * 10) * 0.2;
+        const vortexGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS);
+        vortexGrad.addColorStop(0, 'rgba(245, 158, 11, 0.05)'); // amber core
+        vortexGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.02)');
+        vortexGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+        ctx.fillStyle = vortexGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spinning wind trails
+        ctx.rotate(now * 3);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 10;
+        ctx.globalAlpha = 0.3 * vPulse;
+
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 100 + i * 40, (i * Math.PI) / 2, (i * Math.PI) / 2 + Math.PI);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
     // Stun VFX
     if (player.stunnedUntil && now < player.stunnedUntil) {
         ctx.save();

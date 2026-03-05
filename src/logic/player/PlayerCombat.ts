@@ -5,7 +5,7 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx, fadeOutMusic } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
-import { spawnFloatingNumber } from '../effects/ParticleLogic';
+import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
@@ -375,6 +375,59 @@ export function handleEnemyContact(
     });
 }
 
+export function triggerHiveMotherCone(state: GameState, player: Player) {
+    const coneAngle = 40 * (Math.PI / 180); // 40 degrees
+    const facing = player.targetAngle;
+    const baseBulletSpeed = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED * 0.9;
+
+    const numProjectiles = 20 + player.level;
+    const nanitesToApply = 3 + Math.floor(player.level / 10);
+    const dmgPerNanite = calcStat(player.dmg, state.dmgAtkBuffMult);
+    const totalDmgApply = nanitesToApply * dmgPerNanite;
+
+    const spitCastId = Math.random();
+
+    for (let i = 0; i < numProjectiles; i++) {
+        // Randomize angle within cone
+        const angleOffset = (Math.random() - 0.5) * coneAngle;
+        const angle = facing + angleOffset;
+
+        // Randomize speed so they clump together (from 60% to 110%)
+        const speed = baseBulletSpeed * (0.6 + Math.random() * 0.5);
+
+        // Ensure they travel roughly 800 range, varying a bit
+        const expectedRange = 750 + Math.random() * 100;
+        const bulletLife = expectedRange / speed;
+
+        // Spread starting position slightly so it looks like a wide vomit/spit
+        const spreadRadius = Math.random() * 25;
+        const spreadAngle = Math.random() * Math.PI * 2;
+        const startX = player.x + Math.cos(spreadAngle) * spreadRadius;
+        const startY = player.y + Math.sin(spreadAngle) * spreadRadius;
+
+        state.bullets.push({
+            id: Math.random(),
+            ownerId: player.id,
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            dmg: dmgPerNanite, // Pass base damage instead of multiplied damage!
+            pierce: 0,
+            life: bulletLife,
+            isEnemy: false,
+            hits: new Set<number>(),
+            color: '#22c55e',
+            size: 4 + Math.random() * 4, // 4 to 8 size
+            isNanite: true,
+            isHiveMotherSkill: true,
+            hiveMotherSpitId: spitCastId
+        });
+    }
+
+    playSfx('shoot');
+}
+
 function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: string, data?: any) => void, triggerDeath?: () => void) {
     const { player } = state;
     if (isBuffActive(state, 'TEMPORAL_GUARD')) {
@@ -631,7 +684,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');
                 const player = state.player;
                 if (bloodLevel >= 5 && !player.healingDisabled) {
-                    const heal = zap.dmg * 0.03;
+                    const heal = zap.dmg * 0.01;
                     const maxHp = calcStat(player.hp);
                     player.curHp = Math.min(maxHp, player.curHp + heal);
                 }

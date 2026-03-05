@@ -1,68 +1,68 @@
 # Ray `stormstrike`
 
-## Характеристики
-| Параметр | Значение |
+## Characteristics
+| Parameter | Meaning |
 |----------|----------|
-| Урон | +50% |
-| Скорость атаки | −20% |
+| Damage | +50% |
+| Attack Speed ​​| −20% |
 
 ---
 
-## Способность: Storm Circle (E)
+## Ability: Storm Circle (E)
 
-**Триггер:** нажатие E при наличии заряда > 0.
+**Trigger:** pressing E when charge > 0.
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |----------|----------|
-| Максимальный заряд | 10 сек |
-| КД перед перезарядкой | 3 сек (после использования) |
-| Лазеров на 1 сек заряда | 4 |
-| Лазеров на 10 сек заряда | 12 (линейно) |
-| Урон на 1 сек заряда | 10% от `player.dmg` |
-| Урон на 10 сек заряда | 150% от `player.dmg` (линейно) |
-| Задержка удара лазера | 0.25 сек (визуальный маркер) |
-| Минимальный радиус кольца | 50px от игрока |
-| Максимальный радиус кольца | 350px (скейлится от резонанса) |
-| АОЕ каждого лазера | 60px (скейлится от резонанса) |
+| Maximum Charge | 10 sec |
+| CD before reloading | 3 sec (after use) |
+| Lasers per 1 sec charge | 4 |
+| Lasers for 10 sec charge | 12 (linear) |
+| Damage per 1 sec charge | 10% from `player.dmg` |
+| Damage per 10 sec charge | 150% of `player.dmg` (linear) |
+| Laser Hit Delay | 0.25 sec (visual marker) |
+| Minimum ring radius | 50px from player |
+| Maximum ring radius | 350px (scaled by resonance) |
+| AOE of each laser | 60px (scaled by resonance) |
 
-**Позиции лазеров:** случайный угол (0–360°), случайная дистанция [50px, strikeRadius].
+**Laser positions:** random angle (0–360°), random distance [50px, strikeRadius].
 
-**АОЕ:** все враги в радиусе лазера получают полный урон одновременно.
+**AoE:** All enemies within the laser's radius take full damage at the same time.
 
 ---
 
-## Скорость движения
+## Movement speed
 
-| Заряд | Модификатор скорости |
+| Charge | Speed ​​Modifier |
 |-------|---------------------|
-| 0 сек (0%) | −20% |
-| 5 сек (50%) | 0% |
-| 10 сек (100%) | +20% |
+| 0 sec (0%) | −20% |
+| 5 sec (50%) | 0% |
+| 10 sec (100%) | +20% |
 
-Скейлинг линейный по времени заряда.
+Scaling is linear in charge time.
 
 ---
 
-## Зарядка
+## Charging
 
-| Этап | Поведение |
+| Stage | Behavior |
 |------|-----------|
-| После использования | 3-секундный КД, зарядка не начинается |
-| Зарядка | Начинается автоматически после КД |
-| Визуальный прогресс | Нелинейный (√(t/10)) — быстро в начале, медленнее к концу |
+| After use | 3 second CD, charging does not start |
+| Charging | Starts automatically after CD |
+| Visual progress | Nonlinear (√(t/10)) - fast at the beginning, slower at the end |
 
-Фактические значения урона и количества лазеров привязаны к реальным секундам заряда (линейно), визуальный бар заполняется по кривой корня квадратного.
+The actual values ​​of damage and the number of lasers are tied to the actual seconds of charge (linear), the visual bar is filled according to the square root curve.
 
 ---
 
-## Масштабирование
+## Scaling
 
-| Параметр | Формула | Фиксировано |
+| Parameter | Formula | Fixed |
 |----------|---------|:-----------:|
-| Количество лазеров | `max(4, round(4 + (t−1) × 8/9))` | |
-| Урон лазера | `(0.1 + (t−1) × 1.4/9) × player.dmg` | |
-| Скорость | `−20% + (t/10) × 40%` | |
-| Радиус кольца | `350 × (1 + resonance × 0.25)` | |
-| АОЕ лазера | `60 × (1 + resonance × 0.25)` | |
+| Number of lasers | `max(4, round(4 + (t−1) × 8/9))` | |
+| Laser Damage | `(0.1 + (t−1) × 1.4/9) × player.dmg` | |
+| Speed ​​| `−20% + (t/10) × 40%` | |
+| Ring radius | `350 × (1 + resonance × 0.25)` | |
+| AOE laser | `60 × (1 + resonance × 0.25)` | |
 
-`t` — секунды заряда (0–10), `resonance` — резонанс шасси от метеоритов (коэффициент 0.25 = медленный скейлинг).
+`t` — charge seconds (0–10), `resonance` — chassis resonance from meteorites (coefficient 0.25 = slow scaling).

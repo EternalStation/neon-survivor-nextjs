@@ -29,7 +29,8 @@ export function renderProjectiles(ctx: CanvasRenderingContext2D, state: GameStat
 
         // --- AIGIS RING VISUALIZATION ---
         if (b.isRing && b.ringRadius) {
-            const intensity = Math.min(1.5, Math.max(0.5, (b.ringAmmo || 200) / 200));
+            const baseIntensity = Math.min(1.5, Math.max(0.5, (b.ringAmmo || 200) / 200));
+            const intensity = b.ringVisualIntensity ? baseIntensity * b.ringVisualIntensity : baseIntensity;
 
             // Glow
             ctx.shadowBlur = 15 * intensity;
