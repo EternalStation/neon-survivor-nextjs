@@ -62,24 +62,47 @@ The data is stored in `player.aigisRings[radius] = { count, totalDmg }`.
 
 ## Active Skill: Orbital Vortex
 
-**Cooldown:** 20 seconds  
-**Duration:** 2 seconds  
+**Cooldown:** 20 seconds
+**Duration:** 2 seconds
+**Key:** `E` (configurable via `classAbility` in keybinds)
 
 ### Mechanics
 
 On activation, the player bends the environment around them, creating a massive gravitational wind.
 
-1. **Projectile Overdrive:** 
-   - All player projectiles' orbital speed increases by **400%**. 
+1. **Projectile Overdrive:**
+   - All player projectiles' orbital speed increases by **400%**.
    - If projectiles are merged into solid rings, they visually light up and pulsate instead of spinning faster.
-   - **Visuals:** A wind-like aura swirls around the player, indicating the orbit space.
 
 2. **Meteorite Slingshot Physics:**
-   - The vortex functions as a gravitational slingshot. Enemies are no longer just spun in place; they are pulled into the field and then slung outwards at high velocities.
-   - **Inward Pull:** When far from the player (>180px), enemies are rapidly pulled towards the center of the vortex.
-   - **Outward Sling:** Once enemies reach the inner proximity threshold, the radial force flips to push them away. This creates a high-energy "swing" maneuver.
-    - **Inertial Drift:** Enemies maintain their built-up kinetic energy for 1.5 seconds after leaving the 800px vortex field, gradually fading out before regaining control.
-    - **Wall Slam:** Orbiting enemies dragged into walls take massive damage (10% of Max HP for high-speed impacts).
-    - **Projectile Deflection (Active):** Enemy bullets entering the 800px field are bent into the clockwise orbit, with intensity scaling based on **Vortex Power**.
-    - **Passive Deflection:** The magnetic rings (180px - 330px) provide a subtle course-correction for enemy projectiles even when the skill is inactive.
-    - **Vortex Progression:** Every kill permanently increases **Vortex Power** by 0.0003, ensuring the pull and spin forces scale into the late game.
+   - The vortex behavior scales dynamically with **Vortex Power** (resonance).
+   - **Low Power (starting strength):** Enemies are trapped in a tight **inner rim orbit (~120px)** and are not flung outward. Spin intensity is reduced — enemies orbit but without high tangential force.
+   - **High Power (resonance > 1.4):** The vortex becomes violent. Enemies are pulled inward then **slung outward aggressively** at high velocity, creating area denial.
+   - **Inertial Drift:** Enemies maintain built-up kinetic energy for 1.5 seconds after leaving the 800px vortex field, gradually fading out before regaining control.
+   - **Wall Slam:** Orbiting enemies dragged into walls take massive damage (10% of Max HP for high-speed impacts).
+
+3. **Projectile Deflection:**
+   - **Active:** Enemy bullets entering the 800px field are bent into the clockwise orbit, with intensity scaling based on **Vortex Power**.
+   - **Passive:** The magnetic rings (180px–330px) provide a subtle course-correction for enemy projectiles even when the skill is inactive.
+
+4. **Vortex Progression:** Every kill permanently increases **Vortex Power** by 0.0003.
+
+### Visuals
+| State | Appearance |
+|-------|-----------|
+| Active | Golden amber gravitational field pulsates around the player with rotating wind-trail arcs |
+| Pulsating Rings | Aigis rings light up and pulsate rapidly during the effect |
+| Floater | "ORBITAL VORTEX" text displayed on activation |
+
+---
+
+## Implementation Notes
+- `GameConfig.ts` — `ORBITAL_VORTEX_COOLDOWN`, `ORBITAL_VORTEX_DURATION`
+- `types.ts` — `orbitalVortexUntil` on Player state
+- `useGameInput.ts` — input handling for `aigis` class ability
+- `EnemyIndividualUpdate.ts` — clockwise pull physics and wall damage
+- `ProjectilePlayerLogic.ts` — speed multipliers and visual intensity flags for Aigis bullets
+- `ProjectileEnemyLogic.ts` — trajectory bending for enemy bullets
+- `PlayerRenderer.ts` — wind aura rendering
+- `ProjectileRenderer.ts` — pulsating visuals for Aigis rings
+- `PlayerStatus.tsx` — cooldown indicator in HUD

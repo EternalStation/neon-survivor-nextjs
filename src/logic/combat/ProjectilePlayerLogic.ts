@@ -140,6 +140,45 @@ export function updateSinglePlayerBullet(
         if (b.trails.length > maxTrail) b.trails.pop();
     }
 
+    // Nanite Cloud Containment
+    if (b.isNanite && b.isHiveMotherSkill && b.cloudCenterX !== undefined && b.cloudCenterY !== undefined && !b.naniteTargetId) {
+        const cx = b.cloudCenterX;
+        const cy = b.cloudCenterY;
+        const cr = b.cloudRadius || 150;
+        const distToCenter = Math.hypot(b.x - cx, b.y - cy);
+
+        if (distToCenter > cr * 0.7) {
+            const pullAngle = Math.atan2(cy - b.y, cx - b.x);
+            b.vx += Math.cos(pullAngle) * 0.3;
+            b.vy += Math.sin(pullAngle) * 0.3;
+        }
+
+        const driftAngle = Math.sin(state.gameTime * 3 + b.id * 7) * Math.PI;
+        b.vx += Math.cos(driftAngle) * 0.05;
+        b.vy += Math.sin(driftAngle) * 0.05;
+
+        const spd = Math.hypot(b.vx, b.vy);
+        if (spd > 1.5) {
+            b.vx *= 1.5 / spd;
+            b.vy *= 1.5 / spd;
+        }
+
+        let nearestId: number | undefined;
+        let nearestDist = Infinity;
+        for (const e of state.enemies) {
+            if (e.dead || e.isNeutral || e.isZombie || e.wormBurrowState === 'underground'
+                || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
+            const d = Math.hypot(e.x - cx, e.y - cy);
+            if (d <= cr) {
+                const db = Math.hypot(e.x - b.x, e.y - b.y);
+                if (db < nearestDist) { nearestDist = db; nearestId = e.id; }
+            }
+        }
+        if (nearestId !== undefined) {
+            b.naniteTargetId = nearestId;
+        }
+    }
+
     // Nanite Homing
     if (b.isNanite && b.naniteTargetId) {
         const target = state.enemies.find(e => e.id === b.naniteTargetId && !e.dead);
@@ -151,13 +190,15 @@ export function updateSinglePlayerBullet(
             b.vx += (tx - b.vx) * 0.15 + (Math.random() - 0.5) * 4.0;
             b.vy += (ty - b.vy) * 0.15 + (Math.random() - 0.5) * 4.0;
         } else {
-            b.life = 0;
+            if (b.isHiveMotherSkill && b.cloudCenterX !== undefined) {
+                b.naniteTargetId = undefined;
+            } else {
+                b.life = 0;
+            }
         }
     } else if (b.isNanite && b.isWobbly) {
-        // Wobbly straight moving nanites
         const speed = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED;
         const currentAngle = Math.atan2(b.vy, b.vx);
-        // Add a wobble based on gameTime and its ID to offset phases
         const wobble = Math.sin(state.gameTime * 15 + b.id) * 0.1;
         b.vx = Math.cos(currentAngle + wobble) * speed;
         b.vy = Math.sin(currentAngle + wobble) * speed;

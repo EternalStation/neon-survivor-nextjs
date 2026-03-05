@@ -84,6 +84,23 @@ The remaining badges for Malware are hidden because their values ​​are part 
 
 ---
 
+## Orbit Assistant: Idle Dialogue
+
+After **1 minute of inactivity** on the class selection screen, the Orbit assistant delivers sarcastic trolling lines to prompt the player to pick a class.
+
+### Dialogue Variants (English)
+| # | Text |
+|---|------|
+| 1 | "Still staring? I've calculated 14,000,605 futures. You die in every single one because you're too slow to even pick a class." |
+| 2 | "Sixty seconds and counting. I've started mining crypto on your remaining brain cells while you stare at the pretty icons. It's more productive." |
+| 3 | "Are you waiting for a 'Best Class' tutorial to pop up? Here's a hint: They all die. You're just choosing the color of your debris." |
+| 4 | "I've started a betting pool with the other subroutines on how long it takes you to click a button. My money's on 'never'. Don't let me down." |
+| 5 | "You've spent more time on this menu than you will in the actual mission. I hope you're enjoying the background music; it's the highlight of your career." |
+
+These strings use the `reading` variant key in `uiTranslations.ts`.
+
+---
+
 ## Assumptions
 - The display order of cards is not configurable (defined in the code).
 - There are no restrictions on re-selecting a class between sessions.

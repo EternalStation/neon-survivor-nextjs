@@ -51,7 +51,6 @@ export function triggerDash(state: GameState, keys: Record<string, boolean>, inp
     const dashCD = GAME_CONFIG.DASH.COOLDOWN * getCdMod(state, player);
     player.dashCooldown = dashCD;
     player.dashCooldownMax = dashCD;
-    player.invincibleUntil = state.gameTime + GAME_CONFIG.DASH.INVINCIBLE_DURATION;
 
     spawnParticles(state, player.x, player.y, '#22d3ee', 8, 3, 30, 'spark');
     playSfx('dash');
