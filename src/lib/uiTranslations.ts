@@ -265,7 +265,7 @@ export const UI_TRANSLATIONS = {
                         'AoE vacuum effect on hit'
                     ],
                     metrics: [
-                        { label: 'Singularity Radius', description: 'Static radius' },
+                        { label: 'Void Radius', description: 'Base radius' },
                         { label: 'Pull Strength', description: 'Base pull force' },
                         { label: 'Duration', description: 'Static duration' },
                         { label: 'Elite DMG', description: 'Max HP per second' },
@@ -275,16 +275,18 @@ export const UI_TRANSLATIONS = {
                 stormstrike: {
                     name: "Ray",
                     title: "THE THUNDER ENGINE",
-                    capabilityName: "Orbital Strike",
-                    capabilityDesc: "Every 8 seconds, a massive vertical laser beam strikes a random enemy, dealing 150% AOE damage in a 100px radius.",
+                    capabilityName: "Storm Circle",
+                    capabilityDesc: "Press ACTIVE SKILL to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.",
                     characteristics: [
                         'Slow-firing heavy ordnance',
-                        'Massive AOE orbital strikes'
+                        'Chargeable ring of laser strikes (ACTIVE SKILL)'
                     ],
                     metrics: [
-                        { label: 'Frequency', description: 'Static cooldown (Every 8s)' },
-                        { label: 'Strike DMG', description: 'Damage multiplier' },
-                        { label: 'AOE', description: 'Strike radius' }
+                        { label: 'Recharge', description: 'Static cooldown (10s)' },
+                        { label: 'Max Lasers', description: 'Laser count at full charge' },
+                        { label: 'Max DMG', description: 'Damage per laser at full charge' },
+                        { label: 'Min DMG', description: 'Damage per laser at min charge' },
+                        { label: 'Laser AOE', description: 'Strike radius per laser' }
                     ]
                 },
                 aigis: {
@@ -332,7 +334,7 @@ export const UI_TRANSLATIONS = {
             totalOctaveResonance: 'TOTAL OCTAVE RESONANCE',
             performanceMetrics: 'PERFORMANCE METRICS',
             baseModifiers: 'BASE MODIFIERS',
-            static: 'STATIC:',
+            static: 'STATIC',
             meteorite: 'METEORITE:',
             stats: {
                 meteorite: 'METEORITE:',

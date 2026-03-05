@@ -23,8 +23,7 @@ interface StatsMenuProps {
     gameState: GameState;
 }
 
-export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number; isDisabled?: boolean }> = ({ label, stat, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1, isDisabled = false }) => {
-    // Formula: (Base + Flat + HexFlat) * (1 + NormalMult%) * (1 + HexMult%) * (1 + ClassMult%)
+export const StatRow: React.FC<{ label: string; stat: PlayerStats; t: any; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number; isDisabled?: boolean }> = ({ label, stat, t, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1, isDisabled = false }) => {
     const baseSum = stat.base + stat.flat + legendaryBonusFlat;
     const upgradeMult = 1 + (stat.mult || 0) / 100;
     const hexScaling = 1 + legendaryBonusPct / 100;
@@ -39,10 +38,10 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
 
     const displayTotal = isPercent ? `${formatNum(total)}%` : formatNum(total);
 
-    // Color logic
     const isBuffed = arenaMult > 1;
-    // Use Red if disabled, else normal color logic
     const totalColor = isDisabled ? '#ef4444' : (isBuffed ? '#3b82f6' : '#4ade80');
+
+    const isAtkSpeed = label === t.statsMenu.labels.attackSpeed;
 
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
@@ -52,7 +51,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
 
-                {/* 1. Base (Sum of Base + Flat + HexFlat) */}
                 {legendaryBonusFlat > 0 ? (
                     <span style={{ color: '#64748b', fontSize: 12 }}>
                         ({formatLargeNumber(Math.round((stat.base + stat.flat) * 10) / 10)} <span style={{ color: '#fbbf24' }}>+{formatLargeNumber(Math.round(legendaryBonusFlat * 10) / 10)}</span>)
@@ -63,11 +61,13 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                     </span>
                 )}
 
-                {/* 2. Upgrade Mult */}
-                <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                <span style={{ color: '#94a3b8', fontSize: 12 }}>{formatLargeNumber(Math.round(upgradeMult * 100))}%</span>
+                {!isAtkSpeed && (
+                    <>
+                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
+                        <span style={{ color: '#94a3b8', fontSize: 12 }}>{formatLargeNumber(Math.round(upgradeMult * 100))}%</span>
+                    </>
+                )}
 
-                {/* 3. Hex Mult (Orange) */}
                 {legendaryBonusPct > 0 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
@@ -75,7 +75,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                     </>
                 )}
 
-                {/* 4. Hex Mult 2 (Kinetic Battery - Custom Color) */}
                 {(stat.hexMult2 ?? 0) > 0 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
@@ -83,7 +82,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                     </>
                 )}
 
-                {/* 5. Class Mult (Pink-Purple) */}
                 {(stat.classMult ?? 0) !== 0 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
@@ -91,7 +89,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                     </>
                 )}
 
-                {/* 6. Arena Mult (Only if != 1) */}
                 {arenaMult !== 1 && (
                     <>
                         <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
@@ -99,7 +96,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
                     </>
                 )}
 
-                {/* 7. Equals Total */}
                 <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
                 <span style={{ color: totalColor, fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
                     {displayTotal}
@@ -109,14 +105,6 @@ export const StatRow: React.FC<{ label: string; stat: PlayerStats; isPercent?: b
     );
 };
 
-// --- MAIN MENU ---
-
-/**
- * UPDATED SYSTEM STATS MENU (Version 2.1)
- * Removed Level display as requested.
- * Restored Movement Speed and Regeneration.
- * Fixed Pierce display for non-Malware classes.
- */
 export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
     const { language } = useLanguage();
     const t = getUiTranslation(language);
@@ -195,16 +183,31 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                         {(() => {
                             return (
                                 <>
-                                    {/* 1. Armor */}
+                                    <StatRow label={t.statsMenu.labels.health} stat={player.hp} t={t} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
+                                    <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} t={t} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
+                                    <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} t={t} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
+                                    <StatRow
+                                        label={t.statsMenu.labels.attackSpeed}
+                                        stat={player.atk}
+                                        t={t}
+                                        legendaryBonusFlat={player.atk.hexFlat || 0}
+                                        legendaryBonusPct={player.atk.hexMult || 0}
+                                        arenaMult={gameState.dmgAtkBuffMult}
+                                        extraInfo={(() => {
+                                            const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
+                                            const sps = 2.64 * Math.log(score / 100) - 1.25;
+                                            return `(${sps.toFixed(2)} ${t.units.sps})`;
+                                        })()}
+                                    />
                                     <StatRow
                                         label={t.statsMenu.labels.armor}
                                         stat={player.arm}
+                                        t={t}
                                         legendaryBonusFlat={player.arm.hexFlat || 0}
                                         legendaryBonusPct={player.arm.hexMult || 0}
                                         extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
                                     />
 
-                                    {/* 2. Collision Reduction */}
                                     {(() => {
                                         const colRed = calculateLegendaryBonus(gameState, 'col_red_per_kill');
                                         return (
@@ -217,7 +220,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         );
                                     })()}
 
-                                    {/* 3. Projectile Reduction */}
                                     {(() => {
                                         const projRed = calculateLegendaryBonus(gameState, 'proj_red_per_kill');
                                         return (
@@ -230,7 +232,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         );
                                     })()}
 
-                                    {/* 4. XP Gain */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.xpGain}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -284,20 +285,15 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
-                                    {/* 5. Meteorite Drop */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.meteoriteChance}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                             {(() => {
-                                                const baseChance = 5.0; // Static 5% Base Chance
-
+                                                const baseChance = 5.0;
                                                 const surge = isBuffActive(gameState, 'ARENA_SURGE') ? 2.0 : 1.0;
                                                 const arenaMult = gameState.xpSoulBuffMult || 1.0;
-
-                                                const hexFlat = calculateLegendaryBonus(gameState, 'met_drop_per_kill'); // flat boost (e.g. 0.01 for 1%)
-
+                                                const hexFlat = calculateLegendaryBonus(gameState, 'met_drop_per_kill');
                                                 const bluePrintMult = isBuffActive(gameState, 'METEOR_SHOWER') ? (1 + (0.5 * surge)) : 1;
-
                                                 const total = ((baseChance / 100 * arenaMult) + hexFlat) * bluePrintMult * 100;
 
                                                 return (
@@ -331,7 +327,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </div>
                                     </div>
 
-                                    {/* 6. Cooldown Reduction */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
@@ -339,7 +334,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </span>
                                     </div>
 
-                                    {/* 7. Movement Speed */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
                                         <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
@@ -347,30 +341,12 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                         </span>
                                     </div>
 
-                                    {/* 8. Pierce */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
                                         <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
                                             {player.pierce}
                                         </span>
                                     </div>
-
-                                    {/* --- FUNDAMENTAL STATS --- */}
-                                    <StatRow label={t.statsMenu.labels.health} stat={player.hp} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
-                                    <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
-                                    <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
-                                    <StatRow
-                                        label={t.statsMenu.labels.attackSpeed}
-                                        stat={player.atk}
-                                        legendaryBonusFlat={player.atk.hexFlat || 0}
-                                        legendaryBonusPct={player.atk.hexMult || 0}
-                                        arenaMult={gameState.dmgAtkBuffMult}
-                                        extraInfo={(() => {
-                                            const score = calcStat(player.atk, gameState.dmgAtkBuffMult);
-                                            const sps = 2.64 * Math.log(score / 100) - 1.25;
-                                            return `(${sps.toFixed(2)} ${t.units.sps})`;
-                                        })()}
-                                    />
 
                                     {/* --- CONDITIONAL STATS --- */}
                                     {(() => {

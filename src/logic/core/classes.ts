@@ -43,9 +43,9 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         capabilityName: 'Void Singularity',
         capabilityDesc: 'Spawns a 400px void for 3s with 10s CD. Slowly absorbs enemies in the center. Elites take 25% and Bosses take 10% Max HP per second.',
         capabilityMetrics: [
-            { label: 'Singularity Radius', value: 400, unit: 'px', isPercentage: false, description: 'Static radius' },
-            { label: 'Pull Strength', value: 5, unit: '%', isPercentage: true, description: 'Base pull force' },
-            { label: 'Duration', value: 3, unit: 's', isPercentage: false, description: 'Static duration' },
+            { label: 'Void Radius', value: 400, unit: 'px', isPercentage: false, isResonant: true, description: 'Base radius' },
+            { label: 'Pull Strength', value: 5, unit: '%', isPercentage: true, isResonant: true, description: 'Base pull force' },
+            { label: 'Duration', value: 3, unit: 's', isPercentage: false, isStatic: true, description: 'Static duration' },
             { label: 'Elite DMG', value: 25, unit: '%', isPercentage: true, isStatic: true, description: 'Max HP per second' },
             { label: 'Boss DMG', value: 10, unit: '%', isPercentage: true, isStatic: true, description: 'Max HP per second' }
         ],
@@ -70,9 +70,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         capabilityName: 'Storm Circle',
         capabilityDesc: 'Press ACTIVE SKILL to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.',
         capabilityMetrics: [
-            { label: 'Max Charge', value: 10, unit: 's', isPercentage: false, description: 'Full charge time' },
-            { label: 'Max DMG', value: 150, unit: '%', isPercentage: true, description: 'Damage per laser at full charge' },
-            { label: 'Max Lasers', value: 12, unit: '', isPercentage: false, description: 'Laser count at full charge' }
+            { label: 'Recharge', value: 10, unit: 's', isPercentage: false, isStatic: true, description: 'Full charge time' },
+            { label: 'Max Lasers', value: 12, unit: '', isPercentage: false, isStatic: true, description: 'Laser count at full charge' },
+            { label: 'Max DMG', value: 150, unit: '%', isPercentage: true, isResonant: true, description: 'Damage at full charge' },
+            { label: 'Min DMG', value: 10, unit: '%', isPercentage: true, isResonant: true, description: 'Damage at min charge' },
+            { label: 'Laser AOE', value: 60, unit: 'px', isPercentage: false, isResonant: true, description: 'Radius per laser' }
         ],
         stats: {
             dmgMult: 0.50,

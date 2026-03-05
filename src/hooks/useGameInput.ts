@@ -139,10 +139,11 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     const ct = Math.max(0, Math.min(GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE, player.stormCircleChargeTime ?? 0));
                     if (ct > 0) {
                         const resonance = getChassisResonance(state);
-                        const strikeRadius = 350 * (1 + resonance * 0.25);
-                        const laserAoe = 120 * (1 + resonance * 0.25);
+                        const strikeRadius = 350 * (1 + resonance);
+                        const laserAoe = 60 * (1 + resonance);
                         const laserCount = Math.max(4, Math.round(4 + Math.max(0, ct - 1) * 8 / 9));
-                        const dmgMult = 0.1 + Math.max(0, ct - 1) * (1.4 / 9);
+                        const baseDmgMult = 0.1 + Math.max(0, ct - 1) * (1.4 / 9);
+                        const dmgMult = baseDmgMult * (1 + resonance);
                         const lastLaserDelay = 0.15 + (laserCount - 1) * 0.15;
 
                         state.areaEffects.push({
@@ -230,8 +231,11 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 if (!state.isPaused && !state.gameOver && player.playerClass === 'aigis') {
                     const now = state.gameTime;
                     const cdMod = getCdMod(state, player);
-                    if (!isOnCooldown(player.orbitalVortexUntil ? player.orbitalVortexUntil - GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION : -999999, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now)) {
+                    const lastUsed = player.lastVortexActivation ?? -999999;
+                    if (!isOnCooldown(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now)) {
                         player.orbitalVortexUntil = now + GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION;
+                        player.lastVortexActivation = now + GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION + (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RECHARGE_DELAY || 3);
+                        player.orbitalVortexCooldownEnd = player.lastVortexActivation;
                         spawnFloatingNumber(state, player.x, player.y - 40, 'ORBITAL VORTEX', '#f59e0b', true);
                         playSfx('power-up');
                     }

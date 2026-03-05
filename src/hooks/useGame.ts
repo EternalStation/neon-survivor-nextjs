@@ -56,7 +56,7 @@ export function useGameLoop(gameStarted: boolean) {
     const [showCheatPanel, setShowCheatPanel] = useState(false);
     const [gameSpeedMult, setGameSpeedMultState] = useState<number>(() => {
         const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('gameSpeedMult') : null;
-        return saved ? parseFloat(saved) : 1.0;
+        return saved ? parseFloat(saved) : 1.2;
     });
 
     // Orbit Assistant Hook

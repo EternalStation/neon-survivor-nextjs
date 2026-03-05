@@ -255,13 +255,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                             }}>
                                 {cls.stats.hpMult && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.hpMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.hpMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.hpMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -272,13 +272,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.spdMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.spdMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.spdMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.spdMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -289,13 +289,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.dmgMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.dmgMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.dmgMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.dmgMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -306,13 +306,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.atkMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.atkMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.atkMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.atkMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -323,13 +323,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.armMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.armMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.armMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.armMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -340,13 +340,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.xpMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.xpMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.xpMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.xpMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -357,13 +357,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.stats.regMult && cls.id !== 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: cls.stats.regMult > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: cls.stats.regMult > 0 ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: cls.stats.regMult > 0 ? '#38bdf8' : '#ef4444',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'
@@ -374,13 +374,13 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
                                 )}
                                 {cls.id === 'malware' && (
                                     <div className="stat-pill" style={{
-                                        background: 'rgba(56, 189, 248, 0.1)',
-                                        border: '1px solid rgba(56, 189, 248, 0.2)',
+                                        background: `${cls.themeColor || cls.icon}11`,
+                                        border: `1px solid ${cls.themeColor || cls.icon}33`,
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.65rem',
                                         fontWeight: 900,
-                                        color: '#38bdf8',
+                                        color: cls.themeColor || cls.icon,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px'

@@ -194,6 +194,7 @@ export interface Player {
     lastHiveMotherSkill?: number;
 
     orbitalVortexUntil?: number;
+    lastVortexActivation?: number;
 
     // Malware Sandbox (Active Ability)
     sandboxActive?: boolean;
@@ -201,6 +202,7 @@ export interface Player {
     sandboxY?: number;
     sandboxUntil?: number;
     sandboxCooldownStart?: number;
+    orbitalVortexCooldownEnd?: number;
 
     // Boss Capabilities
     kineticBattery?: boolean; // Arena 2 Boss Drop

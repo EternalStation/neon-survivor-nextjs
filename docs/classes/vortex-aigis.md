@@ -5,7 +5,7 @@
 |----------|----------|
 | HP | +4% |
 | HP Regeneration | +10% |
-| Vortex Power | 1.0 (Scalable) |
+| Strength Pull | 1.0 (Scalable) |
 
 ---
 
@@ -60,11 +60,12 @@ The data is stored in `player.aigisRings[radius] = { count, totalDmg }`.
 
 ---
 
-## Active Skill: Orbital Vortex
-
-**Cooldown:** 20 seconds
-**Duration:** 2 seconds
-**Key:** `E` (configurable via `classAbility` in keybinds)
+## Active Skill (E): Orbital Vortex
+- **Cooldown:** 20s (Static)
+- **Recharge Delay:** 1s (Starts after duration ends)
+- **Duration:** 2s (Static)
+- **Total Cycle:** 23s
+- **Key:** `E` (configurable via `classAbility` in keybinds)
 
 ### Mechanics
 
@@ -73,13 +74,17 @@ On activation, the player bends the environment around them, creating a massive 
 1. **Projectile Overdrive:**
    - All player projectiles' orbital speed increases by **400%**.
    - If projectiles are merged into solid rings, they visually light up and pulsate instead of spinning faster.
+   - **Visuals:** A wind-like aura swirls around the player.
 
 2. **Meteorite Slingshot Physics:**
-   - The vortex behavior scales dynamically with **Vortex Power** (resonance).
+   - The vortex behavior scales dynamically with **Vortex Power** (resonance/strength).
    - **Low Power (starting strength):** Enemies are trapped in a tight **inner rim orbit (~120px)** and are not flung outward. Spin intensity is reduced — enemies orbit but without high tangential force.
    - **High Power (resonance > 1.4):** The vortex becomes violent. Enemies are pulled inward then **slung outward aggressively** at high velocity, creating area denial.
+   - **Uniform Rotation:** Rotation speed follows the formula: **$0.2 + 0.32 \cdot \ln(Strength)$** (Circles per 2s).
+   - **Inward Pull:** When far from the player (>180px), enemies are rapidly pulled towards the center.
+   - **Outward Sling:** Once enemies reach the inner proximity threshold, the radial force flips to push them away.
    - **Inertial Drift:** Enemies maintain built-up kinetic energy for 1.5 seconds after leaving the 800px vortex field, gradually fading out before regaining control.
-   - **Wall Slam:** Orbiting enemies dragged into walls take massive damage (10% of Max HP for high-speed impacts).
+   - **Wall Slam:** Orbiting enemies dragged into walls take massive damage (**10% of Max HP** for high-speed impacts).
 
 3. **Projectile Deflection:**
    - **Active:** Enemy bullets entering the 800px field are bent into the clockwise orbit, with intensity scaling based on **Vortex Power**.

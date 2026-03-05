@@ -222,7 +222,8 @@
 .resonance-footer .label {
     font-size: 10px;
     font-weight: 900;
-    color: #64748b;
+    color: var(--accent-color);
+    opacity: 0.8;
 }
 
 .resonance-footer .value {
@@ -280,15 +281,17 @@
     letter-spacing: 0.5px;
     display: flex;
     align-items: center;
+    line-height: 1;
 }
 
 .metric-label {
     font-size: 10px;
     font-weight: 900;
-    color: #94a3b8;
+    color: var(--accent-color);
     text-shadow: none;
     display: flex;
     align-items: center;
+    line-height: 1;
 }
 
 .metric-calculation {

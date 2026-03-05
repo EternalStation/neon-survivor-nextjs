@@ -472,11 +472,10 @@ export function updateSingleEnemy(
             const perpY = vdx / vdist;
 
             // TANGENTIAL force (Spin - Meteorite kinetic energy)
-            // Spin Logic: "Spin them but not hard" at start. 
-            // When empowered (pullBase > 1.4), spin becomes more violent.
-            const proximityBonus = 1.0 + (1.0 - Math.min(1.0, vdist / 400)) * 2.0;
-            const spinMultiplier = pullBase > 1.4 ? 2.2 : 1.2;
-            const tangentialStrength = pullStrength * spinMultiplier * proximityBonus;
+            // 1% strength (1.0) = 0.2 circle in 2s
+            // User requested formula: circlesIn2s = 0.2 + 0.32 * ln(pullBase)
+            const circlesIn2s = Math.max(0.1, 0.2 + 0.32 * Math.log(Math.max(1, pullBase)));
+            const tangentialStrength = (circlesIn2s * (e.boss ? 0.35 : 1.0) * Math.PI * vdist) / 60;
             const vortexVx = perpX * tangentialStrength;
             const vortexVy = perpY * tangentialStrength;
 
@@ -485,18 +484,18 @@ export function updateSingleEnemy(
 
             // RADIAL force (Orbital Resistance)
             // Hold them in orbit: Inward pull is weaker, balanced against the spin
-            // FLY OUT only happens if the skill is empowered by meteorites (high resonance)
+            // "Fly out" (slingshot) only happens when skill is heavily empowered (pullBase > 4.0)
             let radialForceFactor = 0;
             if (vdist > 250) {
                 radialForceFactor = -0.4; // Gentle inward pull (Resistance)
             } else if (vdist > 120) {
-                radialForceFactor = -0.1; // Holding zone
+                radialForceFactor = -0.15; // Holding zone (settle in orbit)
             } else {
                 // Inner proximity behavior
-                if (pullBase > 1.4) {
-                    radialForceFactor = 3.5; // AGGRESSIVE SLINGSHOT OUT (Empowered)
+                if (pullBase > 4.0) {
+                    radialForceFactor = 4.5; // AGGRESSIVE SLINGSHOT OUT (Empowered)
                 } else {
-                    radialForceFactor = 0.8; // Gentle push to keep them in the 'inner rim' orbit
+                    radialForceFactor = 0.5; // Stabilizer: prevent crushing the player but keep them close
                 }
             }
 

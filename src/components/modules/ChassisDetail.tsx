@@ -128,8 +128,8 @@ export const ChassisDetail: React.FC<ChassisDetailProps> = ({ gameState, playerC
                                                         <span className="final-val" style={{ color: '#94a3b8' }}>{tChassis.static}</span>
                                                     )}
                                                     {m.isResonant && (
-                                                        <span className="final-val" style={{ color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.3)' }}>
-                                                            +{Number((m.value * totalResonance).toFixed(2))}{m.unit} | <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.3)' }}>{Number((m.value * (1 + totalResonance)).toFixed(2))}{m.unit}</span>
+                                                        <span className="final-val" style={{ color: playerClass.icon, textShadow: `0 0 10px ${playerClass.icon}33` }}>
+                                                            +{Math.round(totalResonance * 100)}% | <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.3)' }}>{Number((m.value * (1 + totalResonance)).toFixed(2))}{m.unit}</span>
                                                         </span>
                                                     )}
                                                 </div>

@@ -154,11 +154,23 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         if (!isReady) remainingDisplay = remaining.toFixed(1);
                     } else if (player.playerClass === 'aigis') {
                         show = true;
-                        const lastUsed = player.orbitalVortexUntil ? player.orbitalVortexUntil - GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION : -999999;
-                        const remaining = getRemainingCD(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
-                        cdPct = getCDProgress(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
-                        isReady = remaining <= 0;
-                        if (!isReady) remainingDisplay = remaining.toFixed(1);
+                        const lastUsed = player.lastVortexActivation ?? -999999;
+                        const cooldownEnd = player.orbitalVortexCooldownEnd ?? 0;
+                        const isDelaying = now < cooldownEnd;
+
+                        if (isDelaying) {
+                            const delayDuration = (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION || 2) + (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RECHARGE_DELAY || 3);
+                            const remainingDelay = cooldownEnd - now;
+                            cdPct = remainingDelay / (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RECHARGE_DELAY || 3);
+                            isReady = false;
+                            isStormCooldown = true; // Reuse the grey-bar state variable
+                            remainingDisplay = remainingDelay.toFixed(1);
+                        } else {
+                            const remaining = getRemainingCD(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
+                            cdPct = getCDProgress(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
+                            isReady = remaining <= 0;
+                            if (!isReady) remainingDisplay = remaining.toFixed(1);
+                        }
                     } else if (player.playerClass === 'malware') {
                         show = true;
                         const remaining = getRemainingCD(player.sandboxCooldownStart ?? -999999, GAME_CONFIG.SKILLS.SANDBOX_COOLDOWN, cdMod, now);
@@ -195,7 +207,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     {/* Icon */}
                                     {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.6 }} />}
 
-                                    {player.playerClass === 'stormstrike' ? (
+                                    {(player.playerClass === 'stormstrike' || player.playerClass === 'aigis') ? (
                                         <>
                                             {isStormCooldown && cdPct > 0 && (
                                                 <div style={{

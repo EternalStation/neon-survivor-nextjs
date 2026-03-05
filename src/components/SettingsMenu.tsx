@@ -14,10 +14,10 @@ interface SettingsMenuProps {
     onGameSpeedChange?: (mult: number) => void;
 }
 
-export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'game', gameSpeedMult = 1.0, onGameSpeedChange }: SettingsMenuProps) => {
+export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'game', gameSpeedMult = 1.2, onGameSpeedChange }: SettingsMenuProps) => {
     const [musVol, setMusVol] = useState(getMusicVolume());
     const [sfxVol, setSfxVol] = useState(getSfxVolume());
-    const [speedPct, setSpeedPct] = useState(Math.round((gameSpeedMult ?? 1.0) * 100));
+    const [speedPct, setSpeedPct] = useState(Math.round((gameSpeedMult ?? 1.2) * 100));
     const [activeTab, setActiveTab] = useState<'general' | 'controls' | 'language'>('general');
     const { language, setLanguage } = useLanguage();
     const t = getUiTranslation(language).settings;
