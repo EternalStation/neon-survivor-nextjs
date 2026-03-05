@@ -6,7 +6,7 @@ A basic ability available to all classes. Activated by the **Space** key.
 
 - The player makes a dash in the direction of movement (WASD / stick). If the player is standing, the dash occurs in `lastAngle` (last direction of view).
 - During a dash, standard movement controls are locked.
-- Short period of invulnerability during a dash (`INVINCIBLE_DURATION = 0.15s`).
+- The player takes damage normally during a dash (no invulnerability).
 - If the target of the dash goes beyond the border of the map, the dash is interrupted.
 
 ## Parameters (GameConfig.DASH)
@@ -16,7 +16,6 @@ A basic ability available to all classes. Activated by the **Space** key.
 | DISTANCE | 240px |
 | DURATION | 0.18s |
 | COOLDOWN | 4.0s |
-| INVINCIBLE_DURATION | 0.15s |
 
 ## Player state
 

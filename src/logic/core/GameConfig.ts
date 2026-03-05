@@ -104,7 +104,6 @@ export const GAME_CONFIG = {
         DISTANCE: 240,
         DURATION: 0.18,
         COOLDOWN: 4.0,
-        INVINCIBLE_DURATION: 0.15,
     },
 
     // --- PROJECTILES ---
