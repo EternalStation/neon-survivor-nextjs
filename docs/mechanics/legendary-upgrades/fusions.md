@@ -193,6 +193,19 @@ Inherits all perks from **Shattered Fate** (Lvl 1-4) and **Storm of Steel** (Lvl
 
 ## Technical Details
 
+### Level Labels
+All legendary modules display their level explicitly in the Matrix UI:
+- Levels 1–4 show `LVL 1`, `LVL 2`, `LVL 3`, `LVL 4`.
+- Level 5 shows `MAX`.
+- Level 4 legendaries (eligible for fusion) no longer display a `FUSABLE` tag; the standard `LVL 4` label is used instead.
+
+### Forge Origins (`forgedAt`)
+Each legendary skill tracks its origin forge(s) via `forgedAt?: string[]` (defined in `types.ts`):
+- Base legendaries are initialized with a single origin: `['Exis']`, `['Apex']`, or `['Bastion']`.
+- When two legendaries are fused, the resulting skill inherits **all** origins from both parents via `combineForgedAt` in `LegendaryMergeLogic.ts`.
+- Meteorite perks that require a specific category also check `forgedAt` on neighboring legendary hexes, so merged skills can activate synergy bonuses for **all** of their forge origins simultaneously.
+- `LegendaryDetail.tsx` displays origins dynamically: single-origin as `"EXIS FORGE"`, multi-origin as `"EXIS / BASTION"`.
+
 ### Space-Saving UI
 To prevent interface clutter, **Merged Legendaries (Fusions)** do not display the "SYSTEM CAPABILITY" (Lore) block in their details view. Only the active skill specifications and specific perk data are shown.
 

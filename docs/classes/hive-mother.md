@@ -10,12 +10,12 @@
 
 ## Ability: Nanite Swarm
 
-**Trigger:** a projectile (except for nanites, `isNanite ≠ true`) hits an enemy → the enemy gets `isInfected = true`.
+**Trigger:** Active ability fires a cone of nanites in a spray animation (45 frames). After the spray phase completes, each nanite pivots toward the current cursor position and flies straight at it. On contact the enemy becomes infected.
 
 ### Infection (DoT)
 | Parameter | Meaning |
 |----------|----------|
-| Damage/sec | `player.dmg × 5% × (1 + resonance) × classCurseMult` |
+| Damage/sec | `player.dmg × 40% × (1 + resonance) × classCurseMult` |
 | Tick ​​| every 30 frames (0.5 sec at 60 FPS) |
 | Damage per tick | `infectionDmg/2` |
 | Fractional balance | buffered in `infectionAccumulator`, applied when ≥1 |
@@ -35,7 +35,7 @@
 ## Scaling
 | Parameter | Formula | Fixed |
 |----------|---------|:-----------:|
-| Infection Damage/sec | `player.dmg × 5% × (1+resonance) × classCurseMult` | |
+| Infection Damage/sec | `player.dmg × 40% × (1+resonance) × classCurseMult` | |
 | Jump Chance | | 30% |
 | Jump radius | | 400px |
 | Tick ​​frequency | | 30 frames |

@@ -4,8 +4,6 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(find:*)",
-      "Bash(bun run:*)",
-      "Bash(~/.bun/bin/bun run:*)",
       "Bash(cmd.exe:*)"
     ]
   }
