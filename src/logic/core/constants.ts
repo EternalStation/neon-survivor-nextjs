@@ -4,7 +4,7 @@ export const CANVAS_WIDTH = typeof window !== 'undefined' ? window.innerWidth : 
 export const CANVAS_HEIGHT = typeof window !== 'undefined' ? window.innerHeight : 1080;
 
 export const RARITIES: Rarity[] = [
-    { id: 'scrap', label: 'Scrap', color: '#7FFF00', mult: 0.5 }, // High-Vis Lime
+    { id: 'scrap', label: 'Scrap', color: '#7FFF00', mult: 0.5 },
     { id: 'anomalous', label: 'Anomalous', color: '#00C0C0', mult: 1 },
     { id: 'quantum', label: 'Quantum', color: '#00FFFF', mult: 2 },
     { id: 'astral', label: 'Astral', color: '#7B68EE', mult: 3 },
@@ -43,7 +43,6 @@ export const BASE_UPGRADE_VALUES: Record<string, number> = {
     arm_m: 15
 };
 
-// --- Enemy Progression Constants ---
 
 export const SHAPE_CYCLE_ORDER = ['circle', 'triangle', 'square', 'diamond', 'pentagon'];
 
@@ -54,22 +53,21 @@ export const SHAPE_DEFS: Record<string, { type: string; hpMult: number; speedMul
     diamond: { type: 'diamond', hpMult: 0.6, speedMult: 1.0, sizeMult: 1.0, spawnWeight: 1.0 },
     pentagon: { type: 'pentagon', hpMult: 2.0, speedMult: 0.8, sizeMult: 1.5, spawnWeight: 0.25 },
     glitcher: { type: 'glitcher', hpMult: 1.5, speedMult: 1.1, sizeMult: 1.1, spawnWeight: 0.05 },
-    hexagon: { type: 'hexagon', hpMult: 1.0, speedMult: 0.9, sizeMult: 1.0, spawnWeight: 0 }, // Legion only
-    worm: { type: 'worm', hpMult: 1.5, speedMult: 0.65, sizeMult: 1.2, spawnWeight: 0 } // Unique only
+    hexagon: { type: 'hexagon', hpMult: 1.0, speedMult: 0.9, sizeMult: 1.0, spawnWeight: 0 },
+    worm: { type: 'worm', hpMult: 1.5, speedMult: 0.65, sizeMult: 1.2, spawnWeight: 0 }
 };
 
-// Core, Medium, Dark (for Cycle Logic)
 export const PALETTES = [
     { name: 'Neon Green', colors: ['#00FF00', '#408040', '#204020'] },
-    { name: 'Cyber Blue', colors: ['#00FFFF', '#206080', '#103040'] }, // Cyan Main
-    { name: 'Void Purple', colors: ['#BF00FF', '#602080', '#301040'] }, // Electric Purple
-    { name: 'Solar Orange', colors: ['#FF9900', '#805020', '#402510'] }, // Deep Orange
-    { name: 'Crimson Red', colors: ['#FF0000', '#802020', '#401010'] }  // Pure Red
+    { name: 'Cyber Blue', colors: ['#00FFFF', '#206080', '#103040'] },
+    { name: 'Void Purple', colors: ['#BF00FF', '#602080', '#301040'] },
+    { name: 'Solar Orange', colors: ['#FF9900', '#805020', '#402510'] },
+    { name: 'Crimson Red', colors: ['#FF0000', '#802020', '#401010'] }
 ];
 
 export const PULSE_RATES = [
-    { time: 5, interval: 300 },   // 0-5 mins: Slow Pulse
-    { time: 10, interval: 180 },  // 5-10 mins: Medium Pulse
-    { time: 15, interval: 120 },  // 10-15 mins: Fast Pulse
-    { time: 999, interval: 60 }   // 15+ mins: Hyper Pulse
+    { time: 5, interval: 300 },
+    { time: 10, interval: 180 },
+    { time: 15, interval: 120 },
+    { time: 999, interval: 60 }
 ];

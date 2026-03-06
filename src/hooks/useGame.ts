@@ -425,6 +425,7 @@ export function useGameLoop(gameStarted: boolean) {
                 lastFpsUpdateRef.current = now;
             }
 
+            state.interactPressed = false;
             requestRef.current = requestAnimationFrame(loop);
         };
 

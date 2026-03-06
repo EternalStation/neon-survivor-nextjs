@@ -3,10 +3,7 @@ import type { GameState, Enemy, ShapeType } from '../core/types';
 import { SHAPE_DEFS, PALETTES, PULSE_RATES, SHAPE_CYCLE_ORDER } from '../core/constants';
 import { isInMap, getArenaIndex, getRandomPositionInArena } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
-// import { spawnParticles } from '../effects/ParticleLogic'; // Unused
 import { GAME_CONFIG } from '../core/GameConfig';
-
-// Helper to determine current game era params
 
 export function getCycleHpMult(gameTime: number) {
     const minutes = gameTime / 60;
@@ -16,9 +13,8 @@ export function getCycleHpMult(gameTime: number) {
         if (i < 3) {
             cycleMult *= 1.65;
         } else if (i === 3) {
-            cycleMult *= 2.0; // User request: min 15 = 2.0x base jump
+            cycleMult *= 2.0;
         } else {
-            // User request: +0.2 to cycle rate every 5 mins after min 15
             cycleMult *= (2.0 + (i - 3) * 0.2);
         }
     }
@@ -28,14 +24,12 @@ export function getCycleHpMult(gameTime: number) {
 export function getProgressionParams(gameTime: number) {
     const minutes = Math.floor(gameTime / 60);
     const eraIndex = Math.floor(minutes / 15);
-    const fluxState = Math.floor((minutes % 15) / 5); // 0: Containment, 1: Active Flux, 2: Overload
+    const fluxState = Math.floor((minutes % 15) / 5);
     const shapeIndex = minutes % 5;
 
-    // Cycle shapes: Circle -> Triangle -> Square -> Diamond -> Pentagon
     const shapeId = SHAPE_CYCLE_ORDER[shapeIndex];
     const shapeDef = SHAPE_DEFS[shapeId];
 
-    // Era Palette (Green -> Blue -> Purple -> Orange -> Red)
     const eraPalette = PALETTES[eraIndex % PALETTES.length];
 
     // Pulse Speed
@@ -46,27 +40,33 @@ export function getProgressionParams(gameTime: number) {
 
 export function getEventPalette(state: GameState): [string, string, string] | null {
     if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
-        return ['#9ca3af', '#4b5563', '#1f2937']; // Brighter Black/Grey (Onyx/Slate)
+        return ['#9ca3af', '#4b5563', '#1f2937'];
     }
     return null;
+}
+
+export function getCurrentMinuteEnemyHp(gameTime: number, extractionPowerMult: number = 1.0) {
+    const minutes = gameTime / 60;
+    const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
+    const mInt = Math.floor(minutes);
+    const shapeId = SHAPE_CYCLE_ORDER[mInt % 5];
+    const hpMult = getCycleHpMult(gameTime) * SHAPE_DEFS[shapeId].hpMult;
+    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
+    baseHp *= extractionPowerMult;
+    return Math.floor(baseHp * hpMult);
 }
 
 export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: ShapeType, isBoss: boolean = false, bossTier?: number, isAnomaly: boolean = false) {
     const { player, gameTime } = state;
     const { shapeDef, eraPalette, fluxState } = getProgressionParams(gameTime);
 
-    // We no longer randomly override normal spawns with glitchers here, 
-    // as they are handled by the scheduled 15%/min logic in EnemyLogic.ts
     let chosenShape: ShapeType = shape || shapeDef.type as ShapeType;
 
-    // If specific position provided (cheat command), use it; otherwise calculate spawn location
     let spawnPos = (x !== undefined && y !== undefined) ? { x, y } : { x: player.x, y: player.y };
     const playerArena = getArenaIndex(player.x, player.y);
     let found = false;
 
-    // Only calculate spawn position if not provided
     if (x === undefined || y === undefined) {
-        // Try Ring around player valid in arena
         for (let i = 0; i < 8; i++) {
             const a = Math.random() * 6.28;
             const d = (isBoss ? 1500 : 1200) + Math.random() * 300;
@@ -91,45 +91,43 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 
 
 
-    // Scaling
     const minutes = gameTime / 60;
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
     const hpMult = getCycleHpMult(gameTime) * (isAnomaly ? 2.0 : SHAPE_DEFS[chosenShape].hpMult);
-    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult; // User formula: 60 base, 1.2 exponential, progressive cycle multiplier
+    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
 
-    // Extraction Rage scaling (Fast growth)
     if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
-        // Apply the dynamic power multiplier from ExtractionLogic
         baseHp *= (state.extractionPowerMult || 1.0);
     }
 
-    const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1)); // 10-20 min
-    const isLvl4 = isBoss && (bossTier === 4 || (minutes >= 30 && bossTier !== 1)); // 30+ min
-    const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)) || isLvl4; // 20+ min
+    const isLvl2 = isBoss && (bossTier === 2 || (minutes >= 10 && minutes < 20 && bossTier !== 1));
+    const isLvl4 = isBoss && (bossTier === 4 || (minutes >= 30 && bossTier !== 1));
+    const isLvl3 = isBoss && (bossTier === 3 || (minutes >= 20 && bossTier !== 1)) || isLvl4;
 
-    // Progressive Boss Scaling: 25 + (+1/min 0-5, +2/min 5-10, +3/min 10-15, etc.)
     const mTotal = Math.floor(minutes);
+    const intervals = [2, 5, 10, 15, 20];
     let progressiveBonus = 0;
     const fullIntervals = Math.floor(mTotal / 5);
     for (let i = 0; i < fullIntervals; i++) {
-        progressiveBonus += 5 * (i + 1);
+        const rate = intervals[Math.min(i, intervals.length - 1)];
+        progressiveBonus += 5 * rate;
     }
-    progressiveBonus += (mTotal % 5) * (fullIntervals + 1);
-    const bossHpMult = 25 + progressiveBonus;
+    const currentRate = intervals[Math.min(fullIntervals, intervals.length - 1)];
+    progressiveBonus += (mTotal % 5) * currentRate;
+    const bossHpMult = 30 + progressiveBonus;
+
     let hp = (isBoss ? baseHp * bossHpMult : baseHp) * hpMult;
     if (isAnomaly) {
         const gen = state.anomalyBossCount || 0;
-        hp *= (1.5 + (gen * 0.8)); // +50% base, +80% per summon
+        hp *= (1.5 + (gen * 0.8));
     }
 
-    // Boss Size Scaling
     const baseSize = isBoss ? 80 : (20 * SHAPE_DEFS[chosenShape].sizeMult);
-    const size = isAnomaly ? baseSize * 1.0 : baseSize; // Anomaly same size as normal boss tier
+    const size = isAnomaly ? baseSize * 1.0 : baseSize;
 
     const eventPalette = getEventPalette(state);
     let finalPalette = eventPalette || eraPalette.colors;
 
-    // Anomaly Palette: Hell Theme (Orange / Red / Dark Red)
     if (isAnomaly) {
         finalPalette = ['#f59e0b', '#ef4444', '#7f1d1d'];
     }
@@ -145,7 +143,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         boss: isBoss,
         bossType: isBoss ? Math.floor(Math.random() * 2) : 0,
         bossAttackPattern: 0,
-        bossTier: bossTier || 0, // 0 = Auto
+        bossTier: bossTier || 0,
         dead: false,
         shape: (isAnomaly ? 'abomination' : chosenShape) as ShapeType,
         shellStage: 2,
@@ -170,18 +168,45 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         isFlanker: !isBoss && ['circle', 'triangle', 'square'].includes(chosenShape) && Math.random() < 0.10,
         flankAngle: Math.random() * Math.PI * 2,
         flankDistance: 400 + Math.random() * 200,
-        particleOrbit: isAnomaly ? 180 : (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0) // Anomaly has intense orbit
+        particleOrbit: isAnomaly ? 180 : (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus) ? 60 : 0)
     };
 
     state.enemies.push(newEnemy);
     return newEnemy;
 }
 
+export function getInfernalBossHp(state: GameState): number {
+    const minutes = state.gameTime / 60;
+    const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
+    const hpMult = getCycleHpMult(state.gameTime) * 2.0; // Anomaly mult is 2.0
+    let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
+
+    if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
+        baseHp *= (state.extractionPowerMult || 1.0);
+    }
+
+    const mTotal = Math.floor(minutes);
+    const intervals = [2, 5, 10, 15, 20];
+    let progressiveBonus = 0;
+    const fullIntervals = Math.floor(mTotal / 5);
+    for (let i = 0; i < fullIntervals; i++) {
+        const rate = intervals[Math.min(i, intervals.length - 1)];
+        progressiveBonus += 5 * rate;
+    }
+    const currentRate = intervals[Math.min(fullIntervals, intervals.length - 1)];
+    progressiveBonus += (mTotal % 5) * currentRate;
+    const bossHpMult = 30 + progressiveBonus;
+
+    let hp = baseHp * bossHpMult * hpMult;
+    const gen = state.anomalyBossCount || 0;
+    hp *= (1.5 + (gen * 0.8));
+
+    return Math.floor(hp);
+}
+
 export function spawnRareEnemy(state: GameState) {
     const { player } = state;
-    // const { activeColors } = getProgressionParams(gameTime); // Not needed for fixed snitch
 
-    // Spawn near player or random valid
     let spawnPos = { x: player.x, y: player.y };
     let found = false;
     const playerArena = getArenaIndex(player.x, player.y);
@@ -232,8 +257,6 @@ export function manageRareSpawnCycles(state: GameState) {
     const { gameTime, rareSpawnCycle, rareSpawnActive } = state;
     if (rareSpawnActive) return;
 
-    // DELAY MECHANIC: Snitch ("Rare") spawns start at 5 minutes (300s)
-    // Previously: 60 + ...
     const nextSpawnTime = 300 + (rareSpawnCycle * 120);
 
     if (gameTime >= nextSpawnTime) {
@@ -245,17 +268,17 @@ export function manageRareSpawnCycles(state: GameState) {
 export function spawnShield(state: GameState, x: number, y: number, parentId?: number, maxHp?: number, initialPhase?: number) {
     const shield: Enemy = {
         id: Math.random(),
-        type: 'orbital_shield' as any, // Special type for logic
+        type: 'orbital_shield' as any,
         x, y,
-        size: 40, // Large hitbox to protect boss and be easier to target
+        size: 40,
         hp: maxHp || 1,
         maxHp: maxHp || 1,
-        parentId, // Link to boss
+        parentId,
         spd: 0,
         boss: false, bossType: 0, bossAttackPattern: 0, lastAttack: 0, dead: false,
-        shape: 'orbital_shield' as any, // Visual shape
+        shape: 'orbital_shield' as any,
         shellStage: 0,
-        palette: ['#06b6d4', '#0891b2', '#155e75'], // Cyan/Blue Energy Shield
+        palette: ['#06b6d4', '#0891b2', '#155e75'],
         eraPalette: ['#06b6d4', '#0891b2', '#155e75'],
         fluxState: 0,
         pulsePhase: 0,

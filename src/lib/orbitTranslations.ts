@@ -160,9 +160,9 @@ export const getFastDeathLine = (lang: Language): DialogLine =>
         : { text: "Less then 2 minutes? Even my backup battery lasts longer. Pitiful.", emotion: 'Smile' };
 
 // ─────────────────────────────────────────────────────────────
-//  DEATH – CONTEXT: ANOMALY / HELL BOSS
+//  DEATH – CONTEXT: INFERNAL BREACH / OVERLORD BOSS
 // ─────────────────────────────────────────────────────────────
-export const getAnomalyDeathLine = (lang: Language): DialogLine =>
+export const getInfernalDeathLine = (lang: Language): DialogLine =>
     lang === 'ru'
         ? { text: 'Призвать существо ради наживы и не выжить? Эффективно... для пустоты.', emotion: 'Dissapointed' }
         : { text: "Summoning entities for profit and then failing to survive? Efficient... for the void.", emotion: 'Dissapointed' };

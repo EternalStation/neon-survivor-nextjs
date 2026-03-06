@@ -3,8 +3,7 @@ import type { GameState, Player } from '../core/types';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
 export function getCdMod(state: GameState, player: Player): number {
-    const monolithBonus = ((player as any).temporalMonolithBuff ?? 0) > state.gameTime ? 0.2 : 0;
-    const totalReduction = Math.min(0.9, (player.cooldownReduction || 0) + (player.cooldownReductionBonus || 0) + monolithBonus);
+    const totalReduction = Math.min(0.9, (player.cooldownReduction || 0) + (player.cooldownReductionBonus || 0));
     return (isBuffActive(state, 'NEURAL_OVERCLOCK') ? 0.7 : 1.0) * (1 - totalReduction);
 }
 

@@ -646,8 +646,41 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // BERSERK / ENRAGED VFX (Triangle Elites / Enraged Zombies)
-        if ((e.shape === 'triangle' && e.isElite && e.eliteState === 1) || e.isEnraged) {
+        // FREEZE VFX - Solid Ice Block
+        if (e.frozen && e.frozen > 0) {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
+            ctx.fillStyle = '#bae6fd'; // Light blue ice
+            ctx.strokeStyle = '#38bdf8'; // Cyan rim
+            ctx.lineWidth = 2;
+
+            // Draw a jagged ice block around the enemy
+            ctx.beginPath();
+            const shards = 8;
+            for (let i = 0; i < shards; i++) {
+                const ang = (i / shards) * Math.PI * 2;
+                const r = e.size * (1.1 + (i % 2 === 0 ? 0.2 : 0.05));
+                const px = Math.cos(ang) * r;
+                const py = Math.sin(ang) * r;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // White highlights
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(-e.size * 0.3, -e.size * 0.3, e.size * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // BERSERK / ENRAGED VFX (Enraged Zombies)
+        if (e.isEnraged) {
             ctx.save();
             const time = state.gameTime;
             const rageColor = '#ef4444';
@@ -659,7 +692,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
             // Violent pulsing spikes
             for (let i = 0; i < 6; i++) {
-                const ang = (i * Math.PI / 3) + time * 5;
+                const ang = (i * Math.PI / 3) + time * 3.5; // Lowered spin speed
                 const len = e.size * (1.2 + Math.random() * 0.3);
                 ctx.beginPath();
                 ctx.moveTo(0, 0);

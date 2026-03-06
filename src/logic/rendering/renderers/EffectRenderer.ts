@@ -193,7 +193,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
 
         } else if (effect.type === 'storm_zone') {
             const alpha = Math.min(1, effect.duration * 3);
-            const baseR = effect.radius || 350;
+            const baseR = effect.radius || 250;
 
             ctx.save();
             ctx.translate(effect.x, effect.y);
@@ -206,6 +206,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.lineDashOffset = -(state.gameTime * 60) % 24;
             ctx.stroke();
             ctx.setLineDash([]);
+
             ctx.globalAlpha = 1;
             ctx.restore();
 
@@ -584,6 +585,67 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             }
 
             ctx.restore();
+        } else if (effect.type === 'temporal_freeze_wave') {
+            const elapsed = state.gameTime - effect.creationTime;
+            const progress = Math.min(1, elapsed / effect.duration);
+            const radius = effect.radius * progress;
+            const alpha = 1 - progress;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(34, 211, 238, ${alpha})`;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Inner glow
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(34, 211, 238, ${alpha * 0.3})`;
+            ctx.lineWidth = 20 * (1 - progress);
+            ctx.stroke();
+
+            ctx.restore();
+        } else if (effect.type === 'temporal_burst') {
+            const elapsed = state.gameTime - effect.creationTime;
+            const progress = Math.min(1, elapsed / effect.duration);
+            const radius = effect.radius * progress;
+            const alpha = 1 - progress;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+
+            // Shatter shockwave
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+            ctx.lineWidth = 8 * (1 - progress);
+            ctx.stroke();
+
+            // Shards/Splinters
+            for (let i = 0; i < 8; i++) {
+                const ang = (i / 8) * Math.PI * 2 + state.gameTime * 2;
+                const d = radius * 0.9;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(ang) * d, Math.sin(ang) * d);
+                ctx.lineTo(Math.cos(ang) * (d + 20), Math.sin(ang) * (d + 20));
+                ctx.stroke();
+            }
+
+            // Central bloom
+            if (progress < 0.5) {
+                const bloomAlpha = (1 - progress * 2) * 0.6;
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                grad.addColorStop(0, `rgba(255, 255, 255, ${bloomAlpha})`);
+                grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
         }
     });
 }
@@ -865,42 +927,95 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         ctx.save();
         // Offset (10, -10) to the top-right so the enemy model remains visible
         ctx.translate(fn.x + 10, fn.y - 10);
-        const scale = fn.isCrit ? 1.2 + Math.sin(age * Math.PI) * 0.3 : 1.0;
+
+        let style: 'normal' | 'crit' | 'alert' = 'normal';
+        const isCombatText = /^[+-]?\d+(?:\.\d+)?[a-zA-Z]?$/.test(fn.value) || fn.value === "CRIT";
+
+        if (fn.isCrit) {
+            if (isCombatText) {
+                style = 'crit';
+            } else {
+                style = 'alert';
+            }
+        }
+
+        let scale = 1.0;
+        let fontStr = "";
+        let strokeWidth = 2;
+
+        if (style === 'crit') {
+            scale = 1.2 + Math.sin(age * Math.PI) * 0.3; // Pulses
+            fontStr = "italic 900 24px 'Outfit', sans-serif";
+            strokeWidth = 3;
+        } else if (style === 'alert') {
+            // Alerts slightly pop up and stay
+            const popScale = age > 0.8 ? 1.0 + (age - 0.8) * 1.0 : 1.0;
+            scale = popScale;
+            fontStr = "900 22px 'Orbitron', 'Outfit', sans-serif";
+            strokeWidth = 3;
+        } else {
+            // Normal - smaller, crisp font
+            scale = 1.0;
+            fontStr = "800 16px 'Outfit', sans-serif";
+            strokeWidth = 2;
+        }
+
         ctx.scale(scale, scale);
-        ctx.globalAlpha = Math.min(1, age * 3);
+
+        // Alerts fade out smoothly at the end, but hang around longer at full opacity
+        if (style === 'alert') {
+            ctx.globalAlpha = Math.min(1, age * 5);
+        } else {
+            ctx.globalAlpha = Math.min(1, age * 3);
+        }
 
         // Draw background if specified
         if (fn.backgroundColor) {
-            ctx.font = fn.isCrit ? "italic 900 25px 'Outfit', sans-serif" : "900 20px 'Outfit', sans-serif";
+            ctx.font = fontStr;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const metrics = ctx.measureText(fn.value);
             const padding = 8;
             const bgWidth = metrics.width + padding * 2;
-            const bgHeight = (fn.isCrit ? 25 : 20) + padding;
+            const bgHeight = parseInt(fontStr.match(/\d+/)![0]) + padding;
 
             ctx.fillStyle = fn.backgroundColor;
             ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
         }
 
-        if (fn.isCrit) ctx.font = "italic 900 25px 'Outfit', sans-serif";
-        else ctx.font = "900 20px 'Outfit', sans-serif";
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = fontStr;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
         // Only draw stroke if no background (background text is pure color)
         if (!fn.backgroundColor) {
-            ctx.lineWidth = fn.isCrit ? 4 : 2;
+            ctx.lineWidth = strokeWidth;
             ctx.strokeStyle = '#000000';
             ctx.strokeText(fn.value, 0, 0);
         }
-        if (fn.isCrit) {
+
+        if (style === 'crit') {
             const grad = ctx.createLinearGradient(0, -12, 0, 12);
             grad.addColorStop(0, '#ef4444'); // Bright Blood Red
             grad.addColorStop(0.5, '#991b1b'); // Deep Crimson
             grad.addColorStop(1, '#450a0a'); // Dark Dried Blood
             ctx.fillStyle = grad;
-            // Removed shadowBlur on text for performance
-        } else ctx.fillStyle = fn.color;
+        } else {
+            // Normal and Alert use their inherent color! No overriding!
+            ctx.fillStyle = fn.color || '#ffffff';
+
+            if (style === 'alert') {
+                ctx.shadowColor = fn.color;
+                ctx.shadowBlur = 8;
+            }
+        }
+
         ctx.fillText(fn.value, 0, 0);
+
+        if (style === 'alert') {
+            ctx.shadowBlur = 0; // reset
+        }
+
         ctx.restore();
     });
 }

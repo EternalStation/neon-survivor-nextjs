@@ -1,4 +1,5 @@
 import type { GameState, MapPOI } from '../../core/types';
+import { getInfernalBossHp } from '../../enemies/EnemySpawnLogic';
 import type { Language } from '../../../lib/LanguageContext';
 import { getUiTranslation } from '../../../lib/uiTranslations';
 
@@ -268,6 +269,48 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
         ctx.shadowColor = '#dc2626';
         ctx.textAlign = 'center';
         ctx.fillText(t.ritual, 0, yOffset - 10);
+    } else {
+        // Show Interact Prompt and Boss HP if player is in range
+        const d = Math.hypot(state.player.x - poi.x, state.player.y - poi.y);
+        if (d < poi.radius && poi.cooldown === 0) {
+            const yOffset = 70;
+            const interactKey = state.player.currentInput?.keys ? (Object.keys(state.player.currentInput.keys).find(k => state.player.currentInput?.keys[k])) : 'E'; // Fallback
+            // We know the keybind is 'interact'
+            const keyText = 'E'; // Fixed as 'E' for default or we could get from Keybinds.ts but it's usually E
+
+            // Draw [E] Key icon
+            ctx.save();
+            ctx.translate(0, yOffset);
+
+            // Key box
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Dark background
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 2;
+            renderRoundRect(ctx, -20, -20, 40, 40, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // Key text
+            ctx.font = 'bold 24px Orbitron';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(keyText, 0, 0);
+
+            // "SUMMON" Text
+            const bossT = getUiTranslation(state.language).hud;
+            ctx.font = 'bold 16px Orbitron';
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillText(bossT.bossWord, 0, 40);
+
+            // Boss HP Preview
+            const bossHp = getInfernalBossHp(state);
+            ctx.font = 'bold 14px Orbitron';
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText(`${bossHp.toLocaleString()} HP`, 0, 60);
+
+            ctx.restore();
+        }
     }
 
     // 5. Cooldown Indicator
@@ -544,10 +587,31 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.fillText(`${t.overheat}: ${Math.ceil(poi.cooldown)}${t.sec}`, 0, 68);
     } else if (dToPlayer < poi.radius) {
         const cost = poi.turretCost || (10 * Math.pow(2, poi.turretUses || 0));
-        ctx.font = 'bold 12px Orbitron';
+
+        ctx.save();
+        ctx.translate(0, 85);
+
+        // Key box
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Dark background
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        renderRoundRect(ctx, -15, -15, 30, 30, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Key text
+        ctx.font = 'bold 18px Orbitron';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(`${t.repair} [${cost} ${t.dust}]`, 0, 68);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('E', 0, 0);
+        ctx.restore();
+
+        // Dust required
+        ctx.font = 'bold 16px Orbitron';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${t.repair} [${cost} ${t.dust}]`, 0, 115);
     }
 }
 

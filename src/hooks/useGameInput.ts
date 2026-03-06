@@ -139,8 +139,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     const ct = Math.max(0, Math.min(GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE, player.stormCircleChargeTime ?? 0));
                     if (ct > 0) {
                         const resonance = getChassisResonance(state);
-                        const strikeRadius = 350 * (1 + resonance);
-                        const laserAoe = 60 * (1 + resonance);
+                        const strikeRadius = 250 * (1 + resonance);
+                        const laserAoe = 50 * (1 + resonance);
                         const laserCount = Math.max(4, Math.round(4 + Math.max(0, ct - 1) * 8 / 9));
                         const baseDmgMult = 0.1 + Math.max(0, ct - 1) * (1.4 / 9);
                         const dmgMult = baseDmgMult * (1 + resonance);
@@ -263,6 +263,11 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             // PORTAL TRIGGER
             if (code === (keybinds.portal || '').toLowerCase()) {
                 triggerPortal();
+            }
+
+            // INTERACT TRIGGER
+            if (code === (keybinds.interact || 'keye').toLowerCase()) {
+                gameState.current.interactPressed = true;
             }
 
             // --- CHEAT CODES ---

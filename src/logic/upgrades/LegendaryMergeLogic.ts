@@ -340,6 +340,20 @@ export function performTemporalMonolithMerge(state: GameState) {
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [shieldIdx, chronoIdx] };
     syncLegendaryHex(state, mergedHex);
     state.player.temporalMonolithSouls = 0;
+
+    const usedKeys = state.player.activeSkills.map(s => s.keyBind);
+    const availableKeys = ['1', '2', '3', '4', '5'];
+    const key = availableKeys.find(k => !usedKeys.includes(k));
+    if (key) {
+        state.player.activeSkills.push({
+            type: 'TemporalMonolith',
+            baseCD: GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN,
+            lastUsed: -999999,
+            inUse: false,
+            keyBind: key,
+            icon: mergedHex.customIcon
+        });
+    }
 }
 
 export function canMergeNeutronStar(state: GameState): boolean {

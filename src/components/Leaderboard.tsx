@@ -277,7 +277,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
             const match = result.match(/Anomaly (\w+)/);
             if (match) {
                 const shape = match[1];
-                result = `Аномалия ${translateShape(shape)} (Вызвана из Ада)`;
+                result = `Адский Разлом: ${translateShape(shape)}`;
             }
         } else if (result.includes('Diamond Boss: Orbital Satellites')) {
             result = 'Уничтожен Алмазным Боссом: Орбитальные Спутники';

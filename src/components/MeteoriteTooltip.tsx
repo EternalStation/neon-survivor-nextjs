@@ -486,13 +486,11 @@ export const MeteoriteTooltip: React.FC<MeteoriteTooltipProps> = ({
                                 </div>
                             </div>
 
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', marginBottom: '2px' }}>
-                                    {language === 'ru' ? 'ВЕРСИЯ' : 'VERSION'}
-                                </div>
-                                <div style={{ fontSize: '18px', fontWeight: 950, color: '#fff', lineHeight: 1, textShadow: `0 0 20px ${rarityColor}44` }}>
+                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'baseline', gap: '4px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 950, letterSpacing: '1px' }}>V</span>
+                                <span style={{ fontSize: '18px', fontWeight: 950, color: '#fff', lineHeight: 1, textShadow: `0 0 20px ${rarityColor}44` }}>
                                     {(meteorite.version || 1.0).toFixed(1)}
-                                </div>
+                                </span>
                             </div>
                         </div>
                     </div>

@@ -61,28 +61,29 @@ export function updateTurrets(state: GameState, step: number) {
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
                 turret.turretCost = cost; // Store for renderer
 
-                if (state.player.dust >= cost) {
-                    // Increase repair progress
-                    turret.activationProgress += REPAIR_SPEED * step;
-
-                    if (turret.activationProgress >= 100) {
+                if (state.interactPressed) {
+                    if (state.player.dust >= cost) {
                         // Dedust Cost & Activate
                         state.player.dust -= cost;
                         turret.active = true;
                         turret.activeDuration = 0;
-                        turret.activationProgress = 0;
+                        turret.activationProgress = 100; // Set to 100 for visual consistency
                         turret.turretUses = uses + 1;
                         playSfx('power-up');
                         spawnFloatingNumber(state, turret.x, turret.y, "TURRET ONLINE", '#F59E0B', true);
                         spawnParticles(state, turret.x, turret.y, '#F59E0B', 20);
+                    } else {
+                        // Error sound & text (Throttle to prevent spam)
+                        if (state.gameTime - (turret.lastErrorTime || 0) > 1.0) {
+                            playSfx('power-down');
+                            const errorMsg = state.language === 'ru' ? "НЕДОСТАТОЧНО ПЫЛИ" : "NOT ENOUGH DUST";
+                            spawnFloatingNumber(state, turret.x, turret.y - 20, errorMsg, '#ef4444', true);
+                            turret.lastErrorTime = state.gameTime;
+                        }
                     }
                 }
             } else {
-                // Decay progress if player leaves
-                if (turret.activationProgress > 0) {
-                    turret.activationProgress -= REPAIR_SPEED * step * 2;
-                    if (turret.activationProgress < 0) turret.activationProgress = 0;
-                }
+                turret.activationProgress = 0;
             }
         }
 

@@ -51,7 +51,7 @@ export function updateSingleEnemy(
                     p.damageTaken += dmg;
                     p.lastHitDamage = dmg;
                     if (p.curHp <= 0) {
-                        p.deathCause = "Burn damage from Hell Boss";
+                        p.deathCause = "Infernal Combustion (Overlord Boss)";
                     }
                     spawnFloatingNumber(state, p.x, p.y, `-${Math.round(dmg)}`, '#ef4444', false);
                 }

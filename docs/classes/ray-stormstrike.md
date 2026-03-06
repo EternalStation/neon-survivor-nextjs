@@ -21,11 +21,11 @@
 | Damage per 1 sec charge | 10% from `player.dmg` |
 | Damage per 10 sec charge | 150% of `player.dmg` (linear) |
 | Laser Hit Delay | 0.25 sec (visual marker) |
-| Minimum ring radius | 50px from player |
-| Maximum ring radius | 350px (scaled by resonance) |
-| AOE of each laser | 60px (scaled by resonance) |
+| Minimum ring radius | 50px (scaled by resonance) |
+| Maximum ring radius | 250px (scaled by resonance) |
+| AOE of each laser | 50px (scaled by resonance) |
 
-**Laser positions:** random angle (0–360°), random distance [50px, strikeRadius].
+**Laser positions:** random angle (0–360°), random distance [minStrikeRadius, strikeRadius].
 
 **AoE:** All enemies within the laser's radius take full damage at the same time.
 
@@ -62,7 +62,8 @@ The actual values ​​of damage and the number of lasers are tied to the actua
 | Number of lasers | `max(4, round(4 + (t−1) × 8/9))` | |
 | Laser Damage | `(0.1 + (t−1) × 1.4/9) × player.dmg` | |
 | Speed ​​| `−20% + (t/10) × 40%` | |
-| Ring radius | `350 × (1 + resonance × 0.25)` | |
-| AOE laser | `60 × (1 + resonance × 0.25)` | |
+| Ring radius (Max) | `250 × (1 + resonance)` | |
+| Ring radius (Min) | `50 × (1 + resonance)` | |
+| AOE laser | `50 × (1 + resonance)` | |
 
-`t` — charge seconds (0–10), `resonance` — chassis resonance from meteorites (coefficient 0.25 = slow scaling).
+`t` — charge seconds (0–10), `resonance` — chassis resonance from meteorites.

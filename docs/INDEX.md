@@ -59,6 +59,7 @@ Source of truth: source code. Comments are not used in the code.
 | File | Description |
 |-----------|---------|
 | [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | All debug codes: resources, bosses, improvements, time, turrets, events. |
+| [mechanics/LeaderboardRounding.md](mechanics/LeaderboardRounding.md) | Leaderboard Rounding: Consistent integer and 2-decimal rounding for submission data. |
 
 ---
 

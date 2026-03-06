@@ -69,34 +69,37 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     const menuItems: { label: string; key: keyof Keybinds }[] = [
         { label: t.statsMenu, key: 'stats' },
         { label: t.activatePortal, key: 'portal' },
+        { label: t.interact, key: 'interact' },
         { label: t.dash, key: 'dash' },
+        { label: t.selectUpgrade, key: 'selectUpgrade' },
     ];
 
     const skillItems: { label: string; key: keyof Keybinds }[] = [
-        { label: t.skill1, key: 'skill1' },
-        { label: t.skill2, key: 'skill2' },
-        { label: t.skill3, key: 'skill3' },
-        { label: t.skill4, key: 'skill4' },
-        { label: t.skill5, key: 'skill5' },
-        { label: t.skill6, key: 'skill6' },
+        { label: t.skill1, key: 'classAbility' },
+        { label: t.skill2, key: 'skill1' },
+        { label: t.skill3, key: 'skill2' },
+        { label: t.skill4, key: 'skill3' },
+        { label: t.skill5, key: 'skill4' },
+        { label: t.skill6, key: 'skill5' },
+        { label: 'SKILL 6', key: 'skill6' }, // Fallback for the last one if needed, or I can add it to translations
     ];
 
     const renderBindItem = (item: { label: string; key: keyof Keybinds }) => (
-        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
+        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>{item.label}</span>
             <button
                 onClick={() => setListening(item.key)}
                 className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
                 style={{
-                    padding: '6px 10px',
+                    padding: '3px 6px',
                     background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
                     border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
                     color: '#fff',
                     borderRadius: 4,
                     cursor: 'pointer',
-                    minWidth: 80,
+                    minWidth: 65,
                     textAlign: 'center',
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: 900,
                     transition: 'all 0.2s',
                     boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
@@ -109,26 +112,26 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     );
 
     return (
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 15 }}>
-            <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid #334155', paddingBottom: 10, marginBottom: 10 }}>{t.title}</h3>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <h3 style={{ color: '#fff', fontSize: 13, borderBottom: '1px solid #334155', paddingBottom: 4, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 4 }}>{t.title}</h3>
 
-            <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
+            <div style={{ display: 'flex', gap: 20, paddingRight: 5 }}>
                 {/* COLUMN 1: MOVEMENT */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#22d3ee', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <h4 style={{ color: '#22d3ee', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
                         {Object.entries(RESERVED_KEYS).map(([label, display]) => (
                             <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#64748b', fontSize: 13, fontWeight: 700, letterSpacing: '0.2px' }}>{label}</span>
+                                <span style={{ color: '#64748b', fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{label}</span>
                                 <div style={{
-                                    padding: '6px 10px',
+                                    padding: '3px 6px',
                                     background: 'rgba(30, 41, 59, 0.5)',
                                     border: '1px solid rgba(51, 65, 85, 0.2)',
                                     color: '#64748b',
                                     borderRadius: 4,
-                                    minWidth: 80,
+                                    minWidth: 65,
                                     textAlign: 'center',
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontWeight: 900,
                                     opacity: 0.6
                                 }}>
@@ -139,42 +142,38 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                     </div>
                 </div>
 
-                <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.3)', alignSelf: 'stretch' }} />
+                <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.2)', alignSelf: 'stretch' }} />
 
-                {/* COLUMN 2: SKILLS 1-3 */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.skills}</h4>
-                        {skillItems.slice(0, 3).map(item => renderBindItem(item))}
+                {/* COLUMN 2: SKILLS 1-4 */}
+                <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <h4 style={{ color: '#ef4444', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.skills}</h4>
+                        {skillItems.slice(0, 4).map(item => renderBindItem(item))}
                     </div>
                 </div>
 
-                <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.3)', alignSelf: 'stretch' }} />
+                <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.2)', alignSelf: 'stretch' }} />
 
-                {/* COLUMN 3: SKILLS 4-6 */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 15 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <h4 style={{ color: '#ef4444', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>&nbsp;</h4>
-                        {skillItems.slice(3).map(item => renderBindItem(item))}
+                {/* COLUMN 3: SKILLS 5-7 */}
+                <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <h4 style={{ color: '#ef4444', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>&nbsp;</h4>
+                        {skillItems.slice(4).map(item => renderBindItem(item))}
                     </div>
                 </div>
             </div>
 
-            <div style={{ height: 1, background: 'rgba(51, 65, 85, 0.2)', margin: '0px 0' }} />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ color: '#6366f1', fontSize: 11, margin: '0 0 5px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.system}</h4>
-                <div style={{ display: 'flex', gap: 30, paddingRight: 5 }}>
-                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[0])}</div>
-                    <div style={{ width: 1, alignSelf: 'stretch' }} />
-                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[1])}</div>
-                    <div style={{ width: 1, alignSelf: 'stretch' }} />
-                    <div style={{ flex: 1 }}>{renderBindItem(menuItems[2])}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4, padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: 4 }}>
+                <h4 style={{ color: '#6366f1', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.system}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px 20px' }}>
+                    {menuItems.map(item => (
+                        <div key={item.key}>{renderBindItem(item)}</div>
+                    ))}
                 </div>
             </div>
 
-            <div style={{ height: 10 }}>
-                {conflict && <p style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, textAlign: 'center', margin: 0, letterSpacing: 1 }}>{t.keyAssigned}</p>}
+            <div style={{ height: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {conflict && <p style={{ color: '#ef4444', fontSize: 9, fontWeight: 900, margin: 0, letterSpacing: 1 }}>{t.keyAssigned}</p>}
             </div>
             <style>{`
                 .listening-pulse {

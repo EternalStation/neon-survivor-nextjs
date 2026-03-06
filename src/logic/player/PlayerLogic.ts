@@ -66,12 +66,40 @@ export function updatePlayer(
     // 3. Combat & Aiming (Radiation Core, contact damage, death logic)
     handlePlayerCombat(state, mouseOffset, onEvent, player, triggerDamageTaken, triggerDeath);
 
-    // Temporal Monolith Buff
+    // --- TEMPORAL MONOLITH: COOLDOWN RECOVERY SPEED ---
+    const isMonolithActive = ((player as any).temporalMonolithBuff ?? 0) > now;
     if (player.curHp < hpAtStart) {
         const hasMonolith = state.moduleSockets.hexagons.some(h => h?.type === 'TemporalMonolith');
         if (hasMonolith) {
             (player as any).temporalMonolithBuff = now + 1;
         }
+    }
+
+    if (isMonolithActive) {
+        // 20% Recovery Speed Increase = 0.2s of extra progress per 1.0s of real time
+        const bonus = (1 / 60) * 0.2;
+
+        // 1. Manual Active Skills
+        if (player.activeSkills) {
+            player.activeSkills.forEach((s: import('../core/types').ActiveSkill) => {
+                s.lastUsed -= bonus;
+            });
+        }
+
+        // 2. Class Skills
+        if (player.lastBlackholeUse) player.lastBlackholeUse -= bonus;
+        if (player.lastHiveMotherSkill) player.lastHiveMotherSkill -= bonus;
+        if (player.lastVortexActivation) player.lastVortexActivation -= bonus;
+        if (player.orbitalVortexCooldownEnd) player.orbitalVortexCooldownEnd -= bonus;
+        if (player.sandboxCooldownStart) player.sandboxCooldownStart -= bonus;
+        if (player.lastStormStrike) player.lastStormStrike -= bonus;
+        if (player.stormCircleCooldownEnd) player.stormCircleCooldownEnd -= bonus;
+        if (player.stormCircleChargeTime !== undefined) player.stormCircleChargeTime += bonus;
+
+        // 3. Passive Tech Skills
+        if (player.lastKineticShockwave) player.lastKineticShockwave -= bonus;
+        if (player.lastDash) player.lastDash -= bonus;
+        if (player.lastDeathMark) player.lastDeathMark -= bonus;
     }
 
     // Attach trigger function for other modules (Projectile/UniqueEnemy)

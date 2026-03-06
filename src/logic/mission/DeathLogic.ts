@@ -17,21 +17,21 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         handleVoidBurrowerDeath(state, e, onEvent);
     }
 
-    // --- PHALANX DRONE DEATH TRANSFER ---
+
     if (e.isPhalanxDrone && e.soulLinkHostId) {
         const host = state.enemies.find(h => h.id === e.soulLinkHostId);
         if (host && !host.dead) {
-            // Give a massive burst to boss if drone is somehow killed
-            // Drones have 1,000,000 HP, so 1% is 10k. 
-            // Let's just deal a flat significant % or a standard amount.
-            const deathPenalty = host.maxHp * 0.05; // 5% of Boss Max HP as penalty
+
+
+
+            const deathPenalty = host.maxHp * 0.05;
             host.hp -= deathPenalty;
             spawnFloatingNumber(state, host.x, host.y, `PHALANX BREACH -${Math.round(deathPenalty)}`, '#ef4444', true);
             playSfx('rare-kill');
         }
     }
 
-    if (e.temporalMonolithExplosive && e.hp <= 0 && !e.boss) {
+    if (e.temporalMonolithExplosive && e.hp <= 0) {
         const mult = getHexMultiplier(state, 'TemporalMonolith');
         const aoeDmg = e.maxHp * 0.25 * mult;
         const radius = 200 * mult;
@@ -65,44 +65,44 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
     e.dead = true; e.hp = 0;
 
-    // Soul Reward Multipliers (Kill Count)
+
     let baseSouls = 1;
     if (e.soulRewardMult !== undefined) {
         baseSouls = e.soulRewardMult;
     } else if (e.isElite) {
-        baseSouls = e.shape === 'pentagon' ? 5 : 10; // 5 for pentagons, 10 for others (10-merge)
+        baseSouls = e.shape === 'pentagon' ? 5 : 10;
     } else if (e.shape === 'worm' && e.wormRole === 'head') {
-        baseSouls = 50; // Big reward for head
+        baseSouls = 50;
     }
 
-    // Apply Eco Buff (Only affects Legendary scaling, not displayed kill count)
+
     const soulCount = baseSouls * state.xpSoulBuffMult;
 
-    // SOUL-SHATTER CORE: Execute multiplier (Static 5x)
+
     let finalSoulCount = soulCount;
     const shatterLvl = getHexLevel(state, 'SoulShatterCore');
     if (shatterLvl > 0 && e.isExecuted) {
         finalSoulCount = soulCount * 5;
     }
 
-    state.killCount += soulCount;
-    state.score += soulCount;
-    recordLegendarySouls(state, soulCount);
+    state.killCount += Math.ceil(soulCount);
+    state.score += Math.ceil(soulCount);
+    recordLegendarySouls(state, Math.ceil(soulCount));
 
-    // --- AIGIS PROGRESSION: Increase Vortex Strength on Kill ---
+
     if (state.player.playerClass === 'aigis') {
         state.player.vortexStrength = (state.player.vortexStrength || 1.0) + (baseSouls * 0.0003);
     }
 
-    // --- GRAVITATIONAL HARVEST: Duration Extension ---
+
     const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
     if (harvestLvl > 0) {
-        // Check if killed within an epicenter
+
         const epi = state.areaEffects.find(ae => ae.type === 'epicenter' && Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius);
         if (epi) {
-            const extension = 0.1; // 0.1 seconds per kill
+            const extension = 0.1;
             epi.duration += extension;
-            // Also extend player's skill active state if possible
+
             const skill = state.player.activeSkills.find(s => s.type === 'GravitationalHarvest');
             if (skill && skill.duration !== undefined) {
                 skill.duration += extension;
@@ -110,12 +110,12 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
-    // Add to SoulShatter pool
+
     if (shatterLvl > 0) {
         state.player.soulShatterSouls = (state.player.soulShatterSouls || 0) + finalSoulCount;
     }
 
-    // Track unbuffed kills for HUD
+
     if (state.rawKillCount === undefined) {
         state.rawKillCount = 0;
     }
@@ -123,11 +123,11 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
 
 
-    // --- Void Flux Currency Drops ---
+
     let fluxDrop = 0;
     const minutes = state.gameTime / 60;
 
-    // --- XENO-ALCHEMIST: Refinery Bonus (300% / 4x) ---
+
     let refineryBonus = 1.0;
     const alchemyHex = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
     if (alchemyHex) {
@@ -139,16 +139,16 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
     if (e.boss) {
-        // Optimized: Scale with time to match increasing reroll costs
-        // Base: 100 | Time: +15 per min | Random: +/- 15
+
+
         const timeScaling = Math.floor(minutes * 15);
-        const variance = Math.floor(Math.random() * 31) - 15; // -15 to +15
+        const variance = Math.floor(Math.random() * 31) - 15;
         fluxDrop = Math.max(50, 100 + timeScaling + variance);
     } else if (e.isElite) {
-        // Optimized: Scale with time
-        // Base: 25 | Time: +5.0 per min | Random: +/- 4
+
+
         const timeScaling = Math.floor(minutes * 5.0);
-        const variance = Math.floor(Math.random() * 9) - 4; // -4 to +4
+        const variance = Math.floor(Math.random() * 9) - 4;
         fluxDrop = Math.max(15, 25 + timeScaling + variance);
     }
 
@@ -157,13 +157,13 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         spawnVoidFlux(state, e.x, e.y, fluxDrop);
     }
 
-    // --- 3% Dust Drop ---
+
     if (Math.random() < 0.03) {
         const dustAmount = (e.isElite ? 5 : 1) * refineryBonus;
         spawnDustPile(state, e.x, e.y, dustAmount);
     }
 
-    // --- EcoXP Lvl 2: Dust Extraction ---
+
     const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP' || h?.type === 'XenoAlchemist' || h?.type === 'NeuralSingularity');
     if (ecoXp && ecoXp.level >= 2) {
         const kl = ecoXp.killsAtLevel?.[2] ?? ecoXp.killsAtAcquisition;
@@ -182,25 +182,25 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
-    // --- EcoXP Lvl 3: Flux Extraction ---
+
     if (ecoXp && ecoXp.level >= 3) {
         const kl = ecoXp.killsAtLevel?.[3] ?? ecoXp.killsAtAcquisition;
         const killsSinceLvl3 = state.killCount - kl;
         const prevKillsSinceLvl3 = killsSinceLvl3 - soulCount;
 
-        const currentThresholds = Math.floor(killsSinceLvl3 / 10);
-        const prevThresholds = Math.floor(prevKillsSinceLvl3 / 10);
+        const currentThresholds = Math.floor(killsSinceLvl3 / 100);
+        const prevThresholds = Math.floor(prevKillsSinceLvl3 / 100);
 
         if (currentThresholds > prevThresholds && killsSinceLvl3 > 0) {
             const multiplier = getHexMultiplier(state, ecoXp.type);
-            const fluxAmount = (currentThresholds - prevThresholds) * 5 * multiplier; // 10 kills * 0.5 = 5 Flux
+            const fluxAmount = (currentThresholds - prevThresholds) * 5 * multiplier;
             state.player.isotopes += fluxAmount;
             playSfx('socket-place');
             spawnFloatingNumber(state, e.x, e.y, `+${fluxAmount.toFixed(0)} FLUX`, '#a855f7', false);
         }
     }
 
-    // --- CLASS MODIFIER: Hive-Mother Nanite Spread ---
+
     if (e.isInfected) {
         const resonance = getChassisResonance(state);
         const multiplier = 1 + resonance;
@@ -211,7 +211,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         if (Math.random() < jumpChance) jumpCount++;
 
         if (jumpCount > 0) {
-            // Find multiple nearest enemies
+
             const candidates = state.enemies
                 .filter(other => !other.dead && other.id !== e.id && !other.isFriendly)
                 .map(other => ({
@@ -225,16 +225,16 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
             targets.forEach(t => {
                 const other = t.enemy;
-                // Spawn Nanite Projectile
+
                 state.bullets.push({
                     id: Math.random(),
                     x: e.x,
                     y: e.y,
-                    vx: (Math.random() - 0.5) * 2, // Initial Jitter
+                    vx: (Math.random() - 0.5) * 2,
                     vy: (Math.random() - 0.5) * 2,
-                    dmg: e.infectionDmg || 5, // Carry over damage (already adjusted to per-tick in ProjectileLogic)
+                    dmg: e.infectionDmg || 5,
                     pierce: 1,
-                    life: 120, // 2 Seconds to find target
+                    life: 120,
                     isEnemy: false,
                     hits: new Set([e.id]),
                     color: '#4ade80',
@@ -246,55 +246,55 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
-    // Tutorial Force Drop: If waiting for first meteorite and none exist and time > 60s
+
     if (state.tutorial.isActive &&
         state.tutorial.currentStep === TutorialStep.COLLECT_METEORITE &&
         state.gameTime >= 60 &&
         state.meteorites.length === 0 &&
-        state.inventory.every(slot => slot === null)) { // Strict check: no meteorites at all
+        state.inventory.every(slot => slot === null)) {
 
-        const m = createMeteorite(state, 'anomalous', e.x, e.y); // Force drop
+        const m = createMeteorite(state, 'anomalous', e.x, e.y);
         state.meteorites.push(m);
-        // Don't return, allow normal drops too (though unlikely due to probability)
+
     }
 
-    // Meteorite Drop Check
+
     trySpawnMeteorite(state, e.x, e.y);
 
-    // Blueprint Drop Check (15% from Elites)
+
     if (e.isElite) {
         trySpawnBlueprint(state, e.x, e.y);
     }
 
     if (e.boss && state.extractionStatus === 'none') {
-        state.bossKills++; // Track boss kills correctly
+        state.bossKills++;
 
-        // Restore Souls if Circle Boss Lvl 4 dies
+
         if (e.shape === 'circle' && e.isLevel4) {
             state.player.soulDrainMult = 1.0;
         }
 
-        // --- ANOMALY BOSS DEATH LOGIC ---
+
         if (e.isAnomaly) {
-            // Find the POI associated with this boss (it should be inactive).
+
             const anomalyPoi = state.pois.find(p => p.type === 'anomaly' && !p.active);
 
             if (anomalyPoi) {
-                // Trigger relocation now
+
                 import('./MapLogic').then(({ relocatePOI }) => {
                     relocatePOI(anomalyPoi);
-                    // Override respawn timer to 30s as requested
+
                     anomalyPoi.respawnTimer = 30;
                     spawnFloatingNumber(state, anomalyPoi.x, anomalyPoi.y, "RITUAL CLEARED", '#4ade80', true);
                 });
             }
 
-            // Anomaly reward removed per user request (moved to Snitch)
+
         }
 
-        // UNLOCK PROGRESSION: First Boss Drops Dimensional Gate
+
         if (state.bossKills === 1 && !state.portalsUnlocked) {
-            // Check if we already have it (safety check)
+
             const hasInv = state.inventory.some(i => i && ((i as any).blueprintType === 'DIMENSIONAL_GATE'));
             const hasBp = state.blueprints.some(b => b && b.type === 'DIMENSIONAL_GATE');
 
@@ -306,7 +306,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             }
         }
 
-        // Boss gives normal XP
+
         const xpBase = state.player.xp_per_kill.base;
         const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
         const hexPct = calculateLegendaryBonus(state, 'xp_pct_per_kill');
@@ -324,21 +324,21 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             playSfx('rare-kill');
             state.rareSpawnActive = false;
             state.snitchCaught++;
-            state.rareRewardActive = true; // Added rarity boost flag
+            state.rareRewardActive = true;
             if (onEvent) onEvent('snitch_kill');
         } else {
-            // Consolidated XP Logic (Matches PlayerLogic/ProjectileLogic advanced formula)
+
             let xpBase = state.player.xp_per_kill.base;
 
             if (e.xpRewardMult !== undefined) {
                 xpBase *= e.xpRewardMult;
             } else if (e.isElite) {
-                xpBase *= 14; // Elite = 14x XP
+                xpBase *= 14;
             }
 
             xpBase *= state.xpSoulBuffMult;
 
-            // --- POI EFFECTS: Overclock XP Bonus ---
+
             let overclockActive = false;
             state.pois.forEach(poi => {
                 if (poi.type === 'overclock' && poi.active) {
@@ -350,10 +350,10 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             });
 
             if (overclockActive) {
-                xpBase *= 2.0; // Double XP in Overclock zone
+                xpBase *= 2.0;
             }
 
-            // Legendary XP Bonuses
+
             const hexFlat = calculateLegendaryBonus(state, 'xp_per_kill');
             const hexPct = calculateLegendaryBonus(state, 'xp_pct_per_kill');
 
@@ -367,7 +367,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
-    // Necromancy (Friendly): ComLife Lvl 4+ (10% Chance)
+
     let comLifeLevel = 0;
     if (state.moduleSockets && state.moduleSockets.hexagons) {
         const hex = state.moduleSockets.hexagons.find(h => h && (h.type === 'ComLife'));
@@ -377,13 +377,13 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
     if (!e.isZombie && !e.isGhost && !e.boss && !e.isRare) {
-        // 1. Check for Friendly Zombie (ComLife)
+
         if (comLifeLevel >= 4) {
-            if (Math.random() < 0.10) { // 10% Chance
+            if (Math.random() < 0.10) {
                 const speedBoost = 1.0;
                 const crimsonRiseDelay = 5000;
                 const now = state.gameTime * 1000;
-                const zombieSpd = 6.5; // Scaled to player speed
+                const zombieSpd = 6.5;
                 const zombie: Enemy = {
                     id: Math.random(),
                     type: e.type,
@@ -401,10 +401,10 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     shellStage: 0,
                     zombieTimer: now + crimsonRiseDelay,
                     zombieSpd: zombieSpd,
-                    palette: ['#4ade80', '#22c55e', '#166534'], // Undead Green
+                    palette: ['#4ade80', '#22c55e', '#166534'],
                     pulsePhase: 0,
                     rotationPhase: 0,
-                    isZombie: true, // Friendly
+                    isZombie: true,
                     zombieState: 'dead',
                     vx: 0,
                     vy: 0,
@@ -416,19 +416,19 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     fluxState: 0
                 } as any;
                 state.enemies.push(zombie);
-                // playSfx('zombie-consume'); // Removed per user request (no spawn sound)
+
             }
         }
 
-        // 2. Check for Hostile Ghost (Ghost Horde Event)
-        // MUST happen independently of friendlies
+
+
         if (state.activeEvent?.type === 'necrotic_surge') {
-            // Schedule GHOST spawn
+
             if (!state.activeEvent.pendingZombieSpawns) {
                 state.activeEvent.pendingZombieSpawns = [];
             }
-            const riseDelay = 3000; // 3s delay
-            const speedBoost = 1.1; // 10% faster
+            const riseDelay = 3000;
+            const speedBoost = 1.1;
 
             state.activeEvent.pendingZombieSpawns.push({
                 x: e.x,
@@ -442,7 +442,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
-    // Level Up Loop
+
     if (state.extractionStatus === 'none') {
         while (state.player.xp.current >= state.player.xp.needed) {
             state.player.xp.current -= state.player.xp.needed;

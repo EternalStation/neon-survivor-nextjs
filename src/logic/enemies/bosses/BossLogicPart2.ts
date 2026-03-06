@@ -235,7 +235,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                         if (state.player.curHp <= 0) {
                             state.player.curHp = 0;
                             state.gameOver = true;
-                            state.player.deathCause = "Vaporized by Diamond Boss: Orbital Satellites";
+                            state.player.deathCause = "OVERLORD STRIKE: Satellite Orbital Beam";
                             if (onEvent) onEvent('game_over');
                         }
                     }
@@ -537,7 +537,7 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
                         if (state.player.curHp <= 0) {
                             state.player.curHp = 0;
                             state.gameOver = true;
-                            state.player.deathCause = "Drained by Pentagon Boss: Parasitic Link";
+                            state.player.deathCause = "OVERLORD SIPHON: Parasitic Soul Link";
                             if (onEvent) onEvent('game_over');
                         }
                     }

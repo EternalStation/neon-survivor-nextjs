@@ -5,7 +5,6 @@ import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { getArenaIndex } from '../logic/mission/MapLogic';
 import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 
-// Current game version - update this when you release new patches
 export const CURRENT_PATCH_VERSION = '1.0.3';
 
 export interface RunSubmissionData {
@@ -40,15 +39,11 @@ export interface RunSubmissionData {
         speed: number;
     };
     blueprints: any[];
-    timezoneOffset: number; // Player's timezone offset in minutes (e.g., -60 for UTC+1)
+    timezoneOffset: number;
 }
 
 
-/**
- * Prepares game state data for submission to the leaderboard
- */
 export function prepareRunData(gameState: GameState): RunSubmissionData {
-    // Extract legendary hexes with their levels and acquisition info
     const legendaryHexes = gameState.moduleSockets.hexagons
         .filter(hex => hex !== null)
         .map(hex => ({
@@ -56,17 +51,19 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
             name: hex!.name,
             type: hex!.type,
             level: hex!.level,
-            killsAtAcquisition: hex!.killsAtAcquisition,
-            timeAtAcquisition: hex!.timeAtAcquisition,
-            killsAtLevel: hex!.killsAtLevel || {},
-            timeAtLevel: hex!.timeAtLevel || {}
+            killsAtAcquisition: Math.ceil(hex!.killsAtAcquisition),
+            timeAtAcquisition: Number((hex!.timeAtAcquisition || 0).toFixed(2)),
+            killsAtLevel: Object.fromEntries(
+                Object.entries(hex!.killsAtLevel || {}).map(([lvl, kills]) => [lvl, Math.ceil(kills as number)])
+            ),
+            timeAtLevel: Object.fromEntries(
+                Object.entries(hex!.timeAtLevel || {}).map(([lvl, time]) => [lvl, Number((time as number).toFixed(2))])
+            )
         }));
 
-    // Create level-up order array from killsAtLevel data
     const hexLevelupOrder: Array<{ hexId: string; level: number; killCount: number; gameTime?: number }> = [];
 
     legendaryHexes.forEach(hex => {
-        // Add initial acquisition
         hexLevelupOrder.push({
             hexId: hex.id,
             level: 1,
@@ -74,11 +71,10 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
             gameTime: hex.timeAtAcquisition
         });
 
-        // Add each level up
         if (hex.killsAtLevel) {
             Object.entries(hex.killsAtLevel).forEach(([level, kills]) => {
                 const lvl = parseInt(level);
-                if (lvl === 1) return; // Skip Level 1 to avoid duplication with acquisition
+                if (lvl === 1) return;
 
                 const time = hex.timeAtLevel?.[lvl];
                 hexLevelupOrder.push({
@@ -91,13 +87,10 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         }
     });
 
-    // Sort by kill count to get chronological order
     hexLevelupOrder.sort((a, b) => a.killCount - b.killCount);
 
-    // Calculate final score (you can adjust this formula)
     const score = calculateScore(gameState);
 
-    // Calculate radar counts
     const radarCounts = { DPS: 0, ARM: 0, EXP: 0, HP: 0, REG: 0 };
     gameState.player.upgradesCollected.forEach(u => {
         const id = u.type.id;
@@ -111,8 +104,8 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
     return {
         score: safeIntString(score),
         survivalTime: Math.floor(gameState.gameTime),
-        kills: gameState.killCount,
-        bossKills: gameState.bossKills,
+        kills: Math.ceil(gameState.killCount),
+        bossKills: Math.ceil(gameState.bossKills),
         classUsed: gameState.player.playerClass || 'unknown',
         patchVersion: CURRENT_PATCH_VERSION,
         damageDealt: safeIntString(gameState.player.damageDealt),
@@ -123,14 +116,16 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         damageBlockedProjectile: safeIntString(gameState.player.damageBlockedByProjectileReduc),
         damageBlockedShield: safeIntString(gameState.player.damageBlockedByShield || 0),
         radarCounts,
-        meteoritesCollected: gameState.meteoritesPickedUp,
-        portalsUsed: gameState.portalsUsed,
-        arenaTimes: gameState.timeInArena,
+        meteoritesCollected: Math.ceil(gameState.meteoritesPickedUp),
+        portalsUsed: Math.ceil(gameState.portalsUsed),
+        arenaTimes: Object.fromEntries(
+            Object.entries(gameState.timeInArena).map(([id, time]) => [id, Number(time.toFixed(2))])
+        ),
         legendaryHexes,
         hexLevelupOrder,
-        snitchesCaught: gameState.snitchCaught || 0,
+        snitchesCaught: Math.ceil(gameState.snitchCaught || 0),
         deathCause: gameState.player.deathCause || 'Unknown',
-        timezoneOffset: new Date().getTimezoneOffset(), // Capture player's timezone offset in minutes
+        timezoneOffset: new Date().getTimezoneOffset(),
         blueprints: (() => {
             const grouped: Record<string, { name: string; type: string; count: number }> = {};
             const allBps = [
@@ -187,12 +182,8 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
 }
 
 
-/**
- * Calculate final score based on game performance
- * You can adjust this formula to weight different factors
- */
-const BIGINT_MAX = 9_007_199_254_740_991; // Number.MAX_SAFE_INTEGER
-const NUMERIC_MAX = '9999999999999999999999999999999999999999'; // Support massive numbers
+const BIGINT_MAX = 9_007_199_254_740_991;
+const NUMERIC_MAX = '9999999999999999999999999999999999999999';
 
 function calculateScore(gameState: GameState): number {
     const baseScore = (gameState.killCount || 0) * 100;
@@ -208,29 +199,19 @@ function calculateScore(gameState: GameState): number {
         return 0;
     }
 
-    return Math.floor(total);
+    return Math.ceil(total);
 }
 
-/**
- * Convert a number to a clean integer string without scientific notation.
- * Uses toFixed(0) to prevent scientific notation for very large numbers.
- */
 function safeIntString(num: number): string {
     if (isNaN(num) || num === null) return '0';
-    // Use toFixed(0) to avoid scientific notation like 1.2e+30
-    // BigInt constructor handles strings from toFixed correctly
     try {
-        const str = num.toFixed(0);
-        return str;
+        const rounded = Math.ceil(num);
+        return rounded.toFixed(0);
     } catch {
         return '0';
     }
 }
 
-/**
- * Submit a run to the leaderboard
- * Returns the run ID and rank if successful
- */
 export async function submitRunToLeaderboard(gameState: GameState): Promise<{
     success: boolean;
     runId?: number;
@@ -238,7 +219,6 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
     error?: string;
 }> {
     try {
-        // Check if user is authenticated
         const token = api.getToken();
         if (!token) {
             console.warn('[Leaderboard] No token found, skipping submission');
@@ -248,7 +228,6 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
             };
         }
 
-        // Prepare run data
         const runData = prepareRunData(gameState);
         console.log('[Leaderboard] Submitting run data:', {
             score: runData.score,
@@ -257,7 +236,6 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
             ver: runData.patchVersion
         });
 
-        // Submit to API
         const response = await api.submitRun(runData);
 
         if (!response || !response.run) {

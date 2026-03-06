@@ -93,7 +93,7 @@ export function castSkill(state: GameState, skillIndex: number) {
         const radius = 400 * mult;
         const duration = 4 * mult;
         state.enemies.forEach(e => {
-            if (!e.dead && !e.boss && !e.isFriendly) {
+            if (!e.dead && !e.isFriendly) {
                 const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
                 if (dist <= radius) {
                     e.frozen = duration;
@@ -104,7 +104,7 @@ export function castSkill(state: GameState, skillIndex: number) {
 
         state.areaEffects.push({
             id: Math.random(),
-            type: 'temporal_burst',
+            type: 'temporal_freeze_wave',
             x: state.player.x,
             y: state.player.y,
             radius,

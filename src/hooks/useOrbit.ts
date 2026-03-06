@@ -15,7 +15,7 @@ import {
     getGenericDeathSnarks,
     getProjectileDeathLine,
     getFastDeathLine,
-    getAnomalyDeathLine,
+    getInfernalDeathLine,
     getClassStreak3Variants,
     getClassStreak4Variants,
     getWallWarnVariants,
@@ -434,8 +434,8 @@ export const useOrbit = (
                 contextSnarks.push(getFastDeathLine(lang));
             }
 
-            if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell') || deathCause.toLowerCase().includes('abomination')) {
-                contextSnarks.push(getAnomalyDeathLine(lang));
+            if (deathCause.toLowerCase().includes('anomaly') || deathCause.toLowerCase().includes('hell') || deathCause.toLowerCase().includes('abomination') || deathCause.toLowerCase().includes('overlord') || deathCause.toLowerCase().includes('infernal')) {
+                contextSnarks.push(getInfernalDeathLine(lang));
             }
 
             // Use context-specific if available, otherwise pick from generic pool

@@ -11,6 +11,7 @@ import { getCdMod, getRemainingCD, getCDProgress, isOnCooldown } from '../../log
 import { GAME_CONFIG } from '../../logic/core/GameConfig';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
+import { getKeybinds, getKeyDisplay } from '../../logic/utils/Keybinds';
 
 
 interface PlayerStatusProps {
@@ -22,6 +23,13 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
     const { player } = gameState;
     const { language } = useLanguage();
     const t = getUiTranslation(language).hud;
+    const [keybinds, setKeybinds] = useState(getKeybinds());
+
+    useEffect(() => {
+        const h = () => setKeybinds(getKeybinds());
+        window.addEventListener('keybindsChanged', h);
+        return () => window.removeEventListener('keybindsChanged', h);
+    }, []);
 
     // Track previous HP for damage animation
     const [prevHp, setPrevHp] = useState(player.curHp);
@@ -97,7 +105,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                 boxShadow: '0 0 4px #000', zIndex: 10,
                                 whiteSpace: 'nowrap'
                             }}>
-                                SPC
+                                {getKeyDisplay(keybinds.dash)}
                             </div>
                         </div>
                     );
@@ -265,27 +273,11 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     boxShadow: '0 0 4px #000', zIndex: 10,
                                     whiteSpace: 'nowrap'
                                 }}>
-                                    E
+                                    {getKeyDisplay(keybinds.classAbility)}
                                 </div>
                             )}
 
-                            {/* CD Reduced Icon */}
-                            {cdMod < 1.0 && (
-                                <div style={{
-                                    position: 'absolute', top: -5, left: -5,
-                                    width: 14, height: 14,
-                                    background: '#22d3ee',
-                                    borderRadius: '50%',
-                                    border: '1px solid #fff',
-                                    boxShadow: '0 0 5px #22d3ee',
-                                    zIndex: 20,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }} title={t.neuralOverclockActive}>
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
-                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                                    </svg>
-                                </div>
-                            )}
+
                         </div>
                     );
                 })()}
@@ -357,23 +349,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             {skill.keyBind}
                         </div>
 
-                        {/* CD Reduced Icon */}
-                        {isBuffActive(gameState, 'NEURAL_OVERCLOCK') && (
-                            <div style={{
-                                position: 'absolute', top: -4, left: -4,
-                                width: 14, height: 14,
-                                background: '#22d3ee',
-                                borderRadius: '50%',
-                                border: '1px solid #fff',
-                                boxShadow: '0 0 5px #22d3ee',
-                                zIndex: 20,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }} title={t.neuralOverclockActive}>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                                </svg>
-                            </div>
-                        )}
+
                     </div>
                 ))}
 

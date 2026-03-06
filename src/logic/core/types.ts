@@ -56,7 +56,7 @@ export interface ActiveSkill {
     icon?: string;
 }
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -744,6 +744,7 @@ export interface MapPOI {
     droneSpawned?: boolean;
     lastBomb?: number;
     lastShotRear?: number;
+    lastErrorTime?: number;
 }
 
 export interface GameEvent {
@@ -796,6 +797,7 @@ export interface GameState {
     rareRewardActive?: boolean; // Flag to show "Increased Rarity" text on next level up
     snitchRewardActive?: boolean; // Flag to track Snitch rewards for rerolls
     spawnTimer: number; // For start/restart animation
+    interactPressed?: boolean; // True if interact key was pressed this frame
     unpauseDelay?: number; // Grace period after closing menus
     unpauseMode?: 'normal' | 'slow_motion'; // Type of unpause transition
     flashIntensity?: number; // White flash opacity (0-1)

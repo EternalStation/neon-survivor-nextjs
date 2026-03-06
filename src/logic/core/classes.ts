@@ -71,10 +71,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
         capabilityDesc: 'Press ACTIVE SKILL to unleash a ring of lasers around the player. Charges over 10s. More charge = more lasers and damage. Speed scales with charge level.',
         capabilityMetrics: [
             { label: 'Recharge', value: 10, unit: 's', isPercentage: false, isStatic: true, description: 'Full charge time' },
+            { label: 'Min DMG', value: 10, unit: '%', isPercentage: true, isResonant: true, description: 'Damage at min charge' },
             { label: 'Max Lasers', value: 12, unit: '', isPercentage: false, isStatic: true, description: 'Laser count at full charge' },
             { label: 'Max DMG', value: 150, unit: '%', isPercentage: true, isResonant: true, description: 'Damage at full charge' },
-            { label: 'Min DMG', value: 10, unit: '%', isPercentage: true, isResonant: true, description: 'Damage at min charge' },
-            { label: 'Laser AOE', value: 60, unit: 'px', isPercentage: false, isResonant: true, description: 'Radius per laser' }
+            { label: 'Laser AOE', value: 50, unit: 'px', isPercentage: false, isResonant: true, description: 'Radius per laser' },
+            { label: 'Strike Radius', value: 250, unit: 'px', isPercentage: false, isResonant: true, description: 'Max distance from player' }
         ],
         stats: {
             dmgMult: 0.50,

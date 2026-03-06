@@ -563,7 +563,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
             const hasSkill = state.player.activeSkills.some(s => s.type === selection.type);
             if (!hasSkill) {
                 const usedKeys = state.player.activeSkills.map(s => s.keyBind);
-                const availableKeys = ['1', '2', '3', '4', '5'];
+                const availableKeys = ['2', '3', '4', '5', '6'];
                 const key = availableKeys.find(k => !usedKeys.includes(k));
 
                 if (key) {
@@ -693,14 +693,12 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         };
 
         if (hex.type === 'EcoDMG' || hex.type === 'KineticTsunami' || hex.type === 'SoulShatterCore') {
-            if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.1;
-            if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.1;
+            if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.05;
+            if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.02;
             if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05;
             if (statKey === 'aoe_chance_per_kill') {
-                const souls = getSoulsSinceLevel(4);
-                if (souls > 0) {
-                    // Logarithmic scaling: 100% at 500,000 souls
-                    total += (Math.log(souls + 1) / Math.log(500001)) * 100;
+                if (hex.level >= 4) {
+                    total += player.level * 0.5 * multiplier;
                 }
             }
         }
@@ -724,29 +722,29 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
         }
 
         if (hex.type === 'EcoXP' || hex.type === 'XenoAlchemist' || hex.type === 'NeuralSingularity') {
-            if (statKey === 'xp_per_kill') total += getSoulsSinceLevel(1) * 0.1;
+            if (statKey === 'xp_per_kill') total += getSoulsSinceLevel(1) * 0.05;
             if (statKey === 'dust_extraction') {
-                total += getSoulsSinceLevel(2) * 0.05;
+                total += getSoulsSinceLevel(2) * 0.02;
             }
-            if (statKey === 'flux_per_kill') total += getSoulsSinceLevel(3) * 0.1;
-            if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.1;
+            if (statKey === 'flux_per_kill') total += getSoulsSinceLevel(3) * 0.05;
+            if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
         }
 
         if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') {
             const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') ? 2.0 : 1.0;
-            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.1 * multi;
-            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.03 * multi;
-            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.1 * multi;
+            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.05 * multi;
+            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.02 * multi;
+            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05 * multi;
             if (statKey === 'reg_pct_per_kill') {
-                total += getSoulsSinceLevel(4) * 0.03 * multi;
+                total += getSoulsSinceLevel(4) * 0.02 * multi;
             }
         }
 
         if (hex.type === 'CombShield') {
-            if (statKey === 'arm_per_kill') total += getSoulsSinceLevel(1) * 0.1;
+            if (statKey === 'arm_per_kill') total += getSoulsSinceLevel(1) * 0.05;
             if (statKey === 'col_red_per_kill') total += getSoulsSinceLevel(2) * 0.15;
             if (statKey === 'proj_red_per_kill') total += getSoulsSinceLevel(3) * 0.15;
-            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
+            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.02;
         }
 
         if (hex.type === 'ComLife') {

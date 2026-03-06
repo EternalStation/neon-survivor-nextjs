@@ -67,13 +67,11 @@ export function handlePlayerMovement(
 ) {
     const player = overridePlayer || state.player;
 
-    // Dash Cooldown Tick
     if (player.dashCooldown && player.dashCooldown > 0) {
         player.dashCooldown -= 1 / 60;
         if (player.dashCooldown < 0) player.dashCooldown = 0;
     }
 
-    // Active Dash Movement
     const isDashing = player.dashUntil && state.gameTime < player.dashUntil;
     if (isDashing && player.dashVx !== undefined && player.dashVy !== undefined) {
         const nx = player.x + player.dashVx;
@@ -100,7 +98,6 @@ export function handlePlayerMovement(
         return;
     }
 
-    // Movement
     let vx = 0, vy = 0;
 
     const chronoLvl = getHexLevel(state, 'ChronoPlating');
@@ -114,7 +111,6 @@ export function handlePlayerMovement(
         if (keys['keya'] || keys['arrowleft']) vx--;
         if (keys['keyd'] || keys['arrowright']) vx++;
 
-        // Add Joystick Input
         if (inputVector) {
             vx += inputVector.x;
             vy += inputVector.y;
@@ -145,17 +141,14 @@ export function handlePlayerMovement(
         const hitboxR = GAME_CONFIG.PLAYER.HITBOX_RADIUS;
 
         const checkMove = (tx: number, ty: number) => {
-            // Check if point is inside map OR inside an active portal
             const valid = isInMap(tx, ty) || isInActivePortal(tx, ty, state);
             if (!valid) return false;
 
-            // Check hitbox points
             for (let i = 0; i < 6; i++) {
                 const ang = (Math.PI / 3) * i;
                 const hx = tx + Math.cos(ang) * hitboxR;
                 const hy = ty + Math.sin(ang) * hitboxR;
 
-                // If checking map bounds fail, check if we are in portal
                 if (!isInMap(hx, hy) && !isInActivePortal(hx, hy, state)) return false;
             }
             return true;
@@ -165,7 +158,6 @@ export function handlePlayerMovement(
             player.x = nextX;
             player.y = nextY;
         } else {
-            // Mirror Reflection Logic — guard against rapid repeated triggers
             if (player.lastWallHitTime && state.gameTime - player.lastWallHitTime < 0.5) return;
             player.lastWallHitTime = state.gameTime;
 
@@ -200,16 +192,20 @@ export function handlePlayerMovement(
             player.wallsHit++;
             triggerWallIncompetence?.();
 
-            // Wall Impact Damage to Enemies
             const impactRange = 250;
-            const baseWallDmg = calcStat(player.dmg) * 3.0; // 300% weapon dmg
-            let dealtMult = 1.0;
-            if (player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil) {
-                dealtMult = 3.0;
-            }
-            const finalImpactDmg = baseWallDmg * dealtMult;
+            const maxHp = calcStat(player.hp);
+            let wallDmgMult = GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
+            const isEscalated = !!(player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil);
 
-            spawnParticles(state, player.x, player.y, dealtMult > 1 ? '#ef4444' : '#22d3ee', 12, 5, 40, 'shockwave');
+            if (isEscalated) {
+                wallDmgMult *= 3.0;
+            }
+
+            const rawWallDmg = maxHp * wallDmgMult;
+            const finalImpactDmg = rawWallDmg;
+
+            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 12, 5, 40, 'shockwave');
+            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 1, impactRange, 25, 'shockwave_circle');
 
             state.enemies.forEach(enemy => {
                 if (enemy.dead) return;
@@ -218,17 +214,11 @@ export function handlePlayerMovement(
                 const distSq = dx * dx + dy * dy;
                 if (distSq < impactRange * impactRange) {
                     enemy.hp -= finalImpactDmg;
-                    spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), dealtMult > 1 ? '#ef4444' : '#fff');
-                    spawnParticles(state, enemy.x, enemy.y, dealtMult > 1 ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
+                    spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), isEscalated ? '#ef4444' : '#fff');
+                    spawnParticles(state, enemy.x, enemy.y, isEscalated ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
                 }
             });
 
-            const maxHp = calcStat(player.hp);
-            let wallDmgMult = GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
-            if (player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil) {
-                wallDmgMult *= 3.0; // Triple Damage Penalty
-            }
-            const rawWallDmg = maxHp * wallDmgMult;
             const armor = calcStat(player.arm);
             const drCap = 0.95;
             const armRedMult = 1 - getDefenseReduction(armor, drCap);
@@ -239,15 +229,12 @@ export function handlePlayerMovement(
 
             let wallDmg = wallDmgAfterArmor;
 
-            // Kinetic Battery: Trigger Zap on Wall Hit (Calling from state potentially or re-importing)
             const kinLvl = getHexLevel(state, 'KineticBattery');
             if (kinLvl >= 1) {
-                // We'll call the trigger function if it's available on state or via import
                 const trigger = (state as any).triggerKineticBatteryZap;
                 if (trigger) trigger(state, player, kinLvl);
             }
 
-            // Check Shield Chunks
             let absorbed = 0;
             if (player.shieldChunks && player.shieldChunks.length > 0) {
                 let rem = wallDmg;
@@ -280,11 +267,9 @@ export function handlePlayerMovement(
             if (onEvent) onEvent('player_hit', { dmg: wallDmg });
 
             if (player.curHp <= 0) {
-                // Blueprint: Temporal Guard (Lethal Hit Block)
                 if (isBuffActive(state, 'TEMPORAL_GUARD')) {
                     player.curHp = calcStat(player.hp);
 
-                    // Teleport to random safe location
                     let foundSafe = false;
                     let safeX = player.x;
                     let safeY = player.y;
@@ -309,7 +294,7 @@ export function handlePlayerMovement(
 
                     player.x = safeX;
                     player.y = safeY;
-                    state.activeBlueprintBuffs.TEMPORAL_GUARD = 0; // Consume
+                    state.activeBlueprintBuffs.TEMPORAL_GUARD = 0;
                     player.temporalGuardActive = false;
 
                     const now = state.gameTime;
@@ -328,7 +313,6 @@ export function handlePlayerMovement(
         }
     }
 
-    // Apply & Decay Knockback Momentum
     if (Math.abs(player.knockback.x) > 0.1 || Math.abs(player.knockback.y) > 0.1) {
         const nx = player.x + player.knockback.x;
         const ny = player.y + player.knockback.y;

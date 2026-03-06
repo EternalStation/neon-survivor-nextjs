@@ -10,20 +10,24 @@ export interface Keybinds {
     skill4: string;
     skill5: string;
     skill6: string;
+    selectUpgrade: string;
+    interact: string;
 }
 
 const DEFAULT_KEYBINDS: Keybinds = {
     stats: 'KeyC',
     matrix: 'KeyX',
     portal: 'KeyP',
-    dash: 'Space',
-    classAbility: 'KeyE',
-    skill1: 'Digit1',
-    skill2: 'Digit2',
-    skill3: 'Digit3',
-    skill4: 'Digit4',
-    skill5: 'Digit5',
-    skill6: 'Digit6',
+    dash: 'ShiftLeft',
+    classAbility: 'Digit1',
+    skill1: 'Digit2',
+    skill2: 'Digit3',
+    skill3: 'Digit4',
+    skill4: 'Digit5',
+    skill5: 'Digit6',
+    skill6: 'Digit7',
+    selectUpgrade: 'Space',
+    interact: 'KeyE',
 };
 
 const STORAGE_KEY = 'neon_survivor_keybinds';
@@ -59,6 +63,8 @@ export const resetKeybinds = () => {
 export const getKeyDisplay = (key: string): string => {
     if (!key) return 'NONE';
     if (key === ' ' || key === 'Space') return 'SPACE';
+    if (key === 'ShiftLeft') return 'LSHIFT';
+    if (key === 'ShiftRight') return 'RSHIFT';
 
     // Convert common codes to friendly names
     let display = key;

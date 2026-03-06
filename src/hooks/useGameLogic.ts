@@ -495,7 +495,7 @@ export function useGameLogic({
                     const dy = (e.y - effect.y) / 0.6;
                     const dist = Math.hypot(dx, dy);
 
-                    if (dist < range) {
+                    if (dist < range + (e.size || 20)) {
                         // Pull Effect (Reverse Knockback)
                         // Use configured pull strength
                         if (effect.level >= 2) {
@@ -549,7 +549,7 @@ export function useGameLogic({
 
                     state.enemies.forEach(e => {
                         if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-                        if (Math.hypot(e.x - effect.x, e.y - effect.y) < effect.radius) {
+                        if (Math.hypot(e.x - effect.x, e.y - effect.y) < effect.radius + (e.size || 20)) {
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true);
@@ -579,7 +579,7 @@ export function useGameLogic({
                     state.enemies.forEach(e => {
                         if (e.dead || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
                         const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
-                        if (dist < range) {
+                        if (dist < range + (e.size || 20)) {
                             e.hp -= dmg;
                             state.player.damageDealt += dmg;
                             spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true); // Crit color? Or Theme color

@@ -145,6 +145,23 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState }) => {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('☠', 0, 0);
+            } else if (poi.type === 'turret') {
+                const variant = poi.turretVariant || 'fire';
+                let icon = '🔥';
+                if (variant === 'ice') icon = '❄️';
+                if (variant === 'heal') icon = '✚';
+
+                let baseColor = '#F59E0B';
+                if (variant === 'ice') baseColor = '#22d3ee';
+                if (variant === 'heal') baseColor = '#4ade80';
+
+                const tColor = poi.active ? baseColor : (poi.cooldown > 0 ? '#ef4444' : '#64748B');
+
+                ctx.fillStyle = tColor;
+                ctx.font = 'bold 800px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(icon, 0, 0);
             }
             ctx.restore();
         });

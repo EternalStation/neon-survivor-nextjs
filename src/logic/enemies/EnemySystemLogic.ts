@@ -73,15 +73,12 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                     poi.cooldown = 60;
                 }
             } else if (poi.cooldown === 0) {
-                if (inRange) {
-                    poi.activationProgress += step * 20;
-                    if (poi.activationProgress >= 100) {
-                        poi.active = true;
-                        poi.activationProgress = 100;
-                        poi.activeDuration = 0;
-                        playSfx('power-up');
-                        spawnFloatingNumber(state, poi.x, poi.y, "OVERCLOCK ACTIVE", '#22d3ee', true);
-                    }
+                if (inRange && state.interactPressed) {
+                    poi.active = true;
+                    poi.activeDuration = 0;
+                    poi.activationProgress = 100;
+                    playSfx('power-up');
+                    spawnFloatingNumber(state, poi.x, poi.y, "OVERCLOCK ACTIVE", '#22d3ee', true);
                 } else {
                     if (poi.activationProgress > 0) {
                         poi.activationProgress -= step * 40;
@@ -144,27 +141,36 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 }
             }
 
-            if (poi.active && poi.cooldown === 0 && inRange) {
-                poi.progress += step * 10.0;
-                if (poi.progress >= 100) {
-                    const minutesRaw = state.gameTime / 60;
-                    const current10MinCycle = Math.floor(minutesRaw / 10);
-                    const tier = Math.min(3, current10MinCycle + 1);
-
-                    const pushAngle = Math.atan2(nearestPlayer.y - poi.y, nearestPlayer.x - poi.x);
-                    nearestPlayer.knockback.x = Math.cos(pushAngle) * 65;
-                    nearestPlayer.knockback.y = Math.sin(pushAngle) * 65;
-
-                    spawnFloatingNumber(state, poi.x, poi.y, "ANOMALY SUMMONED", '#ef4444', true);
+            // Summoning Trigger
+            if (poi.active && poi.cooldown === 0) {
+                if (inRange && state.interactPressed && poi.progress === 0) {
+                    poi.progress = 1; // Start the 5s countdown
                     playSfx('warning');
-
-                    poi.anomalySpawnDelay = 0.2;
-                    poi.anomalySpawnTier = tier;
-                    poi.progress = 0;
+                    spawnFloatingNumber(state, poi.x, poi.y, "INFERNAL BREACH", '#ef4444', true);
                 }
-            } else if (poi.progress > 0) {
-                poi.progress -= step * 2.5;
-                if (poi.progress < 0) poi.progress = 0;
+
+                if (poi.progress > 0) {
+                    // Fill over 5 seconds (20% per second)
+                    poi.progress += step * 20;
+
+                    if (poi.progress >= 100) {
+                        const minutesRaw = state.gameTime / 60;
+                        const current10MinCycle = Math.floor(minutesRaw / 10);
+                        const tier = Math.min(3, current10MinCycle + 1);
+
+                        const pushAngle = Math.atan2(nearestPlayer.y - poi.y, nearestPlayer.x - poi.x);
+                        nearestPlayer.knockback.x = Math.cos(pushAngle) * 65;
+                        nearestPlayer.knockback.y = Math.sin(pushAngle) * 65;
+
+                        spawnFloatingNumber(state, poi.x, poi.y, "OVERLORD RISING", '#ef4444', true);
+                        playSfx('warning');
+
+                        poi.anomalySpawnDelay = 0.1; // Small sub-frame delay for the actual spawn logic
+                        poi.anomalySpawnTier = tier;
+                        poi.progress = 0;
+                        poi.active = false; // Set to false so it can't be re-triggered during delay
+                    }
+                }
             }
         }
     });

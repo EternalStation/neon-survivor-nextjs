@@ -2,6 +2,7 @@
 import React from 'react';
 import type { GameState } from '../../logic/core/types';
 import { getArenaIndex } from '../../logic/mission/MapLogic';
+import { getCurrentMinuteEnemyHp } from '../../logic/enemies/EnemySpawnLogic';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 
@@ -11,7 +12,6 @@ interface TopLeftPanelProps {
 }
 
 const PulseLabel = ({ title, buff, color }: { title: string, buff: string, color: string }) => {
-    // Generate a static delay based on mount time relative to a 3s cycle to sync all instances
     const [delay] = React.useState(() => -(Date.now() % 3000));
 
     return (
@@ -53,8 +53,13 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
 
     return (
         <div style={{ position: 'absolute', top: 15, left: 15, pointerEvents: 'auto', zIndex: 10 }}>
-            <div className="kills" style={{ color: '#22d3ee', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', fontSize: 24, fontWeight: 800 }}>
-                {(gameState.rawKillCount || gameState.killCount || 0).toString().padStart(4, '0')}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <div className="kills" style={{ color: '#22d3ee', textShadow: '0 0 10px rgba(34, 211, 238, 0.5)', fontSize: 24, fontWeight: 800 }}>
+                    {(gameState.rawKillCount || gameState.killCount || 0).toString().padStart(4, '0')}
+                </div>
+                <div style={{ color: '#ef4444', fontSize: 13, fontWeight: 900, textShadow: '0 0 8px rgba(239, 68, 68, 0.3)', opacity: 0.9, background: 'rgba(239, 68, 68, 0.05)', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.5 }}>
+                    {t.enemyHp} {getCurrentMinuteEnemyHp(gameTime, gameState.extractionPowerMult || 1.0).toLocaleString()}
+                </div>
             </div>
             <div className="stat-row" style={{ fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 {t.lvl} {player.level}
@@ -62,7 +67,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
             <div className="stat-row" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start', fontSize: 15, fontWeight: 800, color: '#64748b', letterSpacing: 1 }}>
                 <span style={{ minWidth: 55 }}>{Math.floor(gameTime / 60)}:{Math.floor(gameTime % 60).toString().padStart(2, '0')}</span>
 
-                {/* Next Boss Tracker */}
                 {gameState.nextBossSpawnTime && (
                     <>
                         <span style={{ color: '#64748b', opacity: 0.5 }}>|</span>
@@ -102,18 +106,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     100% { transform: rotate(360deg); }
                 }
             `}</style>
-
-            {/* Note: PulseLabel uses transform: scale(0.9) in style. 
-                The keyframe override above needs to respect that base scale.
-                Actually, the inline style transform is applied to the element.
-                The animation modifying transform will OVERRIDE propertty.
-                So defining scale(0.9) in keyframe is correct. 
-                Wait, keyframes override inline styles if the property is animated.
-                So simply putting 'scale(0.9)' in inline style might be ignored if animation is running.
-                I have updated the keyframe above to oscillate around 0.9.
-            */}
-
-            {/* BUFFERED RENDERING LOGIC */}
             {(() => {
                 const arenaIdx = getArenaIndex(player.x, player.y);
                 const surgeMult = gameState.activeBlueprintBuffs['ARENA_SURGE'] ? 2.0 : 1.0;
@@ -121,7 +113,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 type BuffItem = { id: string, title: string, buff: string, color: string, remaining: number, priority: number };
                 const buffs: BuffItem[] = [];
 
-                // 0. EXTRACTION BUFF (Priority 3 - ABSOLUTE TOP)
                 if (['requested', 'waiting', 'active', 'arriving', 'arrived'].includes(gameState.extractionStatus)) {
                     const pct = Math.round((gameState.extractionPowerMult || 1.0) * 100 - 100);
                     buffs.push({
@@ -134,8 +125,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     });
                 }
 
-                // 1. ARENA BUFFS (Priority 2 - TOP)
-                // Duration is effectively infinite for sorting purposes relative to decaying buffs
                 if (arenaIdx === 0 && (gameState.arenaLevels[0] || 0) >= 1) {
                     buffs.push({ id: 'eco1', title: t.ecoArena, buff: `+${30 * surgeMult}% ${t.ecoBuff1}`, color: '#22d3ee', remaining: 99999, priority: 2 });
                     buffs.push({ id: 'eco2', title: t.ecoArena, buff: t.ecoBuff2, color: '#22d3ee', remaining: 99999, priority: 2 });
@@ -145,7 +134,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     buffs.push({ id: 'def1', title: t.defArena, buff: `+${30 * surgeMult}% ${t.defBuff}`, color: '#3b82f6', remaining: 99999, priority: 2 });
                 }
 
-                // 2. BLUEPRINT BUFFS (Priority 1 - Sorted by Duration)
                 const addBp = (type: import('../../logic/core/types').BlueprintType, serial: string, text: string, color: string) => {
                     const endTime = gameState.activeBlueprintBuffs[type];
                     if (endTime) {
@@ -169,19 +157,17 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 addBp('TEMPORAL_GUARD', 'GUAR-D', t.temporalGuardSuffix, '#10b981');
                 addBp('MATRIX_OVERDRIVE', 'MATR-X', t.matrixOverdriveSuffix, '#f97316');
 
-                // QUANTUM SCRAPPER (Charge Based) - Treat as high priority/duration within blueprints
                 if (gameState.activeBlueprintCharges['QUANTUM_SCRAPPER'] !== undefined) {
                     buffs.push({
                         id: 'QUANTUM_SCRAPPER',
                         title: `SCRP-Q (${gameState.activeBlueprintCharges['QUANTUM_SCRAPPER']} Uses)`,
                         buff: t.quantumScrapperBuff,
                         color: '#facc15',
-                        remaining: 88888, // Sorts above time-based blueprints
+                        remaining: 88888,
                         priority: 1
                     });
                 }
 
-                // 2.3 OVERCLOCK POI BUFF (Priority 1.5 - Between Arena and Blueprints)
                 gameState.pois.forEach(poi => {
                     if (poi.type === 'overclock' && poi.active) {
                         const timeLeft = Math.max(0, Math.ceil(30 - poi.activeDuration));
@@ -198,7 +184,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
 
 
 
-                // 4. TRIPLE WALL DAMAGE PENALTY (Priority 4 - TOP)
                 if (player.tripleWallDamageUntil && gameTime < player.tripleWallDamageUntil) {
                     const wallTimeLeft = Math.max(0, Math.ceil(player.tripleWallDamageUntil - gameTime));
                     const wm = Math.floor(wallTimeLeft / 60);
@@ -213,9 +198,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     });
                 }
 
-                // SORTING LOGIC
-                // 1. Priority Descending (Arena > Blueprints)
-                // 2. Remaining Time Descending
                 buffs.sort((a, b) => {
                     if (a.priority !== b.priority) return b.priority - a.priority;
                     return b.remaining - a.remaining;
@@ -230,7 +212,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 );
             })()}
 
-            {/* RESEARCH PROGRESS INDICATORS */}
             {gameState.inventory.map((item, i) => {
                 if (item && item.isBlueprint && item.status === 'researching' && (item as any).researchFinishTime) {
                     const timeLeftRaw = (item as any).researchFinishTime - gameState.gameTime;
@@ -239,7 +220,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     return (
                         <div key={`research-${i}`} style={{
                             marginTop: 6, display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '5px 12px', background: 'rgba(251, 191, 36, 0.1)', // Amber background
+                            padding: '5px 12px', background: 'rgba(251, 191, 36, 0.1)',
                             border: '1px solid rgba(251, 191, 36, 0.5)',
                             borderRadius: 6,
                             boxShadow: '0 0 10px rgba(251, 191, 36, 0.15)',
@@ -249,7 +230,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                             transform: 'scale(0.9)',
                             transformOrigin: 'left center'
                         }}>
-                            {/* Animated Scanner Icon or Dot */}
                             <div style={{
                                 width: 10, height: 10, border: '2px solid #fbbf24', borderRadius: '50%',
                                 borderTopColor: 'transparent',
@@ -270,8 +250,6 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                 return null;
             })}
 
-            {/* STUN INDICATOR (Keep Separate/Bottom) */}
-            {/* STUN INDICATOR (Keep Separate/Bottom) */}
             {player.stunnedUntil && gameState.gameTime < player.stunnedUntil && (
                 <div style={{
                     marginTop: 10,

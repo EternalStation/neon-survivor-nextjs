@@ -75,7 +75,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
     const QUALITIES = ['All', 'NEW', 'DAM', 'BRO', 'COR', 'BLUEPRINTS'];
     const ARENAS = ['All', 'Economic Arena', 'Combat Arena', 'Defence Arena'];
     const SECTOR_OPTS = ['All', 'Sector 01', 'Sector 02', 'Sector 03'];
-    const LEGENDARY_OPTS = ['All', 'Exis ◈', 'Apex ◆', 'Bastion ⬡'];
+    const LEGENDARY_OPTS = ['All', 'Exis', 'Apex', 'Bastion'];
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [activePerkDropdown, setActivePerkDropdown] = useState<string | null>(null);

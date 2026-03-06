@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import type { GameState, UpgradeChoice } from '../../logic/core/types';
 import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
+import { getKeybinds } from '../../logic/utils/Keybinds';
 import { UpgradeCard } from '../UpgradeCard';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
@@ -46,7 +47,8 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
         const handleSelect = (e: KeyboardEvent) => {
             if (e.repeat) return;
             const code = e.code.toLowerCase();
-            if (code === 'space' || code === 'enter') {
+            const sk = (getKeybinds().selectUpgrade || 'Space').toLowerCase();
+            if (code === sk || code === 'enter') {
                 const choice = upgradeChoices[selectedIndex];
                 playUpgradeSfx(choice.rarity?.id || 'common');
                 onUpgradeSelect(choice);
