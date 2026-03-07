@@ -16,12 +16,16 @@ interface UpgradeMenuProps {
 
 export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgradeSelect, onUpgradeReroll, gameState }) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [canSelect, setCanSelect] = useState(false);
     const { language } = useLanguage();
     const t = getUiTranslation(language).hud;
 
-    // Initial Reset
+    // Initial Reset & Delay
     useEffect(() => {
         setSelectedIndex(0);
+        setCanSelect(false);
+        const timer = setTimeout(() => setCanSelect(true), 1000);
+        return () => clearTimeout(timer);
     }, [upgradeChoices]);
 
     // Keyboard Navigation
@@ -47,6 +51,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
 
     // Selection Confirmation
     useEffect(() => {
+        if (!canSelect) return;
         const handleSelect = (e: KeyboardEvent) => {
             if (e.repeat) return;
             const code = e.code.toLowerCase();
@@ -59,7 +64,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
         };
         window.addEventListener('keydown', handleSelect);
         return () => window.removeEventListener('keydown', handleSelect);
-    }, [upgradeChoices, selectedIndex, onUpgradeSelect]);
+    }, [upgradeChoices, selectedIndex, onUpgradeSelect, canSelect]);
 
     return (
         <div className="upgrade-menu-overlay" style={{ zIndex: 1000, pointerEvents: 'auto' }}>
@@ -98,12 +103,13 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
             }}>
 
                 {upgradeChoices.map((c, i) => (
-                    <div key={i} className="upgrade-card-container">
+                    <div key={i} className={`upgrade-card-container ${!canSelect ? 'locked' : ''}`}>
                         <UpgradeCard
                             choice={c}
                             index={i}
                             isSelected={i === selectedIndex}
                             onSelect={(choice) => {
+                                if (!canSelect) return;
                                 playUpgradeSfx(choice.rarity?.id || 'common');
                                 onUpgradeSelect(choice);
                             }}
@@ -124,41 +130,48 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                     width: '100%'
                 }}>
                     <button
-                        onClick={onUpgradeReroll}
+                        onClick={() => canSelect && onUpgradeReroll()}
+                        disabled={!canSelect}
                         style={{
                             padding: '8px 20px',
                             background: 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))',
                             border: '1px solid rgba(56, 189, 248, 0.5)',
-                            borderBottom: '2px solid #38bdf8',
-                            boxShadow: '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)',
+                            borderBottom: `2px solid #38bdf8`,
+                            boxShadow: canSelect ? '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)' : 'none',
                             color: '#38bdf8',
                             fontFamily: 'Orbitron, sans-serif',
                             fontSize: 14,
                             fontWeight: 'bold',
-                            cursor: 'pointer',
+                            cursor: canSelect ? 'pointer' : 'not-allowed',
                             textTransform: 'uppercase',
                             letterSpacing: 3,
                             borderRadius: '6px',
                             transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
                             position: 'relative',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            opacity: canSelect ? 1 : 0.7,
+                            transform: canSelect ? 'scale(1)' : 'scale(0.92)'
                         }}
                         onMouseOver={(e) => {
+                            if (!canSelect) return;
                             e.currentTarget.style.background = 'linear-gradient(45deg, rgba(30, 41, 59, 1), rgba(56, 189, 248, 0.2))';
                             e.currentTarget.style.boxShadow = '0 6px 20px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.2)';
                             e.currentTarget.style.transform = 'translateY(-2px)';
                             e.currentTarget.style.borderColor = '#38bdf8';
                         }}
                         onMouseOut={(e) => {
+                            if (!canSelect) return;
                             e.currentTarget.style.background = 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))';
                             e.currentTarget.style.boxShadow = '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)';
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
                         }}
                         onMouseDown={(e) => {
+                            if (!canSelect) return;
                             e.currentTarget.style.transform = 'translateY(2px)';
                         }}
                         onMouseUp={(e) => {
+                            if (!canSelect) return;
                             e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
                     >

@@ -8,7 +8,7 @@ import { HexGrid } from './modules/HexGrid';
 import { InventoryPanel } from './modules/InventoryPanel';
 import { ChassisDetail } from './modules/ChassisDetail';
 import { ModuleDetailPanel } from './modules/ModuleDetailPanel';
-import { getMeteoriteImage, getDustValue, PerkFilter, matchesFilter } from './modules/ModuleUtils';
+import { getMeteoriteImage, getDustValue, PerkFilter, matchesFilter, getBlueprintImage } from './modules/ModuleUtils';
 import { isBuffActive, researchBlueprint, activateBlueprint } from '../logic/upgrades/BlueprintLogic';
 import type { BestiaryEntry } from '../data/BestiaryData';
 import { BlueprintBay } from './BlueprintBay';
@@ -1067,7 +1067,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                     }}>
                         <img
                             src={movedItem.item.isBlueprint
-                                ? '/assets/Icons/Blueprint.png'
+                                ? getBlueprintImage(movedItem.item.status)
                                 : getMeteoriteImage(movedItem.item)}
                             alt="item"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}

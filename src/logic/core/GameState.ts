@@ -86,6 +86,7 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
     return p;
 };
 
+import { getKeybinds } from '../utils/Keybinds';
 import { SpatialGrid } from './SpatialGrid';
 
 export const createInitialGameState = (selectedClass?: PlayerClass, startingArenaId: number = 0, tutorialEnabled: boolean = true, gameMode: 'single' | 'multiplayer' = 'single', multiplayerConfig: any = null): GameState => {
@@ -283,7 +284,8 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
                 totalDamageTaken: 0,
                 totalSurvivalTime: 0
             }
-        }
+        },
+        keybinds: getKeybinds()
     };
 
 

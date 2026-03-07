@@ -4,6 +4,7 @@ import type { Language } from '../../../lib/LanguageContext';
 import { getUiTranslation } from '../../../lib/uiTranslations';
 import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
 import { calculateLegendaryBonus } from '../../upgrades/LegendaryLogic';
+import { getKeyDisplay } from '../../utils/Keybinds';
 import { formatLargeNumber } from '../../../utils/format';
 
 export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState, language: Language = 'en') {
@@ -361,7 +362,7 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 12px Orbitron';
-                ctx.fillText(`PRESS [E] TO SUMMON`, 0, rectH / 2 - 8);
+                ctx.fillText(`PRESS [${getKeyDisplay(state.keybinds.interact)}] TO SUMMON`, 0, rectH / 2 - 8);
             }
 
             ctx.restore();
@@ -658,7 +659,7 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('E', 0, 0);
+        ctx.fillText(getKeyDisplay(state.keybinds.interact), 0, 0);
         ctx.restore();
 
 

@@ -56,7 +56,7 @@ export function updateTurrets(state: GameState, step: number) {
 
 
             if (dToPlayer < turret.radius + 100) {
-                turret.activationProgress = 100;
+                // turret.activationProgress = 100;
                 const uses = turret.turretUses || 0;
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
                 turret.turretCost = cost;

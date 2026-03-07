@@ -3,8 +3,8 @@
 ## Characteristics
 | Parameter | Meaning |
 |----------|----------|
-| HP | +4% |
-| HP Regeneration | +10% |
+| HP | +30% |
+| HP Regeneration | +15% |
 | Strength Pull | 1.0 (Scalable) |
 
 ---

@@ -191,7 +191,7 @@ export default function Home() {
           />
         )}
 
-        {selectingClass && <ClassSelection onSelect={handleClassSelect} />}
+        {selectingClass && <ClassSelection onSelect={handleClassSelect} onBack={() => setSelectingClass(false)} />}
 
         {gameStarted && (
           <>

@@ -340,7 +340,7 @@ export function triggerHiveMotherCone(state: GameState, player: Player, cursorX:
     const cloudY = cursorY;
     const facing = Math.atan2(cloudY - player.y, cloudX - player.x);
 
-    const cloudRadius = 150;
+    const cloudRadius = 200;
     const numProjectiles = 20 + player.level;
     const dmgPerNanite = calcStat(player.dmg, state.dmgAtkBuffMult);
     const spitCastId = Math.random();

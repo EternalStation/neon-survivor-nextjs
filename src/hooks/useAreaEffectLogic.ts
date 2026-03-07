@@ -9,6 +9,7 @@ import { PLAYER_CLASSES } from '../logic/core/classes';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { applyDamageToPlayer } from '../logic/utils/CombatUtils';
+import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 
 export function updateAreaEffects(state: GameState, step: number, onEvent?: (event: string, data?: any) => void) {
     const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
@@ -71,6 +72,36 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
 
         if (effect.type === 'nanite_cloud') {
             const elapsed = state.gameTime - effect.creationTime;
+            const range = effect.radius || 200;
+            const resonance = getChassisResonance(state);
+
+            state.enemies.forEach(e => {
+                if (e.dead || e.isFriendly || e.isZombie || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
+                const d = Math.hypot(e.x - effect.x, e.y - effect.y);
+                if (d < range + (e.size || 20)) {
+                    if (e.lastSpitHitId !== effect.naniteSpitId) {
+                        const nanitesToApply = 4 + Math.floor((effect.level || 0) / 10);
+                        const baseSwarmPct = 0.05 * (1 + resonance);
+                        const naniteDmgPerSec = (effect.naniteDmg || 0) * baseSwarmPct * nanitesToApply;
+
+                        e.slowFactor = Math.max(e.slowFactor || 0, 0.3);
+                        e.slowUntil = 999999999;
+
+                        if (!e.naniteGroups) e.naniteGroups = [];
+                        e.naniteGroups.push({ count: nanitesToApply, dmgPerSecond: naniteDmgPerSec, spitId: effect.naniteSpitId! });
+
+                        e.activeNaniteCount = (e.activeNaniteCount || 0) + nanitesToApply;
+                        e.activeNaniteDmg = (e.activeNaniteDmg || 0) + naniteDmgPerSec;
+
+                        e.isInfected = true;
+                        e.infectedUntil = 999999999;
+                        e.lastSpitHitId = effect.naniteSpitId;
+
+                        spawnParticles(state, e.x, e.y, '#22c55e', 5, 2, 20);
+                    }
+                }
+            });
+
             if (elapsed >= 0.4 && !effect.naniteSpawned) {
                 effect.naniteSpawned = true;
                 spawnNanitesFromCloud(state, effect);

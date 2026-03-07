@@ -7,9 +7,10 @@ import { getUiTranslation } from '../lib/uiTranslations';
 
 interface ClassSelectionProps {
     onSelect: (selectedClass: PlayerClass, tutorialEnabled: boolean) => void;
+    onBack?: () => void;
 }
 
-export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
+export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect, onBack }) => {
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [tutorialEnabled, setTutorialEnabled] = React.useState(false);
     const [orbitMessage, setOrbitMessage] = React.useState<string | null>(null);
@@ -62,6 +63,9 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
             }
             if (code === 'space' || code === 'enter') {
                 onSelect(PLAYER_CLASSES[selectedIndex], tutorialEnabled);
+            }
+            if (code === 'escape' && onBack) {
+                onBack();
             }
         };
         window.addEventListener('keydown', handleKeys);

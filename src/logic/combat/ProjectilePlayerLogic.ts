@@ -10,6 +10,7 @@ import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { triggerKineticBolt } from '../player/PlayerCombat';
 import { recordDamage } from '../utils/DamageTracking';
+import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 
 export function updateSinglePlayerBullet(
     state: GameState,
@@ -400,14 +401,20 @@ export function updateSinglePlayerBullet(
                     b.life = 0;
 
                     if (e.lastSpitHitId !== b.hiveMotherSpitId) {
-                        const nanitesToApply = 3 + Math.floor(owner.level / 10);
+                        const nanitesToApply = 4 + Math.floor(owner.level / 10);
+                        const resonance = getChassisResonance(state);
+                        const baseSwarmPct = 0.05 * (1 + resonance);
+                        const groupDmg = b.dmg * baseSwarmPct * nanitesToApply;
 
-                        e.slowFactor = Math.max(e.slowFactor || 0, 0.5);
-                        e.slowUntil = Math.max(e.slowUntil || 0, state.gameTime + 3);
+                        e.slowFactor = Math.max(e.slowFactor || 0, 0.3);
+                        e.slowUntil = 999999999;
+
+                        if (!e.naniteGroups) e.naniteGroups = [];
+                        e.naniteGroups.push({ count: nanitesToApply, dmgPerSecond: groupDmg, spitId: b.hiveMotherSpitId! });
 
                         e.activeNaniteCount = (e.activeNaniteCount || 0) + nanitesToApply;
+                        e.activeNaniteDmg = (e.activeNaniteDmg || 0) + groupDmg;
 
-                        e.activeNaniteDmg = (e.activeNaniteDmg || 0) + (b.dmg * nanitesToApply);
                         e.isInfected = true;
                         e.infectedUntil = 999999999;
                         e.lastSpitHitId = b.hiveMotherSpitId;

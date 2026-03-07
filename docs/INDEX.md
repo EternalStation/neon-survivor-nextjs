@@ -115,6 +115,7 @@ Source of truth: source code. Comments are not used in the code.
 | File | Description |
 |-----------|---------|
 | [enemies/snitch.md](enemies/snitch.md) | Quantum Snitch - evasive rare target, 1 HP, orbital behavior, tactical teleports, spawn cycle every 2 minutes. |
+| [enemies/overlord.md](enemies/overlord.md) | Overlord (Anomaly Boss) - Infernal Heat Aura with HP-based phased evolution and regeneration. |
 | [mechanics/PentagonBossUpdate.md](mechanics/PentagonBossUpdate.md) | Pentagon Boss: Rocket transformation, fire trails, and Level 2/3 Rocket Barrage mechanics. |
 | [mechanics/BossHitboxOptimization.md](mechanics/BossHitboxOptimization.md) | Boss Hitbox Optimization: Increased base size (110px) and collision padding to align with visual models. |
 

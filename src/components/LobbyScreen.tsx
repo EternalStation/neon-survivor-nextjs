@@ -15,6 +15,17 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onStartGame, onBack })
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
+        const handleKeys = (e: KeyboardEvent) => {
+            if (e.code === 'Escape') {
+                if (status === 'joining' || status === 'class_select') setStatus(status === 'class_select' ? 'lobby' : 'menu');
+                else if (status === 'menu' || status === 'lobby') onBack();
+            }
+        };
+        window.addEventListener('keydown', handleKeys);
+        return () => window.removeEventListener('keydown', handleKeys);
+    }, [status, onBack]);
+
+    useEffect(() => {
         if (lobbyState.gameStarted) {
             // Trigger parent start game
             onStartGame('multiplayer', {

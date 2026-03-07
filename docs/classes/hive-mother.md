@@ -22,11 +22,12 @@
 ### Phase 2: Cloud (0.4s–3s)
 | Parameter | Meaning |
 |----------|----------|
-| Cloud Radius | 150px |
+| Cloud Radius | 200px |
 | Total Duration | 3s |
 | Dissipation | Cloud expands up to 2.2× radius while fading to transparent |
 | Nanite Drift Speed | 0.3–1.0 units/frame (capped at 1.5) |
 | Nanite Containment | Pulled back toward center when >70% radius |
+| Multi-Infection | Each cloud hit applies a separate group of 4 (+1 per 10 lvls) nanites. |
 
 ### Nanite Targeting
 | Parameter | Meaning |
@@ -39,9 +40,11 @@
 ### Infection (DoT)
 | Parameter | Meaning |
 |----------|----------|
-| Damage/sec | `player.dmg × 40% × (1 + resonance) × classCurseMult` |
-| Tick | every 30 frames (0.5 sec at 60 FPS) |
-| Damage per tick | `infectionDmg/2` |
+| Stack Mechanism | Each "spit" (cloud hit) creates its own nanite group on the enemy. |
+| Damage/sec | Total damage = `groupCount × 5% × (1 + resonance) × player.dmg` |
+| Indicator | Each group triggers its own floating damage number. |
+| Slow | Infected enemies are **permanently slowed by 30%**. |
+| Tick | every 60 frames (1 sec) for each individual group |
 | Fractional balance | buffered in `infectionAccumulator`, applied when ≥1 |
 
 ### Nanite jumps when the host dies
@@ -62,10 +65,10 @@
 | Infection Damage/sec | `player.dmg × 40% × (1+resonance) × classCurseMult` | |
 | Jump Chance | | 30% |
 | Jump radius | | 400px |
-| Tick frequency | | 30 frames |
+| Tick frequency | | 60 frames (1s) |
 | Nanite Speed | | 12 units/frame |
 | Nanite Lifetime | | ≈2 sec |
-| Cloud Radius | | 150px |
+| Cloud Radius | | 200px |
 | Cloud Duration | | 3s |
 | Spray Duration | | 0.4s |
 | Nanite Lifetime (skill) | | 180 frames |

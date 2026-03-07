@@ -423,7 +423,10 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     element: (
                                         <div key={parent + "_group"}>
                                             <DamageRow
-                                                label={parent === 'Projectile' ? ((t.statsMenu.labels.damageSources as any).projectile || 'Projectile') : parent}
+                                                label={(() => {
+                                                    const key = parent.charAt(0).toLowerCase() + parent.slice(1).replace(/\s+/g, '');
+                                                    return (t.statsMenu.labels.damageSources as any)[key] || parent;
+                                                })()}
                                                 amount={groupTotal}
                                                 total={player.damageDealt}
                                                 color={cfg.color}

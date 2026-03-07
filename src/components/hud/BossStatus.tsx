@@ -111,6 +111,12 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                     background: 'linear-gradient(90deg, #ef4444, #991b1b)',
                                     transition: 'width 0.1s linear'
                                 }} />
+                                {boss.isAnomaly && (
+                                    <>
+                                        <div style={{ position: 'absolute', left: '30%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.5)', zIndex: 2, boxShadow: '0 0 5px rgba(255,255,255,0.2)' }} />
+                                        <div style={{ position: 'absolute', left: '60%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.5)', zIndex: 2, boxShadow: '0 0 5px rgba(255,255,255,0.2)' }} />
+                                    </>
+                                )}
                                 <div style={{
                                     position: 'absolute', width: '100%', textAlign: 'center', top: 0,
                                     color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',

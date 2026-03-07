@@ -318,7 +318,7 @@ export const UI_TRANSLATIONS = {
                     name: "Hive Mother",
                     title: "THE SWARM OVERLORD",
                     capabilityName: "Nanite Swarm",
-                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
+                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 4 (+1 per 10 lvls) nanites to each. 14s CD.",
                     characteristics: [
                         'Damage-over-time specialist',
                         'Organic growth scaling',
@@ -1255,7 +1255,7 @@ export const UI_TRANSLATIONS = {
                     name: "Эгида",
                     title: "ЗОЛОТОЙ БАСТИОН",
                     capabilityName: "Магнитный Вихрь",
-                    capabilityDesc: "Снаряды вращаются вокруг игрока кольцом, пока не поразят врага. Шанс создать до 4 орбит.",
+                    capabilityDesc: "Снаряды вращаются вокруг игрока кольцом, пока не поразят врага. Дает +30% ОЗ и +15% Реген. Шанс создать до 4 орбит.",
                     characteristics: [
                         'Защитный периметр ближнего действия',
                         'Паттерны взрывов с задержкой',
@@ -1271,7 +1271,7 @@ export const UI_TRANSLATIONS = {
                     name: "Hive Mother",
                     title: "ВЛАДЫКА РОЯ",
                     capabilityName: "Рой Нанитов",
-                    capabilityDesc: "При попадании пули распадаются на нанитов, наносящих урон. После смерти нанит скачет на цель в 400px. АКТИВНО (E): Плюет нанитов конусом в 40 градусов на 800px. Замедляет врагов и заражает их 3 нанитами (+1 за 10 ур). КД 14сек.",
+                    capabilityDesc: "При попадании пули распадаются на нанитов, наносящих урон. После смерти нанит скачет на цель в 400px. АКТИВНО (E): Плюет нанитов конусом в 40 градусов на 800px. Замедляет врагов и заражает их 4 нанитами (+1 за 10 ур). КД 14сек.",
                     characteristics: [
                         'Специалист по периодическому урону',
                         'Органическое масштабирование',

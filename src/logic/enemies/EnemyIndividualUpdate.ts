@@ -39,21 +39,46 @@ export function updateSingleEnemy(
     }
 
     if (e.isAnomaly && !e.dead) {
+        const hpPct = e.hp / e.maxHp;
+        if (hpPct <= 0.60 && (e.stage || 0) < 2) {
+            e.stage = 2;
+            e.stage2StartTime = state.gameTime;
+        }
+        if (hpPct <= 0.30 && (e.stage || 0) < 3) {
+            e.stage = 3;
+            e.stage3StartTime = state.gameTime;
+        }
+
+        const stage = e.stage || 1;
         const gen = e.anomalyGeneration || 0;
-        const burnRadius = 390 + (gen * 10) + (e.bonusBurnRadius || 0);
+
+        // Phase 2 Upgrade: Radius grows by 5px per second
+        if (stage >= 2) {
+            e.bonusBurnRadius = (e.bonusBurnRadius || 0) + (5 * step);
+        }
+
+        // Phase 3 Upgrade: Damage grows by 0.5% per second, and Boss heals 1% per second
+        if (stage >= 3) {
+            e.bonusBurnPct = (e.bonusBurnPct || 0) + (0.005 * step);
+            e.hp = Math.min(e.maxHp, e.hp + (e.maxHp * 0.01 * step));
+        }
+
+        let burnRadius = 390 + (gen * 10) + (e.bonusBurnRadius || 0);
+
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         players.forEach(p => {
             const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
             if (distToPlayer < burnRadius) {
-                const burnTick = 10;
+                const burnTick = 60;
                 if (state.frameCount % burnTick === 0) {
-                    const burnDmgPct = 0.05 + (gen * 0.01) + (e.bonusBurnPct || 0);
-                    const dmg = (calcStat(p.hp) * burnDmgPct) / (60 / burnTick);
+                    const baseBurnPct = 0.05 + (gen * 0.01);
+                    let currentBurnPct = baseBurnPct + (e.bonusBurnPct || 0);
+
+                    const dmg = calcStat(p.hp) * currentBurnPct;
                     applyDamageToPlayer(state, p, dmg, {
                         sourceType: 'other',
                         deathCause: "Overlord Burn"
                     });
-                    recordDamage(state, 'Infernal Combustion', dmg);
                 }
             }
         });
@@ -175,7 +200,23 @@ export function updateSingleEnemy(
 
     if (!e.boss) e.takenDamageMultiplier = 1.0;
 
-    if (e.activeNaniteCount && e.activeNaniteCount > 0) {
+    if (e.naniteGroups && e.naniteGroups.length > 0) {
+        const dotFreq = 60;
+        if (state.frameCount % dotFreq === 0) {
+            e.naniteGroups.forEach(group => {
+                const dmgPerTick = group.dmgPerSecond;
+                if (dmgPerTick > 0) {
+                    e.hp -= dmgPerTick;
+                    state.player.damageDealt += dmgPerTick;
+                    recordDamage(state, 'Nanite Swarm', dmgPerTick, e);
+                    const rx = e.x + (Math.random() - 0.5) * 40;
+                    const ry = e.y + (Math.random() - 0.5) * 40;
+                    spawnFloatingNumber(state, rx, ry, Math.round(dmgPerTick).toString(), '#22c55e', false);
+                }
+            });
+            if (e.hp <= 0 && !e.dead) { handleEnemyDeath(state, e, onEvent); return; }
+        }
+    } else if (e.activeNaniteCount && e.activeNaniteCount > 0) {
         const dotFreq = 30;
         if (state.frameCount % dotFreq === 0) {
             const totalDns = (e.activeNaniteDmg || 0);
@@ -183,6 +224,7 @@ export function updateSingleEnemy(
             if (dmgPerTick > 0) {
                 e.hp -= dmgPerTick;
                 state.player.damageDealt += dmgPerTick;
+                recordDamage(state, 'Nanite Swarm', dmgPerTick, e);
 
                 const rawNumToShow = Math.min(3, e.activeNaniteCount);
 
@@ -223,6 +265,7 @@ export function updateSingleEnemy(
                         e.hp -= dmgDealt;
                         e.lastHitTime = state.gameTime;
                         state.player.damageDealt += dmgDealt;
+                        recordDamage(state, 'Nanite Swarm', dmgDealt, e);
                         const themeColor = getPlayerThemeColor(state);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), themeColor, false);
                         spawnParticles(state, e.x, e.y, themeColor, 1);

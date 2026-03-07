@@ -13,6 +13,7 @@ import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
 import { useMultiplayerGame } from './useMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
+import { getKeybinds } from '../logic/utils/Keybinds';
 
 export function useGameLoop(gameStarted: boolean) {
     const { language } = useLanguage();
@@ -234,6 +235,14 @@ export function useGameLoop(gameStarted: boolean) {
     useEffect(() => {
         gameState.current.language = language;
     }, [language]);
+
+    useEffect(() => {
+        const handleKeybindsChanged = () => {
+            gameState.current.keybinds = getKeybinds();
+        };
+        window.addEventListener('keybindsChanged', handleKeybindsChanged);
+        return () => window.removeEventListener('keybindsChanged', handleKeybindsChanged);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;

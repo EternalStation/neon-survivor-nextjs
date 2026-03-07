@@ -143,6 +143,17 @@
     z-index: 10;
     position: relative;
     /* Context */
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.upgrade-card-container.locked {
+    transform: scale(0.88);
+    cursor: not-allowed;
+}
+
+.upgrade-card-container.locked .upgrade-card {
+    pointer-events: none;
+    box-shadow: none !important;
 }
 
 .upgrade-card {

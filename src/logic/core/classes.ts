@@ -97,7 +97,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'ACTIVE SKILL: Orbital Vortex'
         ],
         capabilityName: 'Magnetic Vortex',
-        capabilityDesc: 'Projectiles spawn in 4 orbits with different chances. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.',
+        capabilityDesc: 'Projectiles spawn in 4 orbits with different chances. Provides +30% HP and +15% HP Regen. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.',
         capabilityMetrics: [
             { label: 'Active CD', value: 20, unit: 's', isPercentage: false, isStatic: true, description: 'Recharge time' },
             { label: 'Orbit II', value: 15, unit: '%', isPercentage: true, isResonant: true, description: 'Chance to spawn' },
@@ -107,8 +107,8 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             { label: 'Orbit IV', value: 5, unit: '%', isPercentage: true, isResonant: true, description: 'Chance to spawn' }
         ],
         stats: {
-            hpMult: 0.50,
-            regMult: 0.30,
+            hpMult: 0.30,
+            regMult: 0.15,
         },
         icon: '#f59e0b',
         themeColor: '#f59e0b',
@@ -126,11 +126,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'ACTIVE SKILL: Nanite Spitter'
         ],
         capabilityName: 'Nanite Swarm',
-        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.',
+        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 4 (+1 per 10 lvls) nanites to each. 14s CD.',
         capabilityMetrics: [
             { label: 'Active CD', value: 14, unit: 's', isPercentage: false, isStatic: true, description: 'Active Skill Cooldown' },
             { label: 'Infection Rate', value: 30, unit: '%', isPercentage: true, description: '' },
-            { label: 'Swarm DMG / sec', value: 5, unit: '%', isPercentage: true, description: '' },
+            { label: 'Swarm DMG / sec', value: 5, unit: '%', isPercentage: true, isResonant: true, description: '' },
             { label: 'Jump Range', value: 400, unit: 'px', isPercentage: false, isStatic: true, description: 'Static jump distance' }
         ],
         stats: {

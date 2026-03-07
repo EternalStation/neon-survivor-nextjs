@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Meteorite } from '../../logic/core/types';
 import { RARITY_ORDER } from '../../logic/core/types';
-import { getMeteoriteImage, RARITY_COLORS, PerkFilter, matchesFilter } from './ModuleUtils';
+import { getMeteoriteImage, RARITY_COLORS, PerkFilter, matchesFilter, getBlueprintImage } from './ModuleUtils';
 import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
@@ -407,13 +407,11 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = React.memo(({
                 {item && (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                         <img
-                            src={item.isBlueprint ? `/assets/Icons/Blueprint.png` : getMeteoriteImage(item as any)}
+                            src={item.isBlueprint ? getBlueprintImage(item.status) : getMeteoriteImage(item as any)}
                             style={{
                                 width: '80%', height: '80%', objectFit: 'contain', pointerEvents: 'none',
-                                filter: item.isBlueprint && item.status === 'broken'
-                                    ? 'grayscale(1) brightness(0.4) sepia(1) hue-rotate(-50deg)'
-                                    : isVisible ? 'none' : 'grayscale(100%)',
-                                opacity: item.isBlueprint && item.status === 'broken' ? 0.5 : isVisible ? 1 : 0.2
+                                filter: isVisible ? 'none' : 'grayscale(100%)',
+                                opacity: isVisible ? 1 : 0.2
                             }}
                             alt="blueprint"
                         />

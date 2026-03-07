@@ -11,7 +11,7 @@ import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
-import { getMeteoriteImage, matchesPerk, PerkFilter } from './ModuleUtils';
+import { getMeteoriteImage, matchesPerk, PerkFilter, getBlueprintImage } from './ModuleUtils';
 import { PLAYER_CLASSES } from '../../logic/core/classes';
 
 import { useLanguage } from '../../lib/LanguageContext';
@@ -199,7 +199,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                     clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
-                                    <img src="/assets/Icons/Blueprint.png" style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 16px #3b82f6)', objectFit: 'contain' }} />
+                                    <img src={getBlueprintImage(bp.status)} style={{ width: '80px', height: '80px', filter: 'drop-shadow(0 0 16px #3b82f6)', objectFit: 'contain' }} />
                                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(transparent, rgba(59,130,246,0.3), transparent)', animation: 'scan-vertical 2s infinite linear' }} />
                                 </div>
                             </div>
@@ -374,7 +374,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                     clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                 }}>
-                                                    <img src="/assets/Icons/Blueprint.png" style={{
+                                                    <img src={getBlueprintImage(hoveredBlueprint.status)} style={{
                                                         width: '60%', height: '60%',
                                                         filter: 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(-10deg) saturate(3)',
                                                         opacity: 0.4

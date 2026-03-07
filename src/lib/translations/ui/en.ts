@@ -283,7 +283,7 @@ export const en = {
                 name: "Aegis",
                 title: "THE GOLDEN BASTION",
                 capabilityName: "Magnetic Vortex",
-                capabilityDesc: "Projectiles spawn in 4 orbits with different chances. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.",
+                capabilityDesc: "Projectiles spawn in 4 orbits with different chances. Provides +30% HP and +15% HP Regen. ACTIVE SKILL: Generates a 800px vortex for 2s that pulls enemies and projectiles into orbit.",
                 characteristics: [
                     '4 Magnetic Orbits',
                     'Projectile course-correction',
@@ -302,7 +302,7 @@ export const en = {
                 name: "Hive Mother",
                 title: "THE SWARM OVERLORD",
                 capabilityName: "Nanite Swarm",
-                capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
+                capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 4 (+1 per 10 lvls) nanites to each. 14s CD.",
                 characteristics: [
                     'Damage-over-time specialist',
                     'Organic growth scaling',

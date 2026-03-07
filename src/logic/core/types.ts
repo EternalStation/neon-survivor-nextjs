@@ -103,7 +103,6 @@ export type DamageSource =
     | 'Malware Wall Bonus'
     | 'Malware Wall damage increase'
     | 'Aegis Rings'
-    | 'Infernal Combustion'
     | 'Other';
 
 export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'afk_strike_hit' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
@@ -133,6 +132,13 @@ export interface AreaEffect {
     isGravityAnchor?: boolean;
     isGravitationalHarvest?: boolean;
     isVitalMire?: boolean;
+    hitEnemies?: Set<number>;
+}
+
+export interface NaniteGroup {
+    count: number;
+    dmgPerSecond: number;
+    spitId: number;
 }
 
 export interface Player {
@@ -604,6 +610,7 @@ export interface Enemy {
     activeNaniteCount?: number;
     activeNaniteDmg?: number;
     lastSpitHitId?: number;
+    naniteGroups?: NaniteGroup[];
 
     bleedTimer?: number;
     bleedDmg?: number;
@@ -1016,6 +1023,7 @@ export interface GameState {
             curseIntensity?: number;
         };
     };
+    keybinds: import('../utils/Keybinds').Keybinds;
 }
 
 export type MeteoriteRarity = 'anomalous' | 'radiant' | 'abyss' | 'eternal' | 'divine' | 'singularity';

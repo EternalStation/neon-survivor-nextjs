@@ -124,7 +124,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 
     const baseSizeRaw = isBoss ? 110 : (20 * SHAPE_DEFS[chosenShape].sizeMult);
     const baseSize = (isBoss && chosenShape === 'pentagon') ? Math.floor(baseSizeRaw * 0.7) : baseSizeRaw;
-    const size = isAnomaly ? baseSize * 1.0 : baseSize;
+    const size = isAnomaly ? baseSize * 0.8 : baseSize;
 
     const eventPalette = getEventPalette(state);
     let finalPalette = eventPalette || eraPalette.colors;

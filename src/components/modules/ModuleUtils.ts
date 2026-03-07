@@ -38,7 +38,8 @@ export const getMeteoriteImage = (m: Meteorite) => {
     return `/assets/meteorites/M${m.visualIndex}${m.quality}.png`;
 };
 
-export const getBlueprintImage = (type: string) => {
+export const getBlueprintImage = (status?: string) => {
+    if (status === 'broken') return `/assets/Icons/BlueprintBroken.png`;
     return `/assets/Icons/Blueprint.png`;
 };
 
