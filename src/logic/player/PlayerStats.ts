@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { calcStat } from '../utils/MathUtils';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
@@ -103,9 +103,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
     }
 
-    if (player.buffs?.vitalRecovery && state.gameTime < player.buffs.vitalRecovery) {
-        state.hpRegenBuffMult *= 1.2;
-    }
 
 
     const kinLvl = getHexLevel(state, 'KineticBattery');

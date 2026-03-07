@@ -1,4 +1,4 @@
-import { GameState, DamageSource, Enemy } from '../core/types';
+import { GameState, DamageSource, Enemy } from '../core/Types';
 
 export function recordDamage(state: GameState, source: DamageSource, amount: number, target?: Enemy) {
     if (amount <= 0) return;

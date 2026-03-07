@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import type { GameState, UpgradeChoice } from '../../logic/core/types';
+import type { GameState, UpgradeChoice } from '../../logic/core/Types';
 import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
 import { getKeybinds } from '../../logic/utils/Keybinds';
 import { UpgradeCard } from '../UpgradeCard';

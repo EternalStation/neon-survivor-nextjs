@@ -10,7 +10,7 @@ import { useGameLogic } from './UseGameLogic';
 import { useOrbit } from './UseOrbit';
 import { useGameUIHandlers } from './UseGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
-import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
+import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/Types';
 import { useMultiplayerGame } from './UseMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
 import { getKeybinds } from '../logic/utils/Keybinds';

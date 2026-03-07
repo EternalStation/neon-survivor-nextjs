@@ -1,4 +1,4 @@
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 
 export interface DamageGroupConfig {
     children: string[];
@@ -67,7 +67,6 @@ export function getDamageMapping(playerClass?: string) {
         'Toxic Puddle (LVL 4)': '#22c55e',
         'Xeno Alchemist (Puddle)': '#a3e635',
         'Irradiated Mire (Puddle)': '#4ade80',
-        'Vital Mire (Puddle)': '#facc15',
         'Shattered Capacitor (Arc)': '#dc2626',
         'Shattered Capacitor (Bleed)': '#b91c1c',
         'Necro-Kinetic Engine': '#4ade80',
@@ -95,7 +94,6 @@ export function getDamageMapping(playerClass?: string) {
         'Shattered Capacitor (Arc)': ['#ef4444', '#3b82f6'],
         'Shattered Capacitor (Bleed)': ['#ef4444', '#3b82f6'],
         'Necro-Kinetic Engine': ['#ef4444', '#3b82f6'],
-        'Vital Mire (Puddle)': ['#719b0b', '#facc15'],
         'Void Singularity': ['#8b5cf6', '#d946ef'],
     };
 
@@ -166,15 +164,14 @@ export function getDamageMapping(playerClass?: string) {
             }
         },
         'Toxic Swamp': {
-            children: ['Toxic Puddle (LVL 1)', 'Toxic Puddle (LVL 4)', 'Xeno Alchemist (Puddle)', 'Irradiated Mire (Puddle)', 'Vital Mire (Puddle)'],
+            children: ['Toxic Puddle (LVL 1)', 'Toxic Puddle (LVL 4)', 'Xeno Alchemist (Puddle)', 'Irradiated Mire (Puddle)'],
             icon: '/assets/hexes/DefPuddle.png',
             color: '#22c55e',
             childLabels: {
                 'Toxic Puddle (LVL 1)': 'Acidic Ground',
                 'Toxic Puddle (LVL 4)': 'Amplification',
                 'Xeno Alchemist (Puddle)': 'Alchemical Mire',
-                'Irradiated Mire (Puddle)': 'Mire (Fusion)',
-                'Vital Mire (Puddle)': 'Vitality (Fusion)'
+                'Irradiated Mire (Puddle)': 'Mire (Fusion)'
             }
         },
         'Epicenter': {

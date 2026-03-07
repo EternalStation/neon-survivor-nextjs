@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GameState, PlayerClass } from '../../logic/core/types';
+import type { GameState, PlayerClass } from '../../logic/core/Types';
 import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './ModuleUtils';
 import { useLanguage } from '../../lib/LanguageContext';

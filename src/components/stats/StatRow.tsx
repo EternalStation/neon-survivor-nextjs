@@ -1,6 +1,6 @@
 import React from 'react';
-import type { PlayerStats } from '../../logic/core/types';
-import { formatLargeNumber } from '../../utils/format';
+import type { PlayerStats } from '../../logic/core/Types';
+import { formatLargeNumber } from '../../utils/Format';
 
 interface StatRowProps {
     label: string;

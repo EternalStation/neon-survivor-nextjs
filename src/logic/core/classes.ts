@@ -1,4 +1,4 @@
-import type { PlayerClass } from './types';
+import type { PlayerClass } from './Types';
 
 export const PLAYER_CLASSES: PlayerClass[] = [
     {

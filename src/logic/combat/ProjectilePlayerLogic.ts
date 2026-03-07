@@ -1,11 +1,11 @@
-import { GameState, Bullet, Player } from '../core/types';
+import { GameState, Bullet, Player } from '../core/Types';
 import { isInMap, getHexDistToWall } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { triggerKineticBolt } from '../player/PlayerCombat';
@@ -521,7 +521,7 @@ export function updateSinglePlayerBullet(
                 targets.forEach(t => {
                     t.hp -= finalDmg; t.lastHitTime = now; owner.damageDealt += finalDmg;
 
-                    let source: import('../core/types').DamageSource = 'Projectile';
+                    let source: import('../core/Types').DamageSource = 'Projectile';
                     if (b.isShockwaveCircle) {
                         if (b.isSingularity) source = 'Neural Singularity';
                         else if (b.isTsunami) source = 'Kinetic Tsunami';

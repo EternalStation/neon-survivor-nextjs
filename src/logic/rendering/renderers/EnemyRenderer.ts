@@ -1,6 +1,6 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 import { getShellVisibility } from '../ColorPalettes';
-import { PALETTES } from '../../core/constants';
+import { PALETTES } from '../../core/Constants';
 import { renderAnomalyAura, renderBossSkills, renderLegionShield, renderBossBodyPre, renderBossBodyPost } from './BossRenderer';
 import { renderEliteEffects } from './EliteRenderer';
 import { renderUniqueEnemy } from './UniqueEnemyRenderer';

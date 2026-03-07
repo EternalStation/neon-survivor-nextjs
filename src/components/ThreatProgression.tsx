@@ -1,9 +1,9 @@
 import React from 'react';
-import type { GameState } from '../logic/core/types';
+import type { GameState } from '../logic/core/Types';
 import { getCycleHpMult } from '../logic/enemies/EnemySpawnLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
-import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/constants';
-import { formatLargeNumber } from '../utils/format';
+import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/Constants';
+import { formatLargeNumber } from '../utils/Format';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 

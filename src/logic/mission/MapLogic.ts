@@ -1,4 +1,4 @@
-import type { GameState, MapPOI } from '../core/types';
+import type { GameState, MapPOI } from '../core/Types';
 import { TURRET_RANGE } from './TurretLogic';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import type { Language } from '../../lib/LanguageContext';

@@ -39,8 +39,8 @@
 | Regular | ≤80px (core) | instant destruction |
 | Worm segment | ≤80px (core) | instant destruction |
 | Elite/Rare (not Snitch) | — | 25% maxHP/sec |
-| [Snitch](../enemies/snitch.md) | >80px | no damage (pull only) |
-| [Snitch](../enemies/snitch.md) | ≤80px (core) | instant destruction |
+| [Snitch](../enemies/Snitch.md) | >80px | no damage (pull only) |
+| [Snitch](../enemies/Snitch.md) | ≤80px (core) | instant destruction |
 | Boss | — | 10% maxHP/sec |
 
 All enemies in the zone receive the `voidAmplified = true` flag.

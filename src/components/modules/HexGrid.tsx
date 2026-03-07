@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/types';
+import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/Types';
 import { calculateMeteoriteEfficiency, getSector } from '../../logic/upgrades/EfficiencyLogic';
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';

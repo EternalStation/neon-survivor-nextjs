@@ -1,5 +1,5 @@
 
-import type { GameState, Player } from '../core/types';
+import type { GameState, Player } from '../core/Types';
 import { calcStat, getDefenseReduction } from './MathUtils';
 import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';

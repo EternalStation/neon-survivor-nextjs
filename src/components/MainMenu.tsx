@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { startMenuMusic, preloadMusic } from '../logic/audio/AudioLogic';
-import { CURRENT_PATCH_VERSION } from '../utils/leaderboard';
+import { CURRENT_PATCH_VERSION } from '../utils/Leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';
 import { useLanguage } from '../lib/LanguageContext';

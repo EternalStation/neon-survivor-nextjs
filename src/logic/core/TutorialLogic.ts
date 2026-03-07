@@ -1,4 +1,4 @@
-import { GameState, TutorialStep } from './types';
+import { GameState, TutorialStep } from './Types';
 
 
 

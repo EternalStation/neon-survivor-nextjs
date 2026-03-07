@@ -1,10 +1,10 @@
-import type { GameState } from '../logic/core/types';
-import api from '../api/client';
+import type { GameState } from '../logic/core/Types';
+import api from '../api/Client';
 import { calcStat } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { getArenaIndex } from '../logic/mission/MapLogic';
 import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
-import { normalizeDeathCause } from './deathCauseUtils';
+import { normalizeDeathCause } from './DeathCauseUtils';
 
 export const CURRENT_PATCH_VERSION = '1.0.3';
 

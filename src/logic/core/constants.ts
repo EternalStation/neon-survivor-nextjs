@@ -1,4 +1,4 @@
-import type { Rarity, Upgrade } from './types';
+import type { Rarity, Upgrade } from './Types';
 
 export const CANVAS_WIDTH = typeof window !== 'undefined' ? window.innerWidth : 1920;
 export const CANVAS_HEIGHT = typeof window !== 'undefined' ? window.innerHeight : 1080;

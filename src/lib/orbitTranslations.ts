@@ -387,7 +387,7 @@ export const getFluxGrantLine = (lang: Language): string =>
 // ─────────────────────────────────────────────────────────────
 //  TUTORIAL HINTS
 // ─────────────────────────────────────────────────────────────
-import { TutorialStep } from '../logic/core/types';
+import { TutorialStep } from '../logic/core/Types';
 
 export const getTutorialHints = (lang: Language): Partial<Record<TutorialStep, { text: string; subtext: string }>> =>
     lang === 'ru'

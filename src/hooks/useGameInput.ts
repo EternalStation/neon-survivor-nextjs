@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/types';
+import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/Types';
 import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
@@ -12,7 +12,7 @@ import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
-import { BlueprintType } from '../logic/core/types';
+import { BlueprintType } from '../logic/core/Types';
 
 import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
 import { applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';

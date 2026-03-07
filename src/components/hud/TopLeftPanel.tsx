@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { GameState } from '../../logic/core/types';
+import type { GameState } from '../../logic/core/Types';
 import { getArenaIndex } from '../../logic/mission/MapLogic';
 import { getCurrentMinuteEnemyHp } from '../../logic/enemies/EnemySpawnLogic';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -134,7 +134,7 @@ export const TopLeftPanel: React.FC<TopLeftPanelProps> = ({ gameState, onSkipTim
                     buffs.push({ id: 'def1', title: t.defArena, buff: `+${30 * surgeMult}% ${t.defBuff}`, color: '#3b82f6', remaining: 99999, priority: 2 });
                 }
 
-                const addBp = (type: import('../../logic/core/types').BlueprintType, serial: string, text: string, color: string) => {
+                const addBp = (type: import('../../logic/core/Types').BlueprintType, serial: string, text: string, color: string) => {
                     const endTime = gameState.activeBlueprintBuffs[type];
                     if (endTime) {
                         const timeLeft = Math.max(0, Math.floor(endTime - gameTime));

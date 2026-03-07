@@ -1,11 +1,11 @@
-import type { GameState, MapPOI } from '../../core/types';
+import type { GameState, MapPOI } from '../../core/Types';
 import { getInfernalBossHp } from '../../enemies/EnemySpawnLogic';
 import type { Language } from '../../../lib/LanguageContext';
 import { getUiTranslation } from '../../../lib/uiTranslations';
 import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
 import { calculateLegendaryBonus } from '../../upgrades/LegendaryLogic';
 import { getKeyDisplay } from '../../utils/Keybinds';
-import { formatLargeNumber } from '../../../utils/format';
+import { formatLargeNumber } from '../../../utils/Format';
 
 export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState, language: Language = 'en') {
     const t = getUiTranslation(language).render;

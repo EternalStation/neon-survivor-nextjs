@@ -1,5 +1,5 @@
-import type { GameState, Enemy } from '../../core/types';
-import { PALETTES } from '../../core/constants';
+import type { GameState, Enemy } from '../../core/Types';
+import { PALETTES } from '../../core/Constants';
 
 export function renderCircleSoulSuck(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     if (e.shape !== 'circle' || !e.boss) return;

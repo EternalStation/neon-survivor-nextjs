@@ -1,5 +1,5 @@
-import type { GameState, Player } from '../core/types';
-import { PLAYER_CLASSES } from '../core/classes';
+import type { GameState, Player } from '../core/Types';
+import { PLAYER_CLASSES } from '../core/Classes';
 
 /**
  * Get the theme color for the current player class

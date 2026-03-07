@@ -1,9 +1,9 @@
-import type { Enemy, GameState } from '../../core/types';
+import type { Enemy, GameState } from '../../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 import { calcStat, getDefenseReduction, distToSegment } from '../../utils/MathUtils';
 import { applyDamageToPlayer } from '../../utils/CombatUtils';
-import { PALETTES } from '../../core/constants';
+import { PALETTES } from '../../core/Constants';
 
 export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let isBerserk = false;

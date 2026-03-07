@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { GameState, UpgradeChoice, PlayerClass, TutorialStep } from '../logic/core/types';
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { GameState, UpgradeChoice, PlayerClass, TutorialStep } from '../logic/core/Types';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../logic/core/constants';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../logic/core/Constants';
 import { updatePlayer } from '../logic/player/PlayerLogic';
 import { updateEnemies } from '../logic/enemies/EnemyLogic';
 import { updateDirector } from '../logic/enemies/DirectorLogic';

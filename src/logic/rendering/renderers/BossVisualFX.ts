@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 
 export function renderBossDistortion(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     const t = state.gameTime;

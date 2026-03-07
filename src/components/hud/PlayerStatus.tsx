@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import type { GameState } from '../../logic/core/types';
-import { CANVAS_WIDTH } from '../../logic/core/constants';
+import type { GameState } from '../../logic/core/Types';
+import { CANVAS_WIDTH } from '../../logic/core/Constants';
 import { getHexMultiplier, getHexLevel } from '../../logic/upgrades/LegendaryLogic';
-import { PLAYER_CLASSES } from '../../logic/core/classes';
+import { PLAYER_CLASSES } from '../../logic/core/Classes';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { calcStat } from '../../logic/utils/MathUtils';
-import { formatLargeNumber } from '../../utils/format';
+import { formatLargeNumber } from '../../utils/Format';
 import { getCdMod, getRemainingCD, getCDProgress, isOnCooldown } from '../../logic/utils/CooldownUtils';
 import { GAME_CONFIG } from '../../logic/core/GameConfig';
 import { useLanguage } from '../../lib/LanguageContext';

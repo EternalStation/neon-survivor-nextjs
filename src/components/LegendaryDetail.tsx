@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GameState, LegendaryHex, LegendaryCategory } from '../logic/core/types';
+import type { GameState, LegendaryHex, LegendaryCategory } from '../logic/core/Types';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './modules/ModuleUtils';
 import { getUiTranslation } from '../lib/uiTranslations';

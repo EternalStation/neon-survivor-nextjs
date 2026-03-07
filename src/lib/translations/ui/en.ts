@@ -374,7 +374,6 @@ export const en = {
         GravitationalHarvest: { name: 'THE GRAVITATIONAL HARVEST', desc: 'A stellar resonance between Essence Syphon and Epicenter. Kills within the well extend its duration. 10% of damage taken is reflected to trapped enemies.', skillDesc: 'Drops crystalline spikes (Radius: 500px) that pull enemies. Duration +0.1s on kill. Reflects 10% damage taken to trapped enemies. Recharges in 30s.' },
         ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Kinetic bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
         ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Zombies have 10% chance to consume enemies on first bite. Zombie kills reduce all active skill cooldowns by 0.03s.' },
-        VitalMire: { name: 'THE VITAL MIRE', desc: 'A mutagenic fusion of Essence Syphon and Toxic Swamp. Converts the life force of fallen enemies into regenerative compounds.', skillDesc: 'Generates a mutagenic puddle (Radius: 600px) for 10s. Enemies killed inside or by the puddle have a 50% chance to drop a Vital Spark that heals for 1% Max HP. Base Cooldown: 25s.' },
         perks: {
             EcoDMG: ["+0.05 DMG per kill", "+0.02 ATC per kill", "+0.05% DMG per kill", "+0.5% AOE Chance per Player Level (100px)"],
             EcoXP: ["+0.05 XP per kill", "+0.02 Dust per kill", "+0.05 Flux per kill", "+0.05% XP per kill"],
@@ -573,21 +572,6 @@ export const en = {
                 "+0.25% Cooldown reduction every minute",
                 "+1% of your Armor increased your HP/sec%"
             ],
-            VitalMire: [
-                "GROUP:THE VITAL MIRE",
-                "50% chance for enemies killed by or inside ACID to spawn a Vital Spark",
-                "Vital Sparks instantly heal the player for 1.5% MAX HP and grant 20% Regen for 5s",
-                "GROUP:ESSENCE SYPHON (ENHANCED)",
-                "+0.1 Max HP per kill",
-                "+0.04 HP/sec per kill",
-                "+0.1% Max HP per kill",
-                "+0.04% HP/sec per kill",
-                "GROUP:TOXIC SWAMP",
-                "+5% Enemy MAX HP DMG/Sec inside ACID",
-                "+20% Slow Enemies Movement inside ACID",
-                "+25% MaxHP and Regen%/sec while in ACID",
-                "+40% increased DMG to enemies inside ACID"
-            ]
         }
     },
     arenas: {
@@ -730,7 +714,6 @@ export const en = {
                 xenoAlchemist: 'Xeno Alchemist',
                 irradiatedMire: 'Irradiated Mire',
                 necroKineticEngine: 'Necro-Kinetic Engine',
-                vitalMire: 'Vital Mire',
                 shatteredCapacitor: 'Shattered Capacitor',
                 neuralSingularity: 'Neural Singularity',
                 kineticTsunami: 'Kinetic Tsunami',

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { RadarChart } from './RadarChart';
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { getUiTranslation } from '../lib/uiTranslations';
-import { formatLargeNumber } from '../utils/format';
+import { formatLargeNumber } from '../utils/Format';
 
 interface LeaderboardStatisticsProps {
     entries: any[];

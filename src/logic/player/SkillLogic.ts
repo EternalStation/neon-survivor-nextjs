@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -17,11 +17,10 @@ export function castSkill(state: GameState, skillIndex: number) {
 
     if (isOnCooldown(skill.lastUsed, skill.baseCD, cdMod, now)) return;
 
-    if (skill.type === 'DefPuddle' || skill.type === 'XenoAlchemist' || skill.type === 'IrradiatedMire' || skill.type === 'VitalMire') {
+    if (skill.type === 'DefPuddle' || skill.type === 'XenoAlchemist' || skill.type === 'IrradiatedMire') {
         const level = getHexLevel(state, 'DefPuddle');
         const mireLvl = getHexLevel(state, 'IrradiatedMire');
-        const vitalLvl = getHexLevel(state, 'VitalMire');
-        const radius = mireLvl > 0 ? 666 : (vitalLvl > 0 ? 600 : (level >= 4 ? 600 : 500));
+        const radius = mireLvl > 0 ? 666 : (level >= 4 ? 600 : 500);
 
         state.areaEffects.push({
             id: Math.random(),
@@ -31,8 +30,7 @@ export function castSkill(state: GameState, skillIndex: number) {
             radius,
             duration: 10,
             creationTime: state.gameTime,
-            level,
-            isVitalMire: vitalLvl > 0
+            level
         });
 
         skill.baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;

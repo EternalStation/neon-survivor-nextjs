@@ -1,7 +1,8 @@
-import type { GameState, Player, PlayerClass } from './types';
+import type { GameState, Player, PlayerClass } from './Types';
 import { ARENA_CENTERS, generateMapPOIs } from '../mission/MapLogic';
 import { GAME_CONFIG } from './GameConfig';
-import { PLAYER_CLASSES } from './classes';
+import { PLAYER_CLASSES } from './Classes';
+import { calcStat } from '../utils/MathUtils';
 import { relocateTurretsToArena } from '../mission/TurretLogic';
 
 
@@ -76,12 +77,9 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
     }
 
 
-    const baseMaxHp = p.hp.base * (1 + p.hp.mult / 100);
-    if (startingArenaId === 2) {
-        p.curHp = baseMaxHp * 1.2;
-    } else {
-        p.curHp = baseMaxHp;
-    }
+    const initialMaxHp = calcStat(p.hp);
+    p.curHp = initialMaxHp;
+    p.xp.current = p.xp.needed;
 
     return p;
 };

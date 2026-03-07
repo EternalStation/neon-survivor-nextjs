@@ -26,7 +26,6 @@ The Fusion Menu (accessible via the `FUSIONS` button in the Matrix) allows playe
 | **THE GRAVITATIONAL HARVEST** | Essence Syphon + Epicenter | Economic / Defensive | EXIS / BASTION |
 | **THE SHATTERED CAPACITOR** | Shattered Fate + Kinetic Battery | Combat / Defensive | APEX / BASTION |
 | **THE CHRONO-DEVOURER** | Crimson Feast + Chrono Plating | Combat / Defensive | APEX / BASTION |
-| **THE VITAL MIRE** | Essence Syphon + Toxic Swamp | Economic / Defensive | EXIS / BASTION |
 
 ---
 
@@ -197,19 +196,6 @@ Inherits all perks from **Aegis Protocol** (Lvl 1-4) and **Chrono Plating** (Lvl
 - **Temporal Shatter**: Enemies that die while frozen shatter for **25% Max HP AOE damage**.
 
 ---
-
-## THE VITAL MIRE
-
-A mutagenic fusion of **Essence Syphon** (EcoHP) and **Toxic Swamp**. It converts necrotic acids into regenerative compounds.
-
-### Passive Perks
-Inherits all perks from **Essence Syphon** (Lvl 1-4) and **Toxic Swamp** (Lvl 1-4).
-- **Essence Syphon (Enhanced)**: Kill-scaling is increased by 2x.
-- **Toxic Swamp**: Slows enemies and deals Max HP damage over time.
-
-### Fusion Mechanics: Mutagenic Recovery
-- **Vital Sparks**: Every enemy killed by or inside the **Vital Mire** (ACID puddle) has a **50% chance** to spawn a **Vital Spark**.
-- **Life Source**: Collecting a Vital Spark instantly heals the player for **1.5% MAX HP** and grants **+20% HP Regeneration** for 5 seconds.
 
 ---
 

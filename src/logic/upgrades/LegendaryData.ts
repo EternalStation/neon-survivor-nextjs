@@ -1,4 +1,4 @@
-import type { LegendaryHex } from '../core/types';
+import type { LegendaryHex } from '../core/Types';
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {
@@ -313,17 +313,4 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         killsAtAcquisition: 0,
         customIcon: '/assets/Fusions/THE CHRONO-DEVOURER.png'
     },
-    VitalMire: {
-        id: 'vital_mire',
-        name: 'THE VITAL MIRE',
-        desc: 'Economic / Defensive Fusion',
-        description: 'A mutagenic fusion of Essence Syphon and Toxic Swamp. The puddle absorbs the essence of fallen enemies, converting their life force into regenerative compounds.',
-        lore: 'Where the Syphon meets the Swamp, death becomes sustenance. The mire pulses with stolen vitality, its yellow-green depths teeming with bio-luminescent organisms that convert organic matter into raw healing energy.',
-        category: 'Fusion',
-        categories: ['Economic', 'Defensive'],
-        type: 'VitalMire',
-        level: 5,
-        killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE VITAL MIRE.png'
-    }
 };

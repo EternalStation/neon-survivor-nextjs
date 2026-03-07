@@ -1,4 +1,4 @@
-import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/types';
+import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/Types';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
 import { calcStat } from '../utils/MathUtils';
@@ -6,7 +6,7 @@ import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { LEGENDARY_UPGRADES } from './LegendaryData';
 
-export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'VitalMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'GravityAnchor'];
+export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'GravityAnchor'];
 
 export function getLegendaryPerksArray(type: string, level: number, state?: GameState, hex?: LegendaryHex, returnAll?: boolean): string[] | string[][] {
     const getSouls = (lvl: number) => {
@@ -46,8 +46,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             (type === 'GravitationalHarvest' && (p.toLowerCase().includes('duration extension') || p.toLowerCase().includes('reflected') || p.toLowerCase().includes('продление') || p.toLowerCase().includes('отражает'))) ||
             (type === 'ShatteredCapacitor' && (p.toLowerCase().includes('arcs a kinetic') || p.toLowerCase().includes('armor dmg as bleed') || p.toLowerCase().includes('рикошетит кинетический') || p.toLowerCase().includes('кровотечение'))) ||
             (type === 'ChronoDevourer' && (p.toLowerCase().includes('explode all shields') || p.toLowerCase().includes('cooldown decrease') || p.toLowerCase().includes('chance for zombies') || p.toLowerCase().includes('взрывает все щиты') || p.toLowerCase().includes('шанс зомби') || p.toLowerCase().includes('ускорение перезарядки'))) ||
-            (type === 'GravityAnchor' && (p.toLowerCase().includes('explosive') || p.toLowerCase().includes('armor') || p.toLowerCase().includes('брони') || p.toLowerCase().includes('взрываются'))) ||
-            (type === 'VitalMire' && (p.toLowerCase().includes('puddle kills') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('vital recovery')));
+            (type === 'GravityAnchor' && (p.toLowerCase().includes('explosive') || p.toLowerCase().includes('armor') || p.toLowerCase().includes('брони') || p.toLowerCase().includes('взрываются')));
 
         if (type === 'SoulShatterCore') {
             if (p.includes('+5% Crit DMG') || p.includes('+5% Крит Урона')) {
@@ -123,7 +122,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         return formattedList;
     }
 
-    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer' || type === 'VitalMire') {
+    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer') {
         return formattedList.flat();
     }
 
@@ -256,7 +255,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
 
                 if (key) {
                     let baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
-                    if (selection.type === 'DefPuddle' || selection.type === 'VitalMire') baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
+                    if (selection.type === 'DefPuddle') baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
                     if (selection.type === 'DefEpi') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
                     if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
                     if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
@@ -292,10 +291,6 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
     if (type === 'DefPuddle' || type === 'RadiationCore') {
         const mire = state.moduleSockets.hexagons.find(h => h?.type === 'IrradiatedMire');
         if (mire) return 5;
-    }
-    if (type === 'EcoHP' || type === 'DefPuddle') {
-        const vital = state.moduleSockets.hexagons.find(h => h?.type === 'VitalMire');
-        if (vital) return 5;
     }
     if (type === 'EcoXP' || type === 'ComWave') {
         const sing = state.moduleSockets.hexagons.find(h => h?.type === 'NeuralSingularity');
@@ -422,8 +417,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
         }
 
-        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest' || hex.type === 'VitalMire') {
-            const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest' || hex.type === 'VitalMire') ? 2.0 : 1.0;
+        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') {
+            const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') ? 2.0 : 1.0;
             if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.05 * multi;
             if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.02 * multi;
             if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05 * multi;

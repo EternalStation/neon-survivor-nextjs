@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/types';
-import { BASE_UPGRADE_VALUES } from '../logic/core/constants';
+import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/Types';
+import { BASE_UPGRADE_VALUES } from '../logic/core/Constants';
 import { calcStat } from '../logic/utils/MathUtils';
-import { formatLargeNumber } from '../utils/format';
+import { formatLargeNumber } from '../utils/Format';
 import { getIcon } from './UpgradeIcons';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';

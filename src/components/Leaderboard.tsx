@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import api from '../api/client';
+import api from '../api/Client';
 import { RadarChart } from './RadarChart';
-import { PLAYER_CLASSES } from '../logic/core/classes';
-import { formatLargeNumber } from '../utils/format';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
+import { formatLargeNumber } from '../utils/Format';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation, UI_TRANSLATIONS } from '../lib/uiTranslations';
 import { LeaderboardStatistics } from './LeaderboardStatistics';
 import { DamageRow } from './stats/DamageRow';
-import { getDamageMapping } from '../utils/damageMapping';
-import { normalizeDeathCause } from '../utils/deathCauseUtils';
+import { getDamageMapping } from '../utils/DamageMapping';
+import { normalizeDeathCause } from '../utils/DeathCauseUtils';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GameState, IncubatedMeteorite } from '../../logic/core/types';
+import type { GameState, IncubatedMeteorite } from '../../logic/core/Types';
 import { getMeteoriteImage } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { useLanguage } from '../../lib/LanguageContext';

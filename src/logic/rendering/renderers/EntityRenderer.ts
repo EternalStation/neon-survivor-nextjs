@@ -1,5 +1,5 @@
-import type { GameState } from '../../core/types';
-import { TutorialStep } from '../../core/types';
+import type { GameState } from '../../core/Types';
+import { TutorialStep } from '../../core/Types';
 
 
 
@@ -100,32 +100,6 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.arc(0, 0, 6, 0, Math.PI * 2);
                 ctx.fill();
             }
-        } else if (m.type === 'vital_spark') {
-            const pulse = (Math.sin(state.gameTime * 8 + m.id) + 1) * 0.5;
-
-
-            ctx.shadowBlur = 15 + pulse * 10;
-            ctx.shadowColor = '#fbbf24';
-
-
-            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.4, '#fbbf24');
-            grad.addColorStop(1, 'rgba(251, 191, 36, 0)');
-
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(0, 0, 10 + pulse * 2, 0, Math.PI * 2);
-            ctx.fill();
-
-
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, 14 + pulse * 4, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.shadowBlur = 0;
         } else {
             const assetQuality = m.quality;
             const imgKey = `M${m.visualIndex}${assetQuality}`;

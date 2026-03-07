@@ -1,5 +1,5 @@
 
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 import { GAME_CONFIG } from '../../core/GameConfig';
 
 export function renderMergeConnections(ctx: CanvasRenderingContext2D, state: GameState) {

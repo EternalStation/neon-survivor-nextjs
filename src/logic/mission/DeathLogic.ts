@@ -1,8 +1,8 @@
-import type { GameState, Enemy, ShapeType } from '../core/types';
-import { TutorialStep } from '../core/types';
+import type { GameState, Enemy, ShapeType } from '../core/Types';
+import { TutorialStep } from '../core/Types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile, spawnVitalSpark } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
@@ -210,18 +210,6 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
 
-    const vitalMireLvl = getHexLevel(state, 'VitalMire');
-    if (vitalMireLvl > 0) {
-        const isInVitalMire = state.areaEffects.some(ae =>
-            ae.type === 'puddle' &&
-            ae.isVitalMire &&
-            Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius
-        );
-
-        if (isInVitalMire && Math.random() < 0.5) {
-            spawnVitalSpark(state, e.x, e.y);
-        }
-    }
 
 
     const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP' || h?.type === 'XenoAlchemist' || h?.type === 'NeuralSingularity');

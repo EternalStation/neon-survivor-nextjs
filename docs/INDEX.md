@@ -88,7 +88,6 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 
 | File | Description |
 | :--- | :--- |
-| [mechanics/MatrixInterface.md](mechanics/MatrixInterface.md) | **Matrix Link**: Central tactical interface, hierarchical menu closure, and Esc exit protocols. |
 | [mechanics/TurretSystem.md](mechanics/TurretSystem.md) | Interaction radius (350px), cost scaling, and turret variants (Fire/Ice/Heal). |
 | [mechanics/MenuAnimation.md](mechanics/MenuAnimation.md) | Scanning effect, "DECRYPTING" animations, and 0.5s-1.0s initial delay. |
 | [mechanics/MatrixSectorColors.md](mechanics/MatrixSectorColors.md) | Unified purple palette for Sector 01-03 identifiers. |
@@ -111,4 +110,4 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 - Core Stats: 8/8
 - Legendary Upgrades: 12/12
 - Bosses: 3 Major variants
-- Systems: 7 Modules
+- Systems: 6 Modules

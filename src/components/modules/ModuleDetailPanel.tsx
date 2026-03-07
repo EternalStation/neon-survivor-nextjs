@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/core/types';
+import type { GameState, Meteorite, LegendaryHex, Blueprint } from '../../logic/core/Types';
 import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
 import { isBuffActive, activateBlueprint, scrapBlueprint } from '../../logic/upgrades/BlueprintLogic';
@@ -12,7 +12,7 @@ import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
 import { getMeteoriteImage, matchesPerk, PerkFilter, getBlueprintImage } from './ModuleUtils';
-import { PLAYER_CLASSES } from '../../logic/core/classes';
+import { PLAYER_CLASSES } from '../../logic/core/Classes';
 
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
@@ -160,8 +160,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
 
         const timeLeft = status === 'researching' && bp.researchFinishTime
             ? Math.max(0, bp.researchFinishTime - gs.gameTime) : 0;
-        const endTime = gs.activeBlueprintBuffs?.[bp.type as import('../../logic/core/types').BlueprintType];
-        const charges = gs.activeBlueprintCharges?.[bp.type as import('../../logic/core/types').BlueprintType];
+        const endTime = gs.activeBlueprintBuffs?.[bp.type as import('../../logic/core/Types').BlueprintType];
+        const charges = gs.activeBlueprintCharges?.[bp.type as import('../../logic/core/Types').BlueprintType];
         const activeTimeLeft = endTime ? Math.max(0, endTime - gs.gameTime) : 0;
 
         return (

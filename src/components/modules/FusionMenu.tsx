@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { GameState } from '../../logic/core/types';
+import type { GameState } from '../../logic/core/Types';
 import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryData';
 import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
@@ -26,7 +26,6 @@ const FUSIONS = [
     { id: 'GravitationalHarvest', result: 'GravitationalHarvest', bases: ['EcoHP', 'DefEpi'], perform: MergeLogic.performGravitationalHarvestMerge },
     { id: 'ShatteredCapacitor', result: 'ShatteredCapacitor', bases: ['ComCrit', 'KineticBattery'], perform: MergeLogic.performShatteredCapacitorMerge },
     { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge },
-    { id: 'VitalMire', result: 'VitalMire', bases: ['EcoHP', 'DefPuddle'], perform: MergeLogic.performVitalMireMerge }
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/types';
+import { GameState, UpgradeChoice, LegendaryHex, PlayerClass } from '../logic/core/Types';
 import { createInitialGameState } from '../logic/core/GameState';
 import { applyUpgrade, spawnUpgrades, spawnSnitchUpgrades } from '../logic/upgrades/UpgradeLogic';
 import { syncLegendaryHex, applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';

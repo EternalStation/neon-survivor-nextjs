@@ -1,4 +1,4 @@
-import type { GameState } from '../../core/types';
+import type { GameState } from '../../core/Types';
 import { GAME_CONFIG } from '../../core/GameConfig';
 
 export function renderSandbox(ctx: CanvasRenderingContext2D, state: GameState) {

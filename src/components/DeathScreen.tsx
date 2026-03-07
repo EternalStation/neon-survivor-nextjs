@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import { DamageRow } from './stats/DamageRow';
 import { getUiTranslation } from '../lib/uiTranslations';
-import type { GameState, UpgradeChoice } from '../logic/core/types';
+import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
-import { submitRunToLeaderboard } from '../utils/leaderboard';
-import { formatLargeNumber } from '../utils/format';
+import { submitRunToLeaderboard } from '../utils/Leaderboard';
+import { formatLargeNumber } from '../utils/Format';
 import { useLanguage } from '../lib/LanguageContext';
-import { getDamageMapping } from '../utils/damageMapping';
+import { getDamageMapping } from '../utils/DamageMapping';
 import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface DeathScreenProps {

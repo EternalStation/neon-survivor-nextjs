@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GameState, Blueprint, Meteorite } from '../logic/core/types';
+import type { GameState, Blueprint, Meteorite } from '../logic/core/Types';
 import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { TICK_INTERVAL } from '../logic/upgrades/IncubatorLogic';
 import { getMeteoriteImage, RARITY_COLORS } from './modules/ModuleUtils';

@@ -1,4 +1,4 @@
-import type { GameState, Meteorite, LegendaryHex } from '../core/types';
+import type { GameState, Meteorite, LegendaryHex } from '../core/Types';
 import { isBuffActive } from './BlueprintLogic';
 
 const FORGE_MAP: Record<string, string> = {

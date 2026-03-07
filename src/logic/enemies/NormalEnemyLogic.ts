@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
 import { spawnParticles } from '../effects/ParticleLogic';
 import { spawnEnemyBullet } from '../combat/ProjectileSpawning';

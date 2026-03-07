@@ -1,4 +1,4 @@
-import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
+import type { GameState, Enemy, MapPOI, Bullet } from '../core/Types';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';

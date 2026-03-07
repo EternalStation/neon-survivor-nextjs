@@ -1,5 +1,5 @@
-import type { GameState, UpgradeChoice } from '../core/types';
-import { UPGRADE_TYPES, RARITIES, BASE_UPGRADE_VALUES } from '../core/constants';
+import type { GameState, UpgradeChoice } from '../core/Types';
+import { UPGRADE_TYPES, RARITIES, BASE_UPGRADE_VALUES } from '../core/Constants';
 import { calcStat } from '../utils/MathUtils';
 import { calculateLegendaryBonus } from './LegendaryLogic';
 

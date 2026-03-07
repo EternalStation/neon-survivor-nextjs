@@ -1,11 +1,11 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { isInMap, getHexDistToWall, ARENA_CENTERS } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { recordDamage } from '../utils/DamageTracking';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -499,7 +499,7 @@ export function updateSingleEnemy(
     } else if (e.isElite) {
         switch (e.shape) {
             case 'circle': v = updateEliteCircle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
-            case 'triangle': v = updateEliteTriangle(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
+            case 'triangle': v = updateEliteTriangle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
             case 'square': v = updateEliteSquare(e, state, currentSpd, dx, dy, pushX, pushY); break;
             case 'diamond': v = updateEliteDiamond(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;
             case 'pentagon': v = updateElitePentagon(e, state, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;

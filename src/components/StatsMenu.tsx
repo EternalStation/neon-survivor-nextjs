@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RadarChart } from './RadarChart';
 export { RadarChart };
-import type { GameState, PlayerStats } from '../logic/core/types';
+import type { GameState, PlayerStats } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { getCdMod } from '../logic/utils/CooldownUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
@@ -11,18 +11,18 @@ import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { DROP_TABLE } from '../logic/mission/LootLogic';
 
 
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
-import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/constants';
+import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/Constants';
 import { getCycleHpMult } from '../logic/enemies/EnemySpawnLogic';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
 
-import { formatLargeNumber } from '../utils/format';
+import { formatLargeNumber } from '../utils/Format';
 import { ThreatProgression } from './ThreatProgression';
 import { StatRow } from './stats/StatRow';
 import { DamageRow } from './stats/DamageRow';
-import { getDamageMapping } from '../utils/damageMapping';
+import { getDamageMapping } from '../utils/DamageMapping';
 
 interface StatsMenuProps {
     gameState: GameState;
