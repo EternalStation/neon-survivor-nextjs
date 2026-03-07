@@ -2,7 +2,13 @@ import type { GameState, Enemy } from '../../core/types';
 import { PALETTES } from '../../core/constants';
 
 export function renderCircleSoulSuck(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
-    if (e.shape !== 'circle' || !e.boss || !e.soulSuckActive) return;
+    if (e.shape !== 'circle' || !e.boss) return;
+
+    if (e.dashState === 1) {
+        renderCircleDashWarning(ctx, e, state);
+    }
+
+    if (!e.soulSuckActive) return;
 
     const totalTime = 300;
     const progress = Math.min(1.0, (totalTime - (e.soulSuckTimer || 0)) / totalTime);
@@ -92,6 +98,41 @@ export function renderCircleSoulSuck(ctx: CanvasRenderingContext2D, e: Enemy, st
     ctx.beginPath();
     ctx.arc(px, py, 40, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
+}
+
+function renderCircleDashWarning(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
+    const t = state.gameTime;
+
+    const chargeProgress = Math.min(1, (e.dashTimer || 0) / 30);
+    const trackingAngle = Math.atan2((e.dashLockY || state.player.y) - e.y, (e.dashLockX || state.player.x) - e.x);
+
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(trackingAngle);
+
+    ctx.strokeStyle = e.palette[1] || '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.3 + chargeProgress * 0.5;
+    ctx.setLineDash([12, 8]);
+    ctx.lineDashOffset = -t * 100;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(2000, 0);
+    ctx.stroke();
+
+    const rectWidth = 80;
+    const rectHeight = e.size * 2 * (0.5 + chargeProgress * 0.5);
+    const rectGrad = ctx.createLinearGradient(0, -rectHeight / 2, 0, rectHeight / 2);
+    rectGrad.addColorStop(0, 'transparent');
+    rectGrad.addColorStop(0.5, e.palette[1] || '#ef4444');
+    rectGrad.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = rectGrad;
+    ctx.globalAlpha = 0.2 + chargeProgress * 0.2;
+    ctx.fillRect(0, -rectHeight / 2, 2000, rectHeight);
 
     ctx.restore();
 }

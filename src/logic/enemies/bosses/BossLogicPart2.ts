@@ -47,10 +47,9 @@ export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy:
         e.deflectState = isBerserk;
     }
 
-    const modifier = isBerserk ? 2.55 : 1.0;
+    const modifier = isBerserk ? 1.8 : 1.0;
     const finalSpd = currentSpd * modifier;
     const angle = Math.atan2(dy, dx);
-
 
     const wobble = isBerserk ? Math.sin(state.gameTime * 20) * 0.5 : 0;
     e.rotationPhase = (e.rotationPhase || 0) + (isBerserk ? 0.3 : 0.05);
