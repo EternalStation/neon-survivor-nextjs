@@ -4,6 +4,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { recordDamage } from '../utils/DamageTracking';
+import { applyDamageToPlayer } from '../utils/CombatUtils';
 import { getPlayerThemeColor } from '../utils/helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
@@ -48,13 +49,10 @@ export function updateSingleEnemy(
                 if (state.frameCount % burnTick === 0) {
                     const burnDmgPct = 0.05 + (gen * 0.01) + (e.bonusBurnPct || 0);
                     const dmg = (calcStat(p.hp) * burnDmgPct) / (60 / burnTick);
-                    p.curHp -= dmg;
-                    p.damageTaken += dmg;
-                    p.lastHitDamage = dmg;
-                    if (p.curHp <= 0) {
-                        p.deathCause = "Infernal Combustion (Overlord Boss)";
-                    }
-                    spawnFloatingNumber(state, p.x, p.y, `-${Math.round(dmg)}`, '#ef4444', false);
+                    applyDamageToPlayer(state, p, dmg, {
+                        sourceType: 'other',
+                        deathCause: "Overlord Burn"
+                    });
                 }
             }
         });
@@ -111,8 +109,11 @@ export function updateSingleEnemy(
             const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
             if (distToPlayer < (e.size + state.player.size)) {
                 const oneShotDmg = calcStat(state.player.hp) * 1.5;
-                state.player.curHp -= oneShotDmg;
-                state.player.damageTaken += oneShotDmg;
+                applyDamageToPlayer(state, state.player, oneShotDmg, {
+                    sourceType: 'collision',
+                    deathCause: `Pentagon Boss Level ${host.bossTier || 1} Phalanx Drone Charge`,
+                    floatingNumberColor: '#ef4444'
+                });
                 spawnFloatingNumber(state, state.player.x, state.player.y, "CRIT", '#ef4444', true);
                 e.dead = true;
                 spawnParticles(state, e.x, e.y, '#eab308', 15);
@@ -227,6 +228,8 @@ export function updateSingleEnemy(
                         e.hp -= dmgDealt;
                         e.lastHitTime = state.gameTime;
                         state.player.damageDealt += dmgDealt;
+                        const shattered = state.moduleSockets.hexagons.some((h: any) => h?.type === 'ShatteredCapacitor');
+                        recordDamage(state, shattered ? 'Shattered Capacitor (Bleed)' : 'Other', dmgDealt);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmgDealt).toString(), '#dc2626', false);
                         spawnParticles(state, e.x, e.y, '#dc2626', 1);
                     }

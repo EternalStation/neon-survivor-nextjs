@@ -6,6 +6,7 @@ import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getHexLevel, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { triggerKineticBatteryZap } from '../player/PlayerCombat';
 import { GAME_CONFIG } from '../core/GameConfig';
+import { applyDamageToPlayer } from '../utils/CombatUtils';
 
 export function updateSingleEnemyBullet(
     state: GameState,
@@ -27,7 +28,7 @@ export function updateSingleEnemyBullet(
         const vPower = player.vortexStrength || 1.0;
 
         if (player.orbitalVortexUntil && player.orbitalVortexUntil > state.gameTime) {
-            
+
             if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
                 const perpX = -vdy / vdist;
                 const perpY = vdx / vdist;
@@ -38,11 +39,11 @@ export function updateSingleEnemyBullet(
                 if (speed > cap) { eb.vx = (eb.vx / speed) * cap; eb.vy = (eb.vy / speed) * cap; }
             }
         } else {
-            
+
             if (vdist > 180 && vdist < 330) {
                 const perpX = -vdy / vdist;
                 const perpY = vdx / vdist;
-                
+
                 eb.vx += perpX * 0.05 * vPower;
                 eb.vy += perpY * 0.05 * vPower;
             }
@@ -54,7 +55,7 @@ export function updateSingleEnemyBullet(
         return true;
     }
 
-    
+
     const nearbyZombies = state.spatialGrid.query(eb.x, eb.y, 50);
     for (const z of nearbyZombies) {
         if (z.isZombie && z.zombieState === 'active' && !z.dead) {
@@ -75,62 +76,21 @@ export function updateSingleEnemyBullet(
         }
     }
 
-    
+
     const playersList = Object.values(state.players);
     for (const p of playersList) {
         if (Math.hypot(p.x - eb.x, p.y - eb.y) < p.size + 10) {
-            const armorValue = calcStat(p.arm);
-            const armRedMult = 1 - getDefenseReduction(armorValue);
-            const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, p);
-            const projRedMult = 1 - getDefenseReduction(projRedRaw, 0.80);
+            const finalDmg = applyDamageToPlayer(state, p, eb.dmg, {
+                sourceType: 'projectile',
+                onEvent,
+                triggerDeath,
+                deathCause: 'Enemy Projectile'
+            });
 
-            const rawDmg = eb.dmg;
-            const dmgAfterArmor = rawDmg * armRedMult;
-            const finalProjDmg = dmgAfterArmor * projRedMult;
-
-            p.damageBlockedByArmor += (rawDmg - dmgAfterArmor);
-            p.damageBlockedByProjectileReduc += (dmgAfterArmor - finalProjDmg);
-            p.damageBlocked += (rawDmg - finalProjDmg);
-
-            let absorbedDmg = 0;
-            if (p.shieldChunks?.length) {
-                p.shieldChunks.sort((a, b) => a.expiry - b.expiry);
-                let remaining = finalProjDmg;
-                for (const chunk of p.shieldChunks) {
-                    if (chunk.amount >= remaining) {
-                        chunk.amount -= remaining;
-                        absorbedDmg += remaining;
-                        remaining = 0;
-                        break;
-                    } else {
-                        absorbedDmg += chunk.amount;
-                        remaining -= chunk.amount;
-                        chunk.amount = 0;
-                    }
-                }
-                p.shieldChunks = p.shieldChunks.filter(c => c.amount > 0);
-            }
-
-            const finalDmg = Math.max(0, finalProjDmg - absorbedDmg);
-            p.damageBlockedByShield += absorbedDmg;
-            p.damageBlocked += absorbedDmg;
-
-            if (finalProjDmg > 0) {
+            if (finalDmg > 0 || eb.dmg > 0) {
                 if (getHexLevel(state, 'KineticBattery') >= 1) triggerKineticBatteryZap(state, p);
-                if (finalDmg > 0) {
-                    p.curHp -= finalDmg;
-                    p.damageTaken += finalDmg;
-                    p.lastHitDamage = finalDmg;
-                    if (onEvent) onEvent('player_hit', { dmg: finalDmg, playerId: p.id });
-                    if (p.curHp <= 0 && !state.gameOver) {
-                        state.gameOver = true;
-                        p.deathCause = 'Died from Enemy Projectile';
-                        if (onEvent) onEvent('game_over');
-                        triggerDeath?.();
-                    }
-                }
             }
-            spawnFloatingNumber(state, p.x, p.y, Math.round(finalProjDmg).toString(), '#ef4444', false);
+
             enemyBullets.splice(index, 1);
             return true;
         }

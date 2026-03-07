@@ -372,6 +372,12 @@ export function useGameLoop(gameStarted: boolean) {
             } else if (state.isPaused && !state.gameOver) {
                 updateTutorial(state, safeDt);
                 updateExtraction(state, safeDt);
+
+                // IMPORTANT: Trigger UI updates for extraction dialogue even while paused
+                // This ensures the typewriter animation in ModuleDetailPanel works correctly
+                if (state.extractionStatus !== 'none') {
+                    setUiState(p => p + 1);
+                }
             }
 
             if (accRef.current > FIXED_STEP * 20) accRef.current = 0;

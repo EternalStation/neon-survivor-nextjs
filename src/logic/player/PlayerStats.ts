@@ -103,6 +103,10 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
     }
 
+    if (player.buffs?.vitalRecovery && state.gameTime < player.buffs.vitalRecovery) {
+        state.hpRegenBuffMult *= 1.2;
+    }
+
 
     const kinLvl = getHexLevel(state, 'KineticBattery');
     if (kinLvl >= 1) {

@@ -273,6 +273,13 @@ export function useGameLogic({
         state.gameTime += step;
         state.frameCount++;
 
+        // Minute Marker Tracking (for damage per minute charts)
+        if (Math.floor(state.gameTime / 60) > state.lastMinuteMark) {
+            state.classSkillDamageHistory.push(state.currentMinuteClassSkillDamage || 0);
+            state.currentMinuteClassSkillDamage = 0;
+            state.lastMinuteMark = Math.floor(state.gameTime / 60);
+        }
+
 
         if (isHost) {
             if (state.portalState !== 'transferring') {

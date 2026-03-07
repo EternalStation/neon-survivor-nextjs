@@ -3,6 +3,7 @@ import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
+import { applyDamageToPlayer } from '../utils/CombatUtils';
 
 
 
@@ -26,7 +27,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
     } else if (e.eliteState === 1) {
         vx = 0; vy = 0; e.rotationPhase = (e.rotationPhase || 0) + 0.2;
         if (state.gameTime > (e.timer || 0)) {
-            
+
             const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
             let nearestP: any = players[0];
             let minD = Infinity;
@@ -44,7 +45,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
             const rDx = e.lockedTargetX - e.x, rDy = e.lockedTargetY - e.y, rDist = Math.hypot(rDx, rDy);
             if (rDist > 10) {
                 const a = Math.atan2(rDy, rDx); vx = Math.cos(a) * 10; vy = Math.sin(a) * 10;
-                
+
                 const pColor = e.palette ? e.palette[0] : '#EF4444';
                 spawnParticles(state, e.x, e.y, pColor, 1);
             } else {
@@ -79,7 +80,7 @@ export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx
 
 export function updateEliteSquare(e: Enemy, state: GameState, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number) {
     const aS = Math.atan2(dy, dx);
-    
+
     const vx = Math.cos(aS) * (currentSpd * 0.85) + pushX;
     const vy = Math.sin(aS) * (currentSpd * 0.85) + pushY;
     if (Math.random() < 0.1) spawnParticles(state, e.x + (Math.random() - 0.5) * e.size * 2, e.y + (Math.random() - 0.5) * e.size * 2, '#94A3B8', 1);
@@ -90,10 +91,10 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
     const angleToPlayerD = Math.atan2(dy, dx);
     let vx = 0, vy = 0;
 
-    
+
     if (!e.eliteState) e.eliteState = 0;
 
-    
+
     if (!e.distGoal) {
         e.distGoal = 600 + Math.random() * 200;
     }
@@ -110,12 +111,12 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
     const distFactor = (dist - distGoal) / 100;
 
     if (e.eliteState === 0) {
-        
+
         if (veryCloseToWall && (!e.lastDodge || state.gameTime - (e.lastDodge || 0) > 3.0)) {
             const angleToCenter = Math.atan2(nearestCenter.y - e.y, nearestCenter.x - e.x);
             const angleAwayFromPlayer = angleToPlayerD + Math.PI;
             e.dashState = (angleToCenter + angleAwayFromPlayer) / 2;
-            e.lockedTargetX = 0; 
+            e.lockedTargetX = 0;
             e.lockedTargetY = state.gameTime + 2.0;
             e.lastDodge = state.gameTime;
         }
@@ -135,43 +136,43 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
             vy = Math.sin(angleToPlayerD) * distFactor * currentSpd + pushY;
         }
 
-        
+
         const currentCD = (e as any).nextAttackCD || 5.0;
         if (state.gameTime - (e.lastAttack || 0) > currentCD) {
             e.eliteState = 1;
-            e.timer = state.gameTime + 1.4; 
-            e.dashState = angleToPlayerD; 
+            e.timer = state.gameTime + 1.4;
+            e.dashState = angleToPlayerD;
         }
     } else if (e.eliteState === 1) {
-        
+
         vx = 0; vy = 0;
 
-        
-        
+
+
         const remaining = (e.timer || 0) - state.gameTime;
         if (remaining > 0.8) {
-            
+
             e.dashState = angleToPlayerD;
         } else {
-            
+
         }
 
         if (state.gameTime > (e.timer || 0)) {
             e.eliteState = 2;
-            e.timer = state.gameTime + 0.8; 
-            e.hasHitThisBurst = false; 
+            e.timer = state.gameTime + 0.8;
+            e.hasHitThisBurst = false;
             playSfx('laser');
         }
     } else if (e.eliteState === 2) {
-        
+
         vx = 0; vy = 0;
-        
+
         e.lockedTargetX = e.x + Math.cos(e.dashState || 0) * 3000;
         e.lockedTargetY = e.y + Math.sin(e.dashState || 0) * 3000;
 
         const laserAngle = e.dashState || 0;
 
-        
+
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         players.forEach(p => {
             const px = p.x - e.x;
@@ -184,63 +185,21 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
                 e.hasHitThisBurst = true;
                 const rawDmg = e.maxHp * 0.04;
 
-                
-                
-                const armorObject = p.arm; 
-                const armorValue = calcStat(armorObject);
-                const reduction = getDefenseReduction(armorValue);
-                const finalActualDmg = rawDmg * (1 - reduction);
+                applyDamageToPlayer(state, p, rawDmg, {
+                    sourceType: 'projectile',
+                    onEvent,
+                    deathCause: 'Incinerated by Elite Diamond Laser',
+                    killerHp: e.hp,
+                    killerMaxHp: e.maxHp,
+                    floatingNumberColor: e.palette ? e.palette[0] : '#f87171'
+                });
 
-                
-                p.damageBlockedByArmor += (rawDmg - finalActualDmg);
-                p.damageBlocked += (rawDmg - finalActualDmg);
-
-                if (finalActualDmg > 0) {
-                    let absorbed = 0;
-                    let damageToApply = finalActualDmg;
-
-                    if (p.shieldChunks && p.shieldChunks.length > 0) {
-                        p.shieldChunks.sort((a: any, b: any) => a.expiry - b.expiry);
-                        let rem = damageToApply;
-                        for (const chunk of p.shieldChunks) {
-                            if (chunk.amount >= rem) {
-                                chunk.amount -= rem; absorbed += rem; rem = 0; break;
-                            } else {
-                                absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0;
-                            }
-                        }
-                        p.shieldChunks = p.shieldChunks.filter((c: any) => c.amount > 0);
-                        p.damageBlockedByShield += absorbed;
-                        p.damageBlocked += absorbed;
-                    }
-
-                    const actualDmg = damageToApply - absorbed;
-
-                    if (actualDmg > 0) {
-                        p.curHp -= actualDmg;
-                        p.damageTaken += actualDmg;
-                        p.lastHitDamage = actualDmg;
-                        p.killerHp = e.hp;
-                        p.killerMaxHp = e.maxHp;
-                    }
-
-                    const beamColor = e.palette ? e.palette[0] : '#f87171';
-                    spawnFloatingNumber(state, p.x, p.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
-
-                    
-                    const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
-                    if (triggerZap) triggerZap(state, p, 1);
-                }
-
-                if (p.curHp <= 0 && !state.gameOver) {
-                    state.gameOver = true;
-                    p.deathCause = 'Incinerated by Elite Diamond Laser';
-                    if (onEvent) onEvent('game_over');
-                }
+                const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
+                if (triggerZap) triggerZap(state, p, 1);
             }
         });
 
-        
+
         state.enemies.forEach(z => {
             if (z.isZombie && z.zombieState === 'active' && !z.dead) {
                 const zdx = z.x - e.x, zdy = z.y - e.y;
@@ -267,28 +226,28 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 }
 
 export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number, _onEvent?: (event: string, data?: any) => void) {
-    
-    
-    
-    
-    
 
-    
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
-    
 
-    
 
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!e.originalPalette) e.originalPalette = e.palette;
 
     const nearestCenter = ARENA_CENTERS.reduce((best, center) => {
@@ -297,9 +256,9 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     }, ARENA_CENTERS[0]);
     const distToWall = ARENA_RADIUS - Math.hypot(e.x - nearestCenter.x, e.y - nearestCenter.y);
 
-    
+
     if (!e.distGoal) {
-        e.distGoal = 600 + Math.random() * 300; 
+        e.distGoal = 600 + Math.random() * 300;
     }
 
     const angleToPlayerP = Math.atan2(dy, dx);
@@ -323,14 +282,14 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     let vx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
     let vy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
 
-    
+
     if (e.minionCount === undefined || state.frameCount % 10 === 0) {
         const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
         e.minionCount = myMinions.length;
         e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
     }
 
-    
+
     const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let distToNearest = Infinity;
     players.forEach(p => {
@@ -340,40 +299,40 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
 
     const hasMinions = (e.minionCount || 0) > 0;
 
-    
+
     if (distToNearest <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
         state.enemies.forEach(m => {
             if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
         });
         playSfx('stun-disrupt');
-        e.angryUntil = state.gameTime + 2.0; 
+        e.angryUntil = state.gameTime + 2.0;
         e.orbitingMinionIds = [];
     }
 
-    
+
     const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
     const isWarning = !!(distToNearest <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
-        
+
         e.palette = ['#EF4444', '#B91C1C', '#7F1D1D'];
-        e.eraPalette = undefined; 
-        vx += (Math.random() - 0.5) * 8; 
+        e.eraPalette = undefined;
+        vx += (Math.random() - 0.5) * 8;
         vy += (Math.random() - 0.5) * 8;
     } else if (isWarning) {
-        
-        e.palette = ['#EF4444', '#F87171', '#7F1D1D'];
-        e.eraPalette = undefined; 
 
-        vx += (Math.random() - 0.5) * 6; 
+        e.palette = ['#EF4444', '#F87171', '#7F1D1D'];
+        e.eraPalette = undefined;
+
+        vx += (Math.random() - 0.5) * 6;
         vy += (Math.random() - 0.5) * 6;
     }
 
-    
+
     const age = state.gameTime - (e.spawnedAt || 0);
     if (age > 60) {
         if ((e.minionCount || 0) > 0) {
-            
+
             if (!e.lastAttack) e.lastAttack = state.gameTime;
             if (state.gameTime - (e.lastAttack || 0) > 2.0) {
                 const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
@@ -384,14 +343,14 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
                 e.lastAttack = state.gameTime;
                 e.minionCount = (e.minionCount || 1) - 1;
             }
-            
+
             if (!isAngry) {
-                
+
                 e.palette = ['#FFFFFF', '#EF4444', '#7F1D1D'];
-                e.eraPalette = undefined; 
+                e.eraPalette = undefined;
             }
         } else {
-            
+
             e.dead = true; e.hp = 0;
             spawnParticles(state, e.x, e.y, '#EF4444', 30);
             playSfx('rare-kill');
@@ -399,13 +358,13 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         return { vx, vy };
     }
 
-    
-    
+
+
     if (e.lastAttack === undefined) e.lastAttack = state.gameTime;
 
     if (e.summonState === 1) {
         if (state.gameTime > (e.timer || 0)) {
-            
+
             spawnMinion(state, e, true, 3);
             e.lastAttack = state.gameTime;
             e.summonState = 0;
@@ -420,7 +379,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         }
     }
 
-    
+
     if (!isAngry && !isWarning && e.summonState !== 1) {
         if (e.originalPalette) e.palette = e.originalPalette;
     }

@@ -20,122 +20,15 @@ import { getUiTranslation } from '../lib/uiTranslations';
 
 import { formatLargeNumber } from '../utils/format';
 import { ThreatProgression } from './ThreatProgression';
+import { StatRow } from './stats/StatRow';
+import { DamageRow } from './stats/DamageRow';
+import { getDamageMapping } from '../utils/damageMapping';
 
 interface StatsMenuProps {
     gameState: GameState;
 }
 
-export const StatRow: React.FC<{ label: string; stat: PlayerStats; t: any; isPercent?: boolean; extraInfo?: string; legendaryBonusFlat?: number; legendaryBonusPct?: number; arenaMult?: number; isDisabled?: boolean }> = ({ label, stat, t, isPercent, extraInfo, legendaryBonusFlat = 0, legendaryBonusPct = 0, arenaMult = 1, isDisabled = false }) => {
-    const baseSum = stat.base + stat.flat + legendaryBonusFlat;
-    const upgradeMult = 1 + (stat.mult || 0) / 100;
-    const hexScaling = 1 + legendaryBonusPct / 100;
-    const classScaling = 1 + (stat.classMult || 0) / 100;
 
-    let total = baseSum * upgradeMult * hexScaling * classScaling * arenaMult;
-    if (isDisabled) total = 0;
-
-    const formatNum = (val: number) => {
-        return formatLargeNumber(val);
-    };
-
-    const displayTotal = isPercent ? `${formatNum(total)}%` : formatNum(total);
-
-    const isBuffed = arenaMult > 1;
-    const totalColor = isDisabled ? '#ef4444' : (isBuffed ? '#3b82f6' : '#4ade80');
-
-    const isAtkSpeed = label === t.statsMenu.labels.attackSpeed;
-
-    return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{label}</span>
-                {extraInfo && <span style={{ color: '#64748b', fontSize: 12 }}>{extraInfo}</span>}
-            </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
-
-                {legendaryBonusFlat > 0 ? (
-                    <span style={{ color: '#64748b', fontSize: 12 }}>
-                        ({formatLargeNumber(Math.round((stat.base + stat.flat) * 10) / 10)} <span style={{ color: '#fbbf24' }}>+{formatLargeNumber(Math.round(legendaryBonusFlat * 10) / 10)}</span>)
-                    </span>
-                ) : (
-                    <span style={{ color: '#64748b', fontSize: 12 }}>
-                        {formatLargeNumber(Math.round(baseSum * 10) / 10)}
-                    </span>
-                )}
-
-                {!isAtkSpeed && (
-                    <>
-                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#94a3b8', fontSize: 12 }}>{formatLargeNumber(Math.round(upgradeMult * 100))}%</span>
-                    </>
-                )}
-
-                {legendaryBonusPct > 0 && (
-                    <>
-                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#f97316', fontSize: 12 }}>{formatLargeNumber(Math.round(hexScaling * 100))}%</span>
-                    </>
-                )}
-
-                {(stat.hexMult2 ?? 0) > 0 && (
-                    <>
-                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: label === 'Regeneration' ? '#3b82f6' : '#fbbf24', fontSize: 12 }}>{formatLargeNumber(Math.round((1 + (stat.hexMult2 ?? 0) / 100) * 100))}%</span>
-                    </>
-                )}
-
-                {(stat.classMult ?? 0) !== 0 && (
-                    <>
-                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#d946ef', fontSize: 12 }}>{formatLargeNumber(Math.round(classScaling * 100))}%</span>
-                    </>
-                )}
-
-                {arenaMult !== 1 && (
-                    <>
-                        <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
-                        <span style={{ color: '#3b82f6', fontSize: 12 }}>{formatLargeNumber(Math.round(arenaMult * 100))}%</span>
-                    </>
-                )}
-
-                <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
-                <span style={{ color: totalColor, fontSize: 18, fontWeight: 600, minWidth: 30, textAlign: 'right' }}>
-                    {displayTotal}
-                </span>
-            </div>
-        </div>
-    );
-};
-
-const DamageRow: React.FC<{ label: string; amount: number; total: number; color?: string; icon?: string; subLabel?: string }> = ({ label, amount, total, color = '#4ade80', icon, subLabel }) => {
-    const pct = total > 0 ? (amount / total) * 100 : 0;
-    return (
-        <div style={{ padding: '8px 0', borderBottom: '1px solid #1e293b' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {icon && (
-                        typeof icon === 'string' && (icon.startsWith('/') || icon.startsWith('http')) ? (
-                            <img src={icon} alt="" style={{ width: 16, height: 16, borderRadius: 2, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.5))' }} />
-                        ) : (
-                            <span style={{ fontSize: 14, width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
-                        )
-                    )}
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>{label}</span>
-                        {subLabel && <span style={{ color: '#64748b', fontSize: 10, fontWeight: 600 }}>{subLabel}</span>}
-                    </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{formatLargeNumber(amount)}</span>
-                </div>
-            </div>
-            <div style={{ width: '100%', height: 6, background: '#0f172a', borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: color, boxShadow: `0 0 8px ${color}`, transition: 'width 0.5s ease-out' }} />
-            </div>
-            <div style={{ textAlign: 'right', fontSize: 10, color: '#64748b', marginTop: 2 }}>{pct.toFixed(1)}%</div>
-        </div>
-    );
-};
 
 export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
     const { language } = useLanguage();
@@ -498,6 +391,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {(() => {
                         const breakdown = player.damageBreakdown || {};
+
                         const sources = Object.entries(breakdown)
                             .filter(([_, amount]) => amount > 0)
                             .sort((a, b) => b[1] - a[1]);
@@ -510,145 +404,123 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             );
                         }
 
-                        const sourceColors: Record<string, string> = {
-                            'Projectile': classColor,
-                            'Shattered Fate (Crit)': '#ef4444',
-                            'Shattered Fate (Death Mark)': '#ef4444',
-                            'Shockwave': '#ef4444',
-                            'Storm of Steel (LVL 4)': '#eab308',
-                            'Nanite Swarm': classColor,
-                            'Fire Turret': '#f97316',
-                            'Ice Turret': '#22d3ee',
-                            'Radiation Aura': '#ef4444',
-                            'Collision': '#ef4444',
-                            'Epicenter (LVL 1)': '#3b82f6',
-                            'Epicenter (LVL 4)': '#3b82f6',
-                            'Gravitational Harvest': '#3b82f6',
-                            'Static Bolt': '#3b82f6',
-                            'Kinetic Bolt (LVL 1)': '#3b82f6',
-                            'Crimson Feast (LVL 3)': '#ef4444',
-                            'Crimson Feast (LVL 4)': '#ef4444',
-                            'Wall Impact': '#ef4444',
-                            'Temporal Monolith': '#3b82f6',
-                            'Gravity Anchor': '#3b82f6',
-                            'Shattered Fate (Execute)': '#ef4444',
-                            'Toxic Puddle (LVL 1)': '#3b82f6',
-                            'Toxic Puddle (LVL 4)': '#3b82f6',
-                            'Storm Circle': '#06b6d4',
-                            'Orbital Vortex': '#f59e0b',
-                            'Void Singularity': '#8b5cf6'
-                        };
-
-                        const sourceIcons: Record<string, string> = {
-                            'Storm of Steel (LVL 4)': '/assets/hexes/EcoDMG.png',
-                            'Crimson Feast (LVL 3)': '/assets/hexes/ComLife.png',
-                            'Crimson Feast (LVL 4)': '/assets/hexes/ComLife.png',
-                            'Radiation Aura': '/assets/hexes/ComRad.png',
-                            'Toxic Puddle (LVL 1)': '/assets/hexes/DefPuddle.png',
-                            'Toxic Puddle (LVL 4)': '/assets/hexes/DefPuddle.png',
-                            'Epicenter (LVL 1)': '/assets/hexes/DefEpi.png',
-                            'Epicenter (LVL 4)': '/assets/hexes/DefEpi.png',
-                            'Kinetic Bolt (LVL 1)': '/assets/hexes/DefBattery.png',
-                            'Static Bolt': '/assets/hexes/DefBattery.png',
-                            'Shockwave': '/assets/hexes/ComWave.png',
-                            'Temporal Monolith': '/assets/hexes/DefChromo.png',
-                            'Gravity Anchor': '/assets/hexes/DefEpi.png',
-                            'Fire Turret': '🔥',
-                            'Ice Turret': '❄️',
-                            'Shattered Fate (Execute)': '/assets/hexes/ComCrit.png',
-                            'Shattered Fate (Crit)': '/assets/hexes/ComCrit.png',
-                            'Shattered Fate (Death Mark)': '/assets/hexes/ComCrit.png',
-                            'Storm Circle': '/assets/hexes/CosmicBeam.png',
-                            'Orbital Vortex': '/assets/hexes/AigisVortex.PNG',
-                            'Void Singularity': '/assets/hexes/EventHorizon.png',
-                            'Wall Impact': '🧱'
-                        };
-
-                        const sourceSubLabels: Record<string, string> = {
-                            'Storm of Steel (LVL 4)': 'LVL 4 (AOE)',
-                            'Crimson Feast (LVL 3)': 'LVL 3 (BONUS)',
-                            'Crimson Feast (LVL 4)': 'LVL 4 (ZOMBIE)',
-                            'Collision': 'BODY IMPACT',
-                            'Kinetic Bolt (LVL 1)': 'LVL 1 (CHAIN DATA)',
-                            'Static Bolt': 'CHAIN DATA',
-                            'Shattered Fate (Execute)': 'LVL 2/4 (EXECUTE)',
-                            'Epicenter (LVL 1)': 'LVL 1 (PULSE)',
-                            'Epicenter (LVL 4)': 'LVL 4 (EXECUTE)',
-                            'Toxic Puddle (LVL 1)': 'LVL 1 (ACID DOT)',
-                            'Toxic Puddle (LVL 4)': 'LVL 4 (AMP BONUS)',
-                            'Wall Impact': 'BOUNCE MULTIPLIER'
-                        };
-
-                        const groupMap: Record<string, string[]> = {
-                            'Projectile': ['Projectile', 'Shattered Fate (Crit)', 'Shattered Fate (Death Mark)', 'Wall Impact']
-                        };
+                        const { groupMap, sourceColors, sourceGradients, classColor } = getDamageMapping(player.playerClass);
 
                         const processedSources = new Set<string>();
-                        const resultElements: React.ReactNode[] = [];
+                        const groupedRows: { key: string; total: number; element: React.ReactNode }[] = [];
 
-                        // 1. Handle Groups
-                        Object.entries(groupMap).forEach(([parent, children]) => {
+                        Object.entries(groupMap).forEach(([parent, cfg]) => {
                             let groupTotal = 0;
-                            children.forEach(c => groupTotal += (breakdown[c] || 0));
+                            cfg.children.forEach(c => groupTotal += (breakdown[c] || 0));
 
                             if (groupTotal > 0) {
-                                // Add Parent Row
-                                resultElements.push(
-                                    <div key={parent + "_group"}>
-                                        <DamageRow
-                                            label={parent === 'Projectile' ? ((t.statsMenu.labels.damageSources as any).projectile || 'Projectile') : parent}
-                                            amount={groupTotal}
-                                            total={player.damageDealt}
-                                            color={parent === 'Projectile' ? (currentClass?.themeColor || '#60a5fa') : sourceColors[parent]}
-                                            icon={parent === 'Projectile' ? currentClass?.iconUrl : sourceIcons[parent]}
-                                        />
-                                        <div style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 0, marginTop: -4 }}>
-                                            {children.map(c => {
-                                                const amt = breakdown[c] || 0;
-                                                if (amt <= 0) return null;
-                                                const label = c.includes('Shattered Fate') ? c.split('(')[1].replace(')', '') : (c === 'Wall Impact' ? 'Wall Increased DMG' : 'Base Impact');
-                                                const iconSrc = c.includes('Shattered Fate') ? sourceIcons[c] : undefined;
-                                                return (
-                                                    <div key={c} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', borderBottom: '1px solid rgba(30, 41, 59, 0.5)', alignItems: 'center' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                            {iconSrc && <img src={iconSrc} alt="" style={{ width: 12, height: 12, borderRadius: 2 }} />}
-                                                            <span style={{ color: '#64748b', fontSize: 11, fontWeight: 600 }}>- {label}</span>
-                                                        </div>
-                                                        <span style={{ color: sourceColors[c] || '#94a3b8', fontSize: 11, fontWeight: 700 }}>{formatLargeNumber(amt)}</span>
-                                                    </div>
-                                                );
-                                            })}
+                                const activeChildren = cfg.children.filter(c => (breakdown[c] || 0) > 0);
+                                const showChildren = activeChildren.length > 1;
+
+                                groupedRows.push({
+                                    key: parent,
+                                    total: groupTotal,
+                                    element: (
+                                        <div key={parent + "_group"}>
+                                            <DamageRow
+                                                label={parent === 'Projectile' ? ((t.statsMenu.labels.damageSources as any).projectile || 'Projectile') : parent}
+                                                amount={groupTotal}
+                                                total={player.damageDealt}
+                                                color={cfg.color}
+                                                gradient={cfg.gradient}
+                                                icon={cfg.icon}
+                                            />
+                                            {showChildren && (
+                                                <div style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 0, marginTop: -4 }}>
+                                                    {activeChildren.map(c => {
+                                                        const amt = breakdown[c] || 0;
+                                                        return (
+                                                            <div key={c} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', borderBottom: '1px solid rgba(30, 41, 59, 0.5)', alignItems: 'center' }}>
+                                                                <span style={{ color: '#64748b', fontSize: 11, fontWeight: 600 }}>- {cfg.childLabels[c] || c}</span>
+                                                                <span style={{ color: sourceColors[c] || '#94a3b8', fontSize: 11, fontWeight: 700 }}>{formatLargeNumber(amt)}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                );
-                                children.forEach(c => processedSources.add(c));
+                                    )
+                                });
+                                cfg.children.forEach(c => processedSources.add(c));
                             }
                         });
 
-                        // 2. Handle Individual Sources
+                        const standaloneRows: { key: string; total: number; element: React.ReactNode }[] = [];
                         sources.forEach(([source, amount]) => {
                             if (processedSources.has(source)) return;
 
                             const sourceKey = source.charAt(0).toLowerCase() + source.slice(1).replace(/\s+/g, '').replace(/\(LVL\d\)/g, '').replace(/\(|\)/g, '');
-                            let label = (t.statsMenu.labels.damageSources as any)[sourceKey] ||
-                                (source.includes('Crimson Feast') ? 'Crimson Feast' :
-                                    source.includes('Storm of Steel') ? 'Storm of Steel' :
-                                        source.includes('Shattered Fate') ? 'Shattered Fate' : source);
+                            const label = (t.statsMenu.labels.damageSources as any)[sourceKey] || source;
 
-                            resultElements.push(
-                                <DamageRow
-                                    key={source}
-                                    label={label}
-                                    amount={amount}
-                                    total={player.damageDealt}
-                                    color={source === 'Projectile' ? (currentClass?.themeColor || '#60a5fa') : (sourceColors[source] || '#94a3b8')}
-                                    icon={source === 'Projectile' ? currentClass?.iconUrl : sourceIcons[source]}
-                                    subLabel={sourceSubLabels[source]}
-                                />
-                            );
+                            const fusionIconMap: Record<string, string> = {
+                                'Neural Singularity': '/assets/Fusions/THE NEURAL SINGULARITY.png',
+                                'Kinetic Tsunami': '/assets/Fusions/THE KINETIC TSUNAMI.png',
+                                'Neutron Star (Aura)': '/assets/Fusions/THE NEUTRON STAR.png',
+                                'Gravitational Harvest': '/assets/Fusions/THE GRAVITATIONAL HARVEST.png',
+                                'Necro-Kinetic Engine': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
+                            };
+
+                            const baseIconMap: Record<string, string> = {
+                                'Storm of Steel (LVL 4)': '/assets/hexes/EcoDMG.png',
+                                'Radiation Aura': '/assets/hexes/ComRad.png',
+                                'Shockwave': '/assets/hexes/ComWave.png',
+                                'Fire Turret': '🔥',
+                                'Ice Turret': '❄️',
+                                'Wall Shockwave': '🧱',
+                                'Malware Wall Bonus': '/assets/hexes/MalwarePrime.png',
+                            };
+
+                            const classSkills = [
+                                'Orbital Vortex',
+                                'Magnetic Vortex',
+                                'Storm Circle',
+                                'Void Singularity',
+                                'Nanite Swarm',
+                                'Quantum Fragmentation',
+                                currentClass?.capabilityName
+                            ].filter(Boolean);
+
+                            const icon = fusionIconMap[source] ||
+                                baseIconMap[source] ||
+                                (classSkills.includes(source) ? currentClass?.iconUrl : undefined);
+
+                            const subLabelMap: Record<string, string> = {
+                                'Storm of Steel (LVL 4)': 'LVL 4 (AOE)',
+                                'Collision': 'BODY IMPACT',
+                                'Neural Singularity': 'FUSION',
+                                'Kinetic Tsunami': 'FUSION',
+                                'Neutron Star (Aura)': 'FUSION',
+                                'Gravitational Harvest': 'FUSION',
+                                'Necro-Kinetic Engine': 'FUSION (BOLTS CAST BY ZOMBIES)',
+                            };
+
+                            standaloneRows.push({
+                                key: source,
+                                total: amount,
+                                element: (
+                                    <DamageRow
+                                        key={source}
+                                        label={label}
+                                        amount={amount}
+                                        total={player.damageDealt}
+                                        color={source === 'Projectile' ? (currentClass?.themeColor || '#60a5fa') : (sourceColors[source] || '#94a3b8')}
+                                        gradient={sourceGradients[source]}
+                                        icon={icon}
+                                        subLabel={subLabelMap[source]}
+                                    />
+                                )
+                            });
                         });
 
-                        return resultElements;
+                        const allRows = [...groupedRows, ...standaloneRows]
+                            .sort((a, b) => b.total - a.total);
+
+                        return allRows.map(r => r.element);
                     })()}
                 </div>
             </div>

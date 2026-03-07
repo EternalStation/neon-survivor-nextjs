@@ -23,7 +23,8 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
     {
         name: 'PLAYER',
         entries: [
-            { code: 'lvl', description: 'Level Up + Unlock Portals' },
+            { code: 'lvl', description: 'Level Up' },
+            { code: 'ulp', description: 'Unlock Portals' },
             { code: 'k1', description: 'Suicide (DEBUG)' },
             { code: 'cs2', description: 'Class Skill Resonance x2 per press (0→0.5→1→2→4...)' },
             { code: 'cdr', description: 'Cooldown Reduction +20% per press (0→20→40→60→80→90%)' },
@@ -45,7 +46,6 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'y0', description: 'DefEpi — EPICENTER (Lv4)' },
             { code: 'y-', description: 'KineticBattery — KINETIC BATTERY (Lv4)' },
             { code: 'y=', description: 'ChronoPlating — CHRONO PLATING (Lv4)' },
-            { code: 'y[', description: 'GravityAnchor — THE GRAVITY ANCHOR (Lv4)' },
         ]
     },
     {
@@ -68,21 +68,37 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
     {
         name: 'METEORITES',
         entries: [
-            { code: 'm1', description: 'Spawn: anomalous (in world)' },
-            { code: 'm3', description: 'Spawn: abyss (in world)' },
-            { code: 'm6', description: 'Spawn: singularity (in world)' },
-            { code: 'mi1', description: 'Add to inventory: anomalous' },
-            { code: 'mi6', description: 'Add to inventory: singularity' },
+            { code: 'm1', description: 'Anomalies' },
+            { code: 'm2', description: 'Radiant' },
+            { code: 'm3', description: 'Abyss' },
+            { code: 'm4', description: 'Eternal' },
+            { code: 'm5', description: 'Divine' },
+            { code: 'm6', description: 'Singularity' },
         ]
     },
     {
         name: 'BOSSES',
         entries: [
-            { code: 'b11', description: 'Boss Circle Lvl 1' },
-            { code: 'b33', description: 'Boss Square Lvl 3' },
-            { code: 'b55', description: 'Boss Pentagon Lvl 5' },
-            { code: 'v1', description: 'Boss Circle Max Tier (Lv4)' },
-            { code: 'v5', description: 'Boss Pentagon Max Tier (Lv4)' },
+            { code: 'b11', description: 'Boss Circle Level 1' },
+            { code: 'b12', description: 'Boss Circle Level 2' },
+            { code: 'b13', description: 'Boss Circle Level 3' },
+            { code: 'b14', description: 'Boss Circle Level 4' },
+            { code: 'b21', description: 'Boss Triangle Level 1' },
+            { code: 'b22', description: 'Boss Triangle Level 2' },
+            { code: 'b23', description: 'Boss Triangle Level 3' },
+            { code: 'b24', description: 'Boss Triangle Level 4' },
+            { code: 'b31', description: 'Boss Square Level 1' },
+            { code: 'b32', description: 'Boss Square Level 2' },
+            { code: 'b33', description: 'Boss Square Level 3' },
+            { code: 'b34', description: 'Boss Square Level 4' },
+            { code: 'b41', description: 'Boss Diamond Level 1' },
+            { code: 'b42', description: 'Boss Diamond Level 2' },
+            { code: 'b43', description: 'Boss Diamond Level 3' },
+            { code: 'b44', description: 'Boss Diamond Level 4' },
+            { code: 'b51', description: 'Boss Pentagon Level 1' },
+            { code: 'b52', description: 'Boss Pentagon Level 2' },
+            { code: 'b53', description: 'Boss Pentagon Level 3' },
+            { code: 'b54', description: 'Boss Pentagon Level 4' },
         ]
     },
     {

@@ -2,13 +2,14 @@ import type { GameState, Enemy, ShapeType } from '../core/types';
 import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile, spawnVitalSpark } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
+import { recordDamage } from '../utils/DamageTracking';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
@@ -51,6 +52,8 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                 const dist = Math.hypot(other.x - e.x, other.y - e.y);
                 if (dist <= radius) {
                     other.hp -= aoeDmg;
+                    state.player.damageDealt += aoeDmg;
+                    recordDamage(state, 'Temporal Monolith (Explosion)', aoeDmg);
                     if (Math.random() < 0.3 || e.boss) {
                         spawnFloatingNumber(state, other.x, other.y, Math.round(aoeDmg).toString(), '#38bdf8', true);
                     }
@@ -144,6 +147,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             if (dist <= 200) {
                 other.hp -= explodeDmg;
                 state.player.damageDealt += explodeDmg;
+                recordDamage(state, 'Gravity Anchor (Explosion)', explodeDmg);
                 spawnFloatingNumber(state, other.x, other.y, Math.round(explodeDmg).toString(), '#ef4444', false);
                 if (other.hp <= 0 && !other.dead) handleEnemyDeath(state, other, onEvent);
             }
@@ -201,6 +205,20 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     if (Math.random() < 0.03) {
         const dustAmount = (e.isElite ? 5 : 1) * refineryBonus;
         spawnDustPile(state, e.x, e.y, dustAmount);
+    }
+
+
+    const vitalMireLvl = getHexLevel(state, 'VitalMire');
+    if (vitalMireLvl > 0) {
+        const isInVitalMire = state.areaEffects.some(ae =>
+            ae.type === 'puddle' &&
+            ae.isVitalMire &&
+            Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius
+        );
+
+        if (isInVitalMire && Math.random() < 0.5) {
+            spawnVitalSpark(state, e.x, e.y);
+        }
     }
 
 

@@ -1036,13 +1036,12 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
                         />
                     </div>
 
-                    {/* EXTRACTION FOCUS DIMMER (Right: Inventory/Sorting Only) */}
                     {extractionFocusActive && (
                         <div style={{
                             position: 'absolute',
                             top: 0,
                             right: 0,
-                            width: 'calc(100% - (40% + 100px))',
+                            width: 'calc(100% - (35% + 170px))',
                             height: '100%',
                             background: 'rgba(0, 0, 0, 0.75)',
                             zIndex: 2500,
@@ -1155,7 +1154,7 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             {
                 extractionFocusActive && (
                     <div style={{
-                        position: 'absolute', top: 0, left: 0, width: '37%', height: '100%',
+                        position: 'absolute', top: 0, left: 0, width: '35%', height: '100%',
                         background: 'rgba(0, 0, 0, 0.75)',
                         zIndex: 2500,
                         pointerEvents: 'none'

@@ -137,6 +137,7 @@ class ApiClient {
         deathCause?: string;
         finalStats?: any;
         radarCounts?: any;
+        damageBreakdown?: Record<string, number>;
         timezoneOffset?: number;
     }) {
         return this.request('/runs', {

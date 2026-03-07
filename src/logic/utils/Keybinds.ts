@@ -15,11 +15,11 @@ export interface Keybinds {
 }
 
 const DEFAULT_KEYBINDS: Keybinds = {
-    stats: 'KeyC',
+    stats: 'Tab',
     matrix: 'KeyX',
     portal: 'KeyP',
     dash: 'ShiftLeft',
-    classAbility: 'KeyQ',
+    classAbility: 'Mouse0',
     skill1: 'Digit1',
     skill2: 'Digit2',
     skill3: 'Digit3',
@@ -31,6 +31,22 @@ const DEFAULT_KEYBINDS: Keybinds = {
 };
 
 const STORAGE_KEY = 'neon_survivor_keybinds';
+const KEYBINDS_VERSION_KEY = 'neon_survivor_keybinds_v';
+const CURRENT_KEYBINDS_VERSION = '2';
+
+export const initKeybinds = () => {
+    if (typeof window === 'undefined') return;
+    try {
+        const storedVersion = localStorage.getItem(KEYBINDS_VERSION_KEY);
+        if (storedVersion !== CURRENT_KEYBINDS_VERSION) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_KEYBINDS));
+            localStorage.setItem(KEYBINDS_VERSION_KEY, CURRENT_KEYBINDS_VERSION);
+            window.dispatchEvent(new Event('keybindsChanged'));
+        }
+    } catch (e) {
+        console.warn('Failed to init keybinds', e);
+    }
+};
 
 export const getKeybinds = (): Keybinds => {
     if (typeof window === 'undefined') return DEFAULT_KEYBINDS;
@@ -49,7 +65,7 @@ export const saveKeybinds = (keybinds: Keybinds) => {
     if (typeof window === 'undefined') return;
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(keybinds));
-
+        localStorage.setItem(KEYBINDS_VERSION_KEY, CURRENT_KEYBINDS_VERSION);
         window.dispatchEvent(new Event('keybindsChanged'));
     } catch (e) {
         console.warn('Failed to save keybinds', e);
@@ -63,6 +79,7 @@ export const resetKeybinds = () => {
 export const getKeyDisplay = (key: string): string => {
     if (!key) return 'NONE';
     if (key === ' ' || key === 'Space') return 'SPACE';
+    if (key === 'Tab') return 'TAB';
     if (key === 'ShiftLeft') return 'LSHIFT';
     if (key === 'ShiftRight') return 'RSHIFT';
 

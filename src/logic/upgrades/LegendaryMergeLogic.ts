@@ -532,3 +532,47 @@ export function performChronoDevourerMerge(state: GameState) {
 
 }
 
+export function canMergeVitalMire(state: GameState): boolean {
+    const ecoHp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoHP');
+    const defPuddle = state.moduleSockets.hexagons.find(h => h?.type === 'DefPuddle');
+    return (ecoHp?.level === 4 && defPuddle?.level === 4);
+}
+
+export function performVitalMireMerge(state: GameState) {
+    const ecoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'EcoHP');
+    const pudIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefPuddle');
+    if (ecoIdx === -1 || pudIdx === -1) return;
+    const ecoHex = state.moduleSockets.hexagons[ecoIdx]!;
+    const pudHex = state.moduleSockets.hexagons[pudIdx]!;
+    const mergedHex: LegendaryHex = {
+        ...LEGENDARY_UPGRADES.VitalMire,
+        level: 5,
+        killsAtAcquisition: Math.min(ecoHex.killsAtAcquisition, pudHex.killsAtAcquisition),
+        timeAtAcquisition: Math.min(ecoHex.timeAtAcquisition || 0, pudHex.timeAtAcquisition || 0),
+        killsAtLevel: {
+            ...(ecoHex.killsAtLevel || {}),
+            ...(pudHex.killsAtLevel || {}),
+            5: state.killCount
+        },
+        timeAtLevel: {
+            ...(ecoHex.timeAtLevel || {}),
+            ...(pudHex.timeAtLevel || {}),
+            5: state.gameTime
+        },
+        statBonuses: {},
+        categories: ['Economic', 'Defensive'],
+        forgedAt: combineForgedAt(ecoHex, pudHex)
+    };
+    if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
+    state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[pudIdx]!.type);
+    state.moduleSockets.hexagons[ecoIdx] = null;
+    state.moduleSockets.hexagons[pudIdx] = null;
+    state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, pudIdx] };
+    syncLegendaryHex(state, mergedHex);
+    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'DefPuddle');
+    if (skillIdx !== -1) {
+        state.player.activeSkills[skillIdx].type = 'VitalMire';
+        state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
+    }
+}
+

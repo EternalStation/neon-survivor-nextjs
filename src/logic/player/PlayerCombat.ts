@@ -12,6 +12,7 @@ import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
 import { recordDamage } from '../utils/DamageTracking';
+import { applyDamageToPlayer } from '../utils/CombatUtils';
 
 export function handlePlayerCombat(
     state: GameState,
@@ -97,7 +98,8 @@ export function handlePlayerCombat(
                     if (finalTickDmg > 0) {
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
-                        recordDamage(state, 'Radiation Aura', finalTickDmg);
+                        const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
+                        recordDamage(state, auraSrc as import('../core/types').DamageSource, finalTickDmg);
                         const isAuraSource = d < range;
                         const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (state.frameCount % 30 === 0);
 
@@ -254,94 +256,36 @@ export function handleEnemyContact(
             }
 
 
-            const armorValue = calcStat(player.arm, 1.0, curseMult);
-            const drCap = 0.95;
-            const armRedMult = 1 - getDefenseReduction(armorValue, drCap);
+            const finalDmg = applyDamageToPlayer(state, player, rawDmg, {
+                sourceType: 'collision',
+                onEvent,
+                triggerDeath: () => handlePlayerLethalHit(state, e, onEvent, triggerDeath),
+                deathCause: '' // handeled by handlePlayerLethalHit
+            });
 
             if (kinLvl >= 1) triggerKineticBatteryZap(state, player);
 
-            const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill');
-
-            const colRedMult = 1 - getDefenseReduction(colRedRaw, 0.80);
-
-            const dmgAfterArmor = rawDmg * armRedMult;
-            player.damageBlockedByArmor += (rawDmg - dmgAfterArmor);
-
-            let reducedDmg = dmgAfterArmor * colRedMult;
-            player.damageBlockedByCollisionReduc += (dmgAfterArmor - reducedDmg);
-            player.damageBlocked += (rawDmg - reducedDmg);
-
-
-
-
-            if (player.invincibleUntil && state.gameTime < player.invincibleUntil) {
-                player.damageBlocked += reducedDmg;
-                reducedDmg = 0;
-            }
-
-            const finalDmg = Math.max(0, reducedDmg);
-
             if (finalDmg > 0 || e.wormTrueDamage) {
-                let absorbed = 0;
-                let damageToApply = finalDmg;
-
-
-                if ((e.wormRole === 'head' || e.isLevel4) && e.wormTrueDamage) {
-                    const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
-                    damageToApply = playerMaxHp * (e.wormTrueDamage / 100);
-                }
-
-                if (player.shieldChunks && player.shieldChunks.length > 0) {
-                    player.shieldChunks.sort((a: any, b: any) => a.expiry - b.expiry);
-                    let rem = damageToApply;
-                    for (const chunk of player.shieldChunks) {
-                        if (chunk.amount >= rem) {
-                            chunk.amount -= rem; absorbed += rem; rem = 0; break;
-                        } else {
-                            absorbed += chunk.amount; rem -= chunk.amount; chunk.amount = 0;
-                        }
-                    }
-                    player.shieldChunks = player.shieldChunks.filter((c: any) => c.amount > 0);
-                    player.damageBlockedByShield += absorbed;
-                    player.damageBlocked += absorbed;
-                }
-
-                const actualDmg = damageToApply - absorbed;
-                if (actualDmg > 0) {
-                    player.curHp -= actualDmg;
-                    player.damageTaken += actualDmg;
-                    player.lastHitDamage = actualDmg;
-                    triggerDamageTaken?.(actualDmg);
-
-
-                    const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
-                    if (harvestLvl > 0) {
-                        const reflectedDmg = actualDmg * 0.10;
-                        state.areaEffects.filter(ae => ae.type === 'epicenter').forEach(ae => {
-                            state.enemies.forEach(target => {
-                                if (!target.dead && !target.isFriendly && !target.isZombie) {
-                                    const d = Math.hypot(target.x - ae.x, target.y - ae.y);
-                                    if (d < ae.radius) {
-                                        target.hp -= reflectedDmg;
-                                        player.damageDealt += reflectedDmg;
-                                        recordDamage(state, 'Epicenter (LVL 1)', reflectedDmg);
-                                        spawnFloatingNumber(state, target.x, target.y, Math.round(reflectedDmg).toString(), '#ef4444', false);
-                                        if (target.hp <= 0 && !target.dead) {
-                                            handleEnemyDeath(state, target, onEvent);
-                                        }
+                const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
+                if (harvestLvl > 0) {
+                    const reflectedDmg = finalDmg * 0.10;
+                    state.areaEffects.filter(ae => ae.type === 'epicenter').forEach(ae => {
+                        state.enemies.forEach(target => {
+                            if (!target.dead && !target.isFriendly && !target.isZombie) {
+                                const d = Math.hypot(target.x - ae.x, target.y - ae.y);
+                                if (d < ae.radius) {
+                                    target.hp -= reflectedDmg;
+                                    player.damageDealt += reflectedDmg;
+                                    recordDamage(state, 'Gravitational Harvest', reflectedDmg);
+                                    spawnFloatingNumber(state, target.x, target.y, Math.round(reflectedDmg).toString(), '#ef4444', false);
+                                    if (target.hp <= 0 && !target.dead) {
+                                        handleEnemyDeath(state, target, onEvent);
                                     }
                                 }
-                            });
+                            }
                         });
-                    }
-
-                    if (state.gameTime - (player.lastDamageTime ?? -999) >= 1.5) {
-                        player.lastDamageTime = state.gameTime;
-                    }
-                    player.killerHp = e.hp;
-                    player.killerMaxHp = e.maxHp;
+                    });
                 }
-                spawnFloatingNumber(state, player.x, player.y, Math.round(damageToApply).toString(), '#ef4444', false);
             }
 
             if (e.stunOnHit) {
@@ -363,7 +307,6 @@ export function handleEnemyContact(
                 }
             }
 
-
             if (e.dieOnCollision) {
                 canDie = true;
             }
@@ -375,10 +318,6 @@ export function handleEnemyContact(
                     recordDamage(state, 'Collision', colDmg);
                 }
                 handleEnemyDeath(state, e, onEvent);
-            }
-
-            if (player.curHp <= 0 && !state.gameOver) {
-                handlePlayerLethalHit(state, e, onEvent, triggerDeath);
             }
         }
     });
@@ -483,13 +422,13 @@ function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: stri
         playSfx('rare-spawn');
     } else {
         state.gameOver = true;
-        if (e.isAnomaly) player.deathCause = `Anomaly ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} (Summoned from Hell)`;
+        if (e.isAnomaly) player.deathCause = `Overlord (Lvl ${state.anomalyBossCount || 1})`;
         else if (e.legionId) player.deathCause = 'Legion Swarm';
         else if (e.isZombie) player.deathCause = 'Zombie Horde';
         else if (e.shape === 'minion') player.deathCause = 'Pentagon Minion';
-        else if (e.boss) player.deathCause = `Boss ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} (Lvl ${e.bossTier || 1})`;
-        else if (e.isElite) player.deathCause = `Collision with Elite ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)}`;
-        else player.deathCause = `Collision with ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)}`;
+        else if (e.boss) player.deathCause = `${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} Boss Level ${e.bossTier || 1} Collision`;
+        else if (e.isElite) player.deathCause = `Elite ${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} Collision`;
+        else player.deathCause = `${e.shape.charAt(0).toUpperCase() + e.shape.slice(1)} Collision`;
 
         if (onEvent) onEvent('game_over');
         triggerDeath?.();
@@ -705,9 +644,18 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 state.player.damageDealt += zap.dmg;
 
                 let source: import('../core/types').DamageSource = 'Kinetic Bolt (LVL 1)';
-                if (zap.color === '#4ade80') source = 'Crimson Feast (LVL 4)';
-                else if (zap.color === '#dc2626') source = 'Kinetic Bolt (LVL 1)';
-                else if (zap.color === '#60a5fa') source = 'Static Bolt';
+                if (zap.color === '#4ade80') {
+                    const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
+                    source = bloodLvl > 0 ? 'Necro-Kinetic Engine' : 'Crimson Feast (LVL 4)';
+                }
+                else if (zap.color === '#dc2626') {
+                    const shatteredLvl = getHexLevel(state, 'ShatteredCapacitor');
+                    source = shatteredLvl > 0 ? 'Shattered Capacitor (Arc)' : 'Kinetic Bolt (LVL 1)';
+                }
+                else if (zap.color === '#60a5fa') {
+                    const kinLvl = getHexLevel(state, 'KineticBattery');
+                    source = kinLvl > 0 ? 'Kinetic Bolt (LVL 1)' : 'Static Bolt';
+                }
 
                 recordDamage(state, source, zap.dmg);
 

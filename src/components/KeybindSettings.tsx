@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getKeybinds, saveKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import type { Keybinds } from '../logic/utils/Keybinds';
 import { useLanguage } from '../lib/LanguageContext';
@@ -13,6 +13,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     const [keybinds, setKeybinds] = useState<Keybinds>(getKeybinds());
     const [listening, setListening] = useState<keyof Keybinds | null>(null);
     const [conflict, setConflict] = useState<keyof Keybinds | null>(null);
+    const skipNextMouseDown = useRef(false);
     const { language } = useLanguage();
     const t = getUiTranslation(language).settings.keybinds;
 
@@ -26,43 +27,21 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     const FORBIDDEN_CODES = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (listening) {
-                e.preventDefault();
-                processInput(e.code);
-            }
-        };
-
-        const handleMouseDown = (e: MouseEvent) => {
-            if (listening) {
-                e.preventDefault();
-                let code = '';
-                if (e.button === 0) code = 'Mouse0';
-                else if (e.button === 1) code = 'Mouse1';
-                else if (e.button === 2) code = 'Mouse2';
-                else code = `Mouse${e.button}`;
-                processInput(code);
-            }
-        };
-
         const processInput = (code: string) => {
             const lowerCode = code.toLowerCase();
 
-            // Prevent unbindable keys
             if (lowerCode === 'escape') {
                 setListening(null);
                 return;
             }
 
-            // Check for duplicates in current keybinds
             const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === code);
-            // Check for duplicates in reserved movement keys
             const isReserved = FORBIDDEN_CODES.includes(lowerCode);
 
             if (isDuplicate || isReserved) {
                 setConflict(listening);
                 setTimeout(() => setConflict(null), 1000);
-                return; // REJECT INPUT
+                return;
             }
 
             const newKeybinds = { ...keybinds, [listening as string]: code };
@@ -72,17 +51,44 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             setConflict(null);
         };
 
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (listening) {
+                e.preventDefault();
+                processInput(e.code);
+            }
+        };
+
+        const handleMouseDown = (e: MouseEvent) => {
+            if (!listening) return;
+
+            if (skipNextMouseDown.current) {
+                skipNextMouseDown.current = false;
+                return;
+            }
+
+            e.preventDefault();
+            let code = '';
+            if (e.button === 0) code = 'Mouse0';
+            else if (e.button === 1) code = 'Mouse1';
+            else if (e.button === 2) code = 'Mouse2';
+            else code = `Mouse${e.button}`;
+            processInput(code);
+        };
+
+        const handleContextMenu = (e: MouseEvent) => {
+            if (listening) e.preventDefault();
+        };
+
         if (listening) {
             window.addEventListener('keydown', handleKeyDown);
             window.addEventListener('mousedown', handleMouseDown);
-            // prevent context menu to allow binding right click
-            window.addEventListener('contextmenu', e => listening && e.preventDefault());
+            window.addEventListener('contextmenu', handleContextMenu);
         }
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mousedown', handleMouseDown);
-            window.removeEventListener('contextmenu', e => listening && e.preventDefault());
+            window.removeEventListener('contextmenu', handleContextMenu);
         };
     }, [listening, keybinds]);
 
@@ -104,39 +110,45 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         { label: (t as any).skill7 || 'Skill 6', key: 'skill6' },
     ];
 
-    const renderBindItem = (item: { label: string; key: keyof Keybinds }) => (
-        <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-            <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>{item.label}</span>
-            <button
-                onClick={() => setListening(item.key)}
-                className={listening === item.key ? (conflict === item.key ? 'conflict-shake' : 'listening-pulse') : ''}
-                style={{
-                    padding: '3px 6px',
-                    background: conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#1e293b'),
-                    border: `1px solid ${conflict === item.key ? '#ef4444' : (listening === item.key ? '#3b82f6' : '#334155')}`,
-                    color: '#fff',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    minWidth: 65,
-                    textAlign: 'center',
-                    fontSize: 10,
-                    fontWeight: 900,
-                    transition: 'all 0.2s',
-                    boxShadow: conflict === item.key ? '0 0 15px #ef4444' : 'none',
-                    letterSpacing: '1px'
-                }}
-            >
-                {conflict === item.key ? '!' : (listening === item.key ? '...' : getKeyDisplay(keybinds[item.key]))}
-            </button>
-        </div>
-    );
+    const renderBindItem = (item: { label: string; key: keyof Keybinds }) => {
+        const isListening = listening === item.key;
+        const isConflict = conflict === item.key;
+        return (
+            <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>{item.label}</span>
+                <button
+                    onClick={() => {
+                        skipNextMouseDown.current = true;
+                        setListening(item.key);
+                    }}
+                    className={isListening ? (isConflict ? 'conflict-shake' : 'listening-pulse') : ''}
+                    style={{
+                        padding: '3px 6px',
+                        background: isConflict ? '#ef4444' : (isListening ? '#3b82f6' : '#1e293b'),
+                        border: `1px solid ${isConflict ? '#ef4444' : (isListening ? '#3b82f6' : '#334155')}`,
+                        color: '#fff',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        minWidth: 65,
+                        textAlign: 'center',
+                        fontSize: 10,
+                        fontWeight: 900,
+                        transition: 'all 0.2s',
+                        boxShadow: isConflict ? '0 0 15px #ef4444' : 'none',
+                        letterSpacing: '1px'
+                    }}
+                >
+                    {isConflict ? '!' : (isListening ? '...' : getKeyDisplay(keybinds[item.key]))}
+                </button>
+            </div>
+        );
+    };
 
     return (
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <h3 style={{ color: '#fff', fontSize: 13, borderBottom: '1px solid #334155', paddingBottom: 4, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 4 }}>{t.title}</h3>
 
             <div style={{ display: 'flex', gap: 20, paddingRight: 5 }}>
-                {/* COLUMN 1: MOVEMENT */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <h4 style={{ color: '#22d3ee', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
@@ -164,7 +176,6 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
 
                 <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.2)', alignSelf: 'stretch' }} />
 
-                {/* COLUMN 2: SKILLS 1-4 */}
                 <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <h4 style={{ color: '#ef4444', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.skills}</h4>
@@ -174,7 +185,6 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
 
                 <div style={{ width: 1, background: 'rgba(51, 65, 85, 0.2)', alignSelf: 'stretch' }} />
 
-                {/* COLUMN 3: SKILLS 5-7 */}
                 <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <h4 style={{ color: '#ef4444', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>&nbsp;</h4>

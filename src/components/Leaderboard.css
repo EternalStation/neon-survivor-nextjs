@@ -765,3 +765,102 @@
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     border-bottom: 2px solid #00ffff;
 }
+
+/* Animations and extra UI styles */
+@keyframes glitch-pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.purge-btn {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.4);
+    color: #ff4444;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.purge-btn:hover {
+    background: #ff4444;
+    color: #000;
+}
+
+.user-run-row {
+    background: rgba(0, 255, 255, 0.03) !important;
+}
+
+.owner-tag {
+    font-size: 10px;
+    color: #00ffff;
+    margin-left: 8px;
+    opacity: 0.8;
+}
+
+.delete-run-btn {
+    width: 100%;
+    background: rgba(255, 68, 68, 0.15);
+    border: 1px solid rgba(255, 68, 68, 0.5);
+    color: #ff4444;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-run-btn:hover:not(:disabled) {
+    background: #ff4444;
+    color: #000;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+}
+
+.delete-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stat-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.loading-glitch {
+    font-size: 24px;
+    font-weight: 900;
+    color: #00ffff;
+    position: relative;
+    animation: glitch-pulse 1s infinite;
+}

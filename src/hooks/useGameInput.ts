@@ -67,10 +67,10 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
 
 
-            // Get latest keybinds from ref
+
             const keybinds = currentKeybinds.current;
 
-            // Prevent browser Tab focus cycling (especially when used for Stats)
+
             if (key === 'tab' || code === 'tab') {
                 e.preventDefault();
             }
@@ -87,14 +87,14 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 return;
             }
 
-            // Block all other input during extraction dialogue
+
             if (['requested', 'waiting'].includes(gameState.current.extractionStatus)) {
                 return;
             }
 
             if (gameState.current.showSettings || gameState.current.showFeedbackModal || gameState.current.showAdminConsole) return;
 
-            // Handle Stats toggle
+
             if (code === (keybinds.stats || '').toLowerCase()) {
                 setShowStats(prev => {
                     const next = !prev;
@@ -288,6 +288,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // GLI - Spawn Prism Glitcher (MANUAL CONSTRUCTION)
             if (cheatBuffer.endsWith('gli')) {
+                gameState.current.cheatsUsed = true;
                 // Check if one already exists
                 if (gameState.current.enemies.some(e => e.shape === 'glitcher' && !e.dead)) {
                     console.log('[CHEAT] Glitcher already exists, skipping spawn');
@@ -347,6 +348,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // BUG - Admin Console
             if (cheatBuffer.endsWith('bug')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 if (setShowAdminConsole) {
                     setShowAdminConsole(true);
                     gameState.current.showAdminConsole = true;
@@ -357,6 +360,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // KKK - Cheat Panel
             if (cheatBuffer.endsWith('kkk')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 if (setShowCheatPanel) {
                     setShowCheatPanel(true);
                     gameState.current.showCheatPanel = true;
@@ -367,6 +372,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // KO - 5100 Dust
             if (cheatBuffer.endsWith('ko')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.player.dust += 5100;
                 console.log('[CHEAT] Added 5100 Dust');
                 refreshUI();
@@ -375,6 +382,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // KP - 1000 Void Flux
             if (cheatBuffer.endsWith('kp')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.player.isotopes += 1000;
                 spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "+1000 FLUX", '#a855f7', true);
                 playSfx('power-up');
@@ -385,6 +394,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // KS5 - 500 Souls (Kills)
             if (cheatBuffer.endsWith('ks5')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.killCount += 500;
                 spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "+500 SOULS", '#fbbf24', true);
                 playSfx('power-up');
@@ -396,6 +407,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // NXP - Toggle XP gain on/off
             if (cheatBuffer.endsWith('nxp')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.xpDisabled = !gameState.current.xpDisabled;
                 const status = gameState.current.xpDisabled ? 'DISABLED' : 'ENABLED';
                 spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, `XP GAIN ${status}`, '#4ade80', true);
@@ -405,6 +418,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // i15 - Trigger Fake Portal Troll
             if (cheatBuffer.endsWith('i15')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 const history = gameState.current.assistant.history;
                 (history as any).fakePortalTriggerTime = gameState.current.gameTime;
                 console.log('[CHEAT] Fake Portal Troll Queued');
@@ -413,6 +428,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // K1 - Suicide
             if (cheatBuffer.endsWith('k1')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.player.curHp = 0;
                 gameState.current.gameOver = true;
                 gameState.current.player.deathCause = 'SIMULATION TERMINATED (DEBUG)';
@@ -422,19 +439,29 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 cheatBuffer = '';
             }
 
-            // LVL - Level Up + Unlock Portals
             if (cheatBuffer.endsWith('lvl')) {
-                // Level Up logic
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.player.xp.current = gameState.current.player.xp.needed;
 
-                // Portal Unlock logic (Dimensional Gate effect)
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "LEVEL UP", '#00ffff', true);
+                playSfx('rare-spawn');
+                console.log('[CHEAT] Level up via LVL');
+
+                refreshUI();
+                cheatBuffer = '';
+            }
+
+            if (cheatBuffer.endsWith('ulp')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                 gameState.current.portalsUnlocked = true;
                 gameState.current.portalState = 'warn';
                 gameState.current.portalTimer = 0.5; // Open in 0.5s
 
-                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "LEVEL UP & PORTALS UNLOCKED", '#00ffff', true);
+                spawnFloatingNumber(gameState.current, gameState.current.player.x, gameState.current.player.y, "PORTALS UNLOCKED", '#00ffff', true);
                 playSfx('rare-spawn');
-                console.log('[CHEAT] Level up and Portals Unlocked via L1/LVL');
+                console.log('[CHEAT] Portals Unlocked via ULP');
 
                 refreshUI();
                 cheatBuffer = '';
@@ -444,6 +471,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             const shapes: Record<string, any> = { '1': 'circle', '2': 'triangle', '3': 'square', '4': 'diamond', '5': 'pentagon' };
             for (const [num, shape] of Object.entries(shapes)) {
                 if (cheatBuffer.endsWith(`e${num}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const p = gameState.current.player;
                     for (let i = 0; i < 5; i++) {
                         const a = (i / 5) * Math.PI * 2;
@@ -467,6 +496,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
                 // v1, v2, v3, v4, v5 - Default to Level 4 (Max Tier)
                 if (cheatBuffer.endsWith(`v${shapeNum}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const p = gameState.current.player;
                     spawnEnemy(gameState.current, p.x + 500, p.y, form as any, true, 4);
                     spawnFloatingNumber(gameState.current, p.x, p.y, `SUMMONED LVL 4 ${form.toUpperCase()}`, '#ef4444', true);
@@ -478,6 +509,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 for (let level = 1; level <= 5; level++) {
                     const bCode = `b${shapeNum}${level}`;
                     if (cheatBuffer.endsWith(bCode)) {
+                        gameState.current.cheatsUsed = true;
+                        if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                         const p = gameState.current.player;
                         const angle = Math.random() * Math.PI * 2;
                         const dist = 500;
@@ -493,6 +526,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // SNI - Snitch
             if (cheatBuffer.endsWith('sni')) {
+                gameState.current.cheatsUsed = true;
                 spawnRareEnemy(gameState.current);
                 cheatBuffer = '';
             }
@@ -505,6 +539,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             ];
             for (let i = 1; i <= blueprintTypes.length; i++) {
                 if (cheatBuffer.endsWith(`o${i}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const p = gameState.current.player;
                     const angle = Math.random() * Math.PI * 2;
                     const spawnX = p.x + Math.cos(angle) * 300;
@@ -520,6 +556,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             const rarities: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
             for (let i = 1; i <= 6; i++) {
                 if (cheatBuffer.endsWith(`m${i}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const player = gameState.current.player;
                     const angle = Math.random() * Math.PI * 2;
                     const dist = 100;
@@ -528,6 +566,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                     cheatBuffer = '';
                 }
                 if (cheatBuffer.endsWith(`mi${i}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const met = createMeteorite(gameState.current, rarities[i - 1], 0, 0);
                     met.isNew = true;
                     const inv = gameState.current.inventory;
@@ -540,6 +580,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // POR - Portal
             if (cheatBuffer.endsWith('por')) {
+                gameState.current.cheatsUsed = true;
                 gameState.current.portalState = 'closed';
                 gameState.current.portalTimer = 10.1;
                 cheatBuffer = '';
@@ -547,6 +588,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // RMO - Armor
             if (cheatBuffer.endsWith('rmo')) {
+                gameState.current.cheatsUsed = true;
                 const p = gameState.current.player;
                 p.arm.base += 100;
                 p.arm.mult = (p.arm.mult || 0) + 10;
@@ -556,14 +598,17 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // Z1-Z2 - Events
             if (cheatBuffer.endsWith('z1')) {
+                gameState.current.cheatsUsed = true;
                 gameState.current.activeEvent = { type: 'legion_formation', startTime: gameState.current.gameTime, duration: 600, endTime: gameState.current.gameTime + 600, data: { legions: [] } };
                 cheatBuffer = '';
             }
             if (cheatBuffer.endsWith('z2')) {
+                gameState.current.cheatsUsed = true;
                 gameState.current.activeEvent = { type: 'necrotic_surge', startTime: gameState.current.gameTime, duration: 30, endTime: gameState.current.gameTime + 30 };
                 cheatBuffer = '';
             }
             if (cheatBuffer.endsWith('z3')) {
+                gameState.current.cheatsUsed = true;
                 const p = gameState.current.player;
                 const angle = Math.random() * Math.PI * 2;
                 spawnVoidBurrower(gameState.current, p.x + Math.cos(angle) * 2000, p.y + Math.sin(angle) * 2000);
@@ -574,6 +619,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             // T5-T60 - Time Warp
             [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].forEach(min => {
                 if (cheatBuffer.endsWith(`t${min}`)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     skipTime(min);
                     cheatBuffer = '';
                 }
@@ -587,6 +634,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 if (turretSpawned) break;
                 for (let level = 1; level <= 6; level++) {
                     if (cheatBuffer.endsWith(`t${keyChar}${level}`)) {
+                        gameState.current.cheatsUsed = true;
+                        if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                         const p = gameState.current.player;
                         const angle = Math.random() * Math.PI * 2;
                         const dist = 100;
@@ -646,6 +695,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             for (const [buffCode, type] of Object.entries(legendaryCheats)) {
                 if (cheatBuffer.endsWith(buffCode)) {
+                    gameState.current.cheatsUsed = true;
+                    if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
                     const state = gameState.current;
                     const base = LEGENDARY_UPGRADES[type];
                     if (base) {
@@ -672,6 +723,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // CDR - Cooldown Reduction +20% per press (max 90%)
             if (cheatBuffer.endsWith('cdr')) {
+                gameState.current.cheatsUsed = true;
                 const state = gameState.current;
                 const cur = state.player.cooldownReductionBonus || 0;
                 const next = Math.min(0.9, cur + 0.2);
@@ -684,6 +736,7 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
             // CS2 - Boost Chassis Resonance (x2 from current per press)
             if (cheatBuffer.endsWith('cs2')) {
+                gameState.current.cheatsUsed = true;
                 const state = gameState.current;
                 const cur = state.chassisResonanceBonus || 0;
                 state.chassisResonanceBonus = cur === 0 ? 0.5 : cur * 2;

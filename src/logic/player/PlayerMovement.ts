@@ -9,6 +9,7 @@ import { getCdMod } from '../utils/CooldownUtils';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { recordDamage } from '../utils/DamageTracking';
+import { applyDamageToPlayer } from '../utils/CombatUtils';
 
 export function triggerDash(state: GameState, keys: Record<string, boolean>, inputVector?: { x: number, y: number }, overridePlayer?: any) {
     const player = overridePlayer || state.player;
@@ -214,58 +215,24 @@ export function handlePlayerMovement(
                 if (distSq < impactRange * impactRange) {
                     enemy.hp -= finalImpactDmg;
                     state.player.damageDealt += finalImpactDmg;
-                    recordDamage(state, 'Wall Impact', finalImpactDmg);
+                    recordDamage(state, 'Wall Shockwave', finalImpactDmg);
                     spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), isEscalated ? '#ef4444' : '#fff');
                     spawnParticles(state, enemy.x, enemy.y, isEscalated ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
                 }
             });
 
-            const armor = calcStat(player.arm);
-            const drCap = 0.95;
-            const armRedMult = 1 - getDefenseReduction(armor, drCap);
-            let wallDmgAfterArmor = rawWallDmg * armRedMult;
-
-            player.damageBlockedByArmor += (rawWallDmg - wallDmgAfterArmor);
-            player.damageBlocked += (rawWallDmg - wallDmgAfterArmor);
-
-            let wallDmg = wallDmgAfterArmor;
+            applyDamageToPlayer(state, player, rawWallDmg, {
+                sourceType: 'collision',
+                onEvent,
+                triggerDeath,
+                deathCause: 'Wall Impact'
+            });
 
             const kinLvl = getHexLevel(state, 'KineticBattery');
             if (kinLvl >= 1) {
                 const trigger = (state as any).triggerKineticBatteryZap;
                 if (trigger) trigger(state, player, kinLvl);
             }
-
-            let absorbed = 0;
-            if (player.shieldChunks && player.shieldChunks.length > 0) {
-                let rem = wallDmg;
-                for (const chunk of player.shieldChunks) {
-                    if (chunk.amount >= rem) {
-                        chunk.amount -= rem;
-                        absorbed += rem;
-                        rem = 0; break;
-                    } else {
-                        absorbed += chunk.amount;
-                        rem -= chunk.amount;
-                        chunk.amount = 0;
-                    }
-                }
-                player.shieldChunks = player.shieldChunks.filter((c: any) => c.amount > 0);
-                player.damageBlockedByShield += absorbed;
-                player.damageBlocked += absorbed;
-            }
-
-            let finalWallDmg = wallDmg - absorbed;
-
-            if (wallDmg > 0) {
-                if (finalWallDmg > 0) {
-                    player.curHp -= finalWallDmg;
-                    player.damageTaken += finalWallDmg;
-                }
-                spawnFloatingNumber(state, player.x, player.y, Math.round(wallDmg).toString(), '#ef4444', false);
-            }
-
-            if (onEvent) onEvent('player_hit', { dmg: wallDmg });
 
             if (player.curHp <= 0) {
                 if (isBuffActive(state, 'TEMPORAL_GUARD')) {
@@ -306,7 +273,7 @@ export function handlePlayerMovement(
                     playSfx('rare-spawn');
                 } else {
                     state.gameOver = true;
-                    player.deathCause = 'Died from Wall Impact';
+                    player.deathCause = 'Wall Impact';
                     if (onEvent) onEvent('game_over');
                     triggerDeath?.();
                 }

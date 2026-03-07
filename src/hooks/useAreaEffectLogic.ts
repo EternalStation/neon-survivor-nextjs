@@ -122,7 +122,11 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         }
                         e.hp -= dotDmg;
                         state.player.damageDealt += dotDmg;
-                        recordDamage(state, 'Toxic Puddle (LVL 1)', dotDmg);
+                        const isXeno = state.moduleSockets.hexagons.some(h => h?.type === 'XenoAlchemist');
+                        const isMirePuddle = state.moduleSockets.hexagons.some(h => h?.type === 'IrradiatedMire');
+                        const isVital = effect.isVitalMire || state.moduleSockets.hexagons.some(h => h?.type === 'VitalMire');
+                        const puddleSource = isXeno ? 'Xeno Alchemist (Puddle)' : (isMirePuddle ? 'Irradiated Mire (Puddle)' : (isVital ? 'Vital Mire (Puddle)' : (effect.level >= 4 ? 'Toxic Puddle (LVL 4)' : 'Toxic Puddle (LVL 1)')));
+                        recordDamage(state, puddleSource as import('../logic/core/types').DamageSource, dotDmg);
 
                         e.puddleDmgAcc = (e.puddleDmgAcc || 0) + dotDmg;
                         e.puddleDmgTimer = (e.puddleDmgTimer || 0) + step;
@@ -170,7 +174,10 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                     if (executeThreshold > 0 && !e.boss && !e.dead && e.hp <= e.maxHp * executeThreshold) {
                         const executedHp = e.hp;
                         state.player.damageDealt += executedHp;
-                        recordDamage(state, 'Epicenter (LVL 4)', executedHp);
+                        const isHarvestExec = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
+                        const isGravityExec = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
+                        const execSource = isHarvestExec ? 'Gravitational Harvest' : (isGravityExec ? 'Gravity Anchor' : 'Epicenter (LVL 4)');
+                        recordDamage(state, execSource as import('../logic/core/types').DamageSource, executedHp);
                         e.hp = 0;
                         e.isExecuted = true;
                         spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#0ea5e9', true, undefined, 12);
@@ -193,7 +200,10 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                     if (Math.hypot(dx, dy) < range) {
                         e.hp -= dmg;
                         state.player.damageDealt += dmg;
-                        recordDamage(state, 'Epicenter (LVL 1)', dmg);
+                        const isHarvest = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
+                        const isGravityAnc = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
+                        const epicSource = isHarvest ? 'Gravitational Harvest' : (isGravityAnc ? 'Gravity Anchor' : 'Epicenter (LVL 1)');
+                        recordDamage(state, epicSource as import('../logic/core/types').DamageSource, dmg);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#0ea5e9', false);
                         if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                     }

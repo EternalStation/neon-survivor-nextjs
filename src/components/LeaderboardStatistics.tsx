@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/classes';
 import { getUiTranslation } from '../lib/uiTranslations';
+import { formatLargeNumber } from '../utils/format';
 
 interface LeaderboardStatisticsProps {
     entries: any[];
@@ -109,7 +110,47 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             reg: totalRadar.reg,
         } : null;
 
-        return { totalRuns, totalTime, avgTime, topClasses, topUpgrades, topDeaths, totalRadar: totalRadarData };
+        const classSkillDpm: Record<string, number[]> = {};
+        const classHistoryCounts: Record<string, number[]> = {};
+
+        validEntries.forEach(e => {
+            const cls = e.class_used;
+            let history = e.class_skill_dmg_history;
+            if (typeof history === 'string') {
+                try {
+                    history = JSON.parse(history);
+                } catch (err) {
+                    history = null;
+                }
+            }
+
+            if (Array.isArray(history)) {
+                if (!classSkillDpm[cls]) {
+                    classSkillDpm[cls] = new Array(61).fill(0);
+                    classHistoryCounts[cls] = new Array(61).fill(0);
+                }
+                history.forEach((dmg, min) => {
+                    if (min <= 60) {
+                        classSkillDpm[cls][min] += (Number(dmg) || 0);
+                        classHistoryCounts[cls][min]++;
+                    }
+                });
+            }
+        });
+
+        const averagedDpm: Record<string, number[]> = {};
+        const averagedTotal: Record<string, number> = {};
+        Object.keys(classSkillDpm).forEach(cls => {
+            averagedDpm[cls] = classSkillDpm[cls].map((total, min) => {
+                const count = classHistoryCounts[cls][min];
+                return count > 0 ? total / count : 0;
+            });
+            const totalSum = classSkillDpm[cls].reduce((a, b) => a + b, 0);
+            const runCount = validEntries.filter(e => e.class_used.toLowerCase() === cls.toLowerCase() && e.class_skill_dmg_history).length;
+            averagedTotal[cls] = runCount > 0 ? totalSum / runCount : 0;
+        });
+
+        return { totalRuns, totalTime, avgTime, topClasses, topUpgrades, topDeaths, totalRadar: totalRadarData, averagedDpm, averagedTotal };
     }, [validEntries, translateDeathCause]);
 
     if (!stats) {
@@ -140,15 +181,15 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
 
             <div className="meta-header-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
                 <div className="meta-card">
-                    <div className="meta-card-title">{t.metaTotalRuns || 'TOTAL RUNS'}</div>
+                    <div className="meta-card-title">{(t.metaTotalRuns || 'TOTAL RUNS') + ' (+2M MIN)'}</div>
                     <div className="meta-card-value val-cyan" style={{ color: '#22d3ee' }}>{stats.totalRuns}</div>
                 </div>
                 <div className="meta-card">
-                    <div className="meta-card-title">{t.metaTotalTime || 'TOTAL TIME PLAYED'}</div>
+                    <div className="meta-card-title">{(t.metaTotalTime || 'TOTAL TIME PLAYED') + ' (+2M MIN)'}</div>
                     <div className="meta-card-value val-amber" style={{ color: '#f59e0b' }}>{formatTimeLong(stats.totalTime)}</div>
                 </div>
                 <div className="meta-card">
-                    <div className="meta-card-title">{t.metaAvgTime || 'AVG SURVIVAL TIME'}</div>
+                    <div className="meta-card-title">{(t.metaAvgTime || 'AVG SURVIVAL TIME') + ' (+2M MIN)'}</div>
                     <div className="meta-card-value val-green" style={{ color: '#10b981' }}>{formatTimeLong(stats.avgTime)}</div>
                 </div>
             </div>
@@ -255,6 +296,92 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
 
             </div>
 
+            <div className="meta-section">
+                <div className="meta-section-title">{t.metaDamageCharts || 'AVERAGE ACTIVE SKILL DAMAGE PER MINUTE (LOG SCALE)'}</div>
+                <div className="meta-card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                    {['Malware', 'Oblivion', 'Zenith', 'Aegis', 'Hive Mother'].map(cls => {
+                        const avg = stats.averagedTotal[cls] || stats.averagedTotal[cls.toLowerCase()] || 0;
+                        const classColor = getClassColor(cls);
+                        return (
+                            <div key={cls} className="meta-card" style={{ padding: '10px', textAlign: 'center', borderLeft: `3px solid ${classColor}` }}>
+                                <div className="meta-card-title" style={{ fontSize: '9px', color: classColor }}>{cls.toUpperCase()} AVG / RUN</div>
+                                <div className="meta-card-value" style={{ fontSize: '14px', color: '#fff' }}>{formatLargeNumber(Math.round(avg))}</div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="meta-card" style={{ padding: '20px', height: '300px' }}>
+                    <DamageLineChart data={stats.averagedDpm} getClassColor={getClassColor} />
+                </div>
+            </div>
         </div>
+    );
+}
+
+const DamageLineChart: React.FC<{ data: Record<string, number[]>, getClassColor: (id: string) => string }> = ({ data, getClassColor }) => {
+    const width = 800;
+    const height = 250;
+    const padding = 30;
+
+    // Find global max for scaling
+    let maxDmg = 1;
+    Object.values(data).forEach(history => {
+        history.forEach(d => { if (d > maxDmg) maxDmg = d; });
+    });
+
+    // Use log scale: log10(val + 1)
+    const logMax = Math.log10(maxDmg + 1);
+
+    const getY = (val: number) => {
+        if (val <= 0) return height - padding;
+        const logVal = Math.log10(val + 1);
+        const ratio = logVal / logMax;
+        return height - padding - (ratio * (height - 2 * padding));
+    };
+
+    const getX = (min: number) => {
+        return padding + (min / 60) * (width - 2 * padding);
+    };
+
+    return (
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%' }}>
+            {/* Grid */}
+            {[0, 10, 20, 30, 40, 50, 60].map(min => (
+                <line key={min} x1={getX(min)} y1={padding} x2={getX(min)} y2={height - padding} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            ))}
+            {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
+                const y = height - padding - (ratio * (height - 2 * padding));
+                return <line key={ratio} x1={padding} y1={y} x2={width - padding} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />;
+            })}
+
+            {/* Labels */}
+            <text x={padding} y={height - 5} fill="#94a3b8" fontSize="10">0m</text>
+            <text x={width / 2} y={height - 5} fill="#94a3b8" fontSize="10" textAnchor="middle">30m</text>
+            <text x={width - padding} y={height - 5} fill="#94a3b8" fontSize="10" textAnchor="end">60m</text>
+
+            <text x={5} y={height / 2} fill="#94a3b8" fontSize="10" transform={`rotate(-90, 5, ${height / 2})`} textAnchor="middle">AVG. DAMAGE (LOG)</text>
+
+            {/* Lines */}
+            {Object.entries(data).map(([cls, history]) => {
+                const points = history.map((d, min) => `${getX(min)},${getY(d)}`).join(' ');
+                const color = getClassColor(cls);
+                return (
+                    <g key={cls}>
+                        <polyline
+                            points={points}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="2"
+                            strokeLinejoin="round"
+                            style={{ filter: `drop-shadow(0 0 2px ${color})` }}
+                        />
+                        {/* Hover circles */}
+                        {history.filter((_, i) => i % 5 === 0).map((d, i) => (
+                            <circle key={i} cx={getX(i * 5)} cy={getY(d)} r="3" fill={color} />
+                        ))}
+                    </g>
+                );
+            })}
+        </svg>
     );
 }

@@ -49,6 +49,8 @@ export function updateSinglePlayerBullet(
                 const speedMult = 1 + (b.bounceSpeedBonus || 0.01);
                 b.vx = (b.vx - 2 * dot * normal.x) * speedMult;
                 b.vy = (b.vy - 2 * dot * normal.y) * speedMult;
+                b.dmg *= 1 + (b.bounceDmgMult || 0.2);
+                b.bounceCount = (b.bounceCount || 0) + 1;
                 b.x += normal.x * (Math.abs(dist) + 5);
                 b.y += normal.y * (Math.abs(dist) + 5);
             }
@@ -512,7 +514,11 @@ export function updateSinglePlayerBullet(
                     t.hp -= finalDmg; t.lastHitTime = now; owner.damageDealt += finalDmg;
 
                     let source: import('../core/types').DamageSource = 'Projectile';
-                    if (b.isShockwaveCircle) source = 'Shockwave';
+                    if (b.isShockwaveCircle) {
+                        if (b.isSingularity) source = 'Neural Singularity';
+                        else if (b.isTsunami) source = 'Kinetic Tsunami';
+                        else source = 'Shockwave';
+                    }
                     else if (b.isNanite) source = 'Nanite Swarm';
                     else if (b.isTurretFire) source = b.turretVariant === 'ice' ? 'Ice Turret' : 'Fire Turret';
                     else if (b.id === -1) source = 'Kinetic Bolt (LVL 1)';
@@ -539,7 +545,7 @@ export function updateSinglePlayerBullet(
                                 }
                             }
                             if (rawPart > 0) recordDamage(state, 'Projectile', rawPart);
-                            if (bouncePart > 0) recordDamage(state, 'Wall Impact', bouncePart);
+                            if (bouncePart > 0) recordDamage(state, 'Malware Wall Bonus', bouncePart);
                         }
                         if (critPart > 0) recordDamage(state, 'Shattered Fate (Crit)', critPart);
                         if (dMarkPart > 0) recordDamage(state, 'Shattered Fate (Death Mark)', dMarkPart);

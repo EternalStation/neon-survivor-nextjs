@@ -26,7 +26,8 @@ export const FUSIONS = [
     { id: 'NeutronStar', result: 'NeutronStar', bases: ['EcoHP', 'RadiationCore'], perform: MergeLogic.performNeutronStarMerge },
     { id: 'GravitationalHarvest', result: 'GravitationalHarvest', bases: ['EcoHP', 'DefEpi'], perform: MergeLogic.performGravitationalHarvestMerge },
     { id: 'ShatteredCapacitor', result: 'ShatteredCapacitor', bases: ['ComCrit', 'KineticBattery'], perform: MergeLogic.performShatteredCapacitorMerge },
-    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge }
+    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge },
+    { id: 'VitalMire', result: 'VitalMire', bases: ['EcoHP', 'DefPuddle'], perform: MergeLogic.performVitalMireMerge }
 ];
 
 interface HexGridProps {
@@ -261,9 +262,10 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
     const getMetColor = (met: any) => {
         if (!met) return "#4A5568";
-        // Convert rarity to key for RARITY_COLORS
-        const r = met.rarity?.toLowerCase() || 'common';
-        return RARITY_COLORS[r] || RARITY_COLORS['common'] || "#4A5568";
+        // Map rarity safely (case-insensitive for UI robustness)
+        const rawRarity = met.rarity || 'Common';
+        const rKey = Object.keys(RARITY_COLORS).find(k => k.toLowerCase() === rawRarity.toLowerCase());
+        return (rKey && RARITY_COLORS[rKey]) || "#4A5568";
     };
 
     const getHexColors = (hex: any) => {
@@ -403,9 +405,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: t.matrix.sector02, code: 'SEC-02', color: '#c084fc', indices: [0, 1] }, // Medium Purple
-                        { name: t.matrix.sector03, code: 'SEC-03', color: '#a855f7', indices: [2, 3] }, // Vibrant Purple
-                        { name: t.matrix.sector01, code: 'SEC-01', color: '#e9d5ff', indices: [4, 5] }  // Very Light Purple
+                        { name: t.matrix.sector02, code: 'SEC-02', color: '#ef4444', indices: [0, 1] }, // Combat - Crimson Red
+                        { name: t.matrix.sector03, code: 'SEC-03', color: '#3b82f6', indices: [2, 3] }, // Defensive - Blue
+                        { name: t.matrix.sector01, code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Economic - Yellow
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];
@@ -501,7 +503,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     return (
                         <g key={`ms-ii-adj-group-${i}`}>
                             {makeVineBundle(pos.x, pos.y, nextPos.x, nextPos.y, i * 10, colors).map((strand, sIdx) => (
-                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "pulse-crimson" : ""} />
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
+                                    className={isPowered ? "synergy-trail" : ""}
+                                    style={{ color: strand.color }} />
                             ))}
                         </g>
                     );
@@ -523,7 +527,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     return (
                         <g key={`ms-io-rad-group-${i}`}>
                             {makeVineBundle(ePos.x, ePos.y, iPos.x, iPos.y, i * 20 + 50, colors).map((strand, sIdx) => (
-                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "pulse-crimson" : ""} />
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
+                                    className={isPowered ? "synergy-trail" : ""}
+                                    style={{ color: strand.color }} />
                             ))}
                         </g>
                     );
@@ -545,7 +551,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     return (
                         <g key={`xms-ci-perp-group-${i}`}>
                             {makeVineBundle(centerSideMidpoints[i].x, centerSideMidpoints[i].y, pos.x, pos.y, i * 5 + 100, colors).map((strand, sIdx) => (
-                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity} className={isPowered ? "synergy-trail" : ""} />
+                                <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
+                                    className={isPowered ? "synergy-trail" : ""}
+                                    style={{ color: strand.color }} />
                             ))}
                         </g>
                     );
@@ -575,7 +583,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         elems.push(
                             <g key={`xms-hi-group-${i}-1`}>
                                 {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 3, colors1).map((strand, sIdx) => (
-                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7} className={isPowered1 ? "synergy-trail" : ""} />
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7}
+                                        className={isPowered1 ? "synergy-trail" : ""}
+                                        style={{ color: strand.color }} />
                                 ))}
                             </g>
                         );
@@ -584,7 +594,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         elems.push(
                             <g key={`xms-hi-group-${i}-2`}>
                                 {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 7 + 10, colors2).map((strand, sIdx) => (
-                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7} className={isPowered2 ? "synergy-trail" : ""} />
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7}
+                                        className={isPowered2 ? "synergy-trail" : ""}
+                                        style={{ color: strand.color }} />
                                 ))}
                             </g>
                         );
@@ -616,7 +628,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         elems.push(
                             <g key={`xms-he-group-${i}-1`}>
                                 {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 4 + 20, colors1).map((strand, sIdx) => (
-                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8} className={isPowered1 ? "synergy-trail" : ""} />
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8}
+                                        className={isPowered1 ? "synergy-trail" : ""}
+                                        style={{ color: strand.color }} />
                                 ))}
                             </g>
                         );
@@ -625,7 +639,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                         elems.push(
                             <g key={`xms-he-group-${i}-2`}>
                                 {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 9 + 30, colors2).map((strand, sIdx) => (
-                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8} className={isPowered2 ? "synergy-trail" : ""} />
+                                    <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8}
+                                        className={isPowered2 ? "synergy-trail" : ""}
+                                        style={{ color: strand.color }} />
                                 ))}
                             </g>
                         );

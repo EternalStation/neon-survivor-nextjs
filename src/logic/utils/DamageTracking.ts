@@ -10,7 +10,9 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
 
     player.damageBreakdown[source] = (player.damageBreakdown[source] || 0) + amount;
 
-    // Also update the total damageDealt just in case some logic missed it
-    // although most combat logic already updates damageDealt separately.
-    // We want to keep damageDealt as the ground truth for total.
+    // Track active skill damage for the current minute
+    const classSkillSources: DamageSource[] = ['Orbital Vortex', 'Storm Circle', 'Void Singularity', 'Nanite Swarm', 'Malware Wall Bonus'];
+    if (classSkillSources.includes(source)) {
+        state.currentMinuteClassSkillDamage = (state.currentMinuteClassSkillDamage || 0) + amount;
+    }
 }

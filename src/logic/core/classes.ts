@@ -3,8 +3,8 @@ import type { PlayerClass } from './types';
 export const PLAYER_CLASSES: PlayerClass[] = [
     {
         id: 'malware',
-        name: 'Sovereign',
-        title: 'THE GLITCHED SOVEREIGN',
+        name: 'Malware',
+        title: 'THE MALWARE',
         lore: 'A flickering phantom in the machine. Reconstructed from corrupted sector data, this chassis exists in a state of constant quantum instability, allowing it to bypass standard ballistic limitations.',
         description: 'A glitched, unstable frame reconstructed from corrupted sector data.',
         characteristics: [
@@ -116,7 +116,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
     },
     {
         id: 'hivemother',
-        name: 'Legion',
+        name: 'Hive Mother',
         title: 'THE SWARM OVERLORD',
         lore: 'Host to a trillion hungry minds. Each projectile fired by the Hive-Mother is a delivery system for a viral nanite swarm that consumes matter and replicates across the battlefield.',
         description: 'A bio-mechanical hybrid that hosts a swarm of adaptive nanites.',

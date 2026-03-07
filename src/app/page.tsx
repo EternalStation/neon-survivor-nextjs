@@ -28,6 +28,9 @@ import { startBGM } from '@/logic/audio/AudioLogic';
 import api from '@/api/client';
 import '@/styles/menu_additions.css';
 import { LanguageProvider } from '@/lib/LanguageContext';
+import { initKeybinds } from '@/logic/utils/Keybinds';
+
+initKeybinds();
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);

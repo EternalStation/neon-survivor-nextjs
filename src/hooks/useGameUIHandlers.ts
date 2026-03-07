@@ -122,6 +122,7 @@ export function useGameUIHandlers({
         const classToUse = selectedClass || gameState.current.moduleSockets.center || undefined;
         gameState.current = createInitialGameState(classToUse, startingArenaId, tutorialEnabled, gameMode, multiplayerConfig);
         if (username) gameState.current.playerName = username;
+        if (typeof window !== 'undefined') (window as any).__cheatsUsed = false;
 
         setGameOver(false);
         setUpgradeChoices(null);

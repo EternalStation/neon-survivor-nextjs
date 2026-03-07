@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
+import { DamageRow } from './stats/DamageRow';
+import { getUiTranslation } from '../lib/uiTranslations';
 import type { GameState, UpgradeChoice } from '../logic/core/types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { submitRunToLeaderboard } from '../utils/leaderboard';
 import { formatLargeNumber } from '../utils/format';
+import { useLanguage } from '../lib/LanguageContext';
+import { getDamageMapping } from '../utils/damageMapping';
 
 interface DeathScreenProps {
     stats: {
@@ -21,7 +25,9 @@ interface DeathScreenProps {
 }
 
 export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRestart, onQuit, onShowLeaderboard }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules'>('overview');
+    const { language } = useLanguage();
+    const t = getUiTranslation(language);
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'damage'>('overview');
     const [rank, setRank] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(true);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -99,7 +105,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     const formatTime = (sec: number) => {
         const m = Math.floor(sec / 60);
         const s = Math.floor(sec % 60);
-        return `${m}:${s.toString().padStart(2, '0')}`;
+        return `${m}:${s.toString().padStart(2, '0')} `;
     };
 
 
@@ -133,8 +139,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
     const grouped: { choice: UpgradeChoice, count: number }[] = [];
     upgrades.forEach(u => {
-        const key = `${u.rarity.id}-${u.type.id}`;
-        const existing = grouped.find(g => `${g.choice.rarity.id}-${g.choice.type.id}` === key);
+        const key = `${u.rarity.id} -${u.type.id} `;
+        const existing = grouped.find(g => `${g.choice.rarity.id} -${g.choice.type.id} ` === key);
         if (existing) existing.count++;
         else grouped.push({ choice: u, count: 1 });
     });
@@ -193,11 +199,11 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 </button>
 
                 <style>{`
-                    @keyframes pulse-glow {
-                        0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3)); }
-                        50% { opacity: 1; filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.6)); }
-                    }
-                `}</style>
+@keyframes pulse - glow {
+    0 %, 100 % { opacity: 0.8; filter: drop - shadow(0 0 10px rgba(16, 185, 129, 0.3)); }
+    50 % { opacity: 1; filter: drop - shadow(0 0 30px rgba(16, 185, 129, 0.6)); }
+}
+`}</style>
             </div>
         );
     }
@@ -249,9 +255,21 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
                     {isSubmitting ? (
                         <div style={{ color: '#22d3ee', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>UPLOADING...</div>
+                    ) : submissionError === 'CHEATS DETECTED' ? (
+                        <div style={{ color: '#ef4444', fontSize: 10, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}>
+                            YOU USED CHEATS.<br />RECORD NOT SAVED.
+                        </div>
+                    ) : submissionError === 'NOT LOGGED IN' ? (
+                        <div style={{ color: '#f59e0b', fontSize: 9, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2 }}>
+                            PLEASE LOGIN TO<br />SAVE RECORDS
+                        </div>
                     ) : submissionError ? (
                         <div style={{ color: '#ef4444', fontSize: 8, letterSpacing: 1, fontWeight: 700, maxWidth: 100, textAlign: 'center' }}>
                             {submissionError.toUpperCase()}
+                        </div>
+                    ) : (gameState.cheatsUsed || (typeof window !== 'undefined' && (window as any).__cheatsUsed)) ? (
+                        <div style={{ color: '#ef4444', fontSize: 10, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}>
+                            YOU USED CHEATS.<br />RECORD NOT SAVED.
                         </div>
                     ) : rank ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -301,8 +319,9 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 }}>SESSION TERMINATED</div>
 
                 <div className="death-tabs" style={{ marginBottom: 5, display: 'flex', justifyContent: 'center' }}>
-                    <button className={`death-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')} style={{ padding: '6px 20px', fontSize: 14 }}>Overview</button>
-                    <button className={`death-tab ${activeTab === 'modules' ? 'active' : ''}`} onClick={() => setActiveTab('modules')} style={{ padding: '6px 20px', fontSize: 14 }}>Hardware Profile</button>
+                    <button className={`death - tab ${activeTab === 'overview' ? 'active' : ''} `} onClick={() => setActiveTab('overview')} style={{ padding: '6px 20px', fontSize: 14 }}>Overview</button>
+                    <button className={`death - tab ${activeTab === 'modules' ? 'active' : ''} `} onClick={() => setActiveTab('modules')} style={{ padding: '6px 20px', fontSize: 14 }}>Hardware Profile</button>
+                    <button className={`death - tab ${activeTab === 'damage' ? 'active' : ''} `} onClick={() => setActiveTab('damage')} style={{ padding: '6px 20px', fontSize: 14 }}>Damage</button>
                 </div>
             </div>
 
@@ -322,7 +341,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             <StatItem label="Snitches" value={displayStats.snitch} color="#f59e0b" />
                             <StatItem label="Portals" value={displayStats.portals} color="#a855f7" />
                             <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
-                            <StatItem label="Fatal Event" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
+                            <StatItem label="Cause of Death" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
                             {gameState.player.lastHitDamage !== undefined && (
                                 <StatItem label="Killing Blow" value={formatLargeNumber(gameState.player.lastHitDamage)} color="#f87171" />
                             )}
@@ -400,7 +419,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                 <div key={i} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     background: 'rgba(30, 41, 59, 0.3)', padding: '10px', borderRadius: 8,
-                                    borderLeft: `4px solid ${g.choice.rarity.color}`
+                                    borderLeft: `4px solid ${g.choice.rarity.color} `
                                 }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                                         <span style={{ color: g.choice.rarity.color, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{g.choice.rarity.label}</span>
@@ -409,6 +428,76 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                     <span style={{ color: '#475569', fontSize: 11, fontWeight: 900 }}>x{g.count}</span>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'damage' && (
+                    <div style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', borderRadius: 12, border: '1px solid #1e293b', padding: 20 }}>
+                        <div style={{ fontSize: 14, color: '#f59e0b', letterSpacing: 4, marginBottom: 15, borderBottom: '1px solid #1e293b', paddingBottom: 10, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>
+                            DAMAGE ATTRIBUTION
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {(() => {
+                                const { groupMap, sourceColors, sourceGradients } = getDamageMapping(gameState.player.playerClass);
+                                const breakdown = gameState.player.damageBreakdown || {};
+                                const totalDamage = gameState.player.damageDealt;
+                                const processedSources = new Set<string>();
+                                const rows: React.ReactNode[] = [];
+
+                                // Grouped rows
+                                Object.entries(groupMap).forEach(([parent, cfg]) => {
+                                    let groupTotal = 0;
+                                    cfg.children.forEach(c => groupTotal += (breakdown[c] || 0));
+
+                                    if (groupTotal > 0) {
+                                        const activeChildren = cfg.children.filter(c => (breakdown[c] || 0) > 0);
+                                        const showChildren = activeChildren.length > 1;
+
+                                        rows.push(
+                                            <div key={parent + "_group"}>
+                                                <DamageRow
+                                                    label={parent === 'Projectile' ? (t.statsMenu.labels.damageSources.projectile || 'Projectile') : parent}
+                                                    amount={groupTotal}
+                                                    total={totalDamage}
+                                                    color={cfg.color}
+                                                    gradient={cfg.gradient}
+                                                    icon={parent === 'Projectile' ? undefined : cfg.icon}
+                                                />
+                                                {showChildren && (
+                                                    <div style={{ paddingLeft: 24, borderLeft: '1px solid rgba(255,255,255,0.1)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                        {activeChildren.map(c => (
+                                                            <div key={c} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9 }}>
+                                                                <span style={{ color: '#94a3b8' }}>- {cfg.childLabels[c] || c}</span>
+                                                                <span style={{ color: '#fff', fontWeight: 800 }}>{formatLargeNumber(breakdown[c])}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                        cfg.children.forEach(c => processedSources.add(c));
+                                    }
+                                });
+
+                                // Remaining sources
+                                Object.entries(breakdown).forEach(([source, amount]) => {
+                                    if (processedSources.has(source) || amount <= 0) return;
+
+                                    rows.push(
+                                        <DamageRow
+                                            key={source}
+                                            label={t.statsMenu.labels.damageSources[source as keyof typeof t.statsMenu.labels.damageSources] || source}
+                                            amount={amount}
+                                            total={totalDamage}
+                                            color={sourceColors[source] || '#64748b'}
+                                            gradient={sourceGradients[source]}
+                                        />
+                                    );
+                                });
+
+                                return rows.length > 0 ? rows : <div style={{ textAlign: 'center', opacity: 0.5, fontSize: 12 }}>NO COMBAT DATA</div>;
+                            })()}
                         </div>
                     </div>
                 )}

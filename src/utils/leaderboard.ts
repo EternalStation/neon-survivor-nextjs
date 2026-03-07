@@ -4,6 +4,7 @@ import { calcStat } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { getArenaIndex } from '../logic/mission/MapLogic';
 import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
+import { normalizeDeathCause } from './deathCauseUtils';
 
 export const CURRENT_PATCH_VERSION = '1.0.3';
 
@@ -39,6 +40,8 @@ export interface RunSubmissionData {
         speed: number;
     };
     blueprints: any[];
+    damageBreakdown: Record<string, number>;
+    class_skill_dmg_history?: number[];
     timezoneOffset: number;
 }
 
@@ -123,8 +126,13 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         ),
         legendaryHexes,
         hexLevelupOrder,
+        damageBreakdown: gameState.player.damageBreakdown || {},
+        class_skill_dmg_history: [
+            ...(gameState.classSkillDamageHistory || []),
+            gameState.currentMinuteClassSkillDamage || 0
+        ],
         snitchesCaught: Math.ceil(gameState.snitchCaught || 0),
-        deathCause: gameState.player.deathCause || 'Unknown',
+        deathCause: normalizeDeathCause(gameState.player.deathCause || 'Unknown'),
         timezoneOffset: new Date().getTimezoneOffset(),
         blueprints: (() => {
             const grouped: Record<string, { name: string; type: string; count: number }> = {};
@@ -219,12 +227,21 @@ export async function submitRunToLeaderboard(gameState: GameState): Promise<{
     error?: string;
 }> {
     try {
+        const isCheat = gameState.cheatsUsed || (typeof window !== 'undefined' && (window as any).__cheatsUsed);
+        if (isCheat) {
+            console.warn('[Leaderboard] Cheats detected via state or global flag, skipping submission');
+            return {
+                success: false,
+                error: 'CHEATS DETECTED'
+            };
+        }
+
         const token = api.getToken();
         if (!token) {
             console.warn('[Leaderboard] No token found, skipping submission');
             return {
                 success: false,
-                error: 'Not authenticated. Please login to submit runs.'
+                error: 'NOT LOGGED IN'
             };
         }
 

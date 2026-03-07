@@ -30,9 +30,10 @@ Debug code system for testing game state without passing. Allows you to summon b
 
 | Code | Effect |
 |----------|--------|
-| `lvl`, `l1`, `lp` | XP → to the next level (level up), unlocks portals (`portalsUnlocked = true`), opens a warning about the portal after 0.5 s |
+| `lvl` | XP → to the next level (level up) |
+| `ulp` | Unlocks portals (`portalsUnlocked = true`), opens a warning about the portal after 0.5 s |
 | `k1` | Kills the player (HP → 0, `gameOver = true`), cause of death: `SIMULATION TERMINATED (DEBUG)` |
-| `cs2` | Doubles the current `chassisResonanceBonus`: 1st press → 0.5, then 0.5→1→2→4→... Resonance effects: EventHorizon - Pull Strength; Malware - bounce DMG/Speed/Range; StormStrike - AOE radius; HiveMother - Infection Rate and Swarm DMG. |
+| `cs2` | Doubles the current `chassisResonanceBonus`: 1st press → 0.5, then 0.5→1→2→4→... |
 
 ---
 
@@ -84,13 +85,12 @@ Code `o1`–`o12` - throws out a blueprint within a radius of 300 px from the pl
 
 | Code | Rarity | Action |
 |----------|---------|---------|
-| `m1` | abnormal | Spawn in the world (100 px from the player) |
-| `m2` | radiant | Spawn in the world |
-| `m3` | abyss | Spawn in the world |
-| `m4` | eternal | Spawn in the world |
-| `m5` | divine | Spawn in the world |
-| `m6` | singularity | Spawn in the world |
-| `mi1`–`mi6` | the same rarities | Places the meteorite directly into inventory (`isNew = true`) |
+| `m1` | Anomalies | Spawn in the world (100 px from the player) |
+| `m2` | Radiant | Spawn in the world |
+| `m3` | Abyss | Spawn in the world |
+| `m4` | Eternal | Spawn in the world |
+| `m5` | Divine | Spawn in the world |
+| `m6` | Singularity | Spawn in the world |
 
 > **Note:** The documentation screenshot indicates `m1...m9`, but only 6 rarities (m1–m6) are implemented in the code.
 
@@ -108,14 +108,15 @@ Format: `b[form_number][level]`
 | diamond | 4 |
 | pentagon | 5 |
 
-Levels: 1–5.
+Levels: 1–4.
 
-**Examples:**- `b11` — Boss Circle Lvl 1
-- `b15` — Boss Circle Lvl 5
-- `b51` — Boss Pentagon Lvl 1
-- `b55` — Boss Pentagon Lvl 5
+**Examples:**
+- `b11` — Boss Circle Level 1
+- `b14` — Boss Circle Level 4
+- `b21` — Boss Triangle Level 1
+- `b54` — Boss Pentagon Level 4
 
-**Fast spawn (maximum level):** `v1`–`v5` - spawns a boss of the corresponding form at level 4 (Max Tier).
+**Fast spawn (max tier):** `v1`–`v5` are legacy but still supported for spawning level 4 bosses.
 
 **Legacy format:** `v[form]-[level]` (e.g. `v1-1`) - similar to b-series, supported.
 
@@ -174,7 +175,7 @@ Format: `t[minutes]`. Available values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 5
 | Code | Effect |
 |----------|--------|
 | `por` | Resets the portal to the `closed` state, timer → 10.1 s (fast re-opening) |
-| `lvl` / `l1` / `lp` | Additionally opens portals (`portalsUnlocked = true`) |
+| `ulp` | Opens portals (`portalsUnlocked = true`) |
 
 ---
 

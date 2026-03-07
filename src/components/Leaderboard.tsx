@@ -6,6 +6,9 @@ import { formatLargeNumber } from '../utils/format';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation, UI_TRANSLATIONS } from '../lib/uiTranslations';
 import { LeaderboardStatistics } from './LeaderboardStatistics';
+import { DamageRow } from './stats/DamageRow';
+import { getDamageMapping } from '../utils/damageMapping';
+import { normalizeDeathCause } from '../utils/deathCauseUtils';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {
@@ -43,6 +46,8 @@ interface LeaderboardEntry {
         speed: number;
     };
     blueprints?: any[];
+    damage_breakdown?: Record<string, number>;
+    class_skill_dmg_history?: number[] | string;
 }
 
 interface LeaderboardProps {
@@ -74,6 +79,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
     const [patches, setPatches] = useState<string[]>([]);
     const [selectedPatch, setSelectedPatch] = useState<string>('');
     const [expandedRunId, setExpandedRunId] = useState<number | null>(null);
+    const [activeExpandedTab, setActiveExpandedTab] = useState<'stats' | 'damage'>('stats');
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
     // Filters
@@ -228,17 +234,22 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
     };
 
     const translateDeathCause = (cause: string) => {
-        if (language === 'en') return cause;
-        if (!cause) return 'Неизвестно';
+        const normalized = normalizeDeathCause(cause);
+        if (language === 'en') return normalized;
+        if (!normalized) return 'Неизвестно';
 
         // Exact matches
-        if (cause === 'EVACUATED') return 'ЭВАКУИРОВАН';
-        if (cause === 'Legion Swarm') return 'Рой Легиона';
-        if (cause === 'Zombie Horde') return 'Орда Зомби';
-        if (cause === 'Pentagon Minion') return 'Миньон Пентагона';
-        if (cause === 'Unknown') return 'Неизвестно';
+        if (normalized === 'EVACUATED') return 'ЭВАКУИРОВАН';
+        if (normalized === 'Hive Swarm') return 'Рой Улья';
+        if (normalized === 'Abomination') return 'Абоминация';
+        if (normalized === 'Abomination Burn') return 'Испепеление Абоминации';
+        if (normalized === 'Enemy Projectile') return 'Вражеский Снаряд';
+        if (normalized === 'Wall Impact') return 'Удар об Стену';
+        if (normalized === 'Zombie Horde') return 'Орда Зомби';
+        if (normalized === 'Pentagon Minion') return 'Миньон Пентагона';
+        if (normalized === 'Unknown') return 'Неизвестно';
 
-        let result = cause;
+        let result = normalized;
         const ruBosses = UI_TRANSLATIONS.ru.bosses.names;
 
         // Try to translate shapes/boss names within the cause string
@@ -273,12 +284,14 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                 const shape = match[1];
                 result = `Столкновения с ${translateShape(shape)}`;
             }
-        } else if (result.startsWith('Anomaly ')) {
-            const match = result.match(/Anomaly (\w+)/);
-            if (match) {
-                const shape = match[1];
-                result = `Адский Разлом: ${translateShape(shape)}`;
-            }
+        } else if (result === 'Abomination') {
+            result = 'Адский Разлом';
+        } else if (result === 'Abomination Burn') {
+            result = 'Адское Испепеление';
+        } else if (result === 'Enemy Projectile') {
+            result = 'Вражеский Снаряд';
+        } else if (result === 'Wall Impact') {
+            result = 'Удар об Стену';
         } else if (result.includes('Diamond Boss: Orbital Satellites')) {
             result = 'Уничтожен Алмазным Боссом: Орбитальные Спутники';
         } else if (result.includes('Pentagon Boss: Parasitic Link')) {
@@ -409,7 +422,10 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                 <React.Fragment key={entry.id}>
                                                     <tr
                                                         className={`${index < 3 ? 'top-rank' : ''} ${isExpanded ? 'expanded-row-parent' : ''} ${isUserRun ? 'user-run-row' : ''}`}
-                                                        onClick={() => setExpandedRunId(isExpanded ? null : entry.id)}
+                                                        onClick={() => {
+                                                            setExpandedRunId(isExpanded ? null : entry.id);
+                                                            setActiveExpandedTab('stats');
+                                                        }}
                                                         style={{ cursor: 'pointer' }}
                                                     >
                                                         <td style={{ color: getRankColor(index + 1), fontWeight: '900', fontFamily: 'Orbitron, sans-serif' }}>
@@ -428,139 +444,241 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                     {isExpanded && (
                                                         <tr className="expanded-details">
                                                             <td colSpan={7}>
-                                                                <div className="run-details-grid">
-                                                                    {/* STATS ANALYTICS */}
-                                                                    <div className="details-card stats-card">
-                                                                        <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.missionData}</div>
-                                                                        <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                                                                            <div className="stat-row"><span>{t.dmgDealt}</span><span className="val-amber">{formatLargeNumber(entry.damage_dealt || 0)}</span></div>
-                                                                            <div className="stat-row"><span>{t.dmgTaken}</span><span className="val-red">{formatLargeNumber(entry.damage_taken || 0)}</span></div>
-                                                                            <div className="stat-row"><span>{t.dmgBlocked}</span><span className="val-blue">{formatLargeNumber(entry.damage_blocked || 0)}</span></div>
-                                                                            <div className="stat-sub-row"><span>{t.armor}</span><span>{formatLargeNumber(entry.damage_blocked_armor || 0)}</span></div>
-                                                                            <div className="stat-sub-row"><span>{t.shield}</span><span>{formatLargeNumber(entry.damage_blocked_shield || 0)}</span></div>
-                                                                            <div className="stat-sub-row"><span>{t.collision}</span><span>{formatLargeNumber(entry.damage_blocked_collision || 0)}</span></div>
-                                                                            <div className="stat-sub-row"><span>{t.projectile}</span><span>{formatLargeNumber(entry.damage_blocked_projectile || 0)}</span></div>
-                                                                            <div className="stat-row" style={{ marginTop: 10 }}><span>{t.kills}</span><span className="val-amber">{entry.kills.toLocaleString()}</span></div>
-                                                                            <div className="stat-row"><span>{t.snitches}</span><span className="val-cyan">{entry.snitches_caught || 0}</span></div>
-                                                                            <div className="stat-row"><span>{t.portals}</span><span className="val-purple">{entry.portals_used || 0}</span></div>
-                                                                        </div>
-
-                                                                        <div className="card-header" style={{ marginTop: 15, fontFamily: 'Orbitron, sans-serif' }}>{t.arenaLog}</div>
-                                                                        <div className="stats-list" style={{ flex: 1, fontFamily: 'Orbitron, sans-serif' }}>
-                                                                            <div className="stat-row"><span>{t.eco}</span><span>{formatTime(entry.arena_times?.[0] || 0)}</span></div>
-                                                                            <div className="stat-row"><span>{t.com}</span><span>{formatTime(entry.arena_times?.[1] || 0)}</span></div>
-                                                                            <div className="stat-row"><span>{t.def}</span><span>{formatTime(entry.arena_times?.[2] || 0)}</span></div>
-                                                                        </div>
-
-                                                                        {isUserRun && (
-                                                                            <div className="card-footer" style={{ marginTop: 20 }}>
-                                                                                <button
-                                                                                    className="delete-run-btn"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handleDeleteRun(entry.id);
-                                                                                    }}
-                                                                                    disabled={deletingId === entry.id}
-                                                                                    style={{ fontFamily: 'Orbitron, sans-serif' }}
-                                                                                >
-                                                                                    {deletingId === entry.id ? t.wiping : t.wipeRecord}
-                                                                                </button>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {/* LEGENDARY LINEUP */}
-                                                                    <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
-                                                                        <div style={{ fontSize: '12px', color: '#00ffff', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                            {t.finalPerformance}
-                                                                        </div>
-                                                                        {entry.final_stats && (
-                                                                            <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
-                                                                                <FinalStatItem label={t.dmgHit} value={formatLargeNumber(entry.final_stats.dmg)} color="#f59e0b" />
-                                                                                <FinalStatItem label={t.maxHp} value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
-                                                                                <FinalStatItem label={t.xpKill} value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
-                                                                                <FinalStatItem label={t.atkSpeed} value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
-                                                                                <FinalStatItem label={t.regen} value={formatLargeNumber(entry.final_stats.regen) + '/s'} color="#4ade80" />
-                                                                                <FinalStatItem label={t.armor} value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
-                                                                                <FinalStatItem label={t.speed} value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
-                                                                            </div>
-                                                                        )}
-
-                                                                        <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(59, 130, 246, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                            {t.augmentationHistory}
-                                                                        </div>
-                                                                        <div className="legendary-grid">
-                                                                            {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
-                                                                                entry.hex_levelup_order.map((step, i) => {
-                                                                                    const hexBase = entry.legendary_hexes?.find(h => h.id === step.hexId);
-                                                                                    if (!hexBase) return null;
-
-                                                                                    return (
-                                                                                        <div key={i} className="hex-step-item">
-                                                                                            <div className="hex-icon-wrapper-small">
-                                                                                                <img
-                                                                                                    src={`/assets/hexes/${hexBase.type === 'EcoDMG' ? 'EcoDMG' :
-                                                                                                        hexBase.type === 'EcoXP' ? 'EcoXP' :
-                                                                                                            hexBase.type === 'EcoHP' ? 'EcoHP' :
-                                                                                                                hexBase.type === 'ComLife' ? 'ComLife' :
-                                                                                                                    hexBase.type === 'ComCrit' ? 'ComCrit' :
-                                                                                                                        hexBase.type === 'ComWave' ? 'ComWave' :
-                                                                                                                            hexBase.type === 'DefPuddle' ? 'DefPuddle' :
-                                                                                                                                hexBase.type === 'DefEpi' ? 'DefEpi' :
-                                                                                                                                    hexBase.type === 'CombShield' ? 'EcoArmor' :
-                                                                                                                                        hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
-                                                                                                                                            hexBase.type === 'shield_passive' ? 'AigisVortex' :
-                                                                                                                                                hexBase.type === 'KineticBattery' ? 'DefBattery' :
-                                                                                                                                                    hexBase.type === 'RadiationCore' ? 'ComRad' :
-                                                                                                                                                        hexBase.type === 'ChronoPlating' ? 'DefChromo' :
-                                                                                                                                                            'MalwarePrime'
-                                                                                                        }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
-                                                                                                    alt={hexBase.name}
-                                                                                                />
-                                                                                            </div>
-                                                                                            <div className="hex-step-level">LVL {step.level}</div>
-                                                                                            <div className="hex-step-kills">{step.gameTime ? formatTime(step.gameTime) : ''}</div>
-                                                                                        </div>
-                                                                                    );
-                                                                                })
-                                                                            ) : (
-                                                                                <div className="empty-msg" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.noAugments}</div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* RADAR PROFILE */}
-                                                                    <div className="details-card radar-card">
-                                                                        <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.hardwareProfile}</div>
-                                                                        <div style={{ padding: '10px 0' }}>
-                                                                            <RadarChart counts={entry.radar_counts} size={150} />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* BLUEPRINT LOADOUT */}
-                                                                    <div className="details-card blueprints-card" style={{ gridColumn: '1 / -1', marginTop: 10 }}>
-                                                                        <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(245, 158, 11, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
-                                                                            {t.blueprintConfig}
-                                                                        </div>
-                                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0' }}>
-                                                                            {entry.blueprints && entry.blueprints.length > 0 ? (
-                                                                                entry.blueprints.map((bp: any, i: number) => (
-                                                                                    <div key={i} style={{
-                                                                                        display: 'flex', alignItems: 'center', gap: 6,
-                                                                                        background: 'rgba(16, 185, 129, 0.1)',
-                                                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                                                        padding: '6px 10px', borderRadius: 6
-                                                                                    }}>
-                                                                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
-                                                                                        <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type} x{bp.count || 1}</span>
-                                                                                    </div>
-                                                                                ))
-                                                                            ) : (
-                                                                                <div className="empty-msg" style={{ fontStyle: 'italic', opacity: 0.5, fontSize: 11, fontFamily: 'Orbitron, sans-serif' }}>{t.noBlueprints}</div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
+                                                                <div className="expanded-tabs-row" style={{ display: 'flex', gap: 10, marginBottom: 20, padding: '0 20px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)' }}>
+                                                                    <button
+                                                                        className={`exp-tab ${activeExpandedTab === 'stats' ? 'active' : ''}`}
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveExpandedTab('stats'); }}
+                                                                        style={{
+                                                                            background: 'none', border: 'none',
+                                                                            color: activeExpandedTab === 'stats' ? '#00ffff' : 'rgba(255,255,255,0.4)',
+                                                                            fontFamily: 'Orbitron, sans-serif', fontSize: 12, fontWeight: 800,
+                                                                            padding: '10px 20px', cursor: 'pointer', borderBottom: activeExpandedTab === 'stats' ? '2px solid #00ffff' : 'none'
+                                                                        }}
+                                                                    >
+                                                                        MISSION STATS
+                                                                    </button>
+                                                                    <button
+                                                                        className={`exp-tab ${activeExpandedTab === 'damage' ? 'active' : ''}`}
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveExpandedTab('damage'); }}
+                                                                        style={{
+                                                                            background: 'none', border: 'none',
+                                                                            color: activeExpandedTab === 'damage' ? '#f59e0b' : 'rgba(255,255,255,0.4)',
+                                                                            fontFamily: 'Orbitron, sans-serif', fontSize: 12, fontWeight: 800,
+                                                                            padding: '10px 20px', cursor: 'pointer', borderBottom: activeExpandedTab === 'damage' ? '2px solid #f59e0b' : 'none'
+                                                                        }}
+                                                                    >
+                                                                        DAMAGE ANALYSIS
+                                                                    </button>
                                                                 </div>
+
+                                                                {activeExpandedTab === 'stats' ? (
+                                                                    <div className="run-details-grid">
+                                                                        {/* STATS ANALYTICS */}
+                                                                        <div className="details-card stats-card">
+                                                                            <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.missionData}</div>
+                                                                            <div className="stats-list" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                                                                                <div className="stat-row"><span>{t.dmgDealt}</span><span className="val-amber">{formatLargeNumber(entry.damage_dealt || 0)}</span></div>
+                                                                                <div className="stat-row"><span>{t.dmgTaken}</span><span className="val-red">{formatLargeNumber(entry.damage_taken || 0)}</span></div>
+                                                                                <div className="stat-row"><span>{t.dmgBlocked}</span><span className="val-blue">{formatLargeNumber(entry.damage_blocked || 0)}</span></div>
+                                                                                <div className="stat-sub-row"><span>{t.armor}</span><span>{formatLargeNumber(entry.damage_blocked_armor || 0)}</span></div>
+                                                                                <div className="stat-sub-row"><span>{t.shield}</span><span>{formatLargeNumber(entry.damage_blocked_shield || 0)}</span></div>
+                                                                                <div className="stat-sub-row"><span>{t.collision}</span><span>{formatLargeNumber(entry.damage_blocked_collision || 0)}</span></div>
+                                                                                <div className="stat-sub-row"><span>{t.projectile}</span><span>{formatLargeNumber(entry.damage_blocked_projectile || 0)}</span></div>
+                                                                                <div className="stat-row" style={{ marginTop: 10 }}><span>{t.kills}</span><span className="val-amber">{entry.kills.toLocaleString()}</span></div>
+                                                                                <div className="stat-row"><span>{t.snitches}</span><span className="val-cyan">{entry.snitches_caught || 0}</span></div>
+                                                                                <div className="stat-row"><span>{t.portals}</span><span className="val-purple">{entry.portals_used || 0}</span></div>
+                                                                            </div>
+
+                                                                            <div className="card-header" style={{ marginTop: 15, fontFamily: 'Orbitron, sans-serif' }}>{t.arenaLog}</div>
+                                                                            <div className="stats-list" style={{ flex: 1, fontFamily: 'Orbitron, sans-serif' }}>
+                                                                                <div className="stat-row"><span>{t.eco}</span><span>{formatTime(entry.arena_times?.[0] || 0)}</span></div>
+                                                                                <div className="stat-row"><span>{t.com}</span><span>{formatTime(entry.arena_times?.[1] || 0)}</span></div>
+                                                                                <div className="stat-row"><span>{t.def}</span><span>{formatTime(entry.arena_times?.[2] || 0)}</span></div>
+                                                                            </div>
+
+                                                                            {isUserRun && (
+                                                                                <div className="card-footer" style={{ marginTop: 20 }}>
+                                                                                    <button
+                                                                                        className="delete-run-btn"
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleDeleteRun(entry.id);
+                                                                                        }}
+                                                                                        disabled={deletingId === entry.id}
+                                                                                        style={{ fontFamily: 'Orbitron, sans-serif' }}
+                                                                                    >
+                                                                                        {deletingId === entry.id ? t.wiping : t.wipeRecord}
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* LEGENDARY LINEUP */}
+                                                                        <div className="details-card legendary-card" style={{ gridColumn: 'span 2' }}>
+                                                                            <div style={{ fontSize: '12px', color: '#00ffff', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                                {t.finalPerformance}
+                                                                            </div>
+                                                                            {entry.final_stats && (
+                                                                                <div className="final-stats-grid" style={{ marginBottom: '24px' }}>
+                                                                                    <FinalStatItem label={t.dmgHit} value={formatLargeNumber(entry.final_stats.dmg)} color="#f59e0b" />
+                                                                                    <FinalStatItem label={t.maxHp} value={formatLargeNumber(entry.final_stats.hp)} color="#4ade80" />
+                                                                                    <FinalStatItem label={t.xpKill} value={formatLargeNumber(entry.final_stats.xp || 0)} color="#22d3ee" />
+                                                                                    <FinalStatItem label={t.atkSpeed} value={(2.64 * Math.log(entry.final_stats.atkSpd / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
+                                                                                    <FinalStatItem label={t.regen} value={formatLargeNumber(entry.final_stats.regen) + '/s'} color="#4ade80" />
+                                                                                    <FinalStatItem label={t.armor} value={formatLargeNumber(entry.final_stats.armor)} color="#3b82f6" />
+                                                                                    <FinalStatItem label={t.speed} value={entry.final_stats.speed.toFixed(1)} color="#22d3ee" />
+                                                                                </div>
+                                                                            )}
+
+                                                                            <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(59, 130, 246, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                                {t.augmentationHistory}
+                                                                            </div>
+                                                                            <div className="legendary-grid">
+                                                                                {entry.hex_levelup_order && entry.hex_levelup_order.length > 0 ? (
+                                                                                    entry.hex_levelup_order.map((step, i) => {
+                                                                                        const hexBase = entry.legendary_hexes?.find(h => h.id === step.hexId);
+                                                                                        if (!hexBase) return null;
+
+                                                                                        return (
+                                                                                            <div key={i} className="hex-step-item">
+                                                                                                <div className="hex-icon-wrapper-small">
+                                                                                                    <img
+                                                                                                        src={`/assets/hexes/${hexBase.type === 'EcoDMG' ? 'EcoDMG' :
+                                                                                                            hexBase.type === 'EcoXP' ? 'EcoXP' :
+                                                                                                                hexBase.type === 'EcoHP' ? 'EcoHP' :
+                                                                                                                    hexBase.type === 'ComLife' ? 'ComLife' :
+                                                                                                                        hexBase.type === 'ComCrit' ? 'ComCrit' :
+                                                                                                                            hexBase.type === 'ComWave' ? 'ComWave' :
+                                                                                                                                hexBase.type === 'DefPuddle' ? 'DefPuddle' :
+                                                                                                                                    hexBase.type === 'DefEpi' ? 'DefEpi' :
+                                                                                                                                        hexBase.type === 'CombShield' ? 'EcoArmor' :
+                                                                                                                                            hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
+                                                                                                                                                hexBase.type === 'shield_passive' ? 'AigisVortex' :
+                                                                                                                                                    hexBase.type === 'KineticBattery' ? 'DefBattery' :
+                                                                                                                                                        hexBase.type === 'RadiationCore' ? 'ComRad' :
+                                                                                                                                                            hexBase.type === 'ChronoPlating' ? 'DefChromo' :
+                                                                                                                                                                'MalwarePrime'
+                                                                                                            }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
+                                                                                                        alt={hexBase.name}
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <div className="hex-step-level">LVL {step.level}</div>
+                                                                                                <div className="hex-step-kills">{step.gameTime ? formatTime(step.gameTime) : ''}</div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })
+                                                                                ) : (
+                                                                                    <div className="empty-msg" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.noAugments}</div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* RADAR PROFILE */}
+                                                                        <div className="details-card radar-card">
+                                                                            <div className="card-header" style={{ fontFamily: 'Orbitron, sans-serif' }}>{t.hardwareProfile}</div>
+                                                                            <div style={{ padding: '10px 0' }}>
+                                                                                <RadarChart counts={entry.radar_counts} size={150} />
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* BLUEPRINT LOADOUT */}
+                                                                        <div className="details-card blueprints-card" style={{ gridColumn: '1 / -1', marginTop: 10 }}>
+                                                                            <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '900', letterSpacing: '1.5px', marginBottom: '12px', borderBottom: '1px solid rgba(245, 158, 11, 0.1)', paddingBottom: '6px', textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                                                                                {t.blueprintConfig}
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0' }}>
+                                                                                {entry.blueprints && entry.blueprints.length > 0 ? (
+                                                                                    entry.blueprints.map((bp: any, i: number) => (
+                                                                                        <div key={i} style={{
+                                                                                            display: 'flex', alignItems: 'center', gap: 6,
+                                                                                            background: 'rgba(16, 185, 129, 0.1)',
+                                                                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                                                            padding: '6px 10px', borderRadius: 6
+                                                                                        }}>
+                                                                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></div>
+                                                                                            <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700, fontFamily: 'Orbitron, sans-serif' }}>{bp.name || bp.type} x{bp.count || 1}</span>
+                                                                                        </div>
+                                                                                    ))
+                                                                                ) : (
+                                                                                    <div className="empty-msg" style={{ fontStyle: 'italic', opacity: 0.5, fontSize: 11, fontFamily: 'Orbitron, sans-serif' }}>{t.noBlueprints}</div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="damage-analysis-view" style={{ padding: '0 20px 20px' }}>
+                                                                        <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: 12, padding: 25, border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                                                            <div style={{ fontSize: 14, color: '#f59e0b', letterSpacing: 4, marginBottom: 20, fontWeight: 800, fontFamily: 'Orbitron, sans-serif', display: 'flex', justifyContent: 'space-between' }}>
+                                                                                <span>DAMAGE ATTRIBUTION</span>
+                                                                                <span style={{ opacity: 0.6 }}>TOTAL: {formatLargeNumber(entry.damage_dealt || 0)}</span>
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                                {(() => {
+                                                                                    const { groupMap, sourceColors, sourceGradients } = getDamageMapping(entry.class_used);
+                                                                                    const breakdown = entry.damage_breakdown || {};
+                                                                                    const totalDamage = entry.damage_dealt || 0;
+                                                                                    const processedSources = new Set<string>();
+                                                                                    const rows: React.ReactNode[] = [];
+                                                                                    const tu = getUiTranslation(language);
+
+                                                                                    // Grouped rows
+                                                                                    Object.entries(groupMap).forEach(([parent, cfg]) => {
+                                                                                        let groupTotal = 0;
+                                                                                        cfg.children.forEach(c => groupTotal += (breakdown[c] || 0));
+
+                                                                                        if (groupTotal > 0) {
+                                                                                            const activeChildren = cfg.children.filter(c => (breakdown[c] || 0) > 0);
+                                                                                            const showChildren = activeChildren.length > 1;
+
+                                                                                            rows.push(
+                                                                                                <div key={parent + "_group"}>
+                                                                                                    <DamageRow
+                                                                                                        label={parent === 'Projectile' ? (tu.statsMenu.labels.damageSources.projectile || 'Projectile') : parent}
+                                                                                                        amount={groupTotal}
+                                                                                                        total={totalDamage}
+                                                                                                        color={cfg.color}
+                                                                                                        gradient={cfg.gradient}
+                                                                                                        icon={parent === 'Projectile' ? undefined : cfg.icon}
+                                                                                                    />
+                                                                                                    {showChildren && (
+                                                                                                        <div style={{ paddingLeft: 24, borderLeft: '1px solid rgba(255,255,255,0.1)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                                                                            {activeChildren.map(c => (
+                                                                                                                <div key={c} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+                                                                                                                    <span style={{ color: '#94a3b8' }}>- {cfg.childLabels[c] || c}</span>
+                                                                                                                    <span style={{ color: '#fff', fontWeight: 800 }}>{formatLargeNumber(breakdown[c])}</span>
+                                                                                                                </div>
+                                                                                                            ))}
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            );
+                                                                                            cfg.children.forEach(c => processedSources.add(c));
+                                                                                        }
+                                                                                    });
+
+                                                                                    // Remaining sources
+                                                                                    Object.entries(breakdown).forEach(([source, amount]) => {
+                                                                                        if (processedSources.has(source) || amount <= 0) return;
+
+                                                                                        rows.push(
+                                                                                            <DamageRow
+                                                                                                key={source}
+                                                                                                label={tu.statsMenu.labels.damageSources[source as keyof typeof tu.statsMenu.labels.damageSources] || source}
+                                                                                                amount={amount}
+                                                                                                total={totalDamage}
+                                                                                                color={sourceColors[source] || '#64748b'}
+                                                                                                gradient={sourceGradients[source]}
+                                                                                                icon={undefined}
+                                                                                            />
+                                                                                        );
+                                                                                    });
+
+                                                                                    return rows.length > 0 ? rows : <div style={{ textAlign: 'center', opacity: 0.5, fontSize: 12, padding: 40 }}>NO DETAILED DAMAGE DATA AVAILABLE FOR THIS RUN</div>;
+                                                                                })()}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     )}
@@ -591,93 +709,6 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                     </div>
                 )}
             </div>
-            <style>{`
-                .loading-glitch {
-                    font-size: 24px;
-                    font-weight: 900;
-                    color: #00ffff;
-                    position: relative;
-                    animation: glitch-pulse 1s infinite;
-                }
-                @keyframes glitch-pulse {
-                    0% { opacity: 1; transform: scale(1); }
-                    50% { opacity: 0.7; transform: scale(0.98); }
-                    100% { opacity: 1; transform: scale(1); }
-                }
-
-                .header-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                }
-
-                .purge-btn {
-                    background: rgba(255, 68, 68, 0.1);
-                    border: 1px solid rgba(255, 68, 68, 0.4);
-                    color: #ff4444;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-size: 11px;
-                    font-weight: 900;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                }
-
-                .purge-btn:hover {
-                    background: #ff4444;
-                    color: #000;
-                }
-
-                .user-run-row {
-                    background: rgba(0, 255, 255, 0.03) !important;
-                }
-
-                .owner-tag {
-                    font-size: 10px;
-                    color: #00ffff;
-                    margin-left: 8px;
-                    opacity: 0.8;
-                }
-
-                .delete-run-btn {
-                    width: 100%;
-                    background: rgba(255, 68, 68, 0.15);
-                    border: 1px solid rgba(255, 68, 68, 0.5);
-                    color: #ff4444;
-                    padding: 10px;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    font-weight: 900;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                }
-
-                .stat-label {
-                    font-size: 10px;
-                    font-weight: 800;
-                    color: rgba(255, 255, 255, 0.4);
-                    text-transform: uppercase;
-                    letter-spacing: 0.8px;
-                    font-family: 'Orbitron', sans-serif;
-                }
-
-                .stat-value {
-                    font-size: 18px;
-                    font-weight: 700;
-                    font-family: 'Orbitron', sans-serif;
-                }
-
-                .delete-run-btn:hover:not(:disabled) {
-                    background: #ff4444;
-                    color: #000;
-                    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
-                }
-
-                .delete-run-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-            `}</style>
         </div>
     );
 }

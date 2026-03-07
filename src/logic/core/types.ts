@@ -65,14 +65,27 @@ export type DamageSource =
     | 'Static Bolt'
     | 'Nanite Swarm'
     | 'Shockwave'
+    | 'Neural Singularity'
+    | 'Kinetic Tsunami'
     | 'Collision'
     | 'Radiation Aura'
+    | 'Neutron Star (Aura)'
+    | 'Irradiated Mire (Aura)'
     | 'Toxic Puddle (LVL 1)'
     | 'Toxic Puddle (LVL 4)'
+    | 'Xeno Alchemist (Puddle)'
+    | 'Irradiated Mire (Puddle)'
+    | 'Vital Mire (Puddle)'
     | 'Epicenter (LVL 1)'
     | 'Epicenter (LVL 4)'
+    | 'Gravitational Harvest'
     | 'Gravity Anchor'
+    | 'Gravity Anchor (Explosion)'
     | 'Temporal Monolith'
+    | 'Temporal Monolith (Explosion)'
+    | 'Shattered Capacitor (Arc)'
+    | 'Shattered Capacitor (Bleed)'
+    | 'Necro-Kinetic Engine'
     | 'Wall Impact'
     | 'Fire Turret'
     | 'Ice Turret'
@@ -86,6 +99,8 @@ export type DamageSource =
     | 'Orbital Vortex'
     | 'Storm Circle'
     | 'Void Singularity'
+    | 'Wall Shockwave'
+    | 'Malware Wall Bonus'
     | 'Other';
 
 export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
@@ -114,6 +129,7 @@ export interface AreaEffect {
     originY?: number;
     isGravityAnchor?: boolean;
     isGravitationalHarvest?: boolean;
+    isVitalMire?: boolean;
 }
 
 export interface Player {
@@ -183,6 +199,7 @@ export interface Player {
         epicenterShield?: number;
         systemSurge?: { end: number, atk: number, spd: number };
         waveSpeed?: number;
+        vitalRecovery?: number;
     };
     playerClass?: import('./classes').PlayerClassId;
     classShotCount?: number;
@@ -710,7 +727,7 @@ export type LegendaryType =
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
     | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
-    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer';
+    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer' | 'VitalMire';
 
 export interface LegendaryHex {
     id: string;
@@ -846,7 +863,10 @@ export interface GameState {
     unpauseDelay?: number;
     unpauseMode?: 'normal' | 'slow_motion';
     flashIntensity?: number;
-
+    cheatsUsed?: boolean;
+    classSkillDamageHistory: number[];
+    currentMinuteClassSkillDamage: number;
+    lastMinuteMark: number;
     hasPlayedSpawnSound?: boolean;
     bossPresence: number;
     critShake: number;
@@ -1007,6 +1027,8 @@ export interface MeteoritePerk {
 
 export interface Meteorite {
     id: number;
+    type?: 'void_flux' | 'dust_pile' | 'vital_spark';
+    amount?: number;
     x: number;
     y: number;
     rarity: MeteoriteRarity;
@@ -1024,17 +1046,18 @@ export interface Meteorite {
         coreSurge?: number;
         neighbor?: number;
         hex?: number;
-        sameType?: number;
-        hexType?: number;
+        found?: number;
+        pair?: number;
+        connected?: number;
+        sector?: number;
+        arena?: number;
     };
     incubatorBoost?: number;
     instability?: number;
-
-    type?: 'dust_pile' | 'meteorite' | 'void_flux';
-    amount?: number;
-
-
+    version?: number;
     blueprintBoosted?: boolean;
+    isCorrupted?: boolean;
+    targetPlayer?: any;
     isBlueprint?: boolean;
     blueprintType?: BlueprintType;
     name?: string;
@@ -1043,9 +1066,6 @@ export interface Meteorite {
     researchFinishTime?: number;
     researchRemainingTime?: number;
     researchDuration?: number;
-    targetPlayer?: import('./types').Player | null;
-    isCorrupted?: boolean;
-    version?: number;
 }
 
 export interface IncubatedMeteorite extends Meteorite {

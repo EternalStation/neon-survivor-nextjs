@@ -25,6 +25,9 @@ Source of truth: source code. Comments are not used in the code.
 
 | File | Description |
 |-----------|---------|
+| [VitalMireImplementation.md](VitalMireImplementation.md) | Vital Mire Implementation |
+| [leaderboard_damage_tab.md](leaderboard_damage_tab.md) | Leaderboard Damage Analysis Tab |
+| [fusion-skill-damage-tracking.md](fusion-skill-damage-tracking.md) | Fused Skill Damage Tracking Logic |
 | [view/class-selection.md](viewlass-selection.md) | Class selection screen before the start of the session: cards, badges, navigation. |
 | [view/stats-menu.md](view/stats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
 | [DamageBreakdownUI.md](DamageBreakdownUI.md) | Damage Attribution tab: source breakdown, visual progress bars, real-time counters. |

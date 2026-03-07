@@ -70,9 +70,9 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
     const extractionDialogActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
     const playerName = gameState.playerName || PLAYER_CLASSES.find(c => c.id === gameState.player.playerClass)?.name || "PILOT";
     const arenaName = gameState.extractionTargetArena !== undefined ? getLocalizedArenaDetails(gameState.extractionTargetArena, language as any).name : "UNKNOWN";
-    const extractionMessages = getExtractionMessages(language, playerName, arenaName);
+    const extractionMessages: ExtractionMessage[] = getExtractionMessages(language, playerName, arenaName);
 
-    const alertIdx = extractionMessages.findIndex(m => m.isAlert);
+    const alertIdx = extractionMessages.findIndex((m: ExtractionMessage) => m.isAlert);
     const isAlertActive = extractionDialogActive && alertIdx !== -1 && gameState.extractionMessageIndex >= alertIdx;
     const themeColor = isAlertActive ? '#ef4444' : '#3b82f6';
     const themeColorSecondary = isAlertActive ? '#f87171' : '#60a5fa';
@@ -98,39 +98,19 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
         const start = gameState.extractionMessageTimes?.[gameState.extractionMessageIndex] || 0;
         const now = gameState.extractionDialogTime || 0;
         const elapsed = Math.max(0, now - start);
-        const speed = 0.03; // 30ms per character (Fast)
+        const speed = 0.03;
 
         const targetCharCount = Math.floor(elapsed / speed);
         const currentChars = Math.min(msg.text.length, targetCharCount);
 
         if (currentChars > lastCharIndexRef.current) {
-            // Play sound for EACH new character
-            const newChars = currentChars - lastCharIndexRef.current;
-            // Limit sound spam if lagging
-            if (newChars < 5) {
-                for (let k = 0; k < newChars; k++) {
-                    // Slight stagger or just play? Play might be too much overlap.
-                    // Just play once per tick is usually enough for "typing" feel, 
-                    // but user said "hear every letter". 
-                    // If we type 3 letters in one frame, playing 3 sounds instantly might clip.
-                    // Let's play one sound but maybe vary pitch?
-                    // 'playTypewriterClick' is standard.
-                    // Let's just play it once per update if chars increased. 
-                    // PROMPT: "I want to hear every letter typed". 
-                    // If frame rate is 60fps, 16ms. 30ms per char matches ~2 chars per frame?
-                    // If multiple chars, loop?
-                }
-                playTypewriterClick();
-            } else {
-                playTypewriterClick();
-            }
+            playTypewriterClick();
             lastCharIndexRef.current = currentChars;
         }
     }, [gameState.extractionDialogTime, extractionDialogActive, gameState.extractionMessageIndex]);
 
     const handleExitRecalibrate = () => {
         if (recalibrateSlot) {
-            // Find empty slot in inventory (Storage 10+ first, then Safe Slots 0-9)
             let emptyIdx = -1;
             for (let i = 10; i < gameState.inventory.length; i++) {
                 if (gameState.inventory[i] === null) { emptyIdx = i; break; }
@@ -147,7 +127,6 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                 onUpdate?.();
                 playSfx('ui-click');
             } else {
-                // Return as moved item if inventory is full
                 setMovedItem?.({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
                 setRecalibrateSlot(null);
             }
@@ -665,19 +644,15 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             .typewriter-cursor::after { content: '▋'; animation: blink 1s step-start infinite; color: currentColor; margin-left: 2px; }
                             @keyframes blink { 50% { opacity: 0; } }
                         `}</style>
-                            {extractionMessages.slice(0, gameState.extractionMessageIndex + 1).map((msg, i) => {
+                            {extractionMessages.slice(0, gameState.extractionMessageIndex + 1).map((msg: ExtractionMessage, i: number) => {
                                 const isCurrent = i === gameState.extractionMessageIndex;
-
-                                // Dynamic Placeholder Replacement (Now handled by getExtractionMessages)
                                 const fullText = msg.text;
-
-                                // Typewriter Logic: Constant Speed Calculation
                                 let displayedText = fullText;
                                 if (isCurrent && !msg.isPause) {
                                     const start = gameState.extractionMessageTimes?.[i] || 0;
                                     const now = gameState.extractionDialogTime || 0;
                                     const elapsed = Math.max(0, now - start);
-                                    const speed = 0.03; // 30ms per character
+                                    const speed = 0.03;
 
                                     const charCount = Math.floor(elapsed / speed);
                                     displayedText = fullText.slice(0, charCount);
@@ -690,7 +665,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                         color: msg.speaker === 'you' ? '#fde68a' : '#93c5fd',
                                         maxWidth: '100%',
                                         wordBreak: 'break-word',
-                                        marginLeft: msg.speaker === 'orbit' ? '5px' : '0', // Move Orbit text right by 5px
+                                        marginLeft: msg.speaker === 'orbit' ? '5px' : '0',
                                         paddingRight: msg.speaker === 'you' ? '10px' : '0'
                                     }}>
                                         <span style={{ fontWeight: 900, opacity: 0.9, marginRight: '16px', letterSpacing: '1px' }}>{msg.speaker?.toUpperCase()}:</span>
@@ -705,7 +680,6 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                 ) : (
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ position: 'relative', width: '220px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {/* Rotating Loading Circle */}
                             <div style={{
                                 position: 'absolute', width: '100%', height: '100%',
                                 border: '2px solid rgba(59, 130, 246, 0.1)',
