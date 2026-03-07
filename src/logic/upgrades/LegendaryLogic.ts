@@ -5,7 +5,7 @@ import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 
-export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'ChronoDevourer'];
+export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'GravityAnchor'];
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {
@@ -246,7 +246,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         id: 'gravity_anchor',
         name: 'THE GRAVITY ANCHOR',
         desc: 'Defensive / Defensive Fusion',
-        description: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.',
+        description: 'A structural collapse between Aegis Protocol and Epicenter. Deploys an anchor dealing damage scaling with 2% Armor and executing enemies below 5% HP.',
         lore: 'The shield is no longer just a barrier; it is a weight. It condenses the gravitational pull of your impact, anchoring it to your armor until the pressure shatters the very ground beneath you.',
         category: 'Fusion',
         categories: ['Defensive', 'Defensive'],
@@ -311,7 +311,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         id: 'chrono_devourer',
         name: 'THE CHRONO-DEVOURER',
         desc: 'Combat / Defensive Fusion',
-        description: 'Active: Explodes all shields to deal AOE damage based on Armor + Shield value. Zombies have a 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.',
+        description: 'Zombies have a 10% chance to consume enemies on first bite. Zombie kills reduce all active skill cooldowns by 0.03s.',
         lore: 'A parasitic anomaly that feeds on both temporal energy and biomatter. It trades your shields for raw devastation, while accelerating your systems with every successful consumption.',
         category: 'Fusion',
         categories: ['Combat', 'Defensive'],
@@ -359,7 +359,8 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             (type === 'NeutronStar' && (p.toLowerCase().includes('horizon') || p.toLowerCase().includes('aura') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('аура'))) ||
             (type === 'GravitationalHarvest' && (p.toLowerCase().includes('duration extension') || p.toLowerCase().includes('reflected') || p.toLowerCase().includes('продление') || p.toLowerCase().includes('отражает'))) ||
             (type === 'ShatteredCapacitor' && (p.toLowerCase().includes('arcs a kinetic') || p.toLowerCase().includes('armor dmg as bleed') || p.toLowerCase().includes('рикошетит кинетический') || p.toLowerCase().includes('кровотечение'))) ||
-            (type === 'ChronoDevourer' && (p.toLowerCase().includes('explode all shields') || p.toLowerCase().includes('cooldown recovery') || p.toLowerCase().includes('chance for zombies') || p.toLowerCase().includes('взрывает все щиты') || p.toLowerCase().includes('шанс зомби') || p.toLowerCase().includes('ускорение перезарядки')));
+            (type === 'ChronoDevourer' && (p.toLowerCase().includes('explode all shields') || p.toLowerCase().includes('cooldown decrease') || p.toLowerCase().includes('chance for zombies') || p.toLowerCase().includes('взрывает все щиты') || p.toLowerCase().includes('шанс зомби') || p.toLowerCase().includes('ускорение перезарядки'))) ||
+            (type === 'GravityAnchor' && (p.toLowerCase().includes('explosive') || p.toLowerCase().includes('armor') || p.toLowerCase().includes('брони') || p.toLowerCase().includes('взрываются')));
 
         if (type === 'SoulShatterCore') {
             if (p.includes('+5% Crit DMG') || p.includes('+5% Крит Урона')) {
@@ -563,7 +564,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
             const hasSkill = state.player.activeSkills.some(s => s.type === selection.type);
             if (!hasSkill) {
                 const usedKeys = state.player.activeSkills.map(s => s.keyBind);
-                const availableKeys = ['2', '3', '4', '5', '6'];
+                const availableKeys = ['1', '2', '3', '4', '5', '6'];
                 const key = availableKeys.find(k => !usedKeys.includes(k));
 
                 if (key) {
@@ -573,7 +574,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
                     if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
                     if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
                     if (selection.type === 'TemporalMonolith') baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
-                    if (selection.type === 'GravitationalHarvest') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
+                    if (selection.type === 'GravitationalHarvest' || selection.type === 'GravityAnchor') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
                     if (selection.type === 'ChronoDevourer') baseCD = GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN;
 
                     state.player.activeSkills.push({

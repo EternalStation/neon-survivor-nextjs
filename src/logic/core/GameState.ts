@@ -18,7 +18,10 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         curHp: 150,
         dmg: { base: 60, flat: 0, mult: 0, classMult: 0 },
         atk: { base: 300, flat: 0, mult: 0, classMult: 0 },
+        critChance: 0,
+        critDamage: 0,
         spd: { base: 6.5, flat: 0, mult: 0, classMult: 0 },
+
         reg: { base: 1, flat: 0, mult: 0, classMult: 0 },
         arm: { base: 0, flat: 0, mult: 0, classMult: 0 },
         xp_per_kill: { base: 25, flat: 0, mult: 0, classMult: 0 },
@@ -31,6 +34,7 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         damageBlockedByCollisionReduc: 0,
         damageBlockedByProjectileReduc: 0,
         damageBlockedByShield: 0,
+        damageBreakdown: {},
         wallsHit: 0,
         upgradesCollected: [],
         lastShot: 0,
@@ -52,8 +56,8 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
     };
 
     if (selectedClass) {
-        // Class Multipliers (Stored as integer percentages, e.g. 25 for +25%)
-        // These are now final multipliers applied in MathUtils.ts
+
+
         if (selectedClass.stats.hpMult) p.hp.classMult = selectedClass.stats.hpMult * 100;
         if (selectedClass.stats.dmgMult) p.dmg.classMult = selectedClass.stats.dmgMult * 100;
         if (selectedClass.stats.atkMult) p.atk.classMult = selectedClass.stats.atkMult * 100;
@@ -62,19 +66,19 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
         if (selectedClass.stats.armMult) p.arm.classMult = selectedClass.stats.armMult * 100;
         if (selectedClass.stats.spdMult) p.spd.classMult = selectedClass.stats.spdMult * 100;
 
-        // Flat/Direct stats
+
         if (selectedClass.stats.regFlat) p.reg.flat += selectedClass.stats.regFlat;
 
-        // Custom start conditions
+
         if (selectedClass.id === 'malware') {
-            p.pierce = 1; // Malware starts with 1 pierce (hits 2 enemies)
+            p.pierce = 1;
         }
     }
 
-    // Finalize HP using unified calcStat logic
+
     const baseMaxHp = p.hp.base * (1 + p.hp.mult / 100);
     if (startingArenaId === 2) {
-        p.curHp = baseMaxHp * 1.2; // Match Defence Hex +20% buff
+        p.curHp = baseMaxHp * 1.2;
     } else {
         p.curHp = baseMaxHp;
     }
@@ -88,22 +92,22 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
     const myId = multiplayerConfig?.myId || 'player1';
     const player = createInitialPlayer(myId, selectedClass, startingArenaId);
 
-    // Multiplayer Spawn Separation:
-    // If we are a guest (implied by having peerIds or not being host, but simpler: check index in peer list?)
-    // Actually, createInitialGameState runs on EACH client for their OWN player initially.
-    // Host will then sync everyone.
-    // BUT, to avoid overlap before sync, let's offset based on whether we are host or not.
+
+
+
+
+
     if (multiplayerConfig?.active && !multiplayerConfig.isHost) {
-        player.x += 500; // Guest spawns 500px to the right
+        player.x += 500;
     }
 
-    // In multiplayer, players map includes me. In single, it's just me.
+
     const players: Record<string, Player> = { [myId]: player };
 
-    // Initialize Peers (if we are Host or even Guest knowing about them)
+
     if (multiplayerConfig?.active && multiplayerConfig.peerIds) {
         multiplayerConfig.peerIds.forEach((peerId: string, index: number) => {
-            // Avoid duplicating self if peerIds includes me (it shouldn't usually, but safety first)
+
             if (peerId === myId) return;
 
             const peerClassId = multiplayerConfig.selectedClasses?.[peerId];
@@ -111,23 +115,23 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
 
             const peerPlayer = createInitialPlayer(peerId, peerClass, startingArenaId);
 
-            // Offset logic for peers
-            // Player 1 (Host) @ 0
-            // Player 2 @ +500
+
+
+
             peerPlayer.x += 500 * (index + 1);
 
             players[peerId] = peerPlayer;
         });
     }
 
-    // Apply classes if we can resolve them? 
-    // For this immediate fix, we rely on the fact that `selectedClass` arg was for ME.
-    // We really should look up peer classes.
-    // Let's trust that the visual syncing happens or we add a TODO to fix peer stats.
+
+
+
+
 
     const state: GameState = {
         gameMode,
-        player: players[myId], // Reference to player in the players map, not a separate copy
+        player: players[myId],
         players,
         language: 'en',
         multiplayer: {
@@ -160,11 +164,11 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         portalsUsed: 0,
         snitchCaught: 0,
         timeInArena: { 0: 0, 1: 0, 2: 0 },
-        arenaLevels: { 0: 0, 1: 0, 2: 0 }, // Initialize levels
+        arenaLevels: { 0: 0, 1: 0, 2: 0 },
         frameCount: 0,
         isPaused: false,
         gameOver: false,
-        nextBossSpawnTime: 105, // 1 minute 45 seconds
+        nextBossSpawnTime: 105,
         nextBossId: 0,
         rareSpawnCycle: 0,
         rareSpawnActive: false,
@@ -175,31 +179,31 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         hasPlayedSpawnSound: false,
         bossPresence: 0,
         critShake: 0,
-        spatialGrid: new SpatialGrid(250), // 250px cells
+        spatialGrid: new SpatialGrid(250),
         activeEvent: null,
-        nextEventCheckTime: 60, // First check at 1 minute
+        nextEventCheckTime: 60,
         directorState: { necroticCycle: -1, legionCycle: -1 },
         pois: generateMapPOIs(),
 
-        // Portal / Arena Defaults
+
         currentArena: startingArenaId,
         lastArena: startingArenaId,
-        portalsUnlocked: false, // Default to locked
+        portalsUnlocked: false,
         portalState: 'closed',
-        portalTimer: 240, // 240s = 4 minutes (Cycle)
-        portalOpenDuration: 10, // 10 seconds open
+        portalTimer: 240,
+        portalOpenDuration: 10,
         transferTimer: 0,
         nextArenaId: null,
         portalOneTimeUse: false,
 
-        // Inventory Defaults
+
         meteorites: [],
-        inventory: Array(319).fill(null), // 319 slots (9 reserved + 310 storage)
-        incubator: Array(3).fill(null), // 3 slots for the void forge
+        inventory: Array(319).fill(null),
+        incubator: Array(3).fill(null),
         incubatorFuel: 0,
         incubatorFuelMax: 30,
 
-        // Module Menu Defaults
+
         showModuleMenu: false,
         showStats: false,
         showSettings: false,
@@ -222,7 +226,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         legionLeads: {},
         playerName: '',
 
-        // Blueprint System Defaults
+
         blueprints: Array(10).fill(null),
         activeBlueprintBuffs: {},
         activeBlueprintCharges: {},
@@ -232,7 +236,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         meteoriteRateBuffMult: 1.0,
         gameSpeedMult: parseFloat(typeof localStorage !== 'undefined' ? (localStorage.getItem('gameSpeedMult') || '1.2') : '1.2'),
 
-        // Extraction System
+
         extractionStatus: 'none',
         extractionTimer: 0,
         extractionMessageIndex: -1,
@@ -242,15 +246,15 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         extractionPowerMult: 1.0,
         anomalyBossCount: 0,
 
-        // UI Delays
+
         pendingLevelUps: 0,
         levelUpTimer: 0,
         pendingBossKills: 0,
         bossKillTimer: 0,
 
         tutorial: {
-            currentStep: 0, // TutorialStep.MOVEMENT (Avoiding circular dependency if enum not imported, but it is valid TS to use enum if imported or just 0)
-            isActive: tutorialEnabled && gameMode === 'single', // Disable tutorial in multiplayer
+            currentStep: 0,
+            isActive: tutorialEnabled && gameMode === 'single',
             stepTimer: 0,
             completedSteps: [],
             pressedKeys: new Set(),
@@ -264,7 +268,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         lastPlacement: null,
         shownUpgradeIds: [],
 
-        // AI Assistant (Orbit) Logic
+
         assistant: {
             message: null,
             emotion: 'Normal',
@@ -279,7 +283,7 @@ export const createInitialGameState = (selectedClass?: PlayerClass, startingAren
         }
     };
 
-    // User Request: Ensure turrets are in the arena the player entered (even at start)
+
     relocateTurretsToArena(state, startingArenaId);
 
     return state;

@@ -17,7 +17,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         bhPullSpeed = (0.66 + (resonance * 0.85));
     }
 
-    // --- ARENA TRANSITION: POI RESET ---
+    
     if (state.lastArena === undefined) state.lastArena = state.currentArena;
     if (state.lastArena !== state.currentArena) {
         state.lastArena = state.currentArena;
@@ -32,7 +32,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         });
     }
 
-    // --- POI EFFECTS: Overclock ---
+    
     let overclockActive = false;
     state.pois.forEach(poi => {
         if (poi.type === 'overclock') {
@@ -48,7 +48,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 poi.cooldown -= step;
                 if (poi.cooldown <= 0) {
                     poi.cooldown = 0;
-                    // Relocate to a new random position after cooldown
+                    
                     relocatePOI(poi);
                     poi.active = false;
                     poi.activationProgress = 0;
@@ -89,7 +89,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         }
     });
 
-    // --- POI EFFECTS: Anomaly Summoning ---
+    
     state.pois.forEach(poi => {
         if (poi.type === 'anomaly') {
             if (poi.respawnTimer > 0) {
@@ -102,9 +102,9 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 poi.cooldown -= step;
                 if (poi.cooldown <= 0) {
                     poi.cooldown = 0;
-                    // Relocate to new random position after cooldown
+                    
                     relocatePOI(poi);
-                    poi.active = true; // Anomaly starts active after relocate
+                    poi.active = true; 
                     poi.progress = 0;
                 }
             }
@@ -141,16 +141,16 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 }
             }
 
-            // Summoning Trigger
+            
             if (poi.active && poi.cooldown === 0) {
                 if (inRange && state.interactPressed && poi.progress === 0) {
-                    poi.progress = 1; // Start the 5s countdown
+                    poi.progress = 1; 
                     playSfx('warning');
                     spawnFloatingNumber(state, poi.x, poi.y, "INFERNAL BREACH", '#ef4444', true);
                 }
 
                 if (poi.progress > 0) {
-                    // Fill over 5 seconds (20% per second)
+                    
                     poi.progress += step * 20;
 
                     if (poi.progress >= 100) {
@@ -165,10 +165,10 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                         spawnFloatingNumber(state, poi.x, poi.y, "OVERLORD RISING", '#ef4444', true);
                         playSfx('warning');
 
-                        poi.anomalySpawnDelay = 0.1; // Small sub-frame delay for the actual spawn logic
+                        poi.anomalySpawnDelay = 0.1; 
                         poi.anomalySpawnTier = tier;
                         poi.progress = 0;
-                        poi.active = false; // Set to false so it can't be re-triggered during delay
+                        poi.active = false; 
                     }
                 }
             }
@@ -223,12 +223,12 @@ export function handleScheduledSpawns(state: GameState) {
     const { gameTime } = state;
     const currentMinute = Math.floor(gameTime / 60);
 
-    // Rare Spawning Logic
+    
     if (state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         manageRareSpawnCycles(state);
     }
 
-    // --- PRISM GLITCHER RANDOM SPAWN ---
+    
     if (state.glitcherLastCheckedMinute === undefined) state.glitcherLastCheckedMinute = 9;
     const glitcherAlive = state.enemies.some(e => e.shape === 'glitcher' && !e.dead);
     if (currentMinute > state.glitcherLastCheckedMinute && !state.glitcherScheduledSpawnTime && !glitcherAlive && currentMinute >= 10) {
@@ -249,7 +249,7 @@ export function handleScheduledSpawns(state: GameState) {
         state.glitcherScheduledSpawnTime = undefined;
     }
 
-    // --- VOID BURROWER RANDOM SPAWN ---
+    
     if (state.wormLastCheckedMinute === undefined) state.wormLastCheckedMinute = 4;
     const wormAlive = state.enemies.some(e => e.shape === 'worm' && !e.dead);
     if (currentMinute > state.wormLastCheckedMinute && !state.wormScheduledSpawnTime && !wormAlive && currentMinute >= 5) {
@@ -272,7 +272,7 @@ export function handleScheduledSpawns(state: GameState) {
         state.wormScheduledSpawnTime = undefined;
     }
 
-    // Boss Spawning (Scheduled)
+    
     if (gameTime >= state.nextBossSpawnTime && state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         const minutesRaw = gameTime / 60;
         const current10MinCycle = Math.floor(minutesRaw / 10);
@@ -297,7 +297,7 @@ export function handleScheduledSpawns(state: GameState) {
 }
 
 export function handleLegionAndMerges(state: GameState, step: number) {
-    // --- LEGION CACHING (Optimization) ---
+    
     const legionGroups = new Map<string, { lead: Enemy | null, members: Enemy[] }>();
     state.legionLeads = {};
     state.enemies.forEach(e => {
@@ -325,7 +325,7 @@ export function handleLegionAndMerges(state: GameState, step: number) {
 
     const activeLegionIds = Array.from(legionGroups.keys());
 
-    // --- LEGION SPAWNING ---
+    
     if (state.activeEvent?.type === 'legion_formation' && !state.directorState?.legionSpawned) {
         const { shapeDef, eraPalette } = getProgressionParams(state.gameTime);
         const legionId = `legion_${Math.random()}`;
@@ -429,7 +429,7 @@ export function handleLegionAndMerges(state: GameState, step: number) {
         }
     }
 
-    // --- MERGING LOGIC ---
+    
     const anyLegionAlive = activeLegionIds.length > 0;
     const compromisedMergeIds = new Set<string>();
     state.enemies.forEach(e => {

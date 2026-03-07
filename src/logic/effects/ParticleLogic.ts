@@ -12,9 +12,11 @@ export interface Particle {
     size: number;
     type?: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust';
     alpha?: number;
+    startAngle?: number;
+    endAngle?: number;
 }
 
-export function spawnParticles(state: GameState, x: number, y: number, color: string | string[], count: number = 8, sizeOverride?: number, lifeOverride?: number, type: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust' = 'spark') {
+export function spawnParticles(state: GameState, x: number, y: number, color: string | string[], count: number = 8, sizeOverride?: number, lifeOverride?: number, type: 'shard' | 'spark' | 'shockwave' | 'bubble' | 'vapor' | 'void' | 'shockwave_circle' | 'dust' = 'spark', startAngle?: number, endAngle?: number) {
     if (!state.particles) state.particles = [];
 
     const totalParticles = state.particles.length;
@@ -25,7 +27,10 @@ export function spawnParticles(state: GameState, x: number, y: number, color: st
     }
 
     for (let i = 0; i < count; i++) {
-        const angle = Math.random() * 6.28;
+        let angle = Math.random() * 6.28;
+        if (startAngle !== undefined && endAngle !== undefined) {
+            angle = startAngle + Math.random() * (endAngle - startAngle);
+        }
         const speed = type === 'shard' ? (Math.random() * 4 + 2) : (Math.random() * 2 + 1);
 
         let selectedColor = '';
@@ -57,7 +62,9 @@ export function spawnParticles(state: GameState, x: number, y: number, color: st
             color: selectedColor,
             size: (sizeOverride || (Math.random() * 3 + 1)),
             type,
-            alpha: 1.0
+            alpha: 1.0,
+            startAngle,
+            endAngle
         });
     }
 }
@@ -95,7 +102,7 @@ export function updateParticles(state: GameState) {
     }
 }
 
-export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string) {
+export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string, fontSize?: number) {
     if (!state.floatingNumbers) state.floatingNumbers = [];
 
     const distSq = (x - state.player.x) ** 2 + (y - state.player.y) ** 2;
@@ -125,6 +132,7 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
         backgroundColor,
         life: lifeDuration,
         maxLife: lifeDuration,
-        isCrit
+        isCrit,
+        fontSize
     });
 }

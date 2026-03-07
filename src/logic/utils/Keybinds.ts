@@ -19,13 +19,13 @@ const DEFAULT_KEYBINDS: Keybinds = {
     matrix: 'KeyX',
     portal: 'KeyP',
     dash: 'ShiftLeft',
-    classAbility: 'Digit1',
-    skill1: 'Digit2',
-    skill2: 'Digit3',
-    skill3: 'Digit4',
-    skill4: 'Digit5',
-    skill5: 'Digit6',
-    skill6: 'Digit7',
+    classAbility: 'KeyQ',
+    skill1: 'Digit1',
+    skill2: 'Digit2',
+    skill3: 'Digit3',
+    skill4: 'Digit4',
+    skill5: 'Digit5',
+    skill6: 'Digit6',
     selectUpgrade: 'Space',
     interact: 'KeyE',
 };
@@ -49,7 +49,7 @@ export const saveKeybinds = (keybinds: Keybinds) => {
     if (typeof window === 'undefined') return;
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(keybinds));
-        // Dispatch a custom event so components can update immediately
+
         window.dispatchEvent(new Event('keybindsChanged'));
     } catch (e) {
         console.warn('Failed to save keybinds', e);
@@ -66,7 +66,10 @@ export const getKeyDisplay = (key: string): string => {
     if (key === 'ShiftLeft') return 'LSHIFT';
     if (key === 'ShiftRight') return 'RSHIFT';
 
-    // Convert common codes to friendly names
+    if (key.toLowerCase() === 'mouse0') return 'MOUSE 1';
+    if (key.toLowerCase() === 'mouse2') return 'MOUSE 2';
+    if (key.toLowerCase() === 'mouse1') return 'MOUSE 3';
+
     let display = key;
     if (display.startsWith('Key')) display = display.substring(3);
     if (display.startsWith('Digit')) display = display.substring(5);

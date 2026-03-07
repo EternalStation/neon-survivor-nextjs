@@ -32,8 +32,8 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.restore();
         } else if (effect.type === 'epicenter') {
             const baseR = effect.radius || 500;
-            // const pTimer = effect.pulseTimer || 0;
-            // const progress = pTimer / 0.5;
+
+
             if (isNaN(effect.x) || isNaN(effect.y)) return;
 
             ctx.save();
@@ -52,7 +52,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             frostGrad.addColorStop(1, 'rgba(34, 211, 238, 0)');
             ctx.fillStyle = frostGrad; ctx.fill();
 
-            // Replacing shadowBlur with Glow Stroke
+
             ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)'; ctx.stroke();
             ctx.lineWidth = 2; ctx.strokeStyle = '#22d3ee'; ctx.stroke();
 
@@ -68,7 +68,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             const spikeCount = 16;
             const shardScale = 0.75;
 
-            // Use simple flat color for performance
+
             ctx.fillStyle = 'rgba(34, 211, 238, 0.6)';
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 1;
@@ -85,6 +85,14 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 if (h <= 0) continue;
                 ctx.save(); ctx.translate(seedX, seedY); ctx.rotate(tilt * Math.PI / 180);
 
+                if ((effect.isGravityAnchor || effect.isGravitationalHarvest) && i % 2 === 0) {
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.7)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                } else {
+                    ctx.fillStyle = 'rgba(34, 211, 238, 0.6)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                }
+
                 ctx.beginPath();
                 ctx.moveTo(-w / 2, 0);
                 ctx.lineTo(0, -h);
@@ -97,8 +105,8 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             }
             ctx.restore();
         } else if (effect.type === 'blackhole') {
-            // --- VOID SINGULARITY VISUAL (Core + Reverted Organic Outline) ---
-            const pullRadius = effect.radius || 400; // Updated to match logic
+
+            const pullRadius = effect.radius || 400;
             const coreRadius = 40;
             if (isNaN(effect.x) || isNaN(effect.y)) return;
 
@@ -106,11 +114,11 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.translate(effect.x, effect.y);
             const t = state.gameTime;
 
-            // 1. ORGANIC ACCRETION DISK (Reverted to previous style)
+
             const rotation = (t * 3) % (Math.PI * 2);
             for (let layer = 0; layer < 6; layer++) {
-                // Layer radius scales from core to pull edge
-                // Layer radius scales from core to pull edge - Adjusted to reach 100% at max layer
+
+
                 const layerRadius = coreRadius + (pullRadius - coreRadius) * (0.2 + (layer / 5) * 0.8);
                 if (layerRadius > pullRadius) continue;
 
@@ -129,17 +137,17 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 ctx.strokeStyle = `rgba(126, 34, 206, ${Math.max(0, opacity)})`;
                 ctx.lineWidth = 3 - layer * 0.4;
 
-                // Optimized: Removed shadowBlur in organic disk as there are 6 layers (360 segments each!)
-                // The overlapping layers already create depth.
+
+
                 ctx.stroke();
             }
 
-            // 2. GRAVITATIONAL LENSING (Keep the clear sharp rim)
+
             ctx.beginPath();
             ctx.arc(0, 0, coreRadius + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f8fafc'; // Sharp white rim
+            ctx.strokeStyle = '#f8fafc';
             ctx.lineWidth = 2;
-            // Neon Glow replacement
+
             ctx.globalAlpha = 0.5;
             ctx.lineWidth = 6;
             ctx.strokeStyle = '#38bdf8';
@@ -149,7 +157,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.strokeStyle = '#f8fafc';
             ctx.stroke();
 
-            // 3. THE SINGULARITY (Keep the pitch black core)
+
             ctx.beginPath();
             ctx.arc(0, 0, coreRadius, 0, Math.PI * 2);
             ctx.fillStyle = '#000000';
@@ -157,31 +165,31 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
 
             ctx.restore();
         } else if (effect.type === 'orbital_strike') {
-            // TARGETING VISUAL (0.3s delay)
-            // Just a contracting ring or target reticle
-            const timeLeft = effect.duration; // 0.3 down to 0
-            const progress = 1 - (timeLeft / 0.3); // 0 to 1
+
+
+            const timeLeft = effect.duration;
+            const progress = 1 - (timeLeft / 0.3);
             const baseR = effect.radius || 150;
 
             ctx.save();
             ctx.translate(effect.x, effect.y);
 
-            // 1. Circle Filling
+
             ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
             ctx.beginPath();
             ctx.arc(0, 0, baseR, 0, Math.PI * 2);
             ctx.fill();
 
-            // Rotating outer ring
+
             ctx.rotate(state.gameTime * 2);
             ctx.beginPath();
-            ctx.arc(0, 0, baseR * (1 - progress * 0.5), 0, Math.PI * 2); // Contracts from 100% to 50%
+            ctx.arc(0, 0, baseR * (1 - progress * 0.5), 0, Math.PI * 2);
             ctx.lineWidth = 2;
-            ctx.strokeStyle = `rgba(56, 189, 248, ${0.5 + progress * 0.5})`; // Fade in alpha
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.5 + progress * 0.5})`;
             ctx.setLineDash([10, 10]);
             ctx.stroke();
 
-            // Inner solid ring
+
             ctx.beginPath();
             ctx.arc(0, 0, baseR * 0.2, 0, Math.PI * 2);
             ctx.lineWidth = 2;
@@ -282,38 +290,38 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.restore();
 
         } else if (effect.type === 'crater') {
-            // CRATER + BEAM (Lasts 5s)
 
-            const lifeTime = state.gameTime - effect.creationTime; // Time since creation
-            const duration = effect.duration; // 5.0
+
+            const lifeTime = state.gameTime - effect.creationTime;
+            const duration = effect.duration;
             const radius = effect.radius || 150;
             const remaining = duration - lifeTime;
-            const alpha = Math.max(0, remaining > 1.0 ? 1.0 : remaining); // Fade out last 1 sec
+            const alpha = Math.max(0, remaining > 1.0 ? 1.0 : remaining);
 
             ctx.save();
             ctx.translate(effect.x, effect.y);
 
-            // 1. CRATER (Scorched SCARS only - No Circle)
-            // Draw crossed lines / cracks in the middle
-            ctx.strokeStyle = `rgba(50, 60, 80, ${0.8 * alpha})`; // Dark scorch color
+
+
+            ctx.strokeStyle = `rgba(50, 60, 80, ${0.8 * alpha})`;
             ctx.lineWidth = 3;
 
-            // Random crossed lines near center
-            const seed = effect.id; // Consistent random seed
+
+            const seed = effect.id;
             const count = 4;
             for (let i = 0; i < count; i++) {
                 ctx.beginPath();
-                // Use deterministic pseudorandom offset based on ID
+
                 const angle = (i * (Math.PI / count)) + (seed % 100) * 0.01;
                 const len = radius * 0.4;
 
-                // Draw line through center
+
                 ctx.moveTo(Math.cos(angle) * -len, Math.sin(angle) * -len * 0.6);
                 ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len * 0.6);
                 ctx.stroke();
             }
 
-            // Add some smaller random cracks
+
             ctx.lineWidth = 1.5;
             for (let i = 0; i < 5; i++) {
                 const angle = (i * 2.5) + (seed % 50) * 0.1;
@@ -329,39 +337,39 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 ctx.stroke();
             }
 
-            // 2. BEAM (High Opacity Center -> Fade corners)
-            // Only visible for first 0.6s
+
+
             const beamDuration = 0.6;
             if (lifeTime < beamDuration) {
                 const beamAlpha = 1 - (lifeTime / beamDuration);
 
-                // Beams are tall. Draw huge rectangle going up.
-                // We are translated to (x,y).
-                // Draw Upwards (-y).
-                const beamHeight = 2000;
-                const beamWidth = radius * 1.5; // Slightly wider than crater for impact feel
 
-                // Gradient: Horizontal (across beam width) - High Center Opacity
+
+
+                const beamHeight = 2000;
+                const beamWidth = radius * 1.5;
+
+
                 const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
-                beamGrad.addColorStop(0, `rgba(56, 189, 248, 0)`); // Corner
-                beamGrad.addColorStop(0.2, `rgba(186, 230, 253, ${0.5 * beamAlpha})`); // Transition
-                beamGrad.addColorStop(0.5, `rgba(255, 255, 255, ${1.0 * beamAlpha})`); // Center (High Opacity)
-                beamGrad.addColorStop(0.8, `rgba(186, 230, 253, ${0.5 * beamAlpha})`); // Transition
-                beamGrad.addColorStop(1, `rgba(56, 189, 248, 0)`); // Corner
+                beamGrad.addColorStop(0, `rgba(56, 189, 248, 0)`);
+                beamGrad.addColorStop(0.2, `rgba(186, 230, 253, ${0.5 * beamAlpha})`);
+                beamGrad.addColorStop(0.5, `rgba(255, 255, 255, ${1.0 * beamAlpha})`);
+                beamGrad.addColorStop(0.8, `rgba(186, 230, 253, ${0.5 * beamAlpha})`);
+                beamGrad.addColorStop(1, `rgba(56, 189, 248, 0)`);
 
                 ctx.fillStyle = beamGrad;
                 ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
 
-                // Add vertical "energy" lines opacity
+
                 ctx.globalCompositeOperation = 'lighter';
                 ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * beamAlpha})`;
-                ctx.lineWidth = 6; // Thicker core
+                ctx.lineWidth = 6;
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(0, -beamHeight);
                 ctx.stroke();
 
-                // Add side streaks
+
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 * beamAlpha})`;
                 ctx.beginPath();
@@ -379,7 +387,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.translate(effect.x, effect.y);
             const t = state.gameTime;
 
-            // Draw noise squares
+
             for (let i = 0; i < 15; i++) {
                 const offX = Math.sin(i * 123 + t * 5) * radius * 0.8;
                 const offY = Math.cos(i * 456 + t * 5) * radius * 0.8;
@@ -390,7 +398,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 ctx.fillRect(offX, offY, sz, sz);
             }
 
-            // Outer distorted ring
+
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 1;
             ctx.globalAlpha = 0.2;
@@ -533,54 +541,54 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.save();
             ctx.translate(effect.x, effect.y);
 
-            // First 2.5s: shrink from 300
-            // Next 2.5s: expand to 300
+
+
             let currentRadius;
             if (progress < 0.5) {
-                // 0 to 2.5s (0 to 0.5 progress)
-                const p = progress / 0.5; // 0 to 1
-                currentRadius = baseR * (1 - p); // 300 to 0
+
+                const p = progress / 0.5;
+                currentRadius = baseR * (1 - p);
             } else {
-                // 2.5 to 5s (0.5 to 1.0 progress)
-                const p = (progress - 0.5) / 0.5; // 0 to 1
-                currentRadius = baseR * p; // 0 to 300
+
+                const p = (progress - 0.5) / 0.5;
+                currentRadius = baseR * p;
             }
 
-            // Dark red color
-            ctx.strokeStyle = '#8B0000'; // Dark Red
+
+            ctx.strokeStyle = '#8B0000';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.arc(0, 0, Math.max(1, currentRadius), 0, Math.PI * 2);
             ctx.stroke();
 
-            // Inner glow / fill
-            ctx.globalAlpha = 0.3 * Math.sin(progress * Math.PI); // Pulse alpha
+
+            ctx.globalAlpha = 0.3 * Math.sin(progress * Math.PI);
             ctx.fillStyle = '#8B0000';
             ctx.fill();
 
-            // Additional Circle "Filling" (Target Ring)
+
             ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(0, 0, 10, 0, Math.PI * 2);
             ctx.stroke();
 
-            // At the very end (last frame), draw a big beam
+
             if (progress > 0.95) {
                 const beamAlpha = (progress - 0.95) / 0.05;
                 const beamHeight = 2000;
-                const beamWidth = 600; // Increased from 300 to match the full radius visual weight
+                const beamWidth = 600;
                 const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
                 beamGrad.addColorStop(0, 'rgba(139, 0, 0, 0)');
-                beamGrad.addColorStop(0.5, `rgba(255, 0, 0, ${0.9 * beamAlpha})`); // Slightly higher opacity
+                beamGrad.addColorStop(0.5, `rgba(255, 0, 0, ${0.9 * beamAlpha})`);
                 beamGrad.addColorStop(1, 'rgba(139, 0, 0, 0)');
                 ctx.fillStyle = beamGrad;
                 ctx.globalAlpha = 1.0;
                 ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
 
-                // Central bright core - huge 200px core
+
                 ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * beamAlpha})`;
-                const coreWidth = 200; // Increased to 200 as requested
+                const coreWidth = 200;
                 ctx.fillRect(-coreWidth / 2, -beamHeight, coreWidth, beamHeight);
             }
 
@@ -599,7 +607,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.lineWidth = 4;
             ctx.stroke();
 
-            // Inner glow
+
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(34, 211, 238, ${alpha * 0.3})`;
@@ -616,14 +624,14 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.save();
             ctx.translate(effect.x, effect.y);
 
-            // Shatter shockwave
+
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
             ctx.lineWidth = 8 * (1 - progress);
             ctx.stroke();
 
-            // Shards/Splinters
+
             for (let i = 0; i < 8; i++) {
                 const ang = (i / 8) * Math.PI * 2 + state.gameTime * 2;
                 const d = radius * 0.9;
@@ -633,7 +641,7 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
                 ctx.stroke();
             }
 
-            // Central bloom
+
             if (progress < 0.5) {
                 const bloomAlpha = (1 - progress * 2) * 0.6;
                 const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
@@ -665,7 +673,7 @@ export function renderEpicenterShield(ctx: CanvasRenderingContext2D, state: Game
         grad.addColorStop(1, 'rgba(34, 211, 238, 0.6)');
         ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
 
-        // Neon Glow replacement
+
         ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)'; ctx.stroke();
         ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 3; ctx.stroke();
         ctx.clip();
@@ -676,11 +684,11 @@ export function renderEpicenterShield(ctx: CanvasRenderingContext2D, state: Game
 }
 
 export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState, filter?: 'void' | 'non-void') {
-    // Group basic particles by color to batch draw calls
+
     const colorGroups = new Map<string, { x: number, y: number, size: number, alpha: number }[]>();
 
     state.particles.forEach(p => {
-        // Apply filter if specified
+
         if (filter === 'void' && p.type !== 'void') return;
         if (filter === 'non-void' && p.type === 'void') return;
 
@@ -719,14 +727,14 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             if (radius > 50) {
                 ctx.arc(cx, cy, radius - 50, angle + 0.75, angle - 0.75, true);
             } else {
-                ctx.lineTo(cx, cy); // Close shape if too small
+                ctx.lineTo(cx, cy);
             }
             ctx.fill();
 
             ctx.globalAlpha = alpha;
             ctx.strokeStyle = p.color || '#FFFFFF';
             ctx.lineWidth = 3;
-            // Neon Glow replacement
+
             ctx.globalAlpha = alpha * 0.3;
             ctx.lineWidth = 10;
             ctx.beginPath(); ctx.arc(cx, cy, radius, angle - 0.7, angle + 0.7); ctx.stroke();
@@ -747,15 +755,18 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             ctx.save();
             ctx.translate(p.x, p.y);
 
+            const sA = p.startAngle ?? 0;
+            const eA = p.endAngle ?? (p.startAngle !== undefined ? p.startAngle + Math.PI : Math.PI * 2);
+
             if (p.isTsunami || p.isSingularity) {
-                // Fusion Synergy: Dual Waves (Red + Yellow/Purple)
+
                 const redColor = '#ef4444';
-                // Tsunami is Yellow/Amber, Singularity is White/Yellow (as per user request: красно желтый)
+
                 const secondaryColor = p.isTsunami ? '#fbbf24' : '#fff176';
 
-                // 1. Outer Wave (Red - Combat)
+
                 ctx.beginPath();
-                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, radius, sA, eA);
                 ctx.strokeStyle = redColor;
                 ctx.globalAlpha = alpha * 0.4;
                 ctx.lineWidth = 30 * (1 - progress * 0.7);
@@ -764,10 +775,10 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // 2. Inner Wave (Secondary - Economic)
+
                 const secondaryRadius = radius * 0.96;
                 ctx.beginPath();
-                ctx.arc(0, 0, secondaryRadius, 0, Math.PI * 2);
+                ctx.arc(0, 0, secondaryRadius, sA, eA);
                 ctx.strokeStyle = secondaryColor;
                 ctx.globalAlpha = alpha * 0.35;
                 ctx.lineWidth = 20 * (1 - progress * 0.7);
@@ -776,7 +787,7 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
                 ctx.lineWidth = 2.5;
                 ctx.stroke();
 
-                // Fill with a dual gradient
+
                 if (radius > 10) {
                     const fillAlpha = alpha * 0.2;
                     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
@@ -785,47 +796,65 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
                     grad.addColorStop(0.85, `rgba(239, 68, 68, ${fillAlpha})`);
                     grad.addColorStop(1, p.isTsunami ? `rgba(251, 191, 36, ${fillAlpha})` : `rgba(255, 241, 118, ${fillAlpha})`);
                     ctx.fillStyle = grad;
-                    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, sA, eA);
+                    ctx.closePath();
+                    ctx.fill();
                 }
 
             } else {
-                // Standard Single-Color Wave
+
                 ctx.beginPath();
-                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, radius, sA, eA);
                 ctx.strokeStyle = p.color || '#ef4444';
 
-                // Thick Neon Glow
+
                 ctx.globalAlpha = alpha * 0.3;
                 ctx.lineWidth = 40 * (1 - progress * 0.7);
                 ctx.stroke();
 
-                // Sharp Wave Edge
+
                 ctx.globalAlpha = alpha;
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // 2. Trailing Background (Wave filling effect)
+
                 if (radius > 10) {
                     const fillAlpha = alpha * 0.25;
                     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+
+
+                    let colorBase = p.color || '#ef4444';
+                    if (colorBase.startsWith('#')) {
+                        const r = parseInt(colorBase.slice(1, 3), 16);
+                        const g = parseInt(colorBase.slice(3, 5), 16);
+                        const bArr = parseInt(colorBase.slice(5, 7), 16);
+                        colorBase = `rgba(${r}, ${g}, ${bArr}, `;
+                    } else {
+                        colorBase = colorBase.replace('rgb', 'rgba').replace(')', ', ');
+                    }
+
                     grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
                     grad.addColorStop(0.5, `rgba(0, 0, 0, 0)`);
-                    grad.addColorStop(0.9, p.color ? p.color.replace(')', ', ' + fillAlpha + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${fillAlpha})`);
-                    grad.addColorStop(1, p.color ? p.color.replace(')', ', ' + (alpha * 0.8) + ')').replace('rgb', 'rgba') : `rgba(239, 68, 68, ${alpha * 0.8})`);
+                    grad.addColorStop(0.9, colorBase + fillAlpha + ')');
+                    grad.addColorStop(1, colorBase + (alpha * 0.8) + ')');
 
                     ctx.fillStyle = grad;
                     ctx.beginPath();
-                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, sA, eA);
+                    ctx.closePath();
                     ctx.fill();
                 }
             }
 
-            // 3. Inner Echo (Ripples inside the wave)
+
             if (progress > 0.2) {
                 const echoProgress = (progress - 0.2) / 0.8;
                 const echoRadius = radius * 0.6;
                 ctx.beginPath();
-                ctx.arc(0, 0, echoRadius, 0, Math.PI * 2);
+                ctx.arc(0, 0, echoRadius, sA, eA);
                 ctx.globalAlpha = alpha * 0.3 * (1 - echoProgress);
                 ctx.lineWidth = 2;
                 ctx.stroke();
@@ -869,18 +898,18 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
             }
             ctx.restore();
         } else {
-            // Collect standard particles for batching
+
             const alpha = p.life < 0.2 ? p.life * 5 : 1;
             if (!colorGroups.has(p.color)) colorGroups.set(p.color, []);
             colorGroups.get(p.color)!.push({ x: p.x, y: p.y, size: p.size, alpha });
         }
     });
 
-    // Draw batched particles
+
     colorGroups.forEach((items, color) => {
         ctx.fillStyle = color;
 
-        // Pass 1: Draw all fully opaque particles in one path
+
         ctx.beginPath();
         let hasOpaque = false;
         items.forEach(item => {
@@ -892,12 +921,12 @@ export function renderParticles(ctx: CanvasRenderingContext2D, state: GameState,
         });
         if (hasOpaque) ctx.fill();
 
-        // Pass 2: Draw faded particles grouped by alpha
-        // Use a simple object as a map to avoid Map object overhead in the inner loop
+
+
         const alphaGroups: Record<string, { x: number, y: number, size: number }[]> = {};
         items.forEach(item => {
             if (item.alpha < 0.98) {
-                const aKey = (Math.round(item.alpha * 10) / 10).toString(); // Group by 0.1 steps
+                const aKey = (Math.round(item.alpha * 10) / 10).toString();
                 if (!alphaGroups[aKey]) alphaGroups[aKey] = [];
                 alphaGroups[aKey].push(item);
             }
@@ -925,7 +954,7 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
     state.floatingNumbers.forEach(fn => {
         const age = fn.life / fn.maxLife;
         ctx.save();
-        // Offset (10, -10) to the top-right so the enemy model remains visible
+
         ctx.translate(fn.x + 10, fn.y - 10);
 
         let style: 'normal' | 'crit' | 'alert' = 'normal';
@@ -944,32 +973,30 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         let strokeWidth = 2;
 
         if (style === 'crit') {
-            scale = 1.2 + Math.sin(age * Math.PI) * 0.3; // Pulses
-            fontStr = "italic 900 24px 'Outfit', sans-serif";
+            scale = 1.2 + Math.sin(age * Math.PI) * 0.3;
+            fontStr = `italic 900 ${fn.fontSize || 24}px 'Outfit', sans-serif`;
             strokeWidth = 3;
         } else if (style === 'alert') {
-            // Alerts slightly pop up and stay
             const popScale = age > 0.8 ? 1.0 + (age - 0.8) * 1.0 : 1.0;
             scale = popScale;
-            fontStr = "900 22px 'Orbitron', 'Outfit', sans-serif";
+            fontStr = `900 ${fn.fontSize || 22}px 'Orbitron', 'Outfit', sans-serif`;
             strokeWidth = 3;
         } else {
-            // Normal - smaller, crisp font
             scale = 1.0;
-            fontStr = "800 16px 'Outfit', sans-serif";
+            fontStr = `800 ${fn.fontSize || 16}px 'Outfit', sans-serif`;
             strokeWidth = 2;
         }
 
         ctx.scale(scale, scale);
 
-        // Alerts fade out smoothly at the end, but hang around longer at full opacity
+
         if (style === 'alert') {
             ctx.globalAlpha = Math.min(1, age * 5);
         } else {
             ctx.globalAlpha = Math.min(1, age * 3);
         }
 
-        // Draw background if specified
+
         if (fn.backgroundColor) {
             ctx.font = fontStr;
             ctx.textAlign = 'center';
@@ -987,7 +1014,7 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Only draw stroke if no background (background text is pure color)
+
         if (!fn.backgroundColor) {
             ctx.lineWidth = strokeWidth;
             ctx.strokeStyle = '#000000';
@@ -996,12 +1023,12 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
 
         if (style === 'crit') {
             const grad = ctx.createLinearGradient(0, -12, 0, 12);
-            grad.addColorStop(0, '#ef4444'); // Bright Blood Red
-            grad.addColorStop(0.5, '#991b1b'); // Deep Crimson
-            grad.addColorStop(1, '#450a0a'); // Dark Dried Blood
+            grad.addColorStop(0, '#ef4444');
+            grad.addColorStop(0.5, '#991b1b');
+            grad.addColorStop(1, '#450a0a');
             ctx.fillStyle = grad;
         } else {
-            // Normal and Alert use their inherent color! No overriding!
+
             ctx.fillStyle = fn.color || '#ffffff';
 
             if (style === 'alert') {
@@ -1013,7 +1040,7 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         ctx.fillText(fn.value, 0, 0);
 
         if (style === 'alert') {
-            ctx.shadowBlur = 0; // reset
+            ctx.shadowBlur = 0;
         }
 
         ctx.restore();
@@ -1021,23 +1048,23 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
 }
 
 export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameState, width: number, height: number) {
-    // 1. Transfer Tunnel
+
     if (state.portalState === 'transferring') {
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         const cx = width / 2;
         const cy = height / 2;
         const t = state.gameTime;
-        const progress = 1 - (state.transferTimer / 2.0); // Assumes 2s duration
+        const progress = 1 - (state.transferTimer / 2.0);
 
-        // 1. Solid Deep Background
+
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, width, height);
 
         ctx.save();
         ctx.translate(cx, cy);
 
-        // 2. 3D perspective Grid lines (Horizontal/Vertical vanishing)
+
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 2;
         const gridCount = 32;
@@ -1051,7 +1078,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
             ctx.stroke();
         }
 
-        // 3. Scale-out Digital Rings (Fractured Hexagons)
+
         const colors = ['#22d3ee', '#a855f7', '#3b82f6'];
         for (let c = 0; c < 3; c++) {
             const baseAlpha = 0.5 - (c * 0.1);
@@ -1067,7 +1094,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
                 ctx.globalAlpha = alpha;
                 ctx.scale(scale, scale);
                 ctx.strokeStyle = colors[c];
-                ctx.lineWidth = 1.5 / scale; // Keep lines clean as they scale
+                ctx.lineWidth = 1.5 / scale;
 
                 ctx.beginPath();
                 const rot = t * (c % 2 === 0 ? 0.5 : -0.5) + i;
@@ -1075,7 +1102,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
                     const ang = (Math.PI / 3) * j + rot;
                     const rx = 40 * Math.cos(ang);
                     const ry = 40 * Math.sin(ang);
-                    // Draw dashed/fragmented hex
+
                     if (j % 2 === 0) ctx.moveTo(rx, ry);
                     else ctx.lineTo(rx, ry);
                 }
@@ -1084,7 +1111,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
             }
         }
 
-        // 4. Kinetic Motion Streaks
+
         for (let i = 0; i < 40; i++) {
             const idSeed = (i * 167.5);
             const angle = (idSeed % (Math.PI * 2));
@@ -1100,7 +1127,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
             ctx.stroke();
         }
 
-        // 5. Digital Glitch Displacement (Vertical slices)
+
         if (Math.random() < 0.15 * (0.5 + progress)) {
             const sliceY = (Math.random() - 0.5) * height;
             const sliceH = 20 + Math.random() * 50;
@@ -1108,7 +1135,7 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
             ctx.fillRect(-width / 2, sliceY, width, sliceH);
         }
 
-        // 6. Final Arrival White-out
+
         if (state.transferTimer < 0.5) {
             const easeIn = Math.pow((0.5 - state.transferTimer) / 0.5, 2);
             ctx.fillStyle = '#ffffff';
@@ -1120,33 +1147,33 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
         ctx.restore();
     }
 
-    // 2. Smoke Blindness
+
     if (state.smokeBlindTime !== undefined) {
         const elapsed = state.gameTime - state.smokeBlindTime;
         if (elapsed < 2.6) {
             const alpha = elapsed < 0.3 ? elapsed / 0.3 : elapsed < 2.3 ? 1 : 1 - (elapsed - 2.3) / 0.3;
             ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-            // Base haze (Keep this full screen but very light, 1 rect)
+
             ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.05})`;
             ctx.fillRect(0, 0, width, height);
 
-            // Optimized Puffs: Reduced count 20 -> 8
+
             for (let i = 0; i < 8; i++) {
                 const x = i % 2 === 0 ? Math.random() * width : (Math.random() < 0.5 ? Math.random() * 150 : width - Math.random() * 150);
                 const y = i % 2 !== 0 ? Math.random() * height : (Math.random() < 0.5 ? Math.random() * 150 : height - Math.random() * 150);
 
                 const drift = Math.sin(state.gameTime * 0.5 + i) * 60;
-                // Reduced Size: 100-250 instead of 150-400
+
                 const size = 100 + Math.abs(Math.sin(i)) * 150;
 
                 const grad = ctx.createRadialGradient(x + drift, y + drift, 0, x + drift, y + drift, size);
-                // Increased alpha slightly to compensate for fewer particles
+
                 grad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.2})`);
                 grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
 
                 ctx.fillStyle = grad;
-                // Optimization: Draw only the puff area, not full screen
+
                 ctx.fillRect((x + drift) - size, (y + drift) - size, size * 2, size * 2);
                 ctx.fillRect((x + drift) - size, (y + drift) - size, size * 2, size * 2);
             }
@@ -1154,8 +1181,8 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
         }
     }
 
-    // 3. Slow Motion Unpause Effects
-    // Flash
+
+
     if (state.flashIntensity && state.flashIntensity > 0) {
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1164,41 +1191,41 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
         ctx.restore();
     }
 
-    // Timer (only if in slow motion unpause)
+
     if (state.unpauseDelay && state.unpauseDelay > 0 && state.unpauseMode === 'slow_motion') {
-        // Text removed as requested by user - just the slow motion and flash remain
+
     }
 
-    // Damage Danger Vignette
-    // Only visible when player HP is at or below 50%.
-    // Fades in gently from 50% HP, reaches full intensity at 20% HP.
-    // On-hit flash has a 1.5s cooldown to prevent epileptic blinking.
+
+
+
+
     const maxHp = calcStat(state.player.hp);
     const hpRatio = Math.max(0, Math.min(1, state.player.curHp / Math.max(1, maxHp)));
 
     if (hpRatio <= 0.5) {
-        // Ambient persistent danger overlay
-        // 0.5 -> 0.2 hp:  opacity ramps from 0.0 to 0.15
-        // 0.2 -> 0.0 hp:  opacity ramps from 0.15 to 0.30
+
+
+
         let ambientAlpha: number;
         if (hpRatio > 0.2) {
-            // 50% to 20%: light vignette, scales 0..0.15
+
             ambientAlpha = (0.5 - hpRatio) / 0.3 * 0.15;
         } else {
-            // 20% to 0%: strong vignette, scales 0.15..0.30
+
             ambientAlpha = 0.15 + (0.2 - hpRatio) / 0.2 * 0.15;
         }
 
-        // Slight slow pulse below 20% to signal critical danger (no fast flicker)
+
         if (hpRatio <= 0.2) {
-            const pulseFreq = 1.2; // Hz - very slow
+            const pulseFreq = 1.2;
             const pulse = 0.5 + 0.5 * Math.sin(state.gameTime * pulseFreq * Math.PI * 2);
             ambientAlpha *= (0.7 + 0.3 * pulse);
         }
 
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        // Radial gradient: edges are red, center is clear
+
         const cx = width / 2;
         const cy = height / 2;
         const radius = Math.max(width, height) * 0.75;
@@ -1210,15 +1237,15 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
         ctx.restore();
     }
 
-    // On-hit flash (rate-limited to max once per 1.5s to prevent epileptic blinking)
+
     if (state.player.lastDamageTime !== undefined) {
         const elapsedDamage = state.gameTime - state.player.lastDamageTime;
-        const FLASH_DURATION = 0.35; // seconds
+        const FLASH_DURATION = 0.35;
         if (elapsedDamage < FLASH_DURATION) {
-            // Only trigger visible flash if HP is at or below 50%
+
             if (hpRatio <= 0.5) {
                 const flashProgress = 1 - (elapsedDamage / FLASH_DURATION);
-                // Max flash intensity scales up as HP drops
+
                 const maxFlash = hpRatio <= 0.2 ? 0.22 : 0.12;
                 const flashAlpha = flashProgress * maxFlash;
                 ctx.save();
@@ -1231,13 +1258,13 @@ export function renderScreenEffects(ctx: CanvasRenderingContext2D, state: GameSt
     }
 }
 
-// Cache to avoid recreating gradient and fill every frame
+
 let cachedVignetteCanvas: HTMLCanvasElement | null = null;
 let lastWidth = 0;
 let lastHeight = 0;
 
 export function renderVignette(ctx: CanvasRenderingContext2D, width: number, height: number) {
-    // Only recreate if dimensions change significantly (e.g. resize)
+
     if (!cachedVignetteCanvas || width !== lastWidth || height !== lastHeight) {
         cachedVignetteCanvas = document.createElement('canvas');
         cachedVignetteCanvas.width = width;
@@ -1260,7 +1287,7 @@ export function renderVignette(ctx: CanvasRenderingContext2D, width: number, hei
 
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // Drawing an image is much faster than calculating gradient per pixel
+
     if (cachedVignetteCanvas) {
         ctx.drawImage(cachedVignetteCanvas, 0, 0);
     }

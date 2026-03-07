@@ -11,6 +11,7 @@ import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
+import { recordDamage } from '../utils/DamageTracking';
 
 export function handlePlayerCombat(
     state: GameState,
@@ -25,7 +26,7 @@ export function handlePlayerCombat(
 
 
 
-    // RADIATION CORE (Combat - Arena 1)
+
     const mireLvl = getHexLevel(state, 'IrradiatedMire');
     const neutronLvl = getHexLevel(state, 'NeutronStar');
     const radLvl = (mireLvl > 0 || neutronLvl > 0) ? 5 : getHexLevel(state, 'RadiationCore');
@@ -39,11 +40,11 @@ export function handlePlayerCombat(
             let dmgAmp = 1.0 * m;
 
             if (neutronActive) {
-                // Radiation Aura damage is increased by 2% for every 100 Max HP you have.
+
                 const hpBonus = (maxHp / 100) * 0.02;
                 dmgAmp *= (1 + hpBonus);
 
-                // 0.01% Aura DMG increase for kills by your Radiant Aura
+
                 const killBonus = (player.neutronStarAuraKills || 0) * 0.0001;
                 dmgAmp *= (1 + killBonus);
             }
@@ -62,23 +63,23 @@ export function handlePlayerCombat(
                 const d = Math.hypot(e.x - player.x, e.y - player.y);
                 let tickDmg = 0;
 
-                // Base Radiation Damage
+
                 if (radLvl >= 4) {
                     tickDmg += (e.maxHp * 0.02 * dmgAmp) / 6;
                 }
 
                 if (d < range) {
                     enemiesInAura.push(e);
-                    const auraPct = 0.05 * dmgAmp; // Flat 5% base from user spec
+                    const auraPct = 0.05 * dmgAmp;
                     tickDmg += (playerMaxHp * auraPct) / 6;
                 }
 
-                // IRRADIATED MIRE: 100% MORE base damage scaling if in Acid
+
                 if (mireActive && d < range) {
                     const isInAcid = state.areaEffects.some(ef => ef.type === 'puddle' && Math.hypot(e.x - ef.x, e.y - ef.y) < ef.radius);
                     if (isInAcid) {
                         const mireMult = getHexMultiplier(state, 'IrradiatedMire');
-                        tickDmg *= (1 + 1.0 * mireMult); // 100% base amplified by meteorites
+                        tickDmg *= (1 + 1.0 * mireMult);
                     }
                 }
 
@@ -96,6 +97,7 @@ export function handlePlayerCombat(
                     if (finalTickDmg > 0) {
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
+                        recordDamage(state, 'Radiation Aura', finalTickDmg);
                         const isAuraSource = d < range;
                         const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (state.frameCount % 30 === 0);
 
@@ -130,13 +132,13 @@ export function handlePlayerCombat(
                 y: player.y + Math.sin(angle) * dist,
                 vx: (Math.random() - 0.5) * 0.4,
                 vy: (Math.random() - 0.5) * 0.4,
-                life: 60, maxLife: 60, color: (neutronLvl > 0) ? '#facc15' : '#bef264',
+                life: 60, maxLife: 60, color: (neutronLvl > 0 && Math.random() < 0.3) ? '#facc15' : '#bef264',
                 size: 6 + Math.random() * 8, type: 'bubble', alpha: 0.5
             });
         }
     }
 
-    // Aiming Logic
+
     if (player.playerClass === 'malware' && mouseOffset) {
         player.targetAngle = Math.atan2(mouseOffset.y, mouseOffset.x);
         player.targetX = player.x + mouseOffset.x;
@@ -159,24 +161,24 @@ export function handlePlayerCombat(
         }
     }
 
-    // SHOOTING LOGIC
+
     const now = state.gameTime;
     const atkAtkValue = calcStat(player.atk, state.dmgAtkBuffMult);
     const shotsPerSec = Math.max(0.1, (2.64 * Math.log(atkAtkValue / 100) - 1.25));
     const atkDelay = 1 / shotsPerSec;
     if (now - (player.lastShot || 0) >= atkDelay) {
-        // Only host or guest for themselves should trigger firing logic
-        // But in this logic loop, we only run for players we control or if we are the host.
+
+
         player.lastShot = now;
         const dmg = calcStat(player.dmg, state.dmgAtkBuffMult);
         spawnBullet(state, player, player.x, player.y, player.targetAngle, dmg, player.pierce);
         playSfx('shoot');
     }
 
-    // Contact Damage
+
     handleEnemyContact(state, onEvent, player, triggerDamageTaken, triggerDeath);
 
-    // Pending Zaps
+
     processPendingZaps(state, onEvent);
 }
 
@@ -194,7 +196,7 @@ export function handleEnemyContact(
 
     state.enemies.forEach(e => {
         if (e.dead || e.hp <= 0 || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
-        if (e.spawnGracePeriod && e.spawnGracePeriod > 0) return; // Boss just spawned, no collision yet
+        if (e.spawnGracePeriod && e.spawnGracePeriod > 0) return;
 
         const dToE = Math.hypot(e.x - player.x, e.y - player.y);
         const contactDist = e.size + 18;
@@ -221,32 +223,33 @@ export function handleEnemyContact(
                     linkedTargets.forEach(target => {
                         target.hp -= splitDmg;
                         player.damageDealt += splitDmg;
+                        recordDamage(state, 'Collision', splitDmg);
                         spawnFloatingNumber(state, target.x, target.y, Math.round(splitDmg).toString(), linkColor, false);
                     });
                     if (!e.boss) e.hp = 0;
                 } else if (e.shape === 'minion' && e.parentId !== undefined) {
                     const mother = state.enemies.find(m => m.id === e.parentId && !m.dead);
-                    // Use current HP of mother (or minion itself) so damage scales with remaining health
+
                     rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
                 } else if (e.customCollisionDmg !== undefined) {
                     const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                     rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
                 } else {
-                    // Level 4 Triangle Boss: Dealing 15% Player Max HP as True Damage (Counter to high HP builds)
+
                     if (e.boss && e.shape === 'triangle' && e.isLevel4) {
                         const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                         rawDmg = playerMaxHp * 0.15;
-                        e.wormTrueDamage = 15; // Flags for True Damage bypass below
+                        e.wormTrueDamage = 15;
                     } else {
-                        // Collision damage based on CURRENT HP so weakened enemies/bosses hit less hard
+
                         rawDmg = e.hp * 0.05;
                     }
                 }
 
-                // Bosses deal 7.5% of their current HP (1.5x of the base 5%)
+
                 if (e.boss && !e.isLevel4) rawDmg *= 1.5;
 
-                // Anomaly Bosses still get an extra kick
+
                 if (e.isAnomaly) rawDmg *= 1.5;
             }
 
@@ -258,7 +261,7 @@ export function handleEnemyContact(
             if (kinLvl >= 1) triggerKineticBatteryZap(state, player);
 
             const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill');
-            // Logarithmic scaling: ~100,000 souls (coefficient 0.08) to reach ~80% reduction
+
             const colRedMult = 1 - getDefenseReduction(colRedRaw, 0.80);
 
             const dmgAfterArmor = rawDmg * armRedMult;
@@ -269,7 +272,7 @@ export function handleEnemyContact(
             player.damageBlocked += (rawDmg - reducedDmg);
 
 
-            // No longer checking for Epicenter shields/channeling since it's autonomous
+
 
             if (player.invincibleUntil && state.gameTime < player.invincibleUntil) {
                 player.damageBlocked += reducedDmg;
@@ -282,7 +285,7 @@ export function handleEnemyContact(
                 let absorbed = 0;
                 let damageToApply = finalDmg;
 
-                // --- SPECIAL: Worm Head or Level 4 Boss True Damage (Pierces Armor & Reduction) ---
+
                 if ((e.wormRole === 'head' || e.isLevel4) && e.wormTrueDamage) {
                     const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
                     damageToApply = playerMaxHp * (e.wormTrueDamage / 100);
@@ -310,17 +313,18 @@ export function handleEnemyContact(
                     player.lastHitDamage = actualDmg;
                     triggerDamageTaken?.(actualDmg);
 
-                    // --- GRAVITATIONAL HARVEST: Damage Reflection ---
+
                     const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
                     if (harvestLvl > 0) {
                         const reflectedDmg = actualDmg * 0.10;
                         state.areaEffects.filter(ae => ae.type === 'epicenter').forEach(ae => {
                             state.enemies.forEach(target => {
-                                if (!target.dead && !target.isFriendly) {
+                                if (!target.dead && !target.isFriendly && !target.isZombie) {
                                     const d = Math.hypot(target.x - ae.x, target.y - ae.y);
                                     if (d < ae.radius) {
                                         target.hp -= reflectedDmg;
                                         player.damageDealt += reflectedDmg;
+                                        recordDamage(state, 'Epicenter (LVL 1)', reflectedDmg);
                                         spawnFloatingNumber(state, target.x, target.y, Math.round(reflectedDmg).toString(), '#ef4444', false);
                                         if (target.hp <= 0 && !target.dead) {
                                             handleEnemyDeath(state, target, onEvent);
@@ -359,12 +363,17 @@ export function handleEnemyContact(
                 }
             }
 
-            // --- SPECIAL: Worm Body Segments die on collision ---
+
             if (e.dieOnCollision) {
                 canDie = true;
             }
 
             if (canDie && (!e.lastCollisionDamage || now - e.lastCollisionDamage <= 10)) {
+                if (e.hp > 0) {
+                    const colDmg = e.hp;
+                    player.damageDealt += colDmg;
+                    recordDamage(state, 'Collision', colDmg);
+                }
                 handleEnemyDeath(state, e, onEvent);
             }
 
@@ -496,16 +505,16 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
     if (isOnCooldown(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, now)) return;
 
     player.lastKineticShockwave = now;
-    const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 1.0; // Updated to 100% Armor
+    const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 1.0;
 
-    // Default source to player if missing
+
     const sx = source ? source.x : player.x;
     const sy = source ? source.y : player.y;
 
     let first: Enemy | null = null;
     let minD = Infinity;
     state.enemies.forEach(target => {
-        if (target.dead || target.isNeutral || target.wormBurrowState === 'underground') return;
+        if (target.dead || target.isNeutral || target.isZombie || target.isFriendly || target.wormBurrowState === 'underground') return;
         const d = Math.hypot(target.x - sx, target.y - sy);
         if (d < minD) { minD = d; first = target; }
     });
@@ -518,7 +527,7 @@ export function triggerKineticBatteryZap(state: GameState, player: Player, sourc
             let best: Enemy | null = null;
             let bestD = Infinity;
             state.enemies.forEach((cand: Enemy) => {
-                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
+                if (cand.dead || cand.isNeutral || cand.isZombie || cand.isFriendly || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
                 const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
                 if (d < bestD) { bestD = d; best = cand; }
             });
@@ -540,13 +549,13 @@ export function triggerZombieZap(state: GameState, player: Player, source: { x: 
     const now = state.gameTime;
     if (!state.pendingZaps) state.pendingZaps = [];
 
-    // Use 20% Armor Damage (matching the theme of Blood Forged Capacitor)
+
     const shockDmg = calcStat(player.arm, 1.0, state.assistant.history.curseIntensity || 1.0) * 0.2;
 
     let first: Enemy | null = null;
     let minD = Infinity;
     state.enemies.forEach(target => {
-        if (target.dead || target.isNeutral || target.wormBurrowState === 'underground') return;
+        if (target.dead || target.isNeutral || target.isZombie || target.isFriendly || target.wormBurrowState === 'underground') return;
         const d = Math.hypot(target.x - source.x, target.y - source.y);
         if (d < minD) { minD = d; first = target; }
     });
@@ -554,12 +563,12 @@ export function triggerZombieZap(state: GameState, player: Player, source: { x: 
     if (first) {
         const targetIds: number[] = [(first as any).id];
         let currentInChain: Enemy = first;
-        // Total 3 targets (1st + 2 chain steps)
+
         for (let i = 0; i < 2; i++) {
             let best: Enemy | null = null;
             let bestD = Infinity;
             state.enemies.forEach((cand: Enemy) => {
-                if (cand.dead || cand.isNeutral || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
+                if (cand.dead || cand.isNeutral || cand.isZombie || cand.isFriendly || targetIds.includes(cand.id) || cand.wormBurrowState === 'underground') return;
                 const d = Math.hypot(cand.x - currentInChain.x, cand.y - currentInChain.y);
                 if (d < bestD) { bestD = d; best = cand; }
             });
@@ -572,9 +581,9 @@ export function triggerZombieZap(state: GameState, player: Player, source: { x: 
         state.pendingZaps.push({
             targetIds, dmg: shockDmg, nextZapTime: now, currentIndex: 0,
             sourcePos: { x: source.x, y: source.y }, history: [],
-            travelProgress: 0, isHunting: true, color: '#4ade80', // Green for zombies
+            travelProgress: 0, isHunting: true, color: '#4ade80',
             applyStun: false,
-            applyBleed: true // Inheritance of merge properties
+            applyBleed: true
         });
         playSfx('wall-shock');
     }
@@ -588,19 +597,19 @@ export function spawnHuntingLine(state: GameState, x1: number, y1: number, x2: n
 
     for (let i = 0; i <= steps * progress; i++) {
         const t = i / steps;
-        // Anchor the start by scaling wobble by t
+
         const wobbleFactor = Math.min(1.0, t * 10);
         const wobble = (Math.sin(t * Math.PI * 3 + time) * 8 + Math.cos(t * Math.PI * 1.5 - time * 0.5) * 4) * wobbleFactor;
 
         const px = x1 + (x2 - x1) * t + Math.cos(angle + Math.PI / 2) * wobble;
         const py = y1 + (y2 - y1) * t + Math.sin(angle + Math.PI / 2) * wobble;
 
-        // Core line
+
         state.particles.push({
             x: px, y: py, vx: 0, vy: 0, life: 8, color: '#fff',
             size: 0.6, type: 'spark', alpha: 1.0
         });
-        // Glow
+
         state.particles.push({
             x: px, y: py, vx: 0, vy: 0, life: 12, color: color,
             size: 1.5, type: 'spark', alpha: 0.4
@@ -612,9 +621,9 @@ export function triggerKineticBolt(state: GameState, player: Player, source: { x
     const now = state.gameTime;
     if (!state.pendingZaps) state.pendingZaps = [];
 
-    // Find nearest enemies
+
     const sortedEnemies = state.enemies
-        .filter(e => !e.dead && !e.isNeutral && e.wormBurrowState !== 'underground')
+        .filter(e => !e.dead && !e.isNeutral && !e.isZombie && !e.isFriendly && e.wormBurrowState !== 'underground')
         .map(e => ({ e, d: Math.hypot(e.x - source.x, e.y - source.y) }))
         .sort((a, b) => a.d - b.d)
         .slice(0, targets);
@@ -629,7 +638,7 @@ export function triggerKineticBolt(state: GameState, player: Player, source: { x
             applyBleed,
             travelProgress: 0,
             isHunting: true,
-            color: '#dc2626', // Red for merged upgrade
+            color: '#dc2626',
             history: [],
             applyStun
         });
@@ -644,9 +653,9 @@ export function triggerStaticBolt(state: GameState, player: Player, source: { x:
     const now = state.gameTime;
     if (!state.pendingZaps) state.pendingZaps = [];
 
-    // Find nearest enemies
+
     const sortedEnemies = state.enemies
-        .filter(e => !e.dead && !e.isNeutral && e.wormBurrowState !== 'underground')
+        .filter(e => !e.dead && !e.isNeutral && !e.isZombie && !e.isFriendly && e.wormBurrowState !== 'underground')
         .map(e => ({ e, d: Math.hypot(e.x - source.x, e.y - source.y) }))
         .sort((a, b) => a.d - b.d)
         .slice(0, targets);
@@ -661,9 +670,9 @@ export function triggerStaticBolt(state: GameState, player: Player, source: { x:
             applyBleed,
             travelProgress: 0,
             isHunting: true,
-            color: '#dc2626', // Red for Static Bolt
+            color: '#dc2626',
             history: [],
-            applyStun: false // Shattered Capacitor Static Bolt never stuns
+            applyStun: false
         });
     });
 
@@ -679,20 +688,29 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
         const target = state.enemies.find(e => e.id === zap.targetIds[zap.currentIndex]);
 
         if (target && !target.dead) {
-            // Smoothly increase travel progress
+
             zap.travelProgress = (zap.travelProgress || 0) + 0.25;
 
-            // USE REAL-TIME POSITION: Update destination to enemy's current x/y
+
             const destX = target.x;
             const destY = target.y;
 
-            // Draw the hunting line every frame targeting current position
+
             const boltColor = zap.color || '#60a5fa';
             spawnHuntingLine(state, zap.sourcePos.x, zap.sourcePos.y, destX, destY, boltColor, Math.min(1, zap.travelProgress));
 
-            // When it reaches the target, apply damage and move to next
+
             if (zap.travelProgress >= 1.0) {
                 target.hp -= zap.dmg;
+                state.player.damageDealt += zap.dmg;
+
+                let source: import('../core/types').DamageSource = 'Kinetic Bolt (LVL 1)';
+                if (zap.color === '#4ade80') source = 'Crimson Feast (LVL 4)';
+                else if (zap.color === '#dc2626') source = 'Kinetic Bolt (LVL 1)';
+                else if (zap.color === '#60a5fa') source = 'Static Bolt';
+
+                recordDamage(state, source, zap.dmg);
+
                 spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
                 if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
                 else if (zap.applyStun) {
@@ -719,14 +737,14 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
 
                 zap.currentIndex++;
                 zap.sourcePos = { x: target.x, y: target.y };
-                zap.travelProgress = 0; // Reset for next target
+                zap.travelProgress = 0;
 
                 if (zap.currentIndex >= zap.targetIds.length) {
                     state.pendingZaps.splice(i, 1);
                 }
             }
         } else {
-            // Target dead, move on immediately
+
             zap.currentIndex++;
             if (zap.currentIndex >= zap.targetIds.length) {
                 state.pendingZaps.splice(i, 1);
@@ -753,17 +771,17 @@ export function spawnLightning(state: GameState, x1: number, y1: number, x2: num
         }
 
         const segDist = Math.hypot(targetX - lastX, targetY - lastY);
-        const dots = Math.floor(segDist / 1.5); // Slightly more dots for denser line
+        const dots = Math.floor(segDist / 1.5);
         for (let j = 0; j < dots; j++) {
             const tt = j / dots;
             const px = lastX + (targetX - lastX) * tt, py = lastY + (targetY - lastY) * tt;
-            // Core white line
+
             state.particles.push({
                 x: px, y: py, vx: 0, vy: 0,
                 life: lifeOverride || 6, color: '#fff',
                 size: 0.5, type: 'spark', alpha: 1.0
             });
-            // Outer glow
+
             state.particles.push({
                 x: px, y: py, vx: 0, vy: 0,
                 life: (lifeOverride ? lifeOverride + 2 : 8), color: color,

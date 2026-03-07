@@ -9,6 +9,7 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { triggerKineticBolt } from '../player/PlayerCombat';
+import { recordDamage } from '../utils/DamageTracking';
 
 export function updateSinglePlayerBullet(
     state: GameState,
@@ -21,7 +22,7 @@ export function updateSinglePlayerBullet(
     let bulletRemoved = false;
     const now = state.gameTime;
 
-    // Ensure hits is a Set (serialization back-compat)
+
     if (!(b.hits instanceof Set)) {
         const oldHits = (b as any).hits;
         b.hits = new Set();
@@ -30,35 +31,26 @@ export function updateSinglePlayerBullet(
         }
     }
 
-    // Movement
+
     b.x += b.vx;
     b.y += b.vy;
     b.life--;
 
-    // Collision with Map Boundary (Walls)
+
     if (!isInMap(b.x, b.y)) {
         if (owner.playerClass === 'malware') {
-            b.bounceCount = (b.bounceCount || 0) + 1;
-            const dmgMult = 1 + (b.bounceDmgMult || 0.05);
-            b.dmg *= dmgMult;
-
-            if (b.bounceCount === 1) b.color = '#fb923c';
-            else {
-                const redProgress = Math.min(1, (b.bounceCount - 1) / 6);
-                const green = Math.floor(146 * (1 - redProgress));
-                b.color = `rgb(255, ${green}, 0)`;
-            }
+            const p = ['#d946ef', '#8b5cf6', '#3b82f6', '#0ea5e9', '#22d3ee', '#f8fafc', '#fbbf24', '#ef4444'];
+            b.color = p[Math.min(b.bounceCount || 0, p.length - 1)];
 
             const { dist, normal } = getHexDistToWall(b.x, b.y);
             const dot = b.vx * normal.x + b.vy * normal.y;
 
             if (dot < 0) {
-                const speedMult = 1 + (b.bounceSpeedBonus || 0.03);
+                const speedMult = 1 + (b.bounceSpeedBonus || 0.01);
                 b.vx = (b.vx - 2 * dot * normal.x) * speedMult;
                 b.vy = (b.vy - 2 * dot * normal.y) * speedMult;
                 b.x += normal.x * (Math.abs(dist) + 5);
                 b.y += normal.y * (Math.abs(dist) + 5);
-                spawnParticles(state, b.x, b.y, b.color, 12);
             }
             if (b.life <= 0 || b.pierce < 0) {
                 bullets.splice(index, 1);
@@ -79,68 +71,67 @@ export function updateSinglePlayerBullet(
         return true;
     }
 
-    // Sandbox Containment (Malware Active Ability)
+
     if (owner.playerClass === 'malware' && owner.sandboxActive && owner.sandboxUntil && now < owner.sandboxUntil && !b.isNanite) {
         const sbx = owner.sandboxX ?? 0;
         const sby = owner.sandboxY ?? 0;
         const R = GAME_CONFIG.SKILLS.SANDBOX_RADIUS;
-        const apothem = R * Math.cos(Math.PI / 5);
+        const rotation = -Math.PI / 2;
+        const apothem = R * Math.cos(Math.PI / 6);
         const dx = b.x - sbx;
         const dy = b.y - sby;
 
-        let inside = true;
-        for (let i = 0; i < 5 && inside; i++) {
-            const midAngle = -Math.PI / 2 + Math.PI / 5 + (2 * Math.PI * i) / 5;
-            if (dx * Math.cos(midAngle) + dy * Math.sin(midAngle) > apothem) inside = false;
+        let maxOvershoot = -Infinity;
+        let bestNormalX = 0;
+        let bestNormalY = 0;
+
+        for (let i = 0; i < 6; i++) {
+            const faceAngle = rotation + Math.PI / 6 + (Math.PI * 2 * i) / 6;
+            const nx = Math.cos(faceAngle);
+            const ny = Math.sin(faceAngle);
+            const dist = dx * nx + dy * ny;
+            const overshoot = dist - apothem;
+            if (overshoot > maxOvershoot) {
+                maxOvershoot = overshoot;
+                bestNormalX = nx;
+                bestNormalY = ny;
+            }
         }
 
-        if (inside) {
+        const isInsideNow = maxOvershoot <= 0;
+
+        if (isInsideNow) {
             b.insideSandbox = true;
         } else if (b.insideSandbox) {
-            let maxOvershoot = 0;
-            let rnx = 0;
-            let rny = 0;
-            for (let i = 0; i < 5; i++) {
-                const midAngle = -Math.PI / 2 + Math.PI / 5 + (2 * Math.PI * i) / 5;
-                const enx = Math.cos(midAngle);
-                const eny = Math.sin(midAngle);
-                const overshoot = dx * enx + dy * eny - apothem;
-                if (overshoot > maxOvershoot) {
-                    maxOvershoot = overshoot;
-                    rnx = enx;
-                    rny = eny;
-                }
-            }
-            b.x -= rnx * (maxOvershoot + 2);
-            b.y -= rny * (maxOvershoot + 2);
-            const outDot = b.vx * rnx + b.vy * rny;
-            if (outDot > 0) {
-                b.vx -= 2 * outDot * rnx;
-                b.vy -= 2 * outDot * rny;
-                const speedMult = 1 + (b.bounceSpeedBonus || 0.05);
+            b.x -= bestNormalX * (maxOvershoot + 2);
+            b.y -= bestNormalY * (maxOvershoot + 2);
+
+            const dot = b.vx * bestNormalX + b.vy * bestNormalY;
+            if (dot > 0) {
+                b.vx -= 2 * dot * bestNormalX;
+                b.vy -= 2 * dot * bestNormalY;
+
+                const speedMult = 1 + (b.bounceSpeedBonus || 0.01);
                 b.vx *= speedMult;
                 b.vy *= speedMult;
                 b.dmg *= 1 + (b.bounceDmgMult || 0.2);
                 b.bounceCount = (b.bounceCount || 0) + 1;
-                if (b.bounceCount === 1) b.color = '#fb923c';
-                else {
-                    const redProgress = Math.min(1, (b.bounceCount - 1) / 6);
-                    b.color = `rgb(255, ${Math.floor(146 * (1 - redProgress))}, 0)`;
-                }
-                spawnParticles(state, b.x, b.y, b.color, 6);
+
+                const p = ['#d946ef', '#8b5cf6', '#3b82f6', '#0ea5e9', '#22d3ee', '#f8fafc', '#fbbf24', '#ef4444'];
+                b.color = p[Math.min(b.bounceCount, p.length - 1)];
             }
         }
     }
 
-    // Malware Trail
+
     if (owner.playerClass === 'malware' && (b.bounceCount || 0) > 0) {
         if (!b.trails) b.trails = [];
         b.trails.unshift({ x: b.x, y: b.y });
-        const maxTrail = (b.bounceCount || 0) * 5;
+        const maxTrail = (b.bounceCount || 0) * 2;
         if (b.trails.length > maxTrail) b.trails.pop();
     }
 
-    // Nanite Cloud Containment
+
     if (b.isNanite && b.isHiveMotherSkill && b.cloudCenterX !== undefined && b.cloudCenterY !== undefined && !b.naniteTargetId) {
         const cx = b.cloudCenterX;
         const cy = b.cloudCenterY;
@@ -179,7 +170,7 @@ export function updateSinglePlayerBullet(
         }
     }
 
-    // Nanite Homing
+
     if (b.isNanite && b.naniteTargetId) {
         const target = state.enemies.find(e => e.id === b.naniteTargetId && !e.dead);
         if (target) {
@@ -204,7 +195,7 @@ export function updateSinglePlayerBullet(
         b.vy = Math.sin(currentAngle + wobble) * speed;
     }
 
-    // Aigis Orbiting
+
     if (b.vortexState === 'orbiting') {
         const vortexActive = owner.orbitalVortexUntil && owner.orbitalVortexUntil > now;
         const orbitSpeedMult = vortexActive ? GAME_CONFIG.SKILLS.ORBITAL_VORTEX_SPEED_MULT : 1.0;
@@ -276,6 +267,7 @@ export function updateSinglePlayerBullet(
                 e.hp -= avgDmg;
                 e.lastHitTime = state.gameTime;
                 owner.damageDealt += avgDmg;
+                recordDamage(state, 'Projectile', avgDmg);
                 if (Math.random() < 0.2) spawnFloatingNumber(state, e.x, e.y, Math.round(avgDmg).toString(), b.color || '#22d3ee', false);
                 spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 1);
                 if (e.hp <= 0 && !e.dead) {
@@ -322,16 +314,27 @@ export function updateSinglePlayerBullet(
                 spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 3);
             }
 
-            let damageAmount = b.dmg;
-            if (e.takenDamageMultiplier) damageAmount *= e.takenDamageMultiplier;
+            let baseDmg = b.dmg;
+            let lvl4PuddleBonus = 0;
+            if (e.takenDamageMultiplier && e.takenDamageMultiplier > 1) {
+                lvl4PuddleBonus = baseDmg * (e.takenDamageMultiplier - 1);
+                baseDmg *= e.takenDamageMultiplier;
+            }
+
+            const critMult = b.critMult || 1.0;
+            const critBonusBase = b.isCrit ? (baseDmg - (baseDmg / critMult)) : 0;
+            let deathMarkBonus = 0;
 
             const critLvl = getHexLevel(state, 'ComCrit');
             const shatterLvl = getHexLevel(state, 'SoulShatterCore');
             if ((critLvl >= 3 || shatterLvl > 0) && e.deathMarkExpiry && now < e.deathMarkExpiry) {
-                damageAmount = (b.dmg / (b.critMult || 1.0)) * Math.max(b.critMult || 1.0, GAME_CONFIG.SKILLS.DEATH_MARK_MULT);
+                const totalDmg = (baseDmg / critMult) * Math.max(critMult, GAME_CONFIG.SKILLS.DEATH_MARK_MULT);
+                deathMarkBonus = totalDmg - baseDmg;
+                baseDmg = totalDmg;
                 spawnParticles(state, e.x, e.y, '#FF0000', 3);
                 e.critGlitchUntil = now + 100;
             }
+            let damageAmount = baseDmg;
 
             if (e.shape === 'triangle' && e.deflectState && Math.random() < 0.5) {
                 const deflectAngle = Math.atan2(b.y - e.y, b.x - e.x) + (Math.random() - 0.5) * 2.5;
@@ -353,13 +356,22 @@ export function updateSinglePlayerBullet(
                     if (t.id !== e.id && !t.dead && !t.isFriendly && Math.hypot(t.x - e.x, t.y - e.y) <= aoeRadius) {
                         t.hp -= aoeDmg;
                         owner.damageDealt += aoeDmg;
-                        if (t.hp <= 0 && !t.dead) handleEnemyDeath(state, t, onEvent);
+                        recordDamage(state, 'Storm of Steel (LVL 4)', aoeDmg);
+                        if (t.hp <= 0 && !t.dead) {
+                            if (b.isTsunami) owner.kineticTsunamiWaveSouls = (owner.kineticTsunamiWaveSouls || 0) + (t.isElite ? 10 : 1);
+                            handleEnemyDeath(state, t, onEvent);
+                        }
                     }
                 });
             }
 
             const lifeLevel = getHexLevel(state, 'ComLife');
-            if (lifeLevel >= 3 && !e.boss) damageAmount += e.maxHp * 0.02;
+            if (lifeLevel >= 3 && !e.boss) {
+                const bonusDmg = e.maxHp * 0.02;
+                e.hp -= bonusDmg;
+                owner.damageDealt += bonusDmg;
+                recordDamage(state, 'Crimson Feast (LVL 3)', bonusDmg);
+            }
 
             if (b.burnDamage) {
                 e.burnStack = (e.burnStack || 0) + b.burnDamage;
@@ -387,11 +399,11 @@ export function updateSinglePlayerBullet(
                     if (e.lastSpitHitId !== b.hiveMotherSpitId) {
                         const nanitesToApply = 3 + Math.floor(owner.level / 10);
 
-                        e.slowFactor = Math.max(e.slowFactor || 0, 0.5); // 50% slow
-                        e.slowUntil = Math.max(e.slowUntil || 0, state.gameTime + 3); // 3 seconds
+                        e.slowFactor = Math.max(e.slowFactor || 0, 0.5);
+                        e.slowUntil = Math.max(e.slowUntil || 0, state.gameTime + 3);
 
                         e.activeNaniteCount = (e.activeNaniteCount || 0) + nanitesToApply;
-                        // Since b.dmg is the base dmgPerNanite, we add (b.dmg * nanitesToApply) for the payload.
+
                         e.activeNaniteDmg = (e.activeNaniteDmg || 0) + (b.dmg * nanitesToApply);
                         e.isInfected = true;
                         e.infectedUntil = 999999999;
@@ -422,8 +434,42 @@ export function updateSinglePlayerBullet(
                 if (owner.curHp <= 0) { state.gameOver = true; owner.deathCause = `Killed by Boss Thorns (${e.shape})`; if (onEvent) onEvent('game_over'); }
             }
 
-            if (damageAmount > 0) {
-                // --- RARE: Snitch Phase Logic ---
+            // Execution Logic (Moved up to suppress normal damage display on execution)
+            let wasExecuted = false;
+            const hexMult = (1 + (shatterLvl > 0 ? (state.player.soulShatterSouls || 0) * 0.001 : 0));
+
+            if ((critLvl >= 2 || shatterLvl > 0) && !e.boss && !e.dead) {
+                const execChance = GAME_CONFIG.SKILLS.EXECUTE_BASE_CHANCE_HIT * hexMult;
+                if (Math.random() < execChance) {
+                    const remainingHp = Math.round(e.hp);
+                    e.hp = 0;
+                    e.isExecuted = true;
+                    wasExecuted = true;
+                    owner.damageDealt += remainingHp;
+                    recordDamage(state, 'Shattered Fate (Execute)', remainingHp);
+                    spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#64748b', true, undefined, 12);
+                    handleEnemyDeath(state, e, onEvent);
+                }
+            }
+
+            if (!wasExecuted && (critLvl >= 4 || shatterLvl > 0) && e.boss && !e.dead) {
+                const bossExecChance = GAME_CONFIG.SKILLS.BOSS_EXECUTE_CHANCE_HIT * hexMult;
+                if (Math.random() < bossExecChance) {
+                    const bossDmg = e.maxHp * GAME_CONFIG.SKILLS.BOSS_PERCENT_HP_ON_HIT;
+                    e.hp -= bossDmg;
+                    owner.damageDealt += bossDmg;
+                    wasExecuted = true;
+                    recordDamage(state, 'Shattered Fate (Execute)', bossDmg);
+                    spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#dc2626', true, undefined, 12);
+                    spawnParticles(state, e.x, e.y, '#dc2626', 15);
+                    if (e.hp <= 0 && !e.dead) {
+                        handleEnemyDeath(state, e, onEvent);
+                    }
+                }
+            }
+
+            if (!wasExecuted && damageAmount > 0) {
+                // ... (rest of the block)
                 if (e.isRare && e.shape === 'snitch') {
                     if (!e.rarePhase || e.rarePhase === 1) {
                         e.rarePhase = 2;
@@ -464,42 +510,61 @@ export function updateSinglePlayerBullet(
                 const finalDmg = damageAmount / targets.length;
                 targets.forEach(t => {
                     t.hp -= finalDmg; t.lastHitTime = now; owner.damageDealt += finalDmg;
+
+                    let source: import('../core/types').DamageSource = 'Projectile';
+                    if (b.isShockwaveCircle) source = 'Shockwave';
+                    else if (b.isNanite) source = 'Nanite Swarm';
+                    else if (b.isTurretFire) source = b.turretVariant === 'ice' ? 'Ice Turret' : 'Fire Turret';
+                    else if (b.id === -1) source = 'Kinetic Bolt (LVL 1)';
+
+                    const total = finalDmg;
+                    const lvl4PuddlePart = (lvl4PuddleBonus / (damageAmount || 1)) * total;
+                    const selfPart = total - lvl4PuddlePart;
+
+                    if (lvl4PuddlePart > 0) recordDamage(state, 'Toxic Puddle (LVL 4)', lvl4PuddlePart);
+
+                    if (source === 'Projectile') {
+                        const dMarkPart = (deathMarkBonus / (damageAmount || 1)) * total;
+                        const critPart = (critBonusBase / (damageAmount || 1)) * total;
+                        let rawPart = selfPart - dMarkPart - critPart;
+
+                        if (rawPart > 0) {
+                            let bouncePart = 0;
+                            if (owner.playerClass === 'malware' && (b.bounceCount || 0) > 0) {
+                                const bounceMultTotal = Math.pow(1 + (b.bounceDmgMult || 0.2), b.bounceCount || 0);
+                                if (bounceMultTotal > 1) {
+                                    const origPart = rawPart / bounceMultTotal;
+                                    bouncePart = rawPart - origPart;
+                                    rawPart = origPart;
+                                }
+                            }
+                            if (rawPart > 0) recordDamage(state, 'Projectile', rawPart);
+                            if (bouncePart > 0) recordDamage(state, 'Wall Impact', bouncePart);
+                        }
+                        if (critPart > 0) recordDamage(state, 'Shattered Fate (Crit)', critPart);
+                        if (dMarkPart > 0) recordDamage(state, 'Shattered Fate (Death Mark)', dMarkPart);
+                    } else {
+                        if (selfPart > 0) recordDamage(state, source, selfPart);
+                    }
                     if (b.isCrit) { t.critGlitchUntil = now + 150; spawnParticles(state, t.x, t.y, b.color || '#fff', 5); }
                     if (targets.length > 1) spawnParticles(state, t.x, t.y, '#ff00ff', 2);
-                    if (t.hp <= 0 && !t.dead) handleEnemyDeath(state, t, onEvent);
+                    if (t.hp <= 0 && !t.dead) {
+                        if (b.isTsunami) owner.kineticTsunamiWaveSouls = (owner.kineticTsunamiWaveSouls || 0) + (t.isElite ? 10 : 1);
+                        handleEnemyDeath(state, t, onEvent);
+                    }
                 });
                 if (!b.isHyperPulse) spawnFloatingNumber(state, e.x, e.y, Math.round(damageAmount).toString(), b.color || '#fff', b.isCrit);
             }
 
-            // --- ComCrit Lvl 3: Apply Death Mark ---
+            // Death Mark logic
             const cdMod = getCdMod(state, owner);
-            if ((critLvl >= 3 || shatterLvl > 0) && !isOnCooldown(owner.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, now)) {
-                e.deathMarkExpiry = now + 3;
+            const isNonNormal = e.boss || e.isElite || e.legionId || e.wormId || e.shape === 'snitch' || e.isAnomaly;
+
+            if ((critLvl >= 3 || shatterLvl > 0) && isNonNormal && !isOnCooldown(owner.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, now)) {
+                e.deathMarkExpiry = now + GAME_CONFIG.SKILLS.DEATH_MARK_DURATION;
                 owner.lastDeathMark = now;
                 spawnParticles(state, e.x, e.y, '#8800FF', 8);
                 playSfx('rare-spawn');
-            }
-
-            // --- ComCrit Lvl 2: Execute (Non-Bosses) ---
-            if ((critLvl >= 2 || shatterLvl > 0) && !e.boss && e.hp < e.maxHp * GAME_CONFIG.SKILLS.EXECUTE_THRESHOLD) {
-                if (Math.random() < GAME_CONFIG.SKILLS.EXECUTE_CHANCE) {
-                    const remainingHp = Math.round(e.hp);
-                    e.hp = 0;
-                    e.isExecuted = true;
-                    spawnFloatingNumber(state, e.x + 10, e.y - 10, `EXEC ${remainingHp}`, '#64748b', false);
-                    playSfx('rare-kill');
-                }
-            }
-
-            // --- ComCrit Lvl 4: Execute Bosses ---
-            if ((critLvl >= 4 || shatterLvl > 0) && e.boss && e.hp < e.maxHp * GAME_CONFIG.SKILLS.BOSS_EXECUTE_THRESHOLD) {
-                if (Math.random() < GAME_CONFIG.SKILLS.BOSS_EXECUTE_CHANCE) {
-                    const remainingHp = Math.round(e.hp);
-                    e.hp = 0;
-                    e.isExecuted = true;
-                    spawnFloatingNumber(state, e.x + 10, e.y - 20, `BOSS EXEC ${remainingHp}`, '#dc2626', true);
-                    playSfx('rare-kill');
-                }
             }
 
             const bloodLevel = getHexLevel(state, 'BloodForgedCapacitor');

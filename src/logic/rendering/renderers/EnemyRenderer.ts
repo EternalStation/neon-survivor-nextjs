@@ -6,18 +6,18 @@ import { PALETTES } from '../../core/constants';
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
     const { enemies } = state;
-    // Build O(1) Lookup Map for performance (Fixes O(N^2) links)
+    
     const enemyMap = new Map<number, Enemy>();
     enemies.forEach(e => { if (!e.dead) enemyMap.set(e.id, e); });
     const bossMap = new Map<number, Enemy>();
     enemies.forEach(e => { if (e.boss && !e.dead) bossMap.set(e.id, e); });
 
-    // Defensive Reset: Ensure no leaked shadows or styles from previous layers affect enemies
+    
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.setLineDash([]);
 
-    // Helper to dim hex color by 20%
+    
     const dimHex = (hex: string, factor: number) => {
         if (!hex.startsWith('#') || hex.length < 7) return hex;
         try {
@@ -28,7 +28,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         } catch { return hex; }
     };
 
-    // 1. Draw Merging Lines (Optimized)
+    
     const mergeHosts = new Map<string, Enemy>();
     enemies.forEach(e => {
         if (e.mergeHost && e.mergeId && !e.dead) mergeHosts.set(e.mergeId, e);
@@ -40,10 +40,10 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             const host = mergeHosts.get(e.mergeId);
             if (host) {
                 ctx.save();
-                ctx.strokeStyle = '#FFFFFF'; // White dashed line
+                ctx.strokeStyle = '#FFFFFF'; 
                 ctx.lineWidth = 1.5;
                 ctx.globalAlpha = 0.6;
-                ctx.setLineDash([8, 8]); // Distinct dash pattern
+                ctx.setLineDash([8, 8]); 
                 ctx.beginPath();
                 ctx.moveTo(e.x, e.y);
                 ctx.lineTo(host.x, host.y);
@@ -53,24 +53,24 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         }
     });
 
-    // --- LEVEL 2 BOSS VISUALS (Underlay - Lines etc) ---
+    
     enemies.forEach(e => {
         if (!e.boss || e.dead) return;
 
-        // PENTAGON SOUL LINK (Snake Lines)
+        
         if (e.shape === 'pentagon' && e.soulLinkTargets && e.soulLinkTargets.length > 0) {
-            // Determine Color based on Spawn Time (Era)
-            // 0-15: Green, 15-30: Blue, 30-45: Purple, 45-60: Orange -> Red
+            
+            
             const minutes = (e.spawnedAt || state.gameTime) / 60;
             const eraIndex = Math.floor(minutes / 15) % PALETTES.length;
-            const linkColor = PALETTES[eraIndex].colors[0]; // Brightest color
+            const linkColor = PALETTES[eraIndex].colors[0]; 
 
             ctx.save();
             ctx.strokeStyle = linkColor;
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
 
-            // Neon Glow replacement for shadowBlur
+            
             ctx.lineWidth = 6;
             ctx.globalAlpha = 0.3;
             ctx.stroke();
@@ -82,18 +82,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             e.soulLinkTargets.forEach((targetId, i) => {
                 const target = enemyMap.get(targetId);
                 if (target) {
-                    // Draw Snake Line
+                    
                     ctx.beginPath();
                     ctx.moveTo(e.x, e.y);
 
                     const angle = Math.atan2(target.y - e.y, target.x - e.x);
                     const dist = Math.hypot(target.x - e.x, target.y - e.y);
 
-                    // Bezier Curve with sine wave offset
+                    
                     const midX = (e.x + target.x) / 2;
                     const midY = (e.y + target.y) / 2;
 
-                    // Animate the curve "snaking"
+                    
                     const offset = Math.sin(time * 8 + i) * 20;
                     const perpX = Math.cos(angle + Math.PI / 2) * offset;
                     const perpY = Math.sin(angle + Math.PI / 2) * offset;
@@ -101,7 +101,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
                     ctx.stroke();
 
-                    // Energy Flow Particles
+                    
                     const particleCount = 2;
                     for (let p = 0; p < particleCount; p++) {
                         const t = (time * 1.5 + (p / particleCount) + (i * 0.3)) % 1.0;
@@ -120,7 +120,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         const isLvl3 = !!e.isLevel3 || isLvl4;
 
         if (e.shape === 'pentagon' && e.boss && e.parasiteLinkActive && isLvl3) {
-            // Match Era Palette
+            
             const minutes = (e.spawnedAt || state.gameTime) / 60;
             const eraIndex = Math.floor(minutes / 15) % PALETTES.length;
             const eraColor = PALETTES[eraIndex].colors[0];
@@ -128,7 +128,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.save();
             const time = state.gameTime;
 
-            // Tight Thin Glitchy line
+            
             const segments = 8;
             for (let s = 0; s < segments; s++) {
                 const progress = s / segments;
@@ -160,11 +160,11 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // PENTAGON LVL 4 HIVEMIND PHALANX TETHERS (Restored Purple)
+        
         if (e.shape === 'pentagon' && isLvl4 && e.phalanxState && e.phalanxState > 0) {
             ctx.save();
             const time = state.gameTime;
-            const phalanxColor = '#a855f7'; // Purple Command Color (Preferred by User)
+            const phalanxColor = '#a855f7'; 
 
             ctx.strokeStyle = phalanxColor;
             ctx.lineWidth = 4;
@@ -176,7 +176,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.beginPath();
                     ctx.moveTo(e.x, e.y);
 
-                    // Bezier command tether
+                    
                     const midX = (e.x + d.x) / 2;
                     const midY = (e.y + d.y) / 2;
                     const ang = Math.atan2(d.y - e.y, d.x - e.x);
@@ -192,19 +192,19 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // CIRCLE DASH INDICATOR (Laser Sight)
+        
         if (e.shape === 'circle' && e.dashState === 1 && e.dashLockX && e.dashLockY) {
             ctx.save();
             ctx.strokeStyle = '#EF4444';
             ctx.lineWidth = 2;
-            ctx.setLineDash([10, 10]); // Dashed aim line
+            ctx.setLineDash([10, 10]); 
             ctx.globalAlpha = 0.7;
             ctx.beginPath();
             ctx.moveTo(e.x, e.y);
             ctx.lineTo(e.dashLockX, e.dashLockY);
             ctx.stroke();
 
-            // Draw Target Reticle
+            
             ctx.translate(e.dashLockX, e.dashLockY);
             ctx.strokeStyle = '#EF4444';
             ctx.lineWidth = 2;
@@ -219,7 +219,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // CIRCLE LVL 4 SOUL SUCK (Milky Way Effect)
+        
         if (e.shape === 'circle' && e.soulSuckActive) {
             ctx.save();
             const time = state.gameTime;
@@ -229,17 +229,17 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.translate(state.player.x, state.player.y);
             ctx.rotate(angle);
 
-            // 1. Dark Milky Way Base (Wide semi-transparent flow)
+            
             const beamWidth = 80;
             const grad = ctx.createLinearGradient(0, -beamWidth / 2, 0, beamWidth / 2);
             grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            grad.addColorStop(0.5, 'rgba(40, 40, 40, 0.85)'); // Darker Grey / Blackish
+            grad.addColorStop(0.5, 'rgba(40, 40, 40, 0.85)'); 
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = grad;
             ctx.globalCompositeOperation = 'source-over';
 
-            // Draw flowing wavy path
+            
             ctx.beginPath();
             ctx.moveTo(0, 0);
             for (let d = 0; d < dist; d += 20) {
@@ -247,7 +247,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.lineTo(d, wave);
             }
 
-            // Draw the volume of the flow
+            
             ctx.save();
             ctx.lineWidth = beamWidth;
             ctx.lineCap = 'round';
@@ -256,7 +256,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.stroke();
             ctx.restore();
 
-            // 2. Swirling "Souls" (White/Purple specs flowing towards boss)
+            
             const particleCount = 15;
             for (let i = 0; i < particleCount; i++) {
                 const pTime = (time * 1.5 + (i / particleCount)) % 1.0;
@@ -264,9 +264,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const pWave = Math.sin(pd * 0.01 + time * 5 + i) * 20;
                 const pSize = 2 + Math.random() * 3;
 
-                if (i % 3 === 0) ctx.fillStyle = '#eab308'; // Gold
-                else if (i % 3 === 1) ctx.fillStyle = '#facc15'; // Bright Yellow
-                else ctx.fillStyle = '#94a3b8'; // Slate Grey
+                if (i % 3 === 0) ctx.fillStyle = '#eab308'; 
+                else if (i % 3 === 1) ctx.fillStyle = '#facc15'; 
+                else ctx.fillStyle = '#94a3b8'; 
 
                 ctx.globalAlpha = 1.0 * (1 - Math.abs(pTime - 0.5) * 2);
                 ctx.beginPath();
@@ -274,13 +274,13 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.fill();
             }
 
-            // 3. Boss Dark Vortex Aura
+            
             ctx.restore();
             ctx.save();
             ctx.translate(e.x, e.y);
             const vortexPulse = 1.0 + Math.sin(time * 15) * 0.15;
             const vortexGrad = ctx.createRadialGradient(0, 0, e.size * 0.2, 0, 0, e.size * 2 * vortexPulse);
-            vortexGrad.addColorStop(0, 'rgba(234, 179, 8, 0.4)'); // Yellow Core Glow
+            vortexGrad.addColorStop(0, 'rgba(234, 179, 8, 0.4)'); 
             vortexGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0.6)');
             vortexGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
@@ -291,14 +291,14 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // DIAMOND BEAM CHARGE (Pre-Fire)
+        
         if (e.shape === 'diamond' && e.beamState === 1 && e.beamX && e.beamY) {
             ctx.save();
             const isLvl4 = (e.bossTier || 0) >= 4 || (state.gameTime > 1800 && e.bossTier !== 1);
             const ang = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
             const isLocked = (e.beamTimer || 0) > 30;
 
-            // Guide line(s)
+            
             ctx.strokeStyle = e.palette[1];
             ctx.globalAlpha = isLocked ? 0.8 : 0.3;
             ctx.lineWidth = isLocked ? 3 : 1;
@@ -318,7 +318,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.stroke();
             }
 
-            // Charge buildup at source
+            
             const chargeProgress = (e.beamTimer || 0) / 60;
             const chargeSize = chargeProgress * 40;
             ctx.fillStyle = e.palette[1];
@@ -327,7 +327,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.arc(e.x, e.y, chargeSize, 0, Math.PI * 2);
             ctx.fill();
 
-            // Internal Pulse
+            
             if (isLocked) {
                 ctx.fillStyle = '#FFFFFF';
                 ctx.globalAlpha = 0.3 + Math.sin(state.gameTime * 20) * 0.2;
@@ -340,35 +340,35 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // DIAMOND LVL 3 SATELLITE STRIKE BEAMS (Cosmic Beam Style)
+        
         if (e.shape === 'diamond' && e.satelliteState === 2 && e.satelliteTargets && (e.satelliteTimer || 0) <= 20) {
-            // Determine era color
+            
             const minutes = (e.spawnedAt || state.gameTime) / 60;
             const eraIndex = Math.floor(minutes / 15) % PALETTES.length;
-            const beamColor = PALETTES[eraIndex].colors[0]; // Brightest era color
+            const beamColor = PALETTES[eraIndex].colors[0]; 
             const beamColorMid = PALETTES[eraIndex].colors[1];
 
             e.satelliteTargets.forEach(t => {
                 ctx.save();
                 ctx.translate(t.x, t.y);
 
-                // Beam animation (fades over 20 frames)
+                
                 const beamAlpha = 1 - (e.satelliteTimer || 0) / 20;
                 const beamHeight = 2000;
-                const beamWidth = 120; // Slightly wider than crater
+                const beamWidth = 120; 
 
-                // Gradient: High center opacity (Cosmic Beam style)
+                
                 const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
-                beamGrad.addColorStop(0, `${beamColor}00`); // Transparent
+                beamGrad.addColorStop(0, `${beamColor}00`); 
                 beamGrad.addColorStop(0.2, beamColorMid.replace(')', `, ${0.5 * beamAlpha})`).replace('rgb', 'rgba'));
                 beamGrad.addColorStop(0.5, `rgba(255, 255, 255, ${1.0 * beamAlpha})`);
                 beamGrad.addColorStop(0.8, beamColorMid.replace(')', `, ${0.5 * beamAlpha})`).replace('rgb', 'rgba'));
-                beamGrad.addColorStop(1, `${beamColor}00`); // Transparent
+                beamGrad.addColorStop(1, `${beamColor}00`); 
 
                 ctx.fillStyle = beamGrad;
                 ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
 
-                // Core beam line
+                
                 ctx.globalCompositeOperation = 'lighter';
                 ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * beamAlpha})`;
                 ctx.lineWidth = 6;
@@ -377,7 +377,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.lineTo(0, -beamHeight);
                 ctx.stroke();
 
-                // Side streaks with era color
+                
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = beamColor.replace(')', `, ${0.4 * beamAlpha})`).replace('rgb', 'rgba');
                 ctx.beginPath();
@@ -390,7 +390,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             });
         }
 
-        // DIAMOND LVL 3 SATELLITE (Orbiting UI indicator)
+        
         if (e.shape === 'diamond' && e.boss && (e.bossTier === 3 || (state.gameTime > 1200 && e.bossTier !== 1))) {
             ctx.save();
             const orbitRadius = e.size * 2.5;
@@ -406,7 +406,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.shadowColor = color;
             ctx.shadowBlur = 15;
 
-            // Sharp Satellite Design
+            
             ctx.beginPath();
             ctx.moveTo(0, -satSize);
             ctx.lineTo(satSize * 0.4, -satSize * 0.2);
@@ -419,7 +419,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.closePath();
             ctx.fill();
 
-            // Rotating Ring
+            
             ctx.strokeStyle = color;
             ctx.lineWidth = 1.5;
             ctx.globalAlpha = 0.4;
@@ -430,7 +430,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // DIAMOND LVL 5 ELECTRIC FENCE
+        
         if (e.shape === 'diamond' && e.crystalPositions && e.crystalState && e.crystalState > 0) {
             ctx.save();
             const time = state.gameTime;
@@ -443,7 +443,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.save();
                 ctx.translate(p.x, p.y);
 
-                // PERFORMANCE FIX: Optimized Crystal Rendering
+                
                 const pulse = 1.0 + Math.sin(time * 10 + i) * 0.1;
                 ctx.scale(pulse, pulse);
                 const spin = time * 3 + i;
@@ -453,7 +453,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
                 ctx.globalAlpha = 1.0;
 
-                // Simple 4-sided Obelisk (Optimized over 8-sided)
+                
                 for (let side = 0; side < 4; side++) {
                     const ang1 = spin + (side * Math.PI) / 2;
                     const ang2 = ang1 + Math.PI / 2;
@@ -463,9 +463,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     if (Math.sin(ang1) > 0 || Math.sin(ang2) > 0) {
                         const shadeFactor = 0.6 + Math.cos(ang1) * 0.4;
                         ctx.fillStyle = crystalColor;
-                        ctx.globalAlpha = shadeFactor; // Use alpha for shading instead of dimHex string parsing
+                        ctx.globalAlpha = shadeFactor; 
 
-                        // Tapered Segments
+                        
                         ctx.beginPath();
                         ctx.moveTo(0, -crystalH); ctx.lineTo(x1, -gap); ctx.lineTo(x2, -gap); ctx.closePath(); ctx.fill();
                         ctx.beginPath();
@@ -476,12 +476,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     }
                 }
 
-                // Internal Beam
+                
                 ctx.fillStyle = '#FFF'; ctx.globalAlpha = 0.8;
                 ctx.fillRect(-1.5, -gap, 3, gap * 2);
                 ctx.restore();
 
-                // Optimized Fence Line
+                
                 if (fenceActive && e.crystalPositions) {
                     const nextP = e.crystalPositions[(i + 1) * 1 % 5];
                     ctx.save();
@@ -489,7 +489,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.lineWidth = 4 + Math.sin(time * 20 + i) * 2;
                     ctx.globalAlpha = 0.7 + Math.sin(time * 15) * 0.2;
 
-                    // Reduced segments (12 -> 6) for performance
+                    
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     const segments = 6;
@@ -510,42 +510,42 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // --- ANOMALY BOSS VISUALS (Molten Ground & Hellish Presence) ---
+        
         if (e.isAnomaly && !e.dead) {
             ctx.save();
             const time = state.gameTime;
 
-            // Calculate dynamic burn radius
+            
             const gen = e.anomalyGeneration || 0;
-            const baseBurnRadius = 390 + (gen * 10); // Base + generation scaling
-            const stage3Bonus = (e.bonusBurnRadius || 0); // Stage 3 growing radius
+            const baseBurnRadius = 390 + (gen * 10); 
+            const stage3Bonus = (e.bonusBurnRadius || 0); 
             const burnRadius = baseBurnRadius + stage3Bonus;
 
             const pulse = 1.0 + Math.sin(time * 4) * 0.05;
 
-            // Stage-dependent colors (progressively more red)
+            
             const stage = e.stage || 1;
-            let innerColor = 'rgba(245, 158, 11, 0.4)'; // Stage 1: Orange
-            let outerColor = 'rgba(239, 68, 68, 0.15)'; // Stage 1: Light Red
-            let auraColor = '#ef4444'; // Stage 1: Red
-            let shadowColor = '#dc2626'; // Stage 1: Dark Red
+            let innerColor = 'rgba(245, 158, 11, 0.4)'; 
+            let outerColor = 'rgba(239, 68, 68, 0.15)'; 
+            let auraColor = '#ef4444'; 
+            let shadowColor = '#dc2626'; 
 
             if (stage === 2) {
-                innerColor = 'rgba(239, 68, 68, 0.5)'; // Stage 2: Bright Red
-                outerColor = 'rgba(220, 38, 38, 0.2)'; // Stage 2: Darker Red
-                auraColor = '#dc2626'; // Stage 2: Darker Red
-                shadowColor = '#b91c1c'; // Stage 2: Even Darker Red
+                innerColor = 'rgba(239, 68, 68, 0.5)'; 
+                outerColor = 'rgba(220, 38, 38, 0.2)'; 
+                auraColor = '#dc2626'; 
+                shadowColor = '#b91c1c'; 
             } else if (stage === 3) {
-                innerColor = 'rgba(220, 38, 38, 0.6)'; // Stage 3: Dark Red
-                outerColor = 'rgba(185, 28, 28, 0.3)'; // Stage 3: Crimson
-                auraColor = '#b91c1c'; // Stage 3: Crimson
-                shadowColor = '#991b1b'; // Stage 3: Deep Crimson
+                innerColor = 'rgba(220, 38, 38, 0.6)'; 
+                outerColor = 'rgba(185, 28, 28, 0.3)'; 
+                auraColor = '#b91c1c'; 
+                shadowColor = '#991b1b'; 
             }
 
-            // 1. Molten Ground Zone (Similar to Ritual)
+            
             const grad = ctx.createRadialGradient(e.x, e.y, 50, e.x, e.y, burnRadius * pulse);
-            grad.addColorStop(0, innerColor); // Inner color based on stage
-            grad.addColorStop(0.7, outerColor); // Outer color based on stage
+            grad.addColorStop(0, innerColor); 
+            grad.addColorStop(0.7, outerColor); 
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = grad;
@@ -560,18 +560,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
             ctx.fill();
 
-            // 2. Central Heat Distortion Glow - REMOVED to avoid confusion with "Circle" shape
-            // Instead, maybe draw a jagged "aura" or just rely on the shape itself doing the work.
-            // Let's add a jagged, sinister aura that matches the Bull/Demon theme.
+            
+            
+            
             ctx.shadowBlur = 40;
             ctx.shadowColor = shadowColor;
             ctx.strokeStyle = auraColor;
             ctx.lineWidth = 3;
-            ctx.globalAlpha = 0.6 + (stage - 1) * 0.1; // Slightly more visible in higher stages
+            ctx.globalAlpha = 0.6 + (stage - 1) * 0.1; 
 
             ctx.beginPath();
 
-            // Draw a rough, spiky aura instead of a circle
+            
             const auraPoints = 16;
             for (let i = 0; i <= auraPoints; i++) {
                 const ang = (i / auraPoints) * Math.PI * 2;
@@ -592,12 +592,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.save();
         ctx.translate(e.x, e.y);
 
-        // Apply visual jitter (used for stuns/vortex)
+        
         if (e.jitterX || e.jitterY) {
             ctx.translate(e.jitterX || 0, e.jitterY || 0);
         }
 
-        // VORTEX / SLINGSHOT STUN VISUAL
+        
         const pDistV = Math.hypot(e.x - state.player.x, e.y - state.player.y);
         const isVortexSkillOn = !!(state.player.orbitalVortexUntil && state.player.orbitalVortexUntil > state.gameTime);
         const isVortexStunned = isVortexSkillOn && pDistV < 800;
@@ -608,7 +608,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
             ctx.save();
             ctx.globalAlpha = alpha;
-            ctx.strokeStyle = '#fbbf24'; // Amber/Golden (Aigis Theme)
+            ctx.strokeStyle = '#fbbf24'; 
             ctx.lineWidth = 2.5;
             const spin = t * 15;
             for (let i = 0; i < 3; i++) {
@@ -620,7 +620,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // SLOW VFX - Frosted Crystalline Shell
+        
         if (e.slowFactor && e.slowFactor > 0.4) {
             ctx.save();
             const slowAmt = Math.min(1, (e.slowFactor - 0.4) * 2);
@@ -630,12 +630,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#06b6d4';
 
-            // Draw a slightly larger frozen shell
+            
             ctx.beginPath();
             ctx.arc(0, 0, e.size * 1.2, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Ice shards/spikes around the shell
+            
             for (let i = 0; i < 6; i++) {
                 const ang = (i * Math.PI / 3) + state.gameTime;
                 ctx.beginPath();
@@ -646,15 +646,15 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // FREEZE VFX - Solid Ice Block
+        
         if (e.frozen && e.frozen > 0) {
             ctx.save();
             ctx.globalAlpha = 0.6;
-            ctx.fillStyle = '#bae6fd'; // Light blue ice
-            ctx.strokeStyle = '#38bdf8'; // Cyan rim
+            ctx.fillStyle = '#bae6fd'; 
+            ctx.strokeStyle = '#38bdf8'; 
             ctx.lineWidth = 2;
 
-            // Draw a jagged ice block around the enemy
+            
             ctx.beginPath();
             const shards = 8;
             for (let i = 0; i < shards; i++) {
@@ -669,7 +669,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.fill();
             ctx.stroke();
 
-            // White highlights
+            
             ctx.globalAlpha = 0.4;
             ctx.fillStyle = '#fff';
             ctx.beginPath();
@@ -679,7 +679,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // BERSERK / ENRAGED VFX (Enraged Zombies)
+        
         if (e.isEnraged) {
             ctx.save();
             const time = state.gameTime;
@@ -690,9 +690,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.shadowColor = rageColor;
             ctx.globalAlpha = 0.4 + Math.sin(time * 15) * 0.2;
 
-            // Violent pulsing spikes
+            
             for (let i = 0; i < 6; i++) {
-                const ang = (i * Math.PI / 3) + time * 3.5; // Lowered spin speed
+                const ang = (i * Math.PI / 3) + time * 3.5; 
                 const len = e.size * (1.2 + Math.random() * 0.3);
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
@@ -711,20 +711,20 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const rx = Math.cos(angle);
                 const ry = Math.sin(angle);
 
-                ctx.strokeStyle = '#eab308'; // Thin yellow line
-                ctx.lineWidth = 1; // "make very thing" -> 1px
+                ctx.strokeStyle = '#eab308'; 
+                ctx.lineWidth = 1; 
                 ctx.globalAlpha = 0.8;
                 ctx.beginPath();
-                // Start at the back edge of the long_drone shape (approx 1.5 * size)
+                
                 const edgeOffset = e.size * 1.5;
                 ctx.moveTo(-rx * edgeOffset, -ry * edgeOffset);
-                ctx.lineTo(-rx * (edgeOffset + 30), -ry * (edgeOffset + 30)); // "longer like 30 pxiels"
+                ctx.lineTo(-rx * (edgeOffset + 30), -ry * (edgeOffset + 30)); 
                 ctx.stroke();
                 ctx.restore();
             }
         }
 
-        // --- ZOMBIE RENDERER ---
+        
         if (e.isZombie) {
             const zombieImg = (meteoriteImages as any).zombie;
             if (zombieImg && zombieImg.complete) {
@@ -740,7 +740,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     const shake = (1 - progress) * 12;
                     ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
 
-                    // Improved Dirt Particles
+                    
                     ctx.fillStyle = '#451a03';
                     const particleCount = progress < 0.3 ? 15 : 5;
                     for (let i = 0; i < particleCount; i++) {
@@ -757,7 +757,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                         ctx.drawImage(zombieImg, -zSize / 2, -zSize / 2, zSize, zSize);
                     }
                 } else if (e.zombieState !== 'dead') {
-                    // Frenzy Glow
+                    
                     if (e.isEnraged) {
                         ctx.save();
                         ctx.shadowBlur = 20;
@@ -770,7 +770,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                         ctx.restore();
                     }
 
-                    // Mirroring logic: PNG faces LEFT. If vx > 0 (moving right), flip.
+                    
                     const isMovingRight = (e.vx || 0) > 0.1;
                     ctx.save();
                     if (isMovingRight) {
@@ -779,7 +779,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.drawImage(zombieImg, -zSize / 2, -zSize / 2, zSize, zSize);
                     ctx.restore();
 
-                    // Heart Indicators (3 Pips)
+                    
                     if (e.zombieHearts !== undefined) {
                         const hCount = e.zombieHearts;
                         const startX = -15;
@@ -797,20 +797,20 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         if (e.rotationPhase) ctx.rotate(e.rotationPhase);
 
-        // BOSS SHIELDED AURA (Level 3 protection)
+        
         if (e.orbitalShields && e.orbitalShields > 0) {
             ctx.save();
-            // Counter-rotate a bit or just spin a slow barrier
-            // e.rotationPhase rotates the context, so this barrier spins with the boss.
-            // Draw a protective energy field
-            ctx.strokeStyle = '#06b6d4'; // Cyan
+            
+            
+            
+            ctx.strokeStyle = '#06b6d4'; 
             ctx.lineWidth = 2;
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#06b6d4';
             ctx.globalAlpha = 0.4;
 
-            // Draw a hexagonal force field barrier
-            const barrierSize = 110; // Protective bubble radius
+            
+            const barrierSize = 110; 
             ctx.beginPath();
             for (let i = 0; i < 6; i++) {
                 const ang = (Math.PI / 3) * i;
@@ -821,47 +821,47 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.closePath();
             ctx.stroke();
 
-            // Inner fill
+            
             ctx.fillStyle = '#06b6d4';
             ctx.globalAlpha = 0.1;
             ctx.fill();
             ctx.restore();
         }
 
-        // ELITE AURA REMOVED FOR PERFORMANCE (User Request)
+        
 
 
         const pulse = 1.0 + (Math.sin(e.pulsePhase || 0) * 0.05);
         ctx.scale(pulse, pulse);
 
-        // --- Spectral Flux: Color Logic ---
+        
         const p = e.palette || PALETTES[0].colors;
         let coreColor = e.eraPalette?.[2] || p[0];
         let innerColor = e.eraPalette?.[1] || p[1];
         let outerColor = e.eraPalette?.[0] || p[2];
 
-        // LVL 4 Circle Boss Soul Suck: Black/Grey/Yellow Layers
+        
         const fState = e.fluxState || 0;
         if (e.soulSuckActive || e.soulSuckUsed) {
-            coreColor = '#eab308'; // Gold Core
-            innerColor = '#334155'; // Dark Slate Grey
-            outerColor = '#000000'; // Black silhouette base
+            coreColor = '#eab308'; 
+            innerColor = '#334155'; 
+            outerColor = '#000000'; 
             ctx.shadowColor = e.soulSuckActive ? '#eab308' : '#000000';
             ctx.shadowBlur = e.soulSuckActive ? 25 : 5;
         } else {
             if (fState === 0) {
-                // Prime: High Contrast (Stable)
+                
                 coreColor = e.eraPalette?.[0] || p[0];
                 innerColor = e.eraPalette?.[2] || p[1];
                 outerColor = e.eraPalette?.[1] || p[2];
             } else if (fState === 1) {
-                // Resonance: Inner Pulse (Solid)
+                
                 coreColor = e.eraPalette?.[1] || p[0];
                 innerColor = e.eraPalette?.[0] || p[1];
                 outerColor = e.eraPalette?.[2] || p[2];
             } else if (fState === 2) {
-                // Radiance: Overloaded Aura (Static Glow)
-                coreColor = '#FFFFFF'; // White Hot
+                
+                coreColor = '#FFFFFF'; 
                 innerColor = e.eraPalette?.[0] || e.palette[0];
                 outerColor = e.eraPalette?.[1] || e.palette[1];
                 ctx.shadowColor = innerColor;
@@ -869,7 +869,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
         }
 
-        // --- SECOND 5-MIN CYCLE (5-10, 20-25, etc.) BRIGHTNESS TWEAK ---
+        
         if (fState === 1) {
             innerColor = dimHex(innerColor, 0.8);
         }
@@ -880,7 +880,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             chaosLevel = Math.min(1, Math.max(0, (minutes - 2) / 10));
         }
 
-        // --- Era Corruption: Glitch (30-60m) ---
+        
         if (minutes > 30 && !e.boss) {
             const glitchAmount = Math.min(1, (minutes - 30) / 30);
             if (Math.random() < glitchAmount * 0.2) {
@@ -893,9 +893,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         const drawShape = (size: number, isWarpedLimit: boolean = false, isCore: boolean = false) => {
             ctx.beginPath();
 
-            // CORE DISTORTION: Internal digital fragment
+            
             if (isCore) {
-                const sides = 3 + (Math.floor((e.id || 0) * 10) % 3); // 3-5 sides
+                const sides = 3 + (Math.floor((e.id || 0) * 10) % 3); 
                 const rot = state.gameTime * 4 * ((e.id || 0) > 0.5 ? 1 : -1);
                 for (let i = 0; i < sides; i++) {
                     const ang = (i * 2 * Math.PI / sides) + rot;
@@ -982,10 +982,10 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.closePath();
             } else if (e.shape === 'long_drone') {
                 const s = size;
-                const p1 = wp(s * 2.5, 0); // Extended Tip
-                const p2 = wp(-s * 1.5, s * 0.4); // Back right
-                const p3 = wp(-s * 0.8, 0); // Depth
-                const p4 = wp(-s * 1.5, -s * 0.4); // Back left
+                const p1 = wp(s * 2.5, 0); 
+                const p2 = wp(-s * 1.5, s * 0.4); 
+                const p3 = wp(-s * 0.8, 0); 
+                const p4 = wp(-s * 1.5, -s * 0.4); 
                 ctx.moveTo(p1.x, p1.y);
                 ctx.lineTo(p2.x, p2.y);
                 ctx.lineTo(p3.x, p3.y);
@@ -996,7 +996,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.closePath();
             } else if (e.shape === 'square') {
                 if (e.isElite && !isCore) {
-                    // Elite Square (Thorns): Draw 8-pointed aggressive spiked corners
+                    
                     const spike = size * 0.5;
                     const inner = size * 0.7;
 
@@ -1017,7 +1017,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath();
             } else if (e.shape === 'hexagon') {
                 for (let i = 0; i < 6; i++) {
-                    const angle = (i * 2 * Math.PI / 6) - Math.PI / 2; // Pointy top
+                    const angle = (i * 2 * Math.PI / 6) - Math.PI / 2; 
                     const p = wp(Math.cos(angle) * size, Math.sin(angle) * size);
                     if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
                 }
@@ -1030,13 +1030,13 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 }
                 ctx.closePath();
             } else if ((e.type as any) === 'orbital_shield') {
-                // Shield Plate Design: Curved rectangle/Arc
-                // Wider arc for better coverage
-                const arcLen = Math.PI / 1.5; // 120 degrees coverage (wider than before)
-                // Draw a thick arc section
+                
+                
+                const arcLen = Math.PI / 1.5; 
+                
                 ctx.beginPath();
-                ctx.arc(0, 0, size, -arcLen / 2, arcLen / 2); // Outer arc
-                ctx.arc(0, 0, size * 0.6, arcLen / 2, -arcLen / 2, true); // Inner arc
+                ctx.arc(0, 0, size, -arcLen / 2, arcLen / 2); 
+                ctx.arc(0, 0, size * 0.6, arcLen / 2, -arcLen / 2, true); 
                 ctx.closePath();
             } else if (e.shape === 'snitch') {
                 const bodyR = size * 0.7;
@@ -1064,9 +1064,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const isUnderground = e.wormBurrowState === 'underground';
                 const alphaMult = isUnderground ? 0.35 : (isPromoDormant ? 0.5 : 1.0);
 
-                // Dimming logic for colors
+                
                 const dim = (hex: string, amt: number) => {
-                    if (isUnderground) return hex + '88'; // Add transparency
+                    if (isUnderground) return hex + '88'; 
                     return hex;
                 };
 
@@ -1076,11 +1076,11 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const eyesColor = dim(coreColor, 0.5);
 
                 if (isHead) {
-                    // --- CRAZY SCARY HEAD DESIGN ---
+                    
                     ctx.save();
                     ctx.globalAlpha *= alphaMult;
 
-                    // 1. Mandibles / Jaws (Jagged and Sharp)
+                    
                     const drawMandible = (side: number) => {
                         const open = Math.sin(t * 15) * 0.4 + 0.5;
                         const ang = moveAngle + (0.7 + open) * side;
@@ -1091,21 +1091,21 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                         ctx.lineJoin = 'round';
                         ctx.moveTo(Math.cos(moveAngle + 0.4 * side) * size * 0.8, Math.sin(moveAngle + 0.4 * side) * size * 0.8);
 
-                        // Joint 1
+                        
                         const j1x = Math.cos(ang) * size * 1.5;
                         const j1y = Math.sin(ang) * size * 1.5;
                         ctx.lineTo(j1x, j1y);
 
-                        // Joint 2 (Hooked tip)
+                        
                         const tipAng = ang + 0.8 * side;
                         const tX = j1x + Math.cos(tipAng) * size * 0.8;
                         const tY = j1y + Math.sin(tipAng) * size * 0.8;
                         ctx.lineTo(tX, tY);
                         ctx.stroke();
 
-                        // Teeth/Spikes on Mandible
+                        
                         ctx.beginPath();
-                        ctx.fillStyle = eyesColor; // Sulfur teeth
+                        ctx.fillStyle = eyesColor; 
                         for (let i = 0; i < 3; i++) {
                             const p = 0.3 + i * 0.3;
                             const sx = j1x * (1 - p) + (Math.cos(moveAngle + 0.4 * side) * size * 0.8) * p;
@@ -1117,7 +1117,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     drawMandible(1);
                     drawMandible(-1);
 
-                    // 2. Skull Shape (Jagged Pentagonal Shield)
+                    
                     ctx.beginPath();
                     const skullSteps = 8;
                     for (let i = 0; i <= skullSteps; i++) {
@@ -1127,7 +1127,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                         const py = Math.sin(ang) * r;
                         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
                     }
-                    // Back logic for head connection
+                    
                     ctx.lineTo(Math.cos(moveAngle + Math.PI) * size * 0.5, Math.sin(moveAngle + Math.PI) * size * 0.5);
                     ctx.closePath();
                     ctx.strokeStyle = outlineColor;
@@ -1136,11 +1136,11 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.fillStyle = '#111827';
                     ctx.fill();
 
-                    // 3. Multiple Eyes (Spider-like / Eldritch)
+                    
                     const eyePos = [
-                        { a: 0.2, d: 0.8, s: 4 }, { a: -0.2, d: 0.8, s: 4 }, // Main eyes
-                        { a: 0.5, d: 0.6, s: 2 }, { a: -0.5, d: 0.6, s: 2 }, // Side eyes
-                        { a: 0, d: 1.1, s: 3 } // Forward eye
+                        { a: 0.2, d: 0.8, s: 4 }, { a: -0.2, d: 0.8, s: 4 }, 
+                        { a: 0.5, d: 0.6, s: 2 }, { a: -0.5, d: 0.6, s: 2 }, 
+                        { a: 0, d: 1.1, s: 3 } 
                     ];
 
                     const isCharging = e.wormAIState === 'charging' && !isUnderground;
@@ -1159,15 +1159,15 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.restore();
 
                 } else {
-                    // --- ARMORED DIAMOND SEGMENTS ---
+                    
                     ctx.save();
                     ctx.globalAlpha *= alphaMult;
 
-                    // Segment Rotation (follow head's general line)
+                    
                     const rot = t * 3 + e.wormSegmentIndex! * 0.4;
                     ctx.rotate(rot);
 
-                    // Diamond Shape
+                    
                     ctx.beginPath();
                     ctx.moveTo(0, -size * 1.2);
                     ctx.lineTo(size * 0.8, 0);
@@ -1181,7 +1181,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.fillStyle = isUnderground ? '#0f172a' : '#1e293b';
                     ctx.fill();
 
-                    // Inner detail (Fragmented core)
+                    
                     if (!isUnderground) {
                         ctx.beginPath();
                         ctx.strokeStyle = headColor;
@@ -1195,7 +1195,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.restore();
                 }
 
-                // Underground Ripple (MUCH DIMMER)
+                
                 if (isUnderground) {
                     ctx.save();
                     ctx.globalAlpha = 0.2;
@@ -1207,23 +1207,23 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                     ctx.restore();
                 }
 
-                // IMPORTANT: Define empty path so the default stroke/fill at the end doesn't draw anything extra
+                
                 ctx.beginPath();
             } else if (e.shape === 'glitcher') {
-                // Prism Glitcher: Pure Glitch Lines (No Shapes)
+                
                 const t = state.gameTime;
 
-                // ONLY 2 glitch lines!
+                
                 const lineCount = 2;
                 for (let i = 0; i < lineCount; i++) {
                     ctx.save();
                     const angle = (i / lineCount) * Math.PI * 2 + t * 5;
                     const length = size * (1.8 + Math.sin(t * 20 + i) * 0.7);
 
-                    // Alternate colors: pink and cyan
+                    
                     ctx.strokeStyle = i === 0 ? '#ff00ff' : '#00ffff';
                     ctx.lineWidth = 3;
-                    ctx.globalAlpha = 0.7 + Math.sin(t * 15 + i) * 0.3; // Pulsing opacity
+                    ctx.globalAlpha = 0.7 + Math.sin(t * 15 + i) * 0.3; 
 
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
@@ -1234,13 +1234,13 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
         };
 
-        // --- DIGGING / SUMMONING ANIMATION ---
+        
         if (e.summonState === 1 && e.frozen && e.frozen > 0) {
-            const progress = 1 - Math.max(0, e.frozen / 1.0); // 1.0s duration
+            const progress = 1 - Math.max(0, e.frozen / 1.0); 
             const shake = (1 - progress) * 8;
             ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
 
-            // Draw Dirt particles (Matching friendly zombie style)
+            
             ctx.fillStyle = '#451a03';
             const particleCount = progress < 0.5 ? 12 : 6;
             for (let i = 0; i < particleCount; i++) {
@@ -1249,7 +1249,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.fillRect(Math.cos(da) * dr, Math.sin(da) * dr, 3, 3);
             }
 
-            // Clip & Rise
+            
             ctx.beginPath();
             ctx.rect(-e.size * 2, -e.size * 2, e.size * 4, e.size * 2 + 10);
             ctx.clip();
@@ -1272,7 +1272,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.translate((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10);
         }
 
-        // Blackhole Vortex Glitch Effect
+        
         const inBlackhole = state.areaEffects.some(effect => {
             if (effect.type !== 'blackhole') return false;
             const dist = Math.hypot(e.x - effect.x, e.y - effect.y);
@@ -1307,7 +1307,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         if (e.boss) {
             const redAlpha = (0.6 + Math.sin(state.gameTime * 10) * 0.4) * (Math.random() > 0.5 ? 1 : 0.8);
             ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 3;
-            // Replacing shadowBlur with Glow Stroke
+            
             ctx.lineWidth = 8; ctx.globalAlpha = redAlpha * 0.3; drawShape(e.size * 1.25, true); ctx.stroke();
             ctx.lineWidth = 3; ctx.globalAlpha = redAlpha; drawShape(e.size * 1.25, true); ctx.stroke();
             ctx.globalAlpha = 1.0;
@@ -1315,7 +1315,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         ctx.strokeStyle = outerColor; ctx.lineWidth = 1.5;
         if (e.boss) {
-            // Replacing shadowBlur with Glow Stroke
+            
             ctx.lineWidth = 6; ctx.strokeStyle = outerColor; ctx.globalAlpha = 0.4; drawShape(e.size * 1.1, true); ctx.stroke();
             ctx.lineWidth = 1.5; ctx.globalAlpha = 1.0;
         } else {
@@ -1345,20 +1345,20 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        if (false) { // ELITE REACTOR CORE REMOVED FOR PERFORMANCE
+        if (false) { 
         } else {
-            // Existing Logic
+            
             ctx.fillStyle = coreColor; ctx.globalAlpha = 1.0;
 
             if (e.soulSuckCoreSize) {
-                // Growth during soul sucking (Yellow core growing)
+                
                 ctx.fillStyle = coreColor;
                 drawShape(e.soulSuckCoreSize, true, false);
             } else if (e.isNecroticZombie) {
-                // Only zombies get the unique shapeshifting core
+                
                 drawShape(e.size * 0.5, true, true);
             } else {
-                // Normal enemies have a core that matches their shape
+                
                 drawShape(e.size * 0.5, true, false);
             }
             ctx.fill();
@@ -1372,33 +1372,33 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
         }
 
-        // ELITE / WORM HP BAR
+        
         if ((e.isElite || e.shape === 'worm') && e.maxHp > 0 && e.hp < e.maxHp) {
             ctx.save();
-            ctx.rotate(-(e.rotationPhase || 0)); // Counter-rotate so bar is horizontal
+            ctx.rotate(-(e.rotationPhase || 0)); 
             let barWidth = e.size * 2.5;
             let barHeight = 4;
             let yOffset = -e.size * 1.8;
 
             if (e.shape === 'worm') {
                 if (e.wormRole === 'head') {
-                    barWidth = e.size * 3.0; // Larger for head
+                    barWidth = e.size * 3.0; 
                 } else {
-                    barWidth = e.size * 1.5; // Smaller for segments
+                    barWidth = e.size * 1.5; 
                     barHeight = 2.5;
                 }
             }
 
-            // BG
+            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(-barWidth / 2, yOffset, barWidth, barHeight);
 
-            // Fill
+            
             const pct = Math.max(0, e.hp / e.maxHp);
-            ctx.fillStyle = e.palette[1] || '#ff0000'; // Use inner color or red
+            ctx.fillStyle = e.palette[1] || '#ff0000'; 
             ctx.fillRect(-barWidth / 2, yOffset, barWidth * pct, barHeight);
 
-            // Border/Glow for visibility
+            
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 0.5;
             ctx.strokeRect(-barWidth / 2, yOffset, barWidth, barHeight);
@@ -1406,21 +1406,21 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // TRIANGLE BERSERK AURA (Over everything for visibility)
+        
         if (e.shape === 'triangle' && e.berserkState) {
             ctx.save();
-            // Rotation removed to allow spin
+            
             const auraSize = e.size * 2.0;
             ctx.shadowBlur = 20;
-            ctx.shadowColor = '#F59E0B'; // Amber/Gold
+            ctx.shadowColor = '#F59E0B'; 
             ctx.strokeStyle = '#F59E0B';
             ctx.lineWidth = 3;
-            ctx.globalAlpha = 0.6 + Math.sin(state.gameTime * 20) * 0.4; // Rapid flicker
+            ctx.globalAlpha = 0.6 + Math.sin(state.gameTime * 20) * 0.4; 
 
             ctx.beginPath();
-            // Jagged Aura
+            
             for (let i = 0; i < 3; i++) {
-                // rough triangle
+                
                 const ang = i * (Math.PI * 2 / 3) - Math.PI / 2;
                 const ax = Math.cos(ang) * auraSize;
                 const ay = Math.sin(ang) * auraSize;
@@ -1431,7 +1431,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // DIAMOND HYPER BEAM (FIRE STATE)
+        
         if (e.shape === 'diamond' && e.beamState === 2 && e.beamX && e.beamY) {
             const isLvl4 = (e.bossTier || 0) >= 4 || (state.gameTime > 1800 && e.bossTier !== 1);
             const centerAngle = e.beamAngle || Math.atan2(e.beamY - e.y, e.beamX - e.x);
@@ -1444,19 +1444,19 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 const dist = 3000;
                 const beamWidth = (isLvl4 ? 30 : 40) + Math.sin(state.gameTime * 50) * 10;
 
-                // 1. Ultimate Glow Base (Broad)
+                
                 ctx.fillStyle = e.palette[1];
                 ctx.globalAlpha = 0.3;
                 ctx.fillRect(0, -beamWidth / 2, dist, beamWidth);
 
-                // 2. Searing Core (Intense)
+                
                 ctx.fillStyle = '#FFFFFF';
                 ctx.shadowColor = e.palette[1];
                 ctx.shadowBlur = isLvl4 ? 30 : 40;
                 ctx.globalAlpha = 0.8;
                 ctx.fillRect(0, -beamWidth / 6, dist, beamWidth / 3);
 
-                // 3. Ultra-Bright Center Line
+                
                 ctx.fillStyle = '#FFFFFF';
                 ctx.globalAlpha = 1.0;
                 ctx.shadowBlur = 10;
@@ -1466,7 +1466,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
             if (isLvl4) {
                 const startOff = (45 * Math.PI) / 180;
-                const endOff = (4.5 * Math.PI) / 180; // Adjusted to 9 deg total gap
+                const endOff = (4.5 * Math.PI) / 180; 
                 const currentOffset = startOff - (startOff - endOff) * t;
                 drawLaser(centerAngle + currentOffset);
                 drawLaser(centerAngle - currentOffset);
@@ -1475,22 +1475,22 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             }
         }
 
-        // --- LEGION VISUALS (Aura & Shield Bar) ---
+        
         if (e.legionId && e.maxLegionShield && e.legionShield) {
             const isLead = e.id === e.legionLeadId;
             if (isLead) {
                 ctx.save();
-                ctx.rotate(-(e.rotationPhase || 0)); // Un-rotate for bar/aura logic if needed or keep it dynamic
+                ctx.rotate(-(e.rotationPhase || 0)); 
 
                 const spacing = e.size * 2.5;
-                const gridWidth = 5 * spacing; // 6 slots = 5 intervals
-                const gridHeight = 4 * spacing; // 5 slots = 4 intervals
+                const gridWidth = 5 * spacing; 
+                const gridHeight = 4 * spacing; 
 
-                // Offset from lead to formation center (slot 0,0)
+                
                 const centerX = -(e.legionSlot?.x || 0) * spacing;
                 const centerY = -(e.legionSlot?.y || 0) * spacing;
 
-                // 1. Legion AURA
+                
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 const auraPulse = 0.5 + Math.sin(state.gameTime * 3) * 0.2;
@@ -1504,7 +1504,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.arc(0, 0, gridWidth * 1.2, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Shield Border Glow
+                
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 4;
                 ctx.globalAlpha = 0.4 * auraPulse;
@@ -1513,24 +1513,24 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
                 ctx.strokeRect(-gridWidth / 2 - padding, -gridHeight / 2 - padding, gridWidth + padding * 2, gridHeight + padding * 2);
                 ctx.restore();
 
-                // 2. Legion SHIELD BAR (Focused above the total formation)
+                
                 const barWidth = gridWidth + padding;
                 const barHeight = 8;
                 const barX = centerX - barWidth / 2;
                 const barY = centerY - gridHeight / 2 - padding - 40;
 
-                // BG
+                
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(barX, barY, barWidth, barHeight);
 
-                // Shield Fill
+                
                 const shieldPct = Math.max(0, e.legionShield / e.maxLegionShield);
                 ctx.fillStyle = '#38bdf8';
                 ctx.shadowColor = '#38bdf8';
                 ctx.shadowBlur = 10;
                 ctx.fillRect(barX, barY, barWidth * shieldPct, barHeight);
 
-                // Text
+                
                 ctx.fillStyle = '#FFFFFF';
                 ctx.font = 'bold 12px Rajdhani, sans-serif';
                 ctx.textAlign = 'center';
@@ -1545,18 +1545,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.restore();
     });
 
-    // Diamond Elite Laser (Warning & Fire)
+    
     enemies.forEach(e => {
         if (!e.isElite || e.shape !== 'diamond' || e.dead) return;
 
-        // Warning Phase
+        
         if (e.eliteState === 1) {
             ctx.save();
             const ang = e.dashState || 0;
             const remaining = (e.timer || 0) - state.gameTime;
-            const isLocked = remaining <= 0.8; // Matches logic in EliteEnemyLogic.ts (0.8s lock)
+            const isLocked = remaining <= 0.8; 
 
-            // Thin guide line
+            
             ctx.strokeStyle = e.palette[1];
             ctx.globalAlpha = isLocked ? 0.8 : 0.3;
             ctx.lineWidth = isLocked ? 3 : 1;
@@ -1565,7 +1565,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.lineTo(e.x + Math.cos(ang) * 3000, e.y + Math.sin(ang) * 3000);
             ctx.stroke();
 
-            // Charge buildup at source
+            
             const totalDuration = 1.4;
             const chargeProgress = Math.min(1, Math.max(0, 1 - (remaining / totalDuration)));
             const chargeSize = chargeProgress * 30;
@@ -1577,7 +1577,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
             if (isLocked) {
                 ctx.fillStyle = '#FFFFFF';
-                // Use state.gameTime for consistency or Date.now for visual flicker
+                
                 ctx.globalAlpha = 0.3 + Math.sin(state.gameTime * 20) * 0.2;
                 ctx.beginPath();
                 ctx.arc(e.x, e.y, chargeSize * 0.6, 0, Math.PI * 2);
@@ -1586,7 +1586,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             ctx.restore();
         }
 
-        // Fire Phase
+        
         if (e.eliteState === 2 && e.lockedTargetX !== undefined && e.lockedTargetY !== undefined) {
             ctx.save();
             const pulse = 0.8 + Math.sin(state.gameTime * 20) * 0.2;

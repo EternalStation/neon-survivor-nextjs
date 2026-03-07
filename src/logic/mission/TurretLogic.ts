@@ -4,26 +4,26 @@ import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
 import { getRandomPositionInArena } from './MapLogic';
 
-const TURRET_RANGE = 800;
+export const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 2;
 const TURRET_DURATION = 30;
 const TURRET_COOLDOWN = 60;
-const REPAIR_SPEED = 100; // 1 second (100%/sec)
+const REPAIR_SPEED = 100;
 
 export function relocateTurretsToArena(state: GameState, arenaId: number) {
-    // User Request: Turrets should always be in the arena the player entered. 
-    // We relocate ALL turrets from all arenas to the current one.
+
+
     const turrets = state.pois.filter(p => p.type === 'turret');
     turrets.forEach(turret => {
-        turret.arenaId = arenaId; // Move to the new arena
+        turret.arenaId = arenaId;
 
-        // Find a new random position in the arena, away from walls (400px Buffer)
+
         const newPos = getRandomPositionInArena(arenaId, 400);
         turret.x = newPos.x;
         turret.y = newPos.y;
 
-        // Reset State to 'Dormant but Visible' for the new arena deployment
-        // But keep the level (uses) and derived cost as requested.
+
+
         turret.active = false;
         turret.cooldown = 0;
         turret.activeDuration = 0;
@@ -31,12 +31,12 @@ export function relocateTurretsToArena(state: GameState, arenaId: number) {
         turret.respawnTimer = 0;
         turret.lastShot = 0;
 
-        // Visual effect for arrival
-        // We can't spawn particles here easily if the player isn't there yet/rendered yet?
-        // But since this happens ON portal transition, the player arrives at the same time.
-        // So spawning particles at new turrets is good feedback.
-        // We need to defer this slightly? No, state.particles is persistent.
-        // spawnParticles(state, turret.x, turret.y, '#F59E0B', 20, 2, 50, 'spark');
+
+
+
+
+
+
     });
 }
 
@@ -44,36 +44,36 @@ export function updateTurrets(state: GameState, step: number) {
     const turrets = state.pois.filter(p => p.type === 'turret' && p.arenaId === state.currentArena);
 
     turrets.forEach(turret => {
-        // 1. Cooldown Management
+
         if (turret.cooldown > 0) {
             turret.cooldown -= step;
             if (turret.cooldown < 0) turret.cooldown = 0;
         }
 
-        // 2. Interaction (Repair/Activate)
+
         if (!turret.active && turret.cooldown <= 0) {
             const dToPlayer = Math.hypot(state.player.x - turret.x, state.player.y - turret.y);
 
-            // Interaction Zone: 120px radius
-            if (dToPlayer < turret.radius) {
-                // Determine Cost
+
+            if (dToPlayer < turret.radius + 100) {
+                turret.activationProgress = 100;
                 const uses = turret.turretUses || 0;
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
-                turret.turretCost = cost; // Store for renderer
+                turret.turretCost = cost;
 
                 if (state.interactPressed) {
                     if (state.player.dust >= cost) {
-                        // Dedust Cost & Activate
+
                         state.player.dust -= cost;
                         turret.active = true;
                         turret.activeDuration = 0;
-                        turret.activationProgress = 100; // Set to 100 for visual consistency
+                        turret.activationProgress = 0;
                         turret.turretUses = uses + 1;
                         playSfx('power-up');
                         spawnFloatingNumber(state, turret.x, turret.y, "TURRET ONLINE", '#F59E0B', true);
                         spawnParticles(state, turret.x, turret.y, '#F59E0B', 20);
                     } else {
-                        // Error sound & text (Throttle to prevent spam)
+
                         if (state.gameTime - (turret.lastErrorTime || 0) > 1.0) {
                             playSfx('power-down');
                             const errorMsg = state.language === 'ru' ? "НЕДОСТАТОЧНО ПЫЛИ" : "NOT ENOUGH DUST";
@@ -87,86 +87,88 @@ export function updateTurrets(state: GameState, step: number) {
             }
         }
 
-        // 3. Active State (Shooting/Healing)
+
         if (turret.active) {
             turret.activeDuration += step;
 
-            // Check Duration Expiry
+
             if (turret.activeDuration >= TURRET_DURATION) {
                 turret.active = false;
                 turret.cooldown = TURRET_COOLDOWN;
-                playSfx('power-down'); // Shutdown sound
+                turret.radius = 150;
+                turret.activationProgress = 0;
+                playSfx('power-down');
                 return;
             }
 
             const variant = turret.turretVariant || 'fire';
             const level = turret.turretUses || 1;
 
-            // Visual Radius Scaling
-            turret.radius = 120 * (1 + (level - 1) * 0.1); // +10% size per level
 
-            // --- HEAL TURRET LOGIC ---
+            turret.radius = TURRET_RANGE * (1 + (level - 1) * 0.1);
+
+
             if (variant === 'heal') {
                 const dToPlayer = Math.hypot(state.player.x - turret.x, state.player.y - turret.y);
 
-                if (dToPlayer <= TURRET_RANGE && !state.player.healingDisabled) {
-                    // Base: 5% HP/sec, +1% per level
+                if (dToPlayer <= turret.radius && !state.player.healingDisabled) {
+
                     const healPercent = 0.05 + (level - 1) * 0.01;
                     const maxHp = calcStat(state.player.hp);
                     const healAmount = (maxHp * healPercent) * step;
 
-                    // Lvl 3+: Overheal -> Shield (1 min duration)
+
                     if (level >= 3 && state.player.curHp >= maxHp) {
                         if (!state.player.shieldChunks) state.player.shieldChunks = [];
                         state.player.shieldChunks.push({
                             amount: healAmount,
-                            expiry: state.gameTime + 60 // 1 minute
+                            expiry: state.gameTime + 60
                         });
                     } else {
                         state.player.curHp = Math.min(maxHp, state.player.curHp + healAmount);
                     }
 
-                    // Visual feedback occasinally
+
                     if (Math.random() < 0.1) {
                         spawnFloatingNumber(state, state.player.x, state.player.y - 40, `+${Math.ceil(healAmount / step)}`, '#4ade80', false);
                     }
                 }
 
-                // Lvl 6+: Spawn Heal Drone (30s)
+
                 if (level >= 6) {
-                    // Logic for drone spawning would ideally go here or use a cooldown to limit it
-                    // For now, let's say it spawns once per activation at the start
+
+
                     if (turret.activeDuration < step * 2 && !turret.droneSpawned) {
-                        turret.droneSpawned = true; // Flag to prevent multi-spawn
+                        turret.droneSpawned = true;
                         if (!state.allies) state.allies = [];
                         state.allies.push({
                             id: Math.random(),
                             type: 'heal_drone',
                             x: turret.x,
                             y: turret.y,
-                            life: 30, // 30s
-                            ownerId: -1, // Player owned
-                            healPower: 0.05 + (level - 1) * 0.01 // Inherit heal power
+                            life: 30,
+                            ownerId: -1,
+                            healPower: 0.05 + (level - 1) * 0.01
                         });
                         spawnFloatingNumber(state, turret.x, turret.y, "DRONE DEPLOYED", '#4ade80', true);
                     }
                 } else {
-                    turret.droneSpawned = false; // Reset for next activation
+                    turret.droneSpawned = false;
                 }
 
                 return;
             }
 
-            // --- SHOOTING TURRETS (Fire / Ice) ---
+
             const now = state.gameTime;
             const lastShot = turret.lastShot || 0;
 
-            // Fire Rate Scaling
-            // Fire: Base 7/s + 1/s per level
-            // Ice: Fixed fire rate or specialized? Requirements say damage scaling. 
-            // Let's stick to a consistent check interval but spawn multiple bullets for Fire.
 
-            // Base Health Estimation for Scaling
+
+
+
+
+
             const minutes = state.gameTime / 60;
             const estBaseHP = 60 * Math.pow(1.2, minutes);
 
@@ -175,8 +177,8 @@ export function updateTurrets(state: GameState, step: number) {
                 const fireDelay = 1 / shotsPerSec;
 
                 if (now - lastShot >= fireDelay) {
-                    // Find Target
-                    const targets = state.spatialGrid.query(turret.x, turret.y, TURRET_RANGE)
+
+                    const targets = state.spatialGrid.query(turret.x, turret.y, turret.radius)
                         .filter(e => !e.dead && !e.isFriendly);
 
                     let bestTarget: Enemy | null = null;
@@ -192,26 +194,26 @@ export function updateTurrets(state: GameState, step: number) {
                         turret.rotation = angle;
                         turret.lastShot = now;
 
-                        // Dmg: 15% Max HP + 15% per level
+
                         const damagePct = 0.15 + (level - 1) * 0.15;
                         const damage = Math.ceil(estBaseHP * damagePct);
 
-                        // Lvl 3+: Burn (5% MaxHP/sec) - Pass as flag/prop to bullet
+
                         const applyBurn = level >= 3;
 
                         spawnTurretBullet(state, turret.x, turret.y, angle, damage, 'fire', false, applyBurn, level);
                         playSfx('turret-fire');
 
-                        // Lvl 6+: Rear Flamethrower (10hz stream)
+
                         if (level >= 6 && (now - (turret.lastShotRear || 0) >= 0.1)) {
                             turret.lastShotRear = now;
-                            // Fire opposite direction
+
                             const rearAngle = angle + Math.PI;
-                            // Cone of 45 degrees
+
                             const cone = 45 * Math.PI / 180;
                             const flameRange = 400;
-                            const flameDmg = Math.ceil(estBaseHP * 0.10 * step); // 10% per sec, applied per frame-ish? 
-                            // Actually better to spawn "flame" projectiles with short life
+                            const flameDmg = Math.ceil(estBaseHP * 0.10 * step);
+
 
                             for (let i = 0; i < 3; i++) {
                                 const spread = (Math.random() - 0.5) * cone;
@@ -221,15 +223,15 @@ export function updateTurrets(state: GameState, step: number) {
                     }
                 }
             } else if (variant === 'ice') {
-                // Ice Logic
-                // Dmg: 10% + 5% per level
-                // Slow: 50% + 5% per level (Cap 100%)
 
-                const fireRate = 4; // Flat rate for ice mist
+
+
+
+                const fireRate = 4;
                 const delay = 1 / fireRate;
 
                 if (now - lastShot >= delay) {
-                    const targets = state.spatialGrid.query(turret.x, turret.y, TURRET_RANGE)
+                    const targets = state.spatialGrid.query(turret.x, turret.y, turret.radius)
                         .filter(e => !e.dead && !e.isFriendly);
 
                     let bestTarget = null;
@@ -244,12 +246,12 @@ export function updateTurrets(state: GameState, step: number) {
                         turret.rotation = angle;
                         turret.lastShot = now;
 
-                        const dmgPct = 0.10 + (level - 1) * 0.05; // 10% base + 5% per level (including 7+)
-                        const damage = Math.ceil(estBaseHP * dmgPct * delay); // Per shot
+                        const dmgPct = 0.10 + (level - 1) * 0.05;
+                        const damage = Math.ceil(estBaseHP * dmgPct * delay);
 
-                        const slowPct = 0.70; // 70% Slow (Enemies move at 30% speed) as requested
+                        const slowPct = 0.70;
 
-                        // Cone check for Lvl 6
+
                         const coneAngle = level >= 6 ? (120 * Math.PI / 180) : (30 * Math.PI / 180);
 
                         for (let i = 0; i < 5; i++) {
@@ -257,12 +259,12 @@ export function updateTurrets(state: GameState, step: number) {
                             spawnTurretBullet(state, turret.x, turret.y, angle + spread, damage, 'ice', false, false, level, slowPct);
                         }
 
-                        // Lvl 3+: Rear Freeze Bomb (Every 2s)
+
                         if (level >= 3 && (now - (turret.lastBomb || 0) > 2.0)) {
-                            // Find rear target? Or just fire rear? "nearest enemies from behind"
-                            // Direction is opposite to current target
+
+
                             const rearAngle = angle + Math.PI;
-                            // Spawn Bomb
+
                             spawnTurretBullet(state, turret.x, turret.y, rearAngle, 0, 'ice_bomb', false, false, level, 1.0);
                             turret.lastBomb = now;
                         }
@@ -291,24 +293,24 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
     }
 
     if (isFlame) {
-        spd = 10 + Math.random() * 5; // Similar to ice mist
-        life = 40 + Math.random() * 20; // Shorter than ice
-        size = 20 + Math.random() * 15; // Larger particles
-        color = '#f97316'; // Orange
+        spd = 10 + Math.random() * 5;
+        life = 40 + Math.random() * 20;
+        size = 20 + Math.random() * 15;
+        color = '#f97316';
     }
 
     if (isBomb) {
         spd = 10;
-        life = 100; // Until impact
+        life = 100;
         size = 20;
         color = '#3b82f6';
     }
 
-    // Lvl 3/6 Visuals
+
     if (level >= 3 && !isVisualOnly) {
         size *= 1.5;
-        // Tint shift?
-        if (!isIce) color = '#fb923c'; // Brighter Orange for higher levels
+
+        if (!isIce) color = '#fb923c';
     }
 
     const bullet: Bullet = {
@@ -319,31 +321,32 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         dmg,
-        pierce: (isIce || isFlame) ? 999 : 1, // Flame/Mist pierce, Standard fire might not? User said "Infinite Pierce" previously? Let's assume yes for power
+        pierce: (isIce || isFlame) ? 999 : 1,
         life,
         isEnemy: false,
         hits: new Set(),
         size,
         color,
         isTrace: !isIce && !isFlame && !isBomb,
-        isMist: (isIce && !isBomb) || isFlame, // Flame also uses mist rendering
+        isMist: (isIce && !isBomb) || isFlame,
         slowPercent: isIce ? slowPercent : undefined,
-        freezeDuration: isBomb ? 3.0 : undefined, // Only bombs freeze, mist slows
+        freezeDuration: isBomb ? 3.0 : undefined,
         spawnTime: Date.now(),
         isVisualOnly,
-        // Custom Properties for Logic
-        burnDamage: applyBurn ? (dmg * 0.05) : 0, // 5% of dmg? OR 5% max HP? Logic says 5% max HP.
-        // Bullet logic needs to know MaxHP of enemy to apply correct burn. 
-        // We pass a flat value or flag. Let's assume we handle "Burn=True" in collision.
-        isTurretFire: !isIce,
-        turretLevel: level
+
+        burnDamage: applyBurn ? (dmg * 0.05) : 0,
+
+
+        isTurretFire: true,
+        turretLevel: level,
+        turretVariant: isIce ? 'ice' : 'fire'
     };
 
-    // Fix for specific types
+
     if (isBomb) {
-        bullet.isBomb = true; // Needs handler in bullet logic
+        bullet.isBomb = true;
         bullet.explodeRadius = 200;
-        bullet.freezeDuration = 3.0; // 3s freeze (same as regular ice)
+        bullet.freezeDuration = 3.0;
     }
 
     state.bullets.push(bullet);
@@ -366,19 +369,19 @@ export function updateAllies(state: GameState, step: number) {
             const p = state.player;
             const dToPlayer = Math.hypot(p.x - ally.x, p.y - ally.y);
 
-            // Follow Player
+
             const targetDist = 80;
             if (dToPlayer > targetDist) {
                 const angle = Math.atan2(p.y - ally.y, p.x - ally.x);
-                const spd = 5; // Move speed
+                const spd = 5;
                 ally.x += Math.cos(angle) * spd;
                 ally.y += Math.sin(angle) * spd;
 
-                // Bobbing effect
+
                 ally.y += Math.sin(state.gameTime * 5) * 0.5;
             }
 
-            // Heal pulse (every 1s)
+
             if (Math.floor(state.gameTime) !== Math.floor(state.gameTime - step)) {
                 if (dToPlayer < 200 && !p.healingDisabled) {
                     const maxHp = calcStat(p.hp);
@@ -389,7 +392,7 @@ export function updateAllies(state: GameState, step: number) {
                 }
             }
 
-            // Visuals
+
             if (state.frameCount % 10 === 0) {
                 spawnParticles(state, ally.x, ally.y, '#4ade80', 1, 3, 20, 'spark');
             }

@@ -40,13 +40,13 @@ interface HUDProps {
     showUpgradeMenu: boolean;
     onSkipTime?: (min: number) => void;
     onTriggerPortal: () => void;
-    onFeedback: () => void;
+    onStatsToggle: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
     gameState, upgradeChoices, onUpgradeSelect, onUpgradeReroll, gameOver, onRestart, bossWarning,
     fps, onInventoryToggle, portalError, portalCost, showSkillDetail, setShowSkillDetail,
-    isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime, onTriggerPortal, onFeedback
+    isTutorialLayerOnly, showStats, showUpgradeMenu, onSkipTime, onTriggerPortal, onStatsToggle
 }) => {
     const { player, activeEvent } = gameState;
     const { language } = useLanguage();
@@ -86,7 +86,7 @@ export const HUD: React.FC<HUDProps> = ({
             {activeEvent && (
                 <div style={{
                     position: 'absolute',
-                    top: 140,
+                    top: 200,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     textAlign: 'center',
@@ -129,7 +129,7 @@ export const HUD: React.FC<HUDProps> = ({
                 portalsUnlocked={gameState.portalsUnlocked}
                 bossKills={gameState.bossKills}
                 onTriggerPortal={onTriggerPortal}
-                onFeedback={onFeedback}
+                onStatsToggle={onStatsToggle}
             />
             <AlertPanel gameState={gameState} bossWarning={bossWarning} />
 
@@ -190,7 +190,7 @@ export const HUD: React.FC<HUDProps> = ({
             {['waiting', 'active', 'arriving', 'arrived'].includes(gameState.extractionStatus) && (
                 <div style={{
                     position: 'absolute',
-                    top: '50px',
+                    top: '80px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     zIndex: 95,

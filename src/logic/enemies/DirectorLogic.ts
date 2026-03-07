@@ -1,53 +1,53 @@
 import type { GameState, GameEventType, GameEvent } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 
-const CHECK_INTERVAL = 120; // Check every 2 minutes (120s)
-const MIN_TIME_FOR_EVENTS = 60; // Start events after 1 minute
+const CHECK_INTERVAL = 120; 
+const MIN_TIME_FOR_EVENTS = 60; 
 
 export function updateDirector(state: GameState, step: number) {
     if (state.gameOver || state.isPaused || state.extractionStatus !== 'none') return;
 
-    // Ensure state tracking exists
+    
     if (!state.directorState) state.directorState = { necroticCycle: -1, legionCycle: -1 };
 
     const minutes = state.gameTime / 60;
     const current5MinCycle = Math.floor(minutes / 5);
 
 
-    // 2. SCHEDULED EVENTS (Necrotic Surge & Legion Formation)
-    // Only start attempting after 10 minutes (Cycle 2+)
+    
+    
     if (minutes >= 10 && !state.activeEvent) {
 
-        // --- Necrotic Surge Logic ---
-        // Once per 5-min cycle
+        
+        
         if (current5MinCycle > state.directorState.necroticCycle) {
-            // Chance to spawn: We want it to happen EVENTUALLY in this 5 minute window.
-            // Window is 300 seconds. 60 FPS. 18000 frames.
-            // 1/9000 chance gives approx 2 events per window on avg? No, we cap it at 1.
-            // Let's use 1/3600 (once per minute prob) to ensure it happens early-ish but random.
+            
+            
+            
+            
             if (Math.random() < 0.0003) {
                 startEvent(state, 'necrotic_surge');
                 state.directorState.necroticCycle = current5MinCycle;
             }
         }
 
-        // --- Legion Formation Logic ---
-        // Same rules: Once per 5-min cycle, after 10 mins.
-        // We check if we are NOT currently running an event (already checked above)
-        // Note: If Necrotic Surge starts, this won't run until it ends. That's fine.
+        
+        
+        
+        
         if (!state.activeEvent && current5MinCycle > state.directorState.legionCycle) {
             if (Math.random() < 0.0003) {
                 startEvent(state, 'legion_formation');
                 state.directorState.legionCycle = current5MinCycle;
-                state.directorState.legionSpawned = false; // Reset for new event
+                state.directorState.legionSpawned = false; 
             }
         }
     }
 
-    // 3. Update existing event
+    
     if (state.activeEvent) {
         if (state.activeEvent.type === 'legion_formation' && state.directorState?.legionSpawned) {
-            // Check if any legion members remain
+            
             const anyLegionAlive = state.enemies.some(e => e.legionId === state.directorState?.activeLegionId && !e.dead);
             if (!anyLegionAlive) {
                 console.log(`Director: Legion destroyed, ending event`);
@@ -61,13 +61,13 @@ export function updateDirector(state: GameState, step: number) {
 }
 
 function startEvent(state: GameState, type: GameEventType) {
-    let duration = 60; // Default 1 minute
+    let duration = 60; 
 
-    // Necrotic Surge is shorter, Legion Formation lasts until death
+    
     if (type === 'necrotic_surge') {
-        duration = 30; // 30 seconds
+        duration = 30; 
     } else if (type === 'legion_formation') {
-        duration = 600; // 10 minutes fallback
+        duration = 600; 
     }
 
     const event: GameEvent = {
@@ -80,13 +80,13 @@ function startEvent(state: GameState, type: GameEventType) {
 
     state.activeEvent = event;
 
-    // Event Specific Initialization
+    
     switch (type) {
         case 'necrotic_surge':
             playSfx('ghost-horde');
             break;
         case 'legion_formation':
-            playSfx('warning'); // Maybe a horn?
+            playSfx('warning'); 
             break;
     }
 
@@ -96,12 +96,12 @@ function startEvent(state: GameState, type: GameEventType) {
 function updateActiveEvent(state: GameState, _step: number) {
     if (!state.activeEvent) return;
 
-    // Process pending zombie spawns
+    
     if (state.activeEvent.pendingZombieSpawns && state.activeEvent.pendingZombieSpawns.length > 0) {
         const spawnsToProcess = state.activeEvent.pendingZombieSpawns.filter(z => state.gameTime >= z.spawnAt);
 
         spawnsToProcess.forEach(zombieData => {
-            // Spawn the hostile zombie NOW
+            
             const eventZombie: any = {
                 id: Math.random(),
                 type: zombieData.shape,
@@ -109,7 +109,7 @@ function updateActiveEvent(state: GameState, _step: number) {
                 x: zombieData.x,
                 y: zombieData.y,
                 size: zombieData.size,
-                hp: Math.floor(zombieData.maxHp * 0.5), // 50% HP
+                hp: Math.floor(zombieData.maxHp * 0.5), 
                 maxHp: Math.floor(zombieData.maxHp * 0.5),
                 spd: zombieData.spd,
                 boss: false,
@@ -118,35 +118,35 @@ function updateActiveEvent(state: GameState, _step: number) {
                 lastAttack: 0,
                 dead: false,
                 shellStage: 0,
-                palette: ['#93c5fd', '#3b82f6', '#1e3a8a'], // Bright Blue Ghost First
+                palette: ['#93c5fd', '#3b82f6', '#1e3a8a'], 
                 eraPalette: ['#93c5fd', '#3b82f6', '#1e3a8a'],
                 fluxState: 0,
                 pulsePhase: 0,
                 rotationPhase: 0,
                 knockback: { x: 0, y: 0 },
                 isElite: false,
-                xpRewardMult: 0.5, // 50% XP
+                xpRewardMult: 0.5, 
                 spawnedAt: state.gameTime,
-                frozen: 1.0, // Digging for 1 second
-                summonState: 1, // Trigger digging animation in renderer
-                isGhost: true, // Mark as Ghost
-                isNecroticZombie: true // Keep for legacy particle compatibility if needed
+                frozen: 1.0, 
+                summonState: 1, 
+                isGhost: true, 
+                isNecroticZombie: true 
             };
             state.enemies.push(eventZombie);
 
-            // Visual feedback - Void particles
+            
             import('../effects/ParticleLogic').then(({ spawnParticles }) => {
                 spawnParticles(state, zombieData.x, zombieData.y, '#3b82f6', 20);
             });
         });
 
-        // Remove processed spawns
+        
         state.activeEvent.pendingZombieSpawns = state.activeEvent.pendingZombieSpawns.filter(
             z => state.gameTime < z.spawnAt
         );
     }
 
-    // Handle end of event
+    
     if (state.gameTime >= state.activeEvent.endTime) {
         console.log(`Director: Event ${state.activeEvent.type} ended`);
         state.activeEvent = null;
@@ -154,7 +154,7 @@ function updateActiveEvent(state: GameState, _step: number) {
     }
 }
 
-// Helper to check if a specific event is active
+
 export function isEventActive(state: GameState, type: GameEventType): boolean {
     return state.activeEvent?.type === type;
 }

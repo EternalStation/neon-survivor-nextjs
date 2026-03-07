@@ -1,6 +1,6 @@
 import { GameState, TutorialStep } from './types';
 
-// Configuration for Hints (Expanded for Matrix Tour)
+
 
 
 
@@ -11,97 +11,97 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
 
     tutorial.stepTimer += dt;
 
-    // --- State Trackers ---
+    
 
-    // Movement Tracker (Logic should be called from PlayerLogic ideally, but we can infer from position change for now or just trust the keys passed to useGameLogic... wait, useGameLogic has keys!)
-    // We'll update keys in a separate function if needed, or just check player movement.
-    // Actually, let's assume `updateTutorial` receives keys or we just check if player moves significantly.
-    // Better: let's track distinct WASD keys pressed. 
-    // Since we don't have direct access to keys here easily without changing signature, let's fallback to checking if player moves.
-    // PROPOSAL: The user wants "clicks at least two keybind like W and S". 
-    // We will need to hook into `updatePlayer` or `useGameLogic` to feed key presses.
-    // For now, let's assume we can check if player.x/y changes in a specific way? No.
-    // Let's rely on `tutorial.pressedKeys` which we will update from `useGameLogic`.
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    // Metorite Collection
+    
     if (gameState.meteoritesPickedUp > 0 && !tutorial.hasCollectedMeteorite) {
         tutorial.hasCollectedMeteorite = true;
     }
 
-    // Kill Count
+    
     if (gameState.killCount > 0 && !tutorial.hasKilled) {
         tutorial.hasKilled = true;
     }
 
-    // Opened Menu
+    
     if (gameState.showModuleMenu && !tutorial.hasOpenedModules) {
         tutorial.hasOpenedModules = true;
     }
 
-    // Opened Stats
+    
     if (gameState.showStats && !tutorial.hasOpenedStats) {
         tutorial.hasOpenedStats = true;
     }
 
 
-    // --- Step Transition Logic ---
+    
     switch (tutorial.currentStep) {
         case TutorialStep.MOVEMENT:
-            // Priority: If player opens upgrade menu before moving, jump to level up hint
+            
             if (gameState.isUpgradeMenuOpen || gameState.pendingLevelUps > 0) {
                 advanceStep(gameState, TutorialStep.LEVEL_UP_MENU);
                 break;
             }
-            // Condition: 2 distinct keys pressed OR joystick movement
+            
             if (tutorial.pressedKeys.size >= 2 || tutorial.hasMoved) {
-                advanceStep(gameState, TutorialStep.COMBAT); // COMBAT is hidden/internal
+                advanceStep(gameState, TutorialStep.COMBAT); 
             }
             break;
 
 
         case TutorialStep.COMBAT:
-            // Wait for first kill
+            
             if (tutorial.hasKilled) {
                 advanceStep(gameState, TutorialStep.KILL_ENEMY);
             }
             break;
 
         case TutorialStep.KILL_ENEMY:
-            // Show "FILL XP BAR..."
-            // User says: "When player kills enemy and meteorite drops..."
-            // So we wait for a meteorite drop? Or just for first kill?
-            // "When he kills his first enemy no you can show 'FILL XP BAR...'" 
-            // AND "When player kills enemy and meteorite drops from it it will appear a text..."
+            
+            
+            
+            
+            
 
-            // If we have a meteor dropped (we can check gameState.meteorites.length > 0 or verify one dropped near player)
-            // Let's check if player has SEEN a meteorite (inventory check?). 
-            // "Pickup first meteorite" -> show Module Hint.
+            
+            
+            
 
-            // Let's transition to COLLECT_METEORITE if a meteorite exists in the world.
-            // Ensure they see this message for at least a few seconds before switching to meteorite hint
-            // "Eliminate threats... should disappear as soon as player will get the upgrade menu"
+            
+            
+            
             if (gameState.pendingLevelUps > 0 || (gameState.upgradingHexIndex !== null)) {
                 advanceStep(gameState, TutorialStep.LEVEL_UP_MENU);
             }
             break;
 
         case TutorialStep.LEVEL_UP_MENU:
-            // "Show A/D or arrows... Space to select" - handled by hint mapped to this step
+            
             if (gameState.pendingLevelUps === 0 && !gameState.showLegendarySelection && !gameState.isUpgradeMenuOpen) {
                 advanceStep(gameState, TutorialStep.UPGRADE_SELECTED_CHECK_STATS);
             }
             break;
 
         case TutorialStep.UPGRADE_SELECTED_CHECK_STATS:
-            // "Analyze performance [C]."
-            // Advance when user has opened and then closed the stats menu
+            
+            
             if (tutorial.hasOpenedStats && !gameState.showStats) {
                 advanceStep(gameState, TutorialStep.COLLECT_METEORITE);
             }
             break;
 
         case TutorialStep.COLLECT_METEORITE:
-            // "Wait until meteorite will drop from enemy"
+            
             if (tutorial.hasCollectedMeteorite) {
                 advanceStep(gameState, TutorialStep.OPEN_MODULE_MENU);
             }
@@ -110,7 +110,7 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
         case TutorialStep.OPEN_MODULE_MENU:
             if (tutorial.hasOpenedModules) {
                 advanceStep(gameState, TutorialStep.MATRIX_INVENTORY);
-                tutorial.stepTimer = 0; // Reset for sequence
+                tutorial.stepTimer = 0; 
             }
             break;
 
@@ -125,7 +125,7 @@ export const updateTutorial = (gameState: GameState, dt: number) => {
         case TutorialStep.MATRIX_CLASS_DETAIL:
         case TutorialStep.MATRIX_NON_STATIC_METRICS:
         case TutorialStep.MATRIX_FILTERS:
-            // No auto-advance. Handled by TutorialOverlay buttons.
+            
             break;
     }
 };

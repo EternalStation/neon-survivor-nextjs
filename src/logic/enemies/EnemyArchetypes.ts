@@ -3,9 +3,9 @@ export type EnemyArchetype = 'circle' | 'triangle' | 'square' | 'diamond' | 'pen
 export interface ArchetypeConfig {
     shape: EnemyArchetype;
     name: string;
-    speedMult: number;      // Speed multiplier vs baseline
-    hpMult: number;         // HP multiplier vs baseline
-    spawnRateMult: number;  // Spawn rate multiplier
+    speedMult: number;      
+    hpMult: number;         
+    spawnRateMult: number;  
     specialAbility?: string;
 }
 

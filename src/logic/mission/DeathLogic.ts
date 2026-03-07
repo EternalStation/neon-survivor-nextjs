@@ -4,7 +4,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
 import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from './LootLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
-import { spawnFloatingNumber } from '../effects/ParticleLogic';
+import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
 import { getUiTranslation } from '../../lib/uiTranslations';
@@ -12,6 +12,11 @@ import { getStoredLanguage } from '../../lib/LanguageContext';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
+    if (e.isFriendly || e.isZombie) {
+        e.dead = true;
+        e.hp = 0;
+        return;
+    }
 
     if (e.shape === 'worm') {
         handleVoidBurrowerDeath(state, e, onEvent);
@@ -34,33 +39,45 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     if (e.temporalMonolithExplosive && e.hp <= 0) {
         const mult = getHexMultiplier(state, 'TemporalMonolith');
         const aoeDmg = e.maxHp * 0.25 * mult;
-        const radius = 200 * mult;
+
+
+        const baseRadius = e.boss ? 400 : 200;
+        const radius = (baseRadius + e.size * 1.5) * mult;
 
         state.player.temporalMonolithSouls = (state.player.temporalMonolithSouls || 0) + 1;
 
         state.enemies.forEach(other => {
-            if (!other.dead && other.id !== e.id) {
+            if (!other.dead && other.id !== e.id && !other.isFriendly) {
                 const dist = Math.hypot(other.x - e.x, other.y - e.y);
                 if (dist <= radius) {
                     other.hp -= aoeDmg;
-                    spawnFloatingNumber(state, other.x, other.y, Math.round(aoeDmg).toString(), '#38bdf8', true);
-                    if (other.hp <= 0) {
+                    if (Math.random() < 0.3 || e.boss) {
+                        spawnFloatingNumber(state, other.x, other.y, Math.round(aoeDmg).toString(), '#38bdf8', true);
+                    }
+                    if (other.hp <= 0 && !other.dead) {
                         state.player.temporalMonolithSouls = (state.player.temporalMonolithSouls || 0) + 1;
                     }
                 }
             }
         });
+
+
         spawnFloatingNumber(state, e.x, e.y, 'TEMPORAL SHATTER', '#38bdf8', true);
+        playSfx('shatter');
+
         state.areaEffects.push({
             id: Math.random(),
             type: 'temporal_burst',
             x: e.x,
             y: e.y,
             radius: radius,
-            duration: 0.2,
+            duration: 0.35,
             creationTime: state.gameTime,
             level: 1
         });
+
+
+        spawnParticles(state, e.x, e.y, '#38bdf8', 20, 5, 40, 'shard');
     }
 
     e.dead = true; e.hp = 0;
@@ -96,18 +113,41 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
 
     const harvestLvl = getHexLevel(state, 'GravitationalHarvest');
-    if (harvestLvl > 0) {
+    const gravityArcLvl = getHexLevel(state, 'GravityAnchor');
 
+    if (harvestLvl > 0 || gravityArcLvl > 0) {
         const epi = state.areaEffects.find(ae => ae.type === 'epicenter' && Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius);
         if (epi) {
-            const extension = 0.1;
-            epi.duration += extension;
+            if (harvestLvl > 0) {
+                const extension = 0.1;
+                epi.duration += extension;
 
-            const skill = state.player.activeSkills.find(s => s.type === 'GravitationalHarvest');
-            if (skill && skill.duration !== undefined) {
-                skill.duration += extension;
+                const skill = state.player.activeSkills.find(s => s.type === 'GravitationalHarvest');
+                if (skill && skill.duration !== undefined) {
+                    skill.duration += extension;
+                }
+            }
+            if (epi.isGravityAnchor || gravityArcLvl > 0) {
+                e.isExecuted = true;
             }
         }
+    }
+
+    if (e.isExecuted && (gravityArcLvl > 0 || (state.areaEffects.find(ae => ae.type === 'epicenter' && ae.isGravityAnchor && Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius)))) {
+        const meteoritesMult = getHexMultiplier(state, 'GravityAnchor');
+        const explodeDmg = e.maxHp * 0.10 * meteoritesMult;
+        spawnParticles(state, e.x, e.y, '#ef4444', 20, 3, 50, 'shockwave');
+
+        state.enemies.forEach(other => {
+            if (other.dead || other.id === e.id || other.isFriendly) return;
+            const dist = Math.hypot(other.x - e.x, other.y - e.y);
+            if (dist <= 200) {
+                other.hp -= explodeDmg;
+                state.player.damageDealt += explodeDmg;
+                spawnFloatingNumber(state, other.x, other.y, Math.round(explodeDmg).toString(), '#ef4444', false);
+                if (other.hp <= 0 && !other.dead) handleEnemyDeath(state, other, onEvent);
+            }
+        });
     }
 
 
@@ -368,13 +408,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
 
-    let comLifeLevel = 0;
-    if (state.moduleSockets && state.moduleSockets.hexagons) {
-        const hex = state.moduleSockets.hexagons.find(h => h && (h.type === 'ComLife'));
-        if (hex) comLifeLevel = hex.level;
-    } else {
-        comLifeLevel = getHexLevel(state, 'ComLife');
-    }
+    const comLifeLevel = getHexLevel(state, 'ComLife');
 
     if (!e.isZombie && !e.isGhost && !e.boss && !e.isRare) {
 
@@ -405,6 +439,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                     pulsePhase: 0,
                     rotationPhase: 0,
                     isZombie: true,
+                    isFriendly: true,
                     zombieState: 'dead',
                     vx: 0,
                     vy: 0,

@@ -26,7 +26,8 @@ Source of truth: source code. Comments are not used in the code.
 | File | Description |
 |-----------|---------|
 | [view/class-selection.md](viewlass-selection.md) | Class selection screen before the start of the session: cards, badges, navigation. |
-| [view/stats-menu.md](viewtats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
+| [view/stats-menu.md](view/stats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
+| [DamageBreakdownUI.md](DamageBreakdownUI.md) | Damage Attribution tab: source breakdown, visual progress bars, real-time counters. |
 
 ---
 
@@ -60,6 +61,7 @@ Source of truth: source code. Comments are not used in the code.
 |-----------|---------|
 | [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | All debug codes: resources, bosses, improvements, time, turrets, events. |
 | [mechanics/LeaderboardRounding.md](mechanics/LeaderboardRounding.md) | Leaderboard Rounding: Consistent integer and 2-decimal rounding for submission data. |
+| [KeybindRefinement.md](KeybindRefinement.md) | Keybind Refinement: Separated Class Ability (Q) and numerical Skill bar (1-6). |
 
 ---
 
@@ -80,6 +82,7 @@ Source of truth: source code. Comments are not used in the code.
 |-----------|---------|
 | [mechanics/legendary-upgrades/comlife.md](mechanicsegendary-upgrades/comlife.md) | CRIMSON FEAST - Lifesteal 3% (L1), Overheal shield (L2), HP% damage (L3), Zombie (L4). |
 | [mechanics/legendary-upgrades/comcrit.md](mechanicsegendary-upgrades/comcrit.md) | SHATTERED FATE - crit 15%/×2 (L1), Execute (L2), Death Mark (L3), Mega-Crit 25%/×3.5 (L4). |
+| [ShatteredFateRework.md](ShatteredFateRework.md) | Detailed documentation on the hit-based execution and Death Mark rework for Shattered Fate. |
 | [mechanics/legendary-upgrades/comwave.md](mechanicsegendary-upgrades/comwave.md) | TERROR PULSE - active AoE shockwave 200/350% damage, Fear (L2), cooldown 30→20s. |
 | [mechanics/legendary-upgrades/radiationcore.md](mechanicsegendary-upgrades/radiationcore.md) | RADIATION CORE - constant aura 500px (5–10% MaxHP/sec), healing (L2), missing HP scaling (L3), global decay (L4). |
 

@@ -237,7 +237,7 @@ export default function Home() {
                       showUpgradeMenu={!!hook.upgradeChoices}
                       onSkipTime={hook.skipTime}
                       onTriggerPortal={hook.triggerPortal}
-                      onFeedback={() => hook.setShowFeedbackModal(true)}
+                      onStatsToggle={() => hook.setShowStats(true)}
                     />
 
                     {isMobile && !hook.gameOver && (
@@ -356,7 +356,7 @@ export default function Home() {
                   showUpgradeMenu={!!hook.upgradeChoices}
                   onSkipTime={hook.skipTime}
                   onTriggerPortal={hook.triggerPortal}
-                  onFeedback={() => { }} // No-op for tutorial layer
+                  onStatsToggle={() => { }} // No-op for tutorial layer
                 />
               </div>
             </div>

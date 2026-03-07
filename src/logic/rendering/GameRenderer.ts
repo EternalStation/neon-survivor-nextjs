@@ -11,8 +11,8 @@ import { renderAreaEffects, renderEpicenterShield, renderParticles, renderFloati
 import { renderSandbox } from './renderers/SandboxRenderer';
 
 export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, scaleFactor: number = 1, language: Language = 'en') {
-    // Universal damage detection for red danger vignette
-    // Cooldown of 1.5s between flash triggers to prevent epileptic blinking
+    
+    
     const DAMAGE_FLASH_CD = 1.5;
     if ((window as any)._lastRenderedPlayerHp !== undefined) {
         if (state.player.curHp < (window as any)._lastRenderedPlayerHp) {
@@ -27,10 +27,10 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
     const { width, height } = ctx.canvas;
     const { camera } = state;
 
-    // Pixel Art Rendering
+    
     ctx.imageSmoothingEnabled = false;
 
-    // Global Reset: Ensure no leaked state from previous frame persists
+    
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.globalAlpha = 1.0;
@@ -40,23 +40,23 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
     const logicalWidth = (width / dpr) / scaleFactor;
     const logicalHeight = (height / dpr) / scaleFactor;
 
-    // Clear (Full buffer size, PHYSICAL pixels)
+    
     ctx.fillStyle = '#020617';
     ctx.fillRect(0, 0, width, height);
 
     try {
         ctx.save();
 
-        // Zoom / Camera Logic
+        
         ctx.translate(width / 2, height / 2);
         const zoom = scaleFactor * 0.58 * dpr;
         ctx.scale(zoom, zoom);
         ctx.translate(-camera.x, -camera.y);
 
-        // Screen Shake Logic - DISABLED
-        // Screen shake removed per user request
+        
+        
 
-        // Global Darken for Boss
+        
         if (state.bossPresence > 0.01) {
             ctx.fillStyle = `rgba(0, 0, 0, ${state.bossPresence * 0.7})`;
             const vW = logicalWidth / 0.58;
@@ -64,81 +64,81 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
             ctx.fillRect(camera.x - vW, camera.y - vH, vW * 2, vH * 2);
         }
 
-        // --- LAYERED RENDERING ---
+        
 
-        // 1. Background
+        
         renderBackground(ctx, state, logicalWidth, logicalHeight);
 
-        // 2. Map Boundaries
+        
         renderMapBoundaries(ctx, state);
 
 
-        // 2.2 Interactive POIs (Towers, Beacons)
+        
         renderPOIs(ctx, state, language);
 
 
-        // 2.5 Arena Fog (Vignette for Arena) - Draws ON TOP of background but BELOW entities if we want entities to pop? 
-        // User wants "atmosphere" so fog should probably be below entities to simulate ground fog?
-        // But "depth of field off screen" implies hiding things.
-        // Let's draw it HERE so the grid is hidden, but entities are visible on top of the black void?
-        // If entities walk into the void, they should be hidden?
-        // If so, draw it LATER.
-        // Let's draw it AFTER entities (Layer 8.5) so they fade out when leaving?
-        // No, let's draw it HERE to hide the "grid" outside.
+        
+        
+        
+        
+        
+        
+        
+        
         renderArenaVignette(ctx, state);
 
-        // 3. Ground Effects (Area Effects)
+        
         renderAreaEffects(ctx, state);
         renderVoidMarker(ctx, state);
         renderSandbox(ctx, state);
 
-        // 4. Portals
+        
         renderPortals(ctx, state);
 
-        // 5. Pickups / Loot
+        
         renderMeteorites(ctx, state, meteoriteImages);
 
-        // 6. Projectiles
+        
         renderProjectiles(ctx, state);
 
-        // 7. Entities (Enemies, Drones)
+        
         renderDrones(ctx, state);
         renderAllies(ctx, state);
 
-        // 7.5. Void particles (behind enemies for layering)
+        
         renderParticles(ctx, state, 'void');
 
         renderEnemies(ctx, state, meteoriteImages);
 
-        // 8. Player (Drawn ON TOP of enemies to prevent clipping/coloring issues)
-        // Render all players
+        
+        
         if (state.players) {
             Object.values(state.players).forEach(p => {
                 renderPlayer(ctx, p, state, meteoriteImages);
             });
         } else {
-            // Fallback for single player if players map is missing
+            
             renderPlayer(ctx, state.player, state, meteoriteImages);
         }
 
-        // Render shield for local player (or all if we had shield data)
-        // renderPlayer handles shield rendering now if it's on the player object
+        
+        
         renderEpicenterShield(ctx, state);
 
-        // 9. Particles & Floating Numbers (in front of enemies)
+        
         renderParticles(ctx, state, 'non-void');
         renderFloatingNumbers(ctx, state);
 
-        // 10. Extraction Ship
+        
         renderExtractionShip(ctx, state, meteoriteImages);
 
-        ctx.restore(); // Restores zoom/camera for screen-space/ui elements
+        ctx.restore(); 
 
-        // --- OVERLAYS (Screen Space) ---
+        
         renderBossIndicator(ctx, state, width, height, camera, scaleFactor);
         renderScreenEffects(ctx, state, width, height);
 
-        // Extraction Blackout
+        
         if (state.extractionStatus === 'departing' || state.extractionStatus === 'complete') {
             const opacity = state.extractionStatus === 'complete' ? 1.0 : (1 - state.extractionTimer / 5.0);
             ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
@@ -152,33 +152,33 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
                 ctx.shadowBlur = 40;
                 ctx.fillText("MISSION COMPLETED", width / 2, height / 2);
 
-                // Add "Back to Menu" hint (actual button in React UI later)
+                
             }
         }
 
-        // Atmospheric Vignette (Tunnel Vision)
+        
         renderVignette(ctx, width, height);
 
-        // --- NEMESIS PULSE ANIMATION (Restored) ---
-        // Triggers at 30m, 45m, 60m via PulseSystem intervals
-        if (state.gameTime > 1800) { // Starts at 30 minutes
-            const intensity = getPulseIntensity(state.gameTime); // Oscillates 0.4 to 1.2 based on time
-            // Map intensity to opacity: 0.4 -> 0.0, 1.2 -> 0.15 (Max opacity)
-            // We want it to be subtle but noticeable
+        
+        
+        if (state.gameTime > 1800) { 
+            const intensity = getPulseIntensity(state.gameTime); 
+            
+            
             const alpha = Math.max(0, (intensity - 0.4) * 0.2);
 
             if (alpha > 0) {
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                // Red Pulse Vignette
+                
                 const cx = width / 2;
                 const cy = height / 2;
                 const radius = Math.max(width, height) * 0.7;
 
                 const pulseGrad = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius);
                 pulseGrad.addColorStop(0, 'rgba(220, 38, 38, 0)');
-                pulseGrad.addColorStop(1, `rgba(220, 38, 38, ${alpha})`); // Red-600
+                pulseGrad.addColorStop(1, `rgba(220, 38, 38, ${alpha})`); 
 
                 ctx.fillStyle = pulseGrad;
                 ctx.fillRect(0, 0, width, height);
@@ -187,7 +187,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         }
 
     } catch (e) {
-        // Prevent console spam causing freeze
+        
         if ((window as any)._rendererErrorCount === undefined) {
             (window as any)._rendererErrorCount = 0;
         }
@@ -197,6 +197,6 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, mete
         }
     }
 
-    // Final restore in case of nested saves
+    
     try { ctx.restore(); } catch (e) { }
 }

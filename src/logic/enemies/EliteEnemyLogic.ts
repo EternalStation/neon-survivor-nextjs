@@ -3,13 +3,13 @@ import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
-// Actually, check if it is used anywhere else.
-// updateEliteCircle: No.
-// updateEliteTriangle: No.
-// updateEliteSquare: No.
-// updateEliteDiamond: No (removed).
-// updateElitePentagon: No.
-// Safe to remove.
+
+
+
+
+
+
+
 
 import { spawnMinion } from './UniqueEnemyLogic';
 
@@ -26,7 +26,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
     } else if (e.eliteState === 1) {
         vx = 0; vy = 0; e.rotationPhase = (e.rotationPhase || 0) + 0.2;
         if (state.gameTime > (e.timer || 0)) {
-            // Find nearest player for the charge lock
+            
             const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
             let nearestP: any = players[0];
             let minD = Infinity;
@@ -44,7 +44,7 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
             const rDx = e.lockedTargetX - e.x, rDy = e.lockedTargetY - e.y, rDist = Math.hypot(rDx, rDy);
             if (rDist > 10) {
                 const a = Math.atan2(rDy, rDx); vx = Math.cos(a) * 10; vy = Math.sin(a) * 10;
-                // Use Era Color (Palette[0]) instead of fixed Red
+                
                 const pColor = e.palette ? e.palette[0] : '#EF4444';
                 spawnParticles(state, e.x, e.y, pColor, 1);
             } else {
@@ -79,7 +79,7 @@ export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx
 
 export function updateEliteSquare(e: Enemy, state: GameState, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number) {
     const aS = Math.atan2(dy, dx);
-    // Speed: 0.85x Base
+    
     const vx = Math.cos(aS) * (currentSpd * 0.85) + pushX;
     const vy = Math.sin(aS) * (currentSpd * 0.85) + pushY;
     if (Math.random() < 0.1) spawnParticles(state, e.x + (Math.random() - 0.5) * e.size * 2, e.y + (Math.random() - 0.5) * e.size * 2, '#94A3B8', 1);
@@ -90,10 +90,10 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
     const angleToPlayerD = Math.atan2(dy, dx);
     let vx = 0, vy = 0;
 
-    // ELITE SKILL: HYPER BEAM
+    
     if (!e.eliteState) e.eliteState = 0;
 
-    // Keep distance logic (Variable Kiting 600-800)
+    
     if (!e.distGoal) {
         e.distGoal = 600 + Math.random() * 200;
     }
@@ -110,12 +110,12 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
     const distFactor = (dist - distGoal) / 100;
 
     if (e.eliteState === 0) {
-        // Kiting Phase
+        
         if (veryCloseToWall && (!e.lastDodge || state.gameTime - (e.lastDodge || 0) > 3.0)) {
             const angleToCenter = Math.atan2(nearestCenter.y - e.y, nearestCenter.x - e.x);
             const angleAwayFromPlayer = angleToPlayerD + Math.PI;
             e.dashState = (angleToCenter + angleAwayFromPlayer) / 2;
-            e.lockedTargetX = 0; // Escape flag
+            e.lockedTargetX = 0; 
             e.lockedTargetY = state.gameTime + 2.0;
             e.lastDodge = state.gameTime;
         }
@@ -135,43 +135,43 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
             vy = Math.sin(angleToPlayerD) * distFactor * currentSpd + pushY;
         }
 
-        // Charge Transition (Every 5 seconds)
+        
         const currentCD = (e as any).nextAttackCD || 5.0;
         if (state.gameTime - (e.lastAttack || 0) > currentCD) {
             e.eliteState = 1;
-            e.timer = state.gameTime + 1.4; // 1.4s Total Charge (0.8s Track + 0.6s Lock)
-            e.dashState = angleToPlayerD; // Initial angle
+            e.timer = state.gameTime + 1.4; 
+            e.dashState = angleToPlayerD; 
         }
     } else if (e.eliteState === 1) {
-        // Charging Phase
+        
         vx = 0; vy = 0;
 
-        // Sub-Phase 1: Tracking (First 0.6s)
-        // Sub-Phase 2: Locked (Last 0.8s)
+        
+        
         const remaining = (e.timer || 0) - state.gameTime;
         if (remaining > 0.8) {
-            // Tracking
+            
             e.dashState = angleToPlayerD;
         } else {
-            // Locked - DashState remains fixed
+            
         }
 
         if (state.gameTime > (e.timer || 0)) {
             e.eliteState = 2;
-            e.timer = state.gameTime + 0.8; // Firing animation
-            e.hasHitThisBurst = false; // Reset burst hit flag
+            e.timer = state.gameTime + 0.8; 
+            e.hasHitThisBurst = false; 
             playSfx('laser');
         }
     } else if (e.eliteState === 2) {
-        // Firing
+        
         vx = 0; vy = 0;
-        // Visuals can check state 2
+        
         e.lockedTargetX = e.x + Math.cos(e.dashState || 0) * 3000;
         e.lockedTargetY = e.y + Math.sin(e.dashState || 0) * 3000;
 
         const laserAngle = e.dashState || 0;
 
-        // Massive 3000 Range
+        
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         players.forEach(p => {
             const px = p.x - e.x;
@@ -184,14 +184,14 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
                 e.hasHitThisBurst = true;
                 const rawDmg = e.maxHp * 0.04;
 
-                // LASER REDUCTION LOGIC
-                // User: Lasers are reduced by armor, but NOT by projectile reduction
-                const armorObject = p.arm; // This is the PlayerStats object
+                
+                
+                const armorObject = p.arm; 
                 const armorValue = calcStat(armorObject);
                 const reduction = getDefenseReduction(armorValue);
                 const finalActualDmg = rawDmg * (1 - reduction);
 
-                // Track Stats
+                
                 p.damageBlockedByArmor += (rawDmg - finalActualDmg);
                 p.damageBlocked += (rawDmg - finalActualDmg);
 
@@ -227,7 +227,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
                     const beamColor = e.palette ? e.palette[0] : '#f87171';
                     spawnFloatingNumber(state, p.x, p.y, Math.ceil(finalActualDmg).toString(), beamColor, false);
 
-                    // Kinetic Battery: Trigger Zap on Laser Hit
+                    
                     const triggerZap = (state as any).triggerKineticBatteryZap || (window as any).triggerKineticBatteryZap;
                     if (triggerZap) triggerZap(state, p, 1);
                 }
@@ -240,7 +240,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
             }
         });
 
-        // --- ZOMBIE INSTA-KILL BY LASER ---
+        
         state.enemies.forEach(z => {
             if (z.isZombie && z.zombieState === 'active' && !z.dead) {
                 const zdx = z.x - e.x, zdy = z.y - e.y;
@@ -267,28 +267,28 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 }
 
 export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number, _onEvent?: (event: string, data?: any) => void) {
-    // Movement handled by Normal/Shared logic (caller should handle calling Normal Pentagon Update if this returns null or if it's integrated)
-    // Actually, Elite Pentagon logic IS the same as Normal but with Elite Spawning parameters.
-    // The spawning is the ONLY difference in logic besides stats (which are handled in spawnEnemy).
-    // So we can just reuse the Normal Pentagon logic for movement.
-    // BUT we must handle Spawning here if we want strict separation, OR allow Normal logic to handle it if we pass "isElite".
+    
+    
+    
+    
+    
 
-    // As per previous plan, Spawning is handled in the `NormalEnemyLogic`'s `updateNormalPentagon` (if needed) or separate trigger.
-    // Let's implement Spawning HERE for Elite, and remove it from `NormalEnemyLogic` if called as elite?
-    // Or simpler: Pentagon Logic is identical except for Spawn params.
-    // The Caller (EnemyLogic.ts) can just handle the movement via `updateNormalPentagon`, then call `handlePentagonSpawning(e, true)`?
+    
+    
+    
+    
 
-    // For now, let's assume Elite Pentagon logic just handles the Extra Spawning capability (Stunning Minions).
-    // The movement is identical.
-    // I will return NULL here to indicate "Use Default Movement", or I can duplicate the movement.
-    // I will duplicate the movement for robustness as requested, or import it.
-    // Since I cannot easily import from NormalEnemyLogic (circular?), I will duplicate the small block.
-    // Actually, I'll refer to updateNormalPentagon in my instruction to the orchestrator.
-    // But `updateNormalPentagon` is not imported here.
+    
+    
+    
+    
+    
+    
+    
 
-    // Let's duplicate the kiting logic for Elite Pentagon to ensure it's self-contained in `EliteEnemies.ts`.
+    
 
-    // Capture original palette
+    
     if (!e.originalPalette) e.originalPalette = e.palette;
 
     const nearestCenter = ARENA_CENTERS.reduce((best, center) => {
@@ -297,9 +297,9 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     }, ARENA_CENTERS[0]);
     const distToWall = ARENA_RADIUS - Math.hypot(e.x - nearestCenter.x, e.y - nearestCenter.y);
 
-    // Initialize random kiting distance
+    
     if (!e.distGoal) {
-        e.distGoal = 600 + Math.random() * 300; // Random 600-900
+        e.distGoal = 600 + Math.random() * 300; 
     }
 
     const angleToPlayerP = Math.atan2(dy, dx);
@@ -323,14 +323,14 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
     let vx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
     let vy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
 
-    // --- OPTIMIZED HIVE LOGIC (Staggered) ---
+    
     if (e.minionCount === undefined || state.frameCount % 10 === 0) {
         const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
         e.minionCount = myMinions.length;
         e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
     }
 
-    // Multiplayer-aware proximity check
+    
     const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let distToNearest = Infinity;
     players.forEach(p => {
@@ -340,40 +340,40 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
 
     const hasMinions = (e.minionCount || 0) > 0;
 
-    // 1. Proximity Aggro Check
+    
     if (distToNearest <= 350 && (e.orbitingMinionIds?.length || 0) > 0) {
         state.enemies.forEach(m => {
             if (e.orbitingMinionIds?.includes(m.id)) m.minionState = 1;
         });
         playSfx('stun-disrupt');
-        e.angryUntil = state.gameTime + 2.0; // Stay red for 2 seconds
+        e.angryUntil = state.gameTime + 2.0; 
         e.orbitingMinionIds = [];
     }
 
-    // 2. Visual Feedback
+    
     const isAngry = !!(e.angryUntil && state.gameTime < e.angryUntil);
     const isWarning = !!(distToNearest <= 500 && hasMinions && !isAngry);
 
     if (isAngry) {
-        // Full Red (Aggro State)
+        
         e.palette = ['#EF4444', '#B91C1C', '#7F1D1D'];
-        e.eraPalette = undefined; // OVERRIDE ERA PALETTE
-        vx += (Math.random() - 0.5) * 8; // Extra violent shake
+        e.eraPalette = undefined; 
+        vx += (Math.random() - 0.5) * 8; 
         vy += (Math.random() - 0.5) * 8;
     } else if (isWarning) {
-        // High-Visibility Warning (Solid Red)
+        
         e.palette = ['#EF4444', '#F87171', '#7F1D1D'];
-        e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+        e.eraPalette = undefined; 
 
-        vx += (Math.random() - 0.5) * 6; // Increased shake
+        vx += (Math.random() - 0.5) * 6; 
         vy += (Math.random() - 0.5) * 6;
     }
 
-    // --- AGE-BASED DESTRUCTION SEQUENCE (Age > 60s) ---
+    
     const age = state.gameTime - (e.spawnedAt || 0);
     if (age > 60) {
         if ((e.minionCount || 0) > 0) {
-            // RELEASE ONE BY ONE
+            
             if (!e.lastAttack) e.lastAttack = state.gameTime;
             if (state.gameTime - (e.lastAttack || 0) > 2.0) {
                 const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
@@ -384,14 +384,14 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
                 e.lastAttack = state.gameTime;
                 e.minionCount = (e.minionCount || 1) - 1;
             }
-            // Pulsate White/Red while dying (Only if NOT in aggro red state)
+            
             if (!isAngry) {
-                // Pulsate White/Red while dying (Removed blinking per user request)
+                
                 e.palette = ['#FFFFFF', '#EF4444', '#7F1D1D'];
-                e.eraPalette = undefined; // OVERRIDE ERA PALETTE
+                e.eraPalette = undefined; 
             }
         } else {
-            // DIE
+            
             e.dead = true; e.hp = 0;
             spawnParticles(state, e.x, e.y, '#EF4444', 30);
             playSfx('rare-kill');
@@ -399,13 +399,13 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         return { vx, vy };
     }
 
-    // Normal State / Spawning Logic (Only if age <= 60 and not in aggro)
-    // --- SPAWNING LOGIC (Elite - Independent of movement state) ---
+    
+    
     if (e.lastAttack === undefined) e.lastAttack = state.gameTime;
 
     if (e.summonState === 1) {
         if (state.gameTime > (e.timer || 0)) {
-            // Elite spawns Elite minions (true)
+            
             spawnMinion(state, e, true, 3);
             e.lastAttack = state.gameTime;
             e.summonState = 0;
@@ -420,7 +420,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         }
     }
 
-    // Palette Restoration (if not busy/angry/warning)
+    
     if (!isAngry && !isWarning && e.summonState !== 1) {
         if (e.originalPalette) e.palette = e.originalPalette;
     }

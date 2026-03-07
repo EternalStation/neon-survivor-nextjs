@@ -56,6 +56,9 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     useEffect(() => {
         const handleKeys = (e: KeyboardEvent) => {
             const code = e.code.toLowerCase();
+            if (code === 'tab') {
+                e.preventDefault();
+            }
             if (code === 'keya' || code === 'arrowleft') setActiveTab('overview');
             if (code === 'keyd' || code === 'arrowright') setActiveTab('modules');
         };

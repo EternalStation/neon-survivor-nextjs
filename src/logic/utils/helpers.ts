@@ -8,5 +8,5 @@ export function getPlayerThemeColor(state: GameState, overridePlayer?: Player): 
     const player = overridePlayer || state.player;
     const classId = player.playerClass;
     const classData = PLAYER_CLASSES.find(c => c.id === classId);
-    return classData?.themeColor || '#22d3ee'; // Default cyan
+    return classData?.themeColor || '#22d3ee'; 
 }

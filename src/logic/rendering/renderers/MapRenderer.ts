@@ -9,7 +9,7 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
         ? ARENA_CENTERS
         : ARENA_CENTERS.filter(c => c.id === 0);
 
-    // BACKGROUND GRID (Hexagons)
+    
     const drawHexGrid = (r: number) => {
         const hDist = 1.5 * r;
         const vDist = Math.sqrt(3) * r;
@@ -49,7 +49,7 @@ export function renderBackground(ctx: CanvasRenderingContext2D, state: GameState
         }
     };
 
-    // Clip the grid to only draw inside arenas
+    
     ctx.save();
     ctx.beginPath();
     visibleArenas.forEach(c => buildHexPath(ctx, c, ARENA_RADIUS));
@@ -66,7 +66,7 @@ export function renderMapBoundaries(ctx: CanvasRenderingContext2D, state: GameSt
 
     ctx.save();
 
-    // Defensive Reset: Ensure no leaked shadows or styles cause "blinking"
+    
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.globalAlpha = 1.0;
@@ -74,7 +74,7 @@ export function renderMapBoundaries(ctx: CanvasRenderingContext2D, state: GameSt
     ctx.setLineDash([]);
     ctx.filter = 'none';
 
-    // Set Map Boundary Styles
+    
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 30;
     ctx.globalAlpha = 0.3;
@@ -90,7 +90,7 @@ export function renderMapBoundaries(ctx: CanvasRenderingContext2D, state: GameSt
 
 
 
-// Reusable path builder for performance
+
 function buildHexPath(ctx: CanvasRenderingContext2D, center: { x: number, y: number }, r: number) {
     for (let i = 0; i < 6; i++) {
         const ang = Math.PI / 3 * i;
@@ -109,23 +109,23 @@ export function renderArenaVignette(ctx: CanvasRenderingContext2D, state: GameSt
 
     ctx.save();
 
-    // OPTIMIZATION: "Solid Void" removed.
-    // The background grid is now clipped to the arenas, and the screen is cleared to black.
-    // So the void is naturally black without needing this expensive "evenodd" fill.
+    
+    
+    
 
-    // Draw Arena Labels (Curved) - REMOVED PER USER REQUEST
+    
     /*
     const r = 120;
     const hDist = 1.5 * r;
     const vDist = Math.sqrt(3) * r;
 
-    // ECO
+    
     drawCurvedText(ctx, 'ECONOMIC', -hDist * 6, 0, 400, Math.PI, '#fbbf24');
 
-    // COM
+    
     drawCurvedText(ctx, 'COMBAT', hDist * 6, 0, 400, 0, '#f87171');
 
-    // DEF - Top Center
+    
     drawCurvedText(ctx, 'DEFENSE', 0, -vDist * 7, 400, -Math.PI / 2, '#60a5fa', true);
     */
 }
@@ -134,8 +134,8 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
     if (state.portalState === 'closed') return;
 
     PORTALS.forEach(p => {
-        // Only render outgoing portals from the current arena.
-        // Incoming portals are covered by their own definitions (e.g., 1->0 is separate from 0->1).
+        
+        
         if (p.from !== state.currentArena) return;
 
         const center = ARENA_CENTERS.find(c => c.id === p.from);
@@ -151,12 +151,12 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.lineCap = 'round';
 
         if (state.portalState === 'warn') {
-            // Subtle pulse instead of aggressive flashing
+            
             ctx.globalAlpha = 0.7 + Math.sin(state.gameTime * 5) * 0.2;
             ctx.setLineDash([50, 50]);
             ctx.lineWidth = 10;
         } else {
-            // Solid, thick line for open state
+            
             ctx.globalAlpha = 1.0;
             ctx.lineWidth = 18;
         }
@@ -171,6 +171,6 @@ export function renderPortals(ctx: CanvasRenderingContext2D, state: GameState) {
 }
 
 export function renderCorruption(ctx: CanvasRenderingContext2D, state: GameState) {
-    // Deprecated: Now handled directly by renderBackground via hex coloring.
-    // Keeping function stub if called elsewhere, but empty.
+    
+    
 }

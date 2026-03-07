@@ -16,6 +16,9 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const code = e.code.toLowerCase();
+            if (code === 'tab') {
+                e.preventDefault();
+            }
             if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev - 1 + options.length) % options.length);
             } else if (code === 'keyd' || code === 'arrowright') {

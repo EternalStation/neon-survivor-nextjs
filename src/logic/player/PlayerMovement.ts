@@ -8,6 +8,7 @@ import { getHexLevel } from '../upgrades/LegendaryLogic';
 import { getCdMod } from '../utils/CooldownUtils';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
+import { recordDamage } from '../utils/DamageTracking';
 
 export function triggerDash(state: GameState, keys: Record<string, boolean>, inputVector?: { x: number, y: number }, overridePlayer?: any) {
     const player = overridePlayer || state.player;
@@ -124,12 +125,7 @@ export function handlePlayerMovement(
 
     if (vx !== 0 || vy !== 0) {
         const mag = Math.hypot(vx, vy);
-        let stormMod = 1;
-        if (player.playerClass === 'stormstrike') {
-            const ct = Math.max(0, Math.min(GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE, player.stormCircleChargeTime ?? 0));
-            stormMod = 1 + (-0.2 + (ct / GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE) * 0.4);
-        }
-        const spd = player.speed * (state.gameSpeedMult ?? 1) * stormMod;
+        const spd = player.speed * (state.gameSpeedMult ?? 1);
         const dx = (vx / mag) * spd;
         const dy = (vy / mag) * spd;
 
@@ -137,7 +133,7 @@ export function handlePlayerMovement(
         const nextX = player.x + dx;
         const nextY = player.y + dy;
 
-        // Hitbox radius
+
         const hitboxR = GAME_CONFIG.PLAYER.HITBOX_RADIUS;
 
         const checkMove = (tx: number, ty: number) => {
@@ -192,7 +188,7 @@ export function handlePlayerMovement(
             player.wallsHit++;
             triggerWallIncompetence?.();
 
-            const impactRange = 250;
+            const impactRange = 300;
             const maxHp = calcStat(player.hp);
             let wallDmgMult = GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
             const isEscalated = !!(player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil);
@@ -204,8 +200,11 @@ export function handlePlayerMovement(
             const rawWallDmg = maxHp * wallDmgMult;
             const finalImpactDmg = rawWallDmg;
 
-            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 12, 5, 40, 'shockwave');
-            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 1, impactRange, 25, 'shockwave_circle');
+            const startA = collisionNormalAngle + Math.PI / 2;
+            const endA = collisionNormalAngle + Math.PI * 1.5;
+
+            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 12, 5, 40, 'shockwave', startA, endA);
+            spawnParticles(state, player.x, player.y, isEscalated ? '#ef4444' : '#22d3ee', 1, impactRange, 25, 'shockwave_circle', startA, endA);
 
             state.enemies.forEach(enemy => {
                 if (enemy.dead) return;
@@ -214,6 +213,8 @@ export function handlePlayerMovement(
                 const distSq = dx * dx + dy * dy;
                 if (distSq < impactRange * impactRange) {
                     enemy.hp -= finalImpactDmg;
+                    state.player.damageDealt += finalImpactDmg;
+                    recordDamage(state, 'Wall Impact', finalImpactDmg);
                     spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), isEscalated ? '#ef4444' : '#fff');
                     spawnParticles(state, enemy.x, enemy.y, isEscalated ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
                 }

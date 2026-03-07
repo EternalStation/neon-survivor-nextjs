@@ -32,7 +32,7 @@ export function getProgressionParams(gameTime: number) {
 
     const eraPalette = PALETTES[eraIndex % PALETTES.length];
 
-    // Pulse Speed
+    
     const pulseDef = PULSE_RATES.find(p => minutes < p.time) || PULSE_RATES[PULSE_RATES.length - 1];
 
     return { shapeDef, eraPalette, fluxState, pulseDef };
@@ -82,7 +82,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         }
 
 
-        // Fallback: Random spot in Arena
+        
         if (!found) {
             spawnPos = getRandomPositionInArena(playerArena);
         }
@@ -178,7 +178,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
 export function getInfernalBossHp(state: GameState): number {
     const minutes = state.gameTime / 60;
     const difficultyMult = 1 + (minutes * Math.log2(2 + minutes) / 30);
-    const hpMult = getCycleHpMult(state.gameTime) * 2.0; // Anomaly mult is 2.0
+    const hpMult = getCycleHpMult(state.gameTime) * 2.0; 
     let baseHp = 60 * Math.pow(1.2, minutes) * difficultyMult;
 
     if (['requested', 'waiting', 'active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {

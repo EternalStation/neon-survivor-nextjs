@@ -5,6 +5,7 @@ import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { getHexLevel } from '../upgrades/LegendaryLogic';
 import { triggerZombieZap } from '../player/PlayerCombat';
+import { recordDamage } from '../utils/DamageTracking';
 
 export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, count: number) {
     const existingMinions = state.enemies.filter(m => m.parentId === parent.id && !m.dead && m.shape === 'minion');
@@ -18,8 +19,8 @@ export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, c
 
         const minion: Enemy = {
             id: Math.random(),
-            type: 'minion', // Type identifier
-            shape: 'minion', // Logic identifier
+            type: 'minion',
+            shape: 'minion',
             x: mx, y: my,
             size: 15,
             hp: Math.ceil(isElite ? parent.maxHp * 0.15 : parent.maxHp * 0.15),
@@ -31,14 +32,14 @@ export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, c
             lastAttack: 0,
             dead: false,
             shellStage: 0,
-            palette: (parent.originalPalette || parent.palette), // Always inherit parent colors (Era/Stable)
+            palette: (parent.originalPalette || parent.palette),
             pulsePhase: 0,
             rotationPhase: 0,
             parentId: parent.id,
-            minionState: 0, // 0 = Orbiting/Spawning, 1 = Chasing
-            minionIndex: startIdx + i, // Assign a fixed index for formation
+            minionState: 0,
+            minionIndex: startIdx + i,
             spawnedAt: state.gameTime,
-            stunOnHit: isElite, // Still keep the Stun mechanic if it's an Elite spawn
+            stunOnHit: isElite,
             vx: 0, vy: 0,
             knockback: { x: 0, y: 0 },
             isRare: false,
@@ -54,7 +55,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
     const m = state.enemies.find(p => p.id === e.parentId);
     if (!m || m.dead) e.minionState = 1;
 
-    // Launch Trigger: Any player gets too close to Mother (Guard Mode)
+
     if (e.minionState === 0 && m) {
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearestDist = Infinity;
@@ -79,7 +80,7 @@ export function updateMinion(e: Enemy, state: GameState, player: any, dx: number
         });
 
         const aM = Math.atan2(nearestPlayer.y - m.y, nearestPlayer.x - m.x);
-        // Use assigned minionIndex for formation instead of filtering every frame
+
         const idx = e.minionIndex || 0;
         const row = Math.floor((idx + 1) / 2);
         const side = (idx === 0) ? 0 : (idx % 2 === 1 ? -1 : 1);
@@ -113,22 +114,22 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
 
     const dToP = minD;
 
-    // Check wall proximity - teleport if too close to walls
+
     const { dist: wallDist, normal: wallNormal } = getHexDistToWall(e.x, e.y);
     if (wallDist < 200) {
-        // Too close to wall - teleport to safe position
+
         const a = Math.random() * Math.PI * 2;
         const d = 600 + Math.random() * 200;
         let tx = nearestPlayer.x + Math.cos(a) * d;
         let ty = nearestPlayer.y + Math.sin(a) * d;
 
-        // Ensure teleport target is valid and far from walls
+
         let attempts = 0;
         while (attempts < 10) {
             if (isInMap(tx, ty)) {
                 const { dist: targetWallDist } = getHexDistToWall(tx, ty);
                 if (targetWallDist > 300) {
-                    // Valid position found
+
                     const oldX = e.x, oldY = e.y;
                     e.x = tx;
                     e.y = ty;
@@ -140,7 +141,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
                     break;
                 }
             }
-            // Try new position
+
             const newAngle = Math.random() * Math.PI * 2;
             tx = player.x + Math.cos(newAngle) * d;
             ty = player.y + Math.sin(newAngle) * d;
@@ -153,13 +154,13 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         if (e.spiralAngle === undefined) e.spiralAngle = Math.atan2(e.y - player.y, e.x - player.x);
         e.spiralAngle += 0.005;
 
-        // Find valid orbit position
+
         let tx = player.x + Math.cos(e.spiralAngle) * 1100;
         let ty = player.y + Math.sin(e.spiralAngle) * 1100;
 
-        // If target is out of bounds, find closest valid position on the orbit
+
         if (!isInMap(tx, ty)) {
-            // Try progressively closer orbit distances until we find a valid position
+
             for (let dist = 1000; dist >= 400; dist -= 100) {
                 tx = player.x + Math.cos(e.spiralAngle) * dist;
                 ty = player.y + Math.sin(e.spiralAngle) * dist;
@@ -170,10 +171,10 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
             }
         }
 
-        // Ensure target is far enough from walls
+
         const { dist: targetWallDist } = getHexDistToWall(tx, ty);
         if (targetWallDist < 200) {
-            // Adjust position away from wall
+
             const { normal } = getHexDistToWall(tx, ty);
             tx += normal.x * 250;
             ty += normal.y * 250;
@@ -184,7 +185,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
         if (dToP < 500) { e.rarePhase = 1; e.rareTimer = timeS; e.palette = ['#f97316', '#ea580c', '#c2410c']; playSfx('smoke-puff'); }
     } else {
         if (e.lockedTargetX === undefined || e.lockedTargetY === undefined || (Math.abs(e.x - e.lockedTargetX) < 50 && Math.abs(e.y - e.lockedTargetY) < 50)) {
-            // Find new valid target position
+
             let tx = 0, ty = 0;
             let foundValid = false;
 
@@ -203,7 +204,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
                 }
             }
 
-            // Fallback to arena center if no valid position found
+
             if (!foundValid) {
                 tx = ARENA_CENTERS[0].x;
                 ty = ARENA_CENTERS[0].y;
@@ -226,7 +227,7 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
                 e.lockedTargetX = undefined;
                 e.lockedTargetY = undefined;
             } else if (e.forceTeleport) {
-                // Fallback: Random Blink to valid position
+
                 let tx = 0, ty = 0;
                 let foundValid = false;
 
@@ -269,14 +270,14 @@ export function updateSnitch(e: Enemy, state: GameState, player: any, timeS: num
     }
     if (e.panicCooldown && timeS < e.panicCooldown) { vx *= 2; vy *= 2; }
 
-    // Snitch moves are handled by return
-    // Check for collision with Elite Squares to turn Green
+
+
     const others = state.spatialGrid.query(e.x, e.y, e.size + 100);
     for (const other of others) {
         if (other.id !== e.id && !other.dead && other.isElite && other.shape === 'square') {
             const dist = Math.hypot(other.x - e.x, other.y - e.y);
             if (dist < e.size + other.size) {
-                // Change center color to green
+
                 e.palette = ['#4ade80', e.palette[1], e.palette[2]];
             }
         }
@@ -291,12 +292,12 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
     if (e.zombieHearts === undefined) e.zombieHearts = 3;
 
-    // --- RISING STATE ---
+
     if (e.zombieState === 'dead') {
         if (now >= (e.zombieTimer || 0)) {
             e.zombieState = 'rising';
             e.zombieTimer = now + 1500;
-            // playSfx('zombie-rise'); // Removed per user request (digging sound)
+
         }
         return;
     }
@@ -304,24 +305,28 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
     if (e.zombieState === 'rising') {
         if (now >= (e.zombieTimer || 0)) {
             e.zombieState = 'active';
-            e.zombieHearts = 3; // Reset hearts on rise
-            e.invincibleUntil = now + 500; // Brief invulnerability
+            e.zombieHearts = 3;
+            e.invincibleUntil = now + 500;
         }
         return;
     }
 
-    // --- HELPER: DAMAGE LOGIC ---
+
     const takeZombieDamage = (amount: number = 1) => {
         if (e.invincibleUntil && now < e.invincibleUntil) return;
 
         e.zombieHearts = (e.zombieHearts || 3) - amount;
-        e.invincibleUntil = now + 1000; // 1s Invulnerability after hit
+        e.invincibleUntil = now + 1000;
 
         spawnParticles(state, e.x, e.y, '#ef4444', 10);
-        // spawnFloatingNumber(state, e.x, e.y, `-${amount} HEART`, '#ef4444', true); // Removed per user request
+
         playSfx('impact');
 
         if (e.zombieHearts <= 0) {
+            if (e.zombieTargetId) {
+                const t = state.enemies.find(o => o.id === e.zombieTargetId);
+                if (t) t.beingConsumedBy = undefined;
+            }
             e.dead = true;
             e.hp = 0;
             spawnParticles(state, e.x, e.y, '#4ade80', 15);
@@ -329,38 +334,38 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         }
     };
 
-    // --- CLINGING (EATING) STATE ---
+
     if (e.zombieState === 'clinging') {
         const target = state.enemies.find(t => t.id === e.zombieTargetId);
 
-        // 1. Target Lost Check
+
         if (!target || target.dead) {
+            if (target) target.beingConsumedBy = undefined;
             e.zombieState = 'active';
             e.zombieTargetId = undefined;
             e.timer = undefined;
             return;
         }
 
-        // 2. Stick to Target
+
         e.x = target.x;
         e.y = target.y;
         e.vx = 0;
         e.vy = 0;
 
-        // 3. Disable Target (Unless Boss)
+
         if (!target.boss) {
-            target.frozen = 1.0; // Freeze for this frame + buffer
+            target.frozen = 1.0;
             target.vx = 0;
             target.vy = 0;
         }
 
-        // 4. Boss & Legion Damage Over Time (2% Boss HP or 10% Legion HP per second)
+
         if (target.boss || target.legionId) {
-            if ((state.frameCount % 60) === 0) { // Approx every second
-                const dmg = target.boss ? target.maxHp * 0.02 : target.maxHp * 0.1;
+            if ((state.frameCount % 60) === 0) {
+                const dmg = target.boss ? target.maxHp * 0.05 : target.maxHp * 0.1;
                 let appliedDmg = dmg;
 
-                // --- LEGION SHIELD LOGIC ---
                 if (target.legionId) {
                     const lead = state.legionLeads?.[target.legionId];
                     if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
@@ -373,113 +378,175 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
                 if (appliedDmg > 0) {
                     target.hp -= appliedDmg;
+                    player.damageDealt += appliedDmg;
+                    recordDamage(state, 'Crimson Feast (LVL 4)', appliedDmg);
                     if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
                 }
 
                 spawnFloatingNumber(state, target.x, target.y, Math.round(dmg).toString(), '#4ade80', true);
                 spawnParticles(state, target.x, target.y, '#4ade80', 5);
+
+                takeZombieDamage(1);
             }
         }
 
-        // 5. Check Interruption (Collision with OTHER enemies)
-        // Zombie is at target.x/y. Check if any *other* enemy is touching it.
-        // We exclude the target we are eating.
-        // And we exclude Friendly/Other Zombies to prevent friendly fire chaos unless desired? 
-        // Prompt: "other enemy touched him". Usually implies hostiles.
         const nearby = state.spatialGrid.query(e.x, e.y, e.size + 50);
         for (const other of nearby) {
             if (other.id !== e.id && other.id !== target.id && !other.dead && !other.isFriendly && !other.isZombie) {
                 const d = Math.hypot(other.x - e.x, other.y - e.y);
                 if (d < e.size + other.size) {
                     takeZombieDamage(1);
-
-                    // Kinetic Battery: Trigger Zap on Zombie Collision
-                    const kinLvl = getHexLevel(state, 'KineticBattery');
-                    if (kinLvl >= 1) {
-                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
-                        if (triggerZap) triggerZap(state, player, e);
-                    }
-
-                    if (e.dead) return; // Stop if died
+                    if (e.dead) return;
                 }
             }
         }
 
-        // 6. Completion Logic
         if (now >= (e.timer || 0)) {
             if (target.boss) {
-                // Boss Completion: Kill target and spend all 3 zombie lives
-                target.hp = 0;
-                handleEnemyDeath(state, target, onEvent);
-                takeZombieDamage(3);
-            } else if (target.isElite) {
-                // Elite Completion: Kill target and spend all 3 zombie lives
-                target.hp = 0;
-                handleEnemyDeath(state, target, onEvent);
+                const consumedDmg = target.maxHp * 0.20;
+                target.hp -= consumedDmg;
+                player.damageDealt += consumedDmg;
+                recordDamage(state, 'Crimson Feast (LVL 4)', consumedDmg);
 
-                const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
-                if (bloodLvl >= 5 && Math.random() < 0.10) {
-                    triggerZombieZap(state, state.player, e);
+                if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);
+
+                takeZombieDamage(3);
+
+                playSfx('zombie-consume');
+                spawnParticles(state, target.x, target.y, '#ef4444', 30);
+
+                const bloodLvl = getHexLevel(state, 'ComLife');
+                const devLvl = getHexLevel(state, 'ChronoDevourer');
+                if (bloodLvl >= 5 || devLvl >= 5) {
+                    spawnFloatingNumber(state, target.x, target.y, "Successfully consumed it", '#4ade80', true, undefined, 10);
+                    if (Math.random() < 0.10) {
+                        triggerZombieZap(state, state.player, e);
+                    }
                 }
 
-                const devLvl = getHexLevel(state, 'ChronoDevourer');
                 if (devLvl >= 5) {
-                    player.chronoDevourerBuffTime = now + 1000;
+                    const reduction = 0.03;
+                    if (player.activeSkills) {
+                        player.activeSkills.forEach(s => { if (s && s.lastUsed !== undefined) s.lastUsed -= reduction; });
+                    }
+                    if (player.lastBlackholeUse !== undefined) player.lastBlackholeUse -= reduction;
+                    if (player.lastHiveMotherSkill !== undefined) player.lastHiveMotherSkill -= reduction;
+                    if (player.lastVortexActivation !== undefined) player.lastVortexActivation -= reduction;
+                    if (player.sandboxCooldownStart !== undefined) player.sandboxCooldownStart -= reduction;
+                    if (player.lastStormStrike !== undefined) player.lastStormStrike -= reduction;
+                    if (player.stormCircleCooldownEnd !== undefined) player.stormCircleCooldownEnd -= reduction;
+                    if (player.orbitalVortexCooldownEnd !== undefined) player.orbitalVortexCooldownEnd -= reduction;
+                    if (player.lastKineticShockwave !== undefined) player.lastKineticShockwave -= reduction;
+                    if (player.dashCooldown !== undefined) player.dashCooldown -= reduction;
+                    if (player.lastDeathMark !== undefined) player.lastDeathMark -= reduction;
+                }
+            } else if (target.isElite) {
+                const consumedDmg = target.maxHp;
+                target.hp = 0;
+                player.damageDealt += consumedDmg;
+                recordDamage(state, 'Crimson Feast (LVL 4)', consumedDmg);
+                handleEnemyDeath(state, target, onEvent);
+
+                playSfx('zombie-consume');
+                spawnParticles(state, target.x, target.y, '#ef4444', 25);
+
+                const bloodLvl = getHexLevel(state, 'ComLife');
+                const devLvl = getHexLevel(state, 'ChronoDevourer');
+                if (bloodLvl >= 5 || devLvl >= 5) {
+                    spawnFloatingNumber(state, target.x, target.y, "Successfully consumed it", '#4ade80', true, undefined, 10);
+                    if (Math.random() < 0.10) {
+                        triggerZombieZap(state, state.player, e);
+                    }
+                }
+
+                if (devLvl >= 5) {
+                    const reduction = 0.03;
+                    if (player.activeSkills) {
+                        player.activeSkills.forEach(s => { if (s && s.lastUsed !== undefined) s.lastUsed -= reduction; });
+                    }
+                    if (player.lastBlackholeUse !== undefined) player.lastBlackholeUse -= reduction;
+                    if (player.lastHiveMotherSkill !== undefined) player.lastHiveMotherSkill -= reduction;
+                    if (player.lastVortexActivation !== undefined) player.lastVortexActivation -= reduction;
+                    if (player.sandboxCooldownStart !== undefined) player.sandboxCooldownStart -= reduction;
+                    if (player.lastStormStrike !== undefined) player.lastStormStrike -= reduction;
+                    if (player.stormCircleCooldownEnd !== undefined) player.stormCircleCooldownEnd -= reduction;
+                    if (player.orbitalVortexCooldownEnd !== undefined) player.orbitalVortexCooldownEnd -= reduction;
+                    if (player.lastKineticShockwave !== undefined) player.lastKineticShockwave -= reduction;
+                    if (player.dashCooldown !== undefined) player.dashCooldown -= reduction;
+                    if (player.lastDeathMark !== undefined) player.lastDeathMark -= reduction;
                 }
 
                 takeZombieDamage(3);
             } else {
-                // Normal & Legion Completion Logic: Consume 1 heart
+
                 let canKill = true;
                 if (target.legionId) {
                     const lead = state.legionLeads?.[target.legionId];
                     if (lead && lead.legionReady && (lead.legionShield || 0) > 0) {
-                        // Damage shield instead of kill
+
                         lead.legionShield = Math.max(0, (lead.legionShield || 0) - (target.maxHp * 0.5));
                         canKill = false;
                     }
                 }
 
                 if (canKill) {
-                    // Normal/Defenseless Legion Unit
+                    const consumedDmg = target.maxHp;
                     target.hp = 0;
+                    player.damageDealt += consumedDmg;
+                    recordDamage(state, 'Crimson Feast (LVL 4)', consumedDmg);
                     handleEnemyDeath(state, target, onEvent);
                     playSfx('zombie-consume');
                     spawnParticles(state, target.x, target.y, '#ef4444', 20);
 
-                    const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
-                    if (bloodLvl >= 5 && Math.random() < 0.10) {
-                        triggerZombieZap(state, state.player, e);
+                    const bloodLvl = getHexLevel(state, 'ComLife');
+                    const devLvl = getHexLevel(state, 'ChronoDevourer');
+                    if (bloodLvl >= 5 || devLvl >= 5) {
+                        spawnFloatingNumber(state, target.x, target.y, "Successfully consumed it", '#4ade80', true, undefined, 10);
+                        if (Math.random() < 0.10) {
+                            triggerZombieZap(state, state.player, e);
+                        }
                     }
 
-                    const devLvl = getHexLevel(state, 'ChronoDevourer');
                     if (devLvl >= 5) {
-                        player.chronoDevourerBuffTime = now + 1000;
+                        const reduction = 0.03;
+                        if (player.activeSkills) {
+                            player.activeSkills.forEach(s => { if (s && s.lastUsed !== undefined) s.lastUsed -= reduction; });
+                        }
+                        if (player.lastBlackholeUse !== undefined) player.lastBlackholeUse -= reduction;
+                        if (player.lastHiveMotherSkill !== undefined) player.lastHiveMotherSkill -= reduction;
+                        if (player.lastVortexActivation !== undefined) player.lastVortexActivation -= reduction;
+                        if (player.sandboxCooldownStart !== undefined) player.sandboxCooldownStart -= reduction;
+                        if (player.lastStormStrike !== undefined) player.lastStormStrike -= reduction;
+                        if (player.stormCircleCooldownEnd !== undefined) player.stormCircleCooldownEnd -= reduction;
+                        if (player.orbitalVortexCooldownEnd !== undefined) player.orbitalVortexCooldownEnd -= reduction;
+                        if (player.lastKineticShockwave !== undefined) player.lastKineticShockwave -= reduction;
+                        if (player.dashCooldown !== undefined) player.dashCooldown -= reduction;
+                        if (player.lastDeathMark !== undefined) player.lastDeathMark -= reduction;
                     }
                 }
 
                 takeZombieDamage(1);
 
                 if (!e.dead) {
-                    // Reset to hunt again if still alive
                     e.zombieState = 'active';
                     e.zombieTargetId = undefined;
+                    target.beingConsumedBy = undefined;
                     e.timer = undefined;
-                    e.invincibleUntil = now + 1000; // Brief I-frame after meal
+                    e.invincibleUntil = now + 1000;
                 }
             }
         }
         return;
     }
 
-    // --- ACTIVE STATE (HUNTING) ---
 
-    // 1. Find NEAREST enemy
+
+
     let nearest: Enemy | null = null;
     let minDist = Infinity;
 
     state.enemies.forEach(other => {
-        if (other.dead || other.isZombie || other.isFriendly) return; // Target Bosses too!
+        if (other.dead || other.isZombie || other.isFriendly || (other.beingConsumedBy !== undefined && other.beingConsumedBy !== e.id)) return;
         const d = Math.hypot(other.x - e.x, other.y - e.y);
         if (d < minDist) {
             minDist = d;
@@ -493,8 +560,8 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         const dy = target.y - e.y;
         const angle = Math.atan2(dy, dx);
 
-        let spd = 10.0; // Base Speed increased to catch 7.0 speed enemies
-        // Frenzy if near any player (Legacy logic kept for flavor)
+        let spd = 10.0;
+
         const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
         let nearAnyPlayer = false;
         players.forEach(p => {
@@ -512,7 +579,7 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
         e.x += (e.vx || 0) * step;
         e.y += (e.vy || 0) * step;
 
-        // Collision Checks
+
         const nearby = state.spatialGrid.query(e.x, e.y, e.size + 50);
 
         for (const other of nearby) {
@@ -520,40 +587,34 @@ export function updateZombie(e: Enemy, state: GameState, step: number, onEvent?:
 
             const d = Math.hypot(other.x - e.x, other.y - e.y);
             if (d < e.size + other.size) {
-                // Is this our intended target? Or just "Nearest"?
-                // Actually, if we collide with ANY enemy, we should probably try to eat it (if active).
-                // Prioritize the one we were chasing, but if we bump into another, free meal?
-                // But prompt says: "if during running to an closeset enemy he somehow receives colides ith other enemy he looses his 1 life"
-                // This implies he ONLY wants to eat the "closest" one (Target), and others are obstacles.
+
+
+
+
+
 
                 if (other.id === target.id) {
-                    // START EATING
+
                     e.zombieState = 'clinging';
                     e.zombieTargetId = target.id;
+                    target.beingConsumedBy = e.id;
 
-                    // Set Timer based on type
+
                     const eatDuration = (target.boss || target.isElite) ? 5000 : 3000;
                     e.timer = now + eatDuration;
 
                     const devLvl = getHexLevel(state, 'ChronoDevourer');
                     if (devLvl >= 5 && Math.random() < 0.10) {
-                        e.timer = now; // Instant consume
+                        e.timer = now;
                     }
 
-                    // playSfx('zombie-consume'); // Removed per user request (no start eat sound)
-                    return; // Stop processing active state
+
+                    return;
                 } else {
-                    // Collision with OBSTACLE
+
                     takeZombieDamage(1);
 
-                    // Kinetic Battery: Trigger Zap on Zombie Collision
-                    const kinLvl = getHexLevel(state, 'KineticBattery');
-                    if (kinLvl >= 1) {
-                        const triggerZap = (state as any).triggerZombieZap || (window as any).triggerZombieZap;
-                        if (triggerZap) triggerZap(state, player, e);
-                    }
 
-                    // Bounce off
                     const pushAngle = Math.atan2(e.y - other.y, e.x - other.x);
                     e.x += Math.cos(pushAngle) * 30;
                     e.y += Math.sin(pushAngle) * 30;
@@ -570,20 +631,20 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
     const player = state.player;
     const now = state.gameTime;
 
-    // INVINCIBILITY: Glitcher cannot be killed
+
     e.hp = e.maxHp;
 
-    // LIFESPAN: Disappear after 20 seconds
+
     const lifespan = 20;
     const age = now - (e.spawnedAt || now);
 
-    // SPAWN DELAY: Do nothing for first 4 seconds
+
     if (age < 4) {
         return { vx: 0, vy: 0 };
     }
 
     if (age >= lifespan) {
-        // Dramatic exit
+
         const colors = ['#ff00ff', '#00ffff', '#ffffff'];
         for (let i = 0; i < 30; i++) {
             spawnParticles(state, e.x, e.y, colors, 5);
@@ -595,7 +656,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         return { vx: 0, vy: 0 };
     }
 
-    // 1. BLINK (Teleport when any player is too close)
+
     const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
     let nearestDist = Infinity;
     let nearestPlayer: any = players[0];
@@ -605,7 +666,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
     });
 
     const distToPlayer = nearestDist;
-    const blinkCooldown = 6; // 6 seconds
+    const blinkCooldown = 6;
     if (distToPlayer < 300 && (!e.lastBlink || now - e.lastBlink > blinkCooldown) && !e.glitchDecoy) {
         const oldX = e.x, oldY = e.y;
         const angle = Math.random() * Math.PI * 2;
@@ -623,12 +684,12 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         }
     }
 
-    // 2. GLITCH CLOUD ASSAULT (Spawn clouds NEAR PLAYER, not at Glitcher)
-    const cloudInterval = 5; // Every 5 seconds (was 4)
-    if (distToPlayer < 700 && (!e.lastLeak || now - e.lastLeak > cloudInterval)) {
-        // ALWAYS spawn 3 clouds: 1 on player, 2 nearby
 
-        // Cloud 1: Directly on the player
+    const cloudInterval = 5;
+    if (distToPlayer < 700 && (!e.lastLeak || now - e.lastLeak > cloudInterval)) {
+
+
+
         state.areaEffects.push({
             id: Math.random(),
             type: 'glitch_cloud',
@@ -641,10 +702,10 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         });
         spawnParticles(state, player.x, player.y, ['#ff00ff', '#00ffff'], 8);
 
-        // Clouds 2 & 3: Near the player (150-350px away)
+
         for (let i = 0; i < 2; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const distance = 150 + Math.random() * 200; // 150-350px from player
+            const distance = 150 + Math.random() * 200;
             const cloudX = player.x + Math.cos(angle) * distance;
             const cloudY = player.y + Math.sin(angle) * distance;
 
@@ -659,7 +720,7 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
                 level: 1
             });
 
-            // Visual feedback
+
             spawnParticles(state, cloudX, cloudY, ['#ff00ff', '#00ffff'], 8);
         }
 
@@ -668,32 +729,32 @@ export function updatePrismGlitcher(e: Enemy, state: GameState, step: number) {
         playSfx('smoke-puff');
     }
 
-    // Movement: Keep distance from player (harasser behavior)
+
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const dist = Math.hypot(dx, dy);
     let vx = 0, vy = 0;
 
-    // Maintain 300-500px distance
+
     const idealDist = 400;
     if (dist > 1 && !isNaN(dist)) {
         if (dist < 300) {
-            // Too close - move away
+
             vx = -(dx / dist) * e.spd;
             vy = -(dy / dist) * e.spd;
         } else if (dist > 500) {
-            // Too far - move closer
+
             vx = (dx / dist) * e.spd;
             vy = (dy / dist) * e.spd;
         } else {
-            // Circle around player
+
             const perpAngle = Math.atan2(dy, dx) + Math.PI / 2;
             vx = Math.cos(perpAngle) * e.spd;
             vy = Math.sin(perpAngle) * e.spd;
         }
     }
 
-    // Final safety check for velocity
+
     if (isNaN(vx)) vx = 0;
     if (isNaN(vy)) vy = 0;
 

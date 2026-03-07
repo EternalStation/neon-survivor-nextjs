@@ -1,30 +1,30 @@
 
-// Game Balance Configuration
+
 
 export const GAME_CONFIG = {
-    // --- PLAYER ---
+
     PLAYER: {
         HITBOX_RADIUS: 64,
         WALL_BOUNCE_SPEED: 37.5,
-        WALL_DAMAGE_PERCENT: 0.10, // 10% max HP
-        ARMOR_CONSTANT: 171, // Precisely tuned: ~35% reduction at 100 armor, caps at 95%
+        WALL_DAMAGE_PERCENT: 0.10,
+        ARMOR_CONSTANT: 171,
         HISTORY_LENGTH: 60,
         KNOCKBACK_DECAY: 0.85,
-        SPAWN_DURATION: 2.1, // 30% faster than 3.0s
+        SPAWN_DURATION: 2.1,
     },
 
-    // --- ENEMIES ---
+
     ENEMY: {
         BASE_SPAWN_RATE: 1.5,
         SPAWN_RATE_PER_MINUTE: 0.1,
-        BOSS_SPAWN_INTERVAL: 120, // Seconds
+        BOSS_SPAWN_INTERVAL: 120,
 
-        // Rare / Special
+
         SNITCH_HP: 1,
-        SNITCH_SPEED_MULT: 0.7, // Relative to Player Speed (0.7x)
+        SNITCH_SPEED_MULT: 0.7,
 
-        // Merge Logic
-        MERGE_TIMER: 3, // Seconds
+
+        MERGE_TIMER: 3,
         MERGE_THRESHOLD_PENTAGON: 5,
         MERGE_THRESHOLD_DEFAULT: 10,
         MERGE_HP_MULT_PENTAGON: 6,
@@ -35,18 +35,18 @@ export const GAME_CONFIG = {
         MERGE_SOUL_MULT_PENTAGON: 5,
         MERGE_SOUL_MULT_DEFAULT: 10,
 
-        // Contact Damage
+
         MINION_DAMAGE_RATIO: 0.15,
         MINION_STUN_DAMAGE_RATIO: 0.03,
 
-        // New Scaled Collision Logic (Power Scaling)
-        // Damage = HP ^ COLLISION_POWER_SCALING
+
+
         COLLISION_POWER_SCALING: 0.6,
     },
 
-    // --- SKILLS & LEGENDARIES ---
+
     SKILLS: {
-        // ComWave (Sonic Wave)
+
         WAVE_SHOTS_REQUIRED: 15,
         WAVE_RANGE: {
             LVL1: 1500,
@@ -57,8 +57,8 @@ export const GAME_CONFIG = {
             LVL3: 3.5
         },
         WAVE_SPEED: 45,
-        WAVE_COOLDOWN: 30, // Seconds
-        WAVE_COOLDOWN_LVL4: 20, // Seconds
+        WAVE_COOLDOWN: 30,
+        WAVE_COOLDOWN_LVL4: 20,
 
 
         PUDDLE_COOLDOWN: 25,
@@ -78,36 +78,35 @@ export const GAME_CONFIG = {
 
         SANDBOX_COOLDOWN: 15,
         SANDBOX_DURATION: 3,
-        SANDBOX_RADIUS: 220,
+        SANDBOX_RADIUS: 176,
 
-        // ComCrit (Critical Hit)
+
         CRIT_BASE_CHANCE: 0.15,
         CRIT_BASE_MULT: 2.0,
-        DEATH_MARK_DURATION: 3, // Seconds
+        DEATH_MARK_DURATION: Infinity,
         DEATH_MARK_COOLDOWN: 10,
         DEATH_MARK_MULT: 3.0,
-        EXECUTE_THRESHOLD: 0.5,
-        EXECUTE_CHANCE: 0.07,
-        BOSS_EXECUTE_THRESHOLD: 0.4,
-        BOSS_EXECUTE_CHANCE: 0.03,
+        EXECUTE_BASE_CHANCE_HIT: 0.02,
+        BOSS_EXECUTE_CHANCE_HIT: 0.02,
+        BOSS_PERCENT_HP_ON_HIT: 0.10,
 
-        // ComLife (Lifesteal)
+
         LIFESTEAL_PERCENT: 0.03,
-        MAX_HP_DMG_PERCENT: 0.02, // Lvl 3
+        MAX_HP_DMG_PERCENT: 0.02,
         OVERHEAL_SHIELD_MULT: 2.0,
 
-        // Square Thorns (Elite)
-        REFLECT_DAMAGE_PERCENT: 0.002, // 0.2% Max HP
+
+        REFLECT_DAMAGE_PERCENT: 0.002,
     },
 
-    // --- DASH ---
+
     DASH: {
         DISTANCE: 240,
         DURATION: 0.18,
         COOLDOWN: 4.0,
     },
 
-    // --- PROJECTILES ---
+
     PROJECTILE: {
         PLAYER_BULLET_SPEED: 20,
         PLAYER_BULLET_LIFE: 140,

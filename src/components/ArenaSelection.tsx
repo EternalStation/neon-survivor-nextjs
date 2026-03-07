@@ -20,6 +20,10 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
             const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
 
+            if (code === 'tab') {
+                e.preventDefault();
+            }
+
             if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : arenas.length - 1));
             }

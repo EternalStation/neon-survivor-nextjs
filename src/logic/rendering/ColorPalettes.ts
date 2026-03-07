@@ -14,13 +14,13 @@ export const COLOR_PALETTES: ColorPalette[] = [
 ];
 
 export function getCurrentPalette(gameTime: number): ColorPalette {
-    const eraIndex = Math.floor(gameTime / 900) % COLOR_PALETTES.length; // 15 min = 900s
+    const eraIndex = Math.floor(gameTime / 900) % COLOR_PALETTES.length; 
     return COLOR_PALETTES[eraIndex];
 }
 
 export function getShellVisibility(gameTime: number): { core: number; inner: number; outer: number } {
-    const timeInEra = gameTime % 900; // 0-900 seconds within current era
-    const stage = Math.floor(timeInEra / 300); // 0, 1, or 2 (5-minute stages)
+    const timeInEra = gameTime % 900; 
+    const stage = Math.floor(timeInEra / 300); 
 
     if (stage === 0) {
         return { core: 1.0, inner: 0.2, outer: 0.0 };

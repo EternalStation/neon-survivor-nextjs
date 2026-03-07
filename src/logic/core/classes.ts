@@ -12,20 +12,20 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'Quantum Ricochet Rounds'
         ],
         capabilityName: 'QUANTUM FRAGMENTATION',
-        capabilityDesc: 'Manual Targeting. Projectiles have 100% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 5% Damage and 3% Speed.',
+        capabilityDesc: 'Manual Targeting. Projectiles ricochet off all surfaces. ACTIVE SKILL: Deploy a Sandbox Hexagon for 15s (25s CD). Bullets gain +1% Speed and +20% Damage per bounce inside or on walls.',
         capabilityMetrics: [
             { label: 'RANGE', value: 100, unit: '%', isPercentage: true, isResonant: true, description: 'Base projectile range multiplier' },
-            { label: 'DMG/WALL', value: 5, unit: '%', isPercentage: true, isResonant: true, description: 'Damage gain per bounce' },
-            { label: 'SPD/WALL', value: 3, unit: '%', isPercentage: true, isResonant: true, description: 'Speed gain per bounce' },
+            { label: 'DMG/WALL', value: 20, unit: '%', isPercentage: true, isResonant: true, description: 'Damage gain per bounce' },
+            { label: 'SPD/WALL', value: 1, unit: '%', isPercentage: true, isResonant: true, description: 'Speed gain per bounce' },
         ],
         stats: {
             hpMult: -0.15,
-            bounceDmgMult: 0.05,
-            bounceSpeedBonus: 0.03,
+            bounceDmgMult: 0.20,
+            bounceSpeedBonus: 0.01,
             projLifeMult: 1.0,
             pierce: 1,
         },
-        icon: '#d946ef', // Pink-Purple
+        icon: '#d946ef',
         themeColor: '#d946ef',
         iconUrl: '/assets/hexes/MalwarePrime.png',
     },
@@ -53,7 +53,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             armMult: 0.20,
             spdMult: 0.10,
         },
-        icon: '#8b5cf6', // Violet
+        icon: '#8b5cf6',
         themeColor: '#8b5cf6',
         iconUrl: '/assets/hexes/EventHorizon.png'
     },
@@ -81,7 +81,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             dmgMult: 0.50,
             atkMult: -0.20,
         },
-        icon: '#06b6d4', // Cyan
+        icon: '#06b6d4',
         themeColor: '#06b6d4',
         iconUrl: '/assets/hexes/CosmicBeam.png'
     },
@@ -110,7 +110,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             hpMult: 0.50,
             regMult: 0.30,
         },
-        icon: '#f59e0b', // Amber/Gold
+        icon: '#f59e0b',
         themeColor: '#f59e0b',
         iconUrl: '/assets/hexes/AigisVortex.PNG'
     },
@@ -137,7 +137,7 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             xpMult: 0.15,
             dmgMult: 0.10,
         },
-        icon: '#22c55e', // Green
+        icon: '#22c55e',
         themeColor: '#22c55e',
         iconUrl: '/assets/hexes/HiveMother.png'
     }

@@ -58,8 +58,7 @@ interface CardData {
 }
 
 function getFusionPerkGroups(fusionId: string, translations: ReturnType<typeof getUiTranslation>): { title: string; perks: string[] }[] {
-    const matrixData = translations.matrix as unknown as Record<string, Record<string, Record<string, string[]>>>;
-    const raw = matrixData?.legendaries?.perks?.[fusionId];
+    const raw = (translations.legendaries as any)?.perks?.[fusionId];
     if (!raw) return [];
     const groups: { title: string; perks: string[] }[] = [];
     let current: { title: string; perks: string[] } | null = null;
@@ -100,8 +99,7 @@ const FusionCard: React.FC<{
     else if (canMerge) { statusLabel = 'READY'; statusColor = '#10b981'; }
     else if (hasBase1 || hasBase2) { statusLabel = 'PARTIAL'; statusColor = '#f59e0b'; }
 
-    const matrixData = translations.matrix as unknown as Record<string, Record<string, { skillDesc?: string }>>;
-    const fusionTrans = matrixData?.legendaries?.[data.fusion.result];
+    const fusionTrans = (translations.legendaries as any)?.[data.fusion.result];
     const skillDesc = fusionTrans?.skillDesc || "";
     const perkGroups = getFusionPerkGroups(data.fusion.result, translations);
 

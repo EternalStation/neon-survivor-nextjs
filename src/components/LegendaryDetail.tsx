@@ -172,8 +172,12 @@ export const LegendaryDetail: React.FC<LegendaryDetailProps> = ({ hex, gameState
                                     const stormHex = gameState.moduleSockets.hexagons.find(h => h?.type === 'KineticTsunami' || h?.type === 'EcoDMG');
                                     const startKills = stormHex?.killsAtLevel?.[1] ?? stormHex?.killsAtAcquisition ?? gameState.killCount;
                                     const stormSouls = Math.max(0, gameState.killCount - startKills);
-                                    const bonus = Math.floor(stormSouls / 100);
-                                    return `${desc} (Actually +${bonus}% bonus based on ${stormSouls} souls)`;
+                                    const dmgBonus = Math.floor(stormSouls / 100);
+
+                                    const waveSouls = gameState.player.kineticTsunamiWaveSouls || 0;
+                                    const cdBonus = waveSouls * 0.01 * multiplier;
+
+                                    return `${desc} (Actually: +${dmgBonus}% DMG from ${stormSouls} Storm souls | -${cdBonus.toFixed(2)}s CD from ${waveSouls} Wave souls)`;
                                 }
                                 if (isSingularity) {
                                     return desc;

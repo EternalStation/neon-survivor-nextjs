@@ -53,15 +53,27 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
     useEffect(() => {
         let cheatBuffer = '';
 
-        const handleDown = (e: KeyboardEvent) => {
-            if (e.repeat) return;
-            const key = (e.key || '').toLowerCase();
-            const code = (e.code || '').toLowerCase();
+        const handleDown = (e: KeyboardEvent | MouseEvent) => {
+            if (e instanceof KeyboardEvent && e.repeat) return;
+            const key = e instanceof KeyboardEvent ? (e.key || '').toLowerCase() : '';
+            let code = e instanceof KeyboardEvent ? (e.code || '').toLowerCase() : '';
+
+            if (e instanceof MouseEvent) {
+                if (e.button === 0) code = 'mouse0';
+                else if (e.button === 1) code = 'mouse1';
+                else if (e.button === 2) code = 'mouse2';
+                else code = `mouse${e.button}`;
+            }
 
 
 
             // Get latest keybinds from ref
             const keybinds = currentKeybinds.current;
+
+            // Prevent browser Tab focus cycling (especially when used for Stats)
+            if (key === 'tab' || code === 'tab') {
+                e.preventDefault();
+            }
 
             if (key === 'escape' || code === 'escape') {
                 if (gameState.current.showModuleMenu || gameState.current.showBossSkillDetail) {
@@ -223,8 +235,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         const dpr = window.devicePixelRatio || 1;
                         const zoom = windowScaleFactor.current * 0.58 * dpr;
                         const camera = state.camera;
-                        const cursorX = camera.x + (mousePos.current.x - window.innerWidth / 2) / zoom;
-                        const cursorY = camera.y + (mousePos.current.y - window.innerHeight / 2) / zoom;
+                        const cursorX = camera.x + (mousePos.current.x - window.innerWidth / 2) * dpr / zoom;
+                        const cursorY = camera.y + (mousePos.current.y - window.innerHeight / 2) * dpr / zoom;
                         triggerHiveMotherCone(state, player, cursorX, cursorY);
                     }
                 }
@@ -247,14 +259,14 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                         const dpr = window.devicePixelRatio || 1;
                         const zoom = windowScaleFactor.current * 0.58 * dpr;
                         const camera = state.camera;
-                        const worldX = camera.x + (mousePos.current.x - window.innerWidth / 2) / zoom;
-                        const worldY = camera.y + (mousePos.current.y - window.innerHeight / 2) / zoom;
+                        const worldX = camera.x + (mousePos.current.x - window.innerWidth / 2) * dpr / zoom;
+                        const worldY = camera.y + (mousePos.current.y - window.innerHeight / 2) * dpr / zoom;
                         player.sandboxActive = true;
                         player.sandboxX = worldX;
                         player.sandboxY = worldY;
                         player.sandboxUntil = now + GAME_CONFIG.SKILLS.SANDBOX_DURATION;
                         player.sandboxCooldownStart = now;
-                        spawnFloatingNumber(state, player.x, player.y - 40, 'SANDBOX', '#fb923c', true);
+
                         playSfx('power-up');
                     }
                 }
@@ -682,8 +694,8 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             }
         };
 
-        const handleUp = (e: KeyboardEvent) => {
-            const code = (e.code || '').toLowerCase();
+        const handleUp = (e: KeyboardEvent | MouseEvent) => {
+            const code = e instanceof KeyboardEvent ? (e.code || '').toLowerCase() : `mouse${e.button}`;
             keys.current[code] = false;
         };
 
@@ -693,10 +705,14 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
 
         window.addEventListener('keydown', handleDown);
         window.addEventListener('keyup', handleUp);
+        window.addEventListener('mousedown', handleDown);
+        window.addEventListener('mouseup', handleUp);
         window.addEventListener('mousemove', handleMouseMove);
         return () => {
             window.removeEventListener('keydown', handleDown);
             window.removeEventListener('keyup', handleUp);
+            window.removeEventListener('mousedown', handleDown);
+            window.removeEventListener('mouseup', handleUp);
             window.removeEventListener('mousemove', handleMouseMove);
         };
     }, []);

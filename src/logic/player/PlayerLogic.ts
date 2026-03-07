@@ -22,27 +22,27 @@ export function updatePlayer(
     const player = overridePlayer || state.player;
     const now = state.gameTime;
 
-    // Shield Cleanup
+
     if (player.shieldChunks) {
         player.shieldChunks = player.shieldChunks.filter((c: any) => now < c.expiry && c.amount > 0);
     }
 
     const hpAtStart = player.curHp;
 
-    // Track player position history for laser prediction (last 60 frames = ~1 second at 60fps)
+
     if (!state.playerPosHistory) state.playerPosHistory = [];
     state.playerPosHistory.unshift({ x: player.x, y: player.y, timestamp: state.gameTime });
     if (state.playerPosHistory.length > GAME_CONFIG.PLAYER.HISTORY_LENGTH) state.playerPosHistory.pop();
 
-    // Spawn Animation Logic
-    if (player.spawnTimer === undefined) player.spawnTimer = 0; // Fix: Default to 0 (visible) if undefined
+
+    if (player.spawnTimer === undefined) player.spawnTimer = 0;
 
     if (player.spawnTimer > 0) {
         player.spawnTimer -= 1 / 60;
-        if (player.spawnTimer > 0.3) return; // Allow movement in last 0.3s
+        if (player.spawnTimer > 0.3) return;
     }
 
-    // 0. Active Duration Logic (for inUse visual state)
+
     if (player.activeSkills) {
         player.activeSkills.forEach((skill: import('../core/types').ActiveSkill) => {
             if (skill.duration && skill.duration > 0) {
@@ -55,18 +55,18 @@ export function updatePlayer(
         });
     }
 
-    // 1. Movement & Wall Collision
-    handlePlayerMovement(state, keys, inputVector, onEvent, player, triggerDeath, triggerWallIncompetence);
 
-    // Camera is updated centrally in useGameLogic.ts
-
-    // 2. Stat Update & Sync (Regen, Hex Passives)
     updatePlayerStats(state, player);
 
-    // 3. Combat & Aiming (Radiation Core, contact damage, death logic)
+
+    handlePlayerMovement(state, keys, inputVector, onEvent, player, triggerDeath, triggerWallIncompetence);
+
+
+
+
     handlePlayerCombat(state, mouseOffset, onEvent, player, triggerDamageTaken, triggerDeath);
 
-    // --- TEMPORAL MONOLITH: COOLDOWN RECOVERY SPEED ---
+
     const isMonolithActive = ((player as any).temporalMonolithBuff ?? 0) > now;
     if (player.curHp < hpAtStart) {
         const hasMonolith = state.moduleSockets.hexagons.some(h => h?.type === 'TemporalMonolith');
@@ -76,17 +76,17 @@ export function updatePlayer(
     }
 
     if (isMonolithActive) {
-        // 20% Recovery Speed Increase = 0.2s of extra progress per 1.0s of real time
+
         const bonus = (1 / 60) * 0.2;
 
-        // 1. Manual Active Skills
+
         if (player.activeSkills) {
             player.activeSkills.forEach((s: import('../core/types').ActiveSkill) => {
                 s.lastUsed -= bonus;
             });
         }
 
-        // 2. Class Skills
+
         if (player.lastBlackholeUse) player.lastBlackholeUse -= bonus;
         if (player.lastHiveMotherSkill) player.lastHiveMotherSkill -= bonus;
         if (player.lastVortexActivation) player.lastVortexActivation -= bonus;
@@ -96,13 +96,13 @@ export function updatePlayer(
         if (player.stormCircleCooldownEnd) player.stormCircleCooldownEnd -= bonus;
         if (player.stormCircleChargeTime !== undefined) player.stormCircleChargeTime += bonus;
 
-        // 3. Passive Tech Skills
+
         if (player.lastKineticShockwave) player.lastKineticShockwave -= bonus;
         if (player.lastDash) player.lastDash -= bonus;
         if (player.lastDeathMark) player.lastDeathMark -= bonus;
     }
 
-    // Attach trigger function for other modules (Projectile/UniqueEnemy)
+
     if (!(state as any).triggerKineticBatteryZap) {
         (state as any).triggerKineticBatteryZap = triggerKineticBatteryZap;
         (window as any).triggerKineticBatteryZap = triggerKineticBatteryZap;

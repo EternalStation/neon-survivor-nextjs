@@ -14,6 +14,8 @@ export interface Particle {
     maxLife?: number;
     isTsunami?: boolean;
     isSingularity?: boolean;
+    startAngle?: number;
+    endAngle?: number;
 }
 
 export interface FloatingNumber {
@@ -27,6 +29,7 @@ export interface FloatingNumber {
     life: number;
     maxLife: number;
     isCrit: boolean;
+    fontSize?: number;
 }
 
 
@@ -56,6 +59,35 @@ export interface ActiveSkill {
     icon?: string;
 }
 
+export type DamageSource =
+    | 'Projectile'
+    | 'Kinetic Bolt (LVL 1)'
+    | 'Static Bolt'
+    | 'Nanite Swarm'
+    | 'Shockwave'
+    | 'Collision'
+    | 'Radiation Aura'
+    | 'Toxic Puddle (LVL 1)'
+    | 'Toxic Puddle (LVL 4)'
+    | 'Epicenter (LVL 1)'
+    | 'Epicenter (LVL 4)'
+    | 'Gravity Anchor'
+    | 'Temporal Monolith'
+    | 'Wall Impact'
+    | 'Fire Turret'
+    | 'Ice Turret'
+    | 'Zombie'
+    | 'Crimson Feast (LVL 3)'
+    | 'Crimson Feast (LVL 4)'
+    | 'Storm of Steel (LVL 4)'
+    | 'Shattered Fate (Execute)'
+    | 'Shattered Fate (Death Mark)'
+    | 'Shattered Fate (Crit)'
+    | 'Orbital Vortex'
+    | 'Storm Circle'
+    | 'Void Singularity'
+    | 'Other';
+
 export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
 export interface AreaEffect {
     id: number;
@@ -63,15 +95,15 @@ export interface AreaEffect {
     x: number;
     y: number;
     radius: number;
-    duration: number; // remaining time in frames or ms? Let's use seconds/frames logic. Usually ms based on gameTime.
+    duration: number;
     creationTime: number;
     level: number;
-    // Puddle props
+
     tickTimer?: number;
     casterId?: number;
     pulseTimer?: number;
     dmgMult?: number;
-    // Nanite Cloud props
+
     naniteSpawned?: boolean;
     naniteCount?: number;
     naniteDmg?: number;
@@ -80,6 +112,8 @@ export interface AreaEffect {
     facingAngle?: number;
     originX?: number;
     originY?: number;
+    isGravityAnchor?: boolean;
+    isGravitationalHarvest?: boolean;
 }
 
 export interface Player {
@@ -87,7 +121,7 @@ export interface Player {
     x: number;
     y: number;
     size: number;
-    // Multiplayer Input Buffer
+
     currentInput?: {
         keys: Record<string, boolean>;
         vector: { x: number, y: number };
@@ -101,8 +135,11 @@ export interface Player {
     hp: PlayerStats;
     curHp: number;
     dmg: PlayerStats;
-    atk: PlayerStats; // Cooldown in ms (lower is faster)
-    // Stats Tracking
+    atk: PlayerStats;
+    critChance: number;
+    critDamage: number;
+
+
     damageDealt: number;
     damageTaken: number;
     damageBlocked: number;
@@ -110,8 +147,9 @@ export interface Player {
     damageBlockedByCollisionReduc: number;
     damageBlockedByProjectileReduc: number;
     damageBlockedByShield: number;
+    damageBreakdown: Record<string, number>;
     wallsHit: number;
-    upgradesCollected: import('./types').UpgradeChoice[]; // Full objects for stat tracking
+    upgradesCollected: import('./types').UpgradeChoice[];
     reg: PlayerStats;
     invertedControlsUntil?: number;
     arm: PlayerStats;
@@ -128,49 +166,49 @@ export interface Player {
     targetY?: number;
     faceAngle: number;
     knockback: Vector;
-    stunnedUntil?: number; // Timestamp when stun ends
-    invincibleUntil?: number; // Timestamp for invincibility (e.g. Ninja Smoke)
+    stunnedUntil?: number;
+    invincibleUntil?: number;
 
-    // New Legendary Props
-    shield?: number; // @deprecated: Use shieldChunks
-    shieldExpiry?: number; // @deprecated: Use shieldChunks
+
+    shield?: number;
+    shieldExpiry?: number;
     shieldChunks?: ShieldChunk[];
     shotAccumulator?: number;
     shotsFired?: number;
     lastDeathMark?: number;
     activeSkills: ActiveSkill[];
-    immobilized?: boolean; // For Epicenter self-root
+    immobilized?: boolean;
     buffs?: {
-        puddleRegen?: boolean; // Lvl 3 puddle buff
-        epicenterShield?: number; // Lvl 3 epicenter shield
-        systemSurge?: { end: number, atk: number, spd: number }; // General surge buff for Storm-Strike or others
-        waveSpeed?: number; // Timestamp for wave speed buff
+        puddleRegen?: boolean;
+        epicenterShield?: number;
+        systemSurge?: { end: number, atk: number, spd: number };
+        waveSpeed?: number;
     };
     playerClass?: import('./classes').PlayerClassId;
-    classShotCount?: number; // For Storm-Strike Hyper-Pulse
+    classShotCount?: number;
     lastCosmicStrikeTime?: number;
     lastBlackholeUse?: number;
     stormCircleChargeTime?: number;
     stormCircleCooldownEnd?: number;
-    deathCause?: string; // Reason for game over
-    lastHitDamage?: number; // Final hit damage that killed the player
-    lastDamageTime?: number; // Timestamp when player took damage
+    deathCause?: string;
+    lastHitDamage?: number;
+    lastDamageTime?: number;
     wallHitTimestamps?: number[];
     waveUses?: number;
     lastWallWarningTime?: number;
     tripleWallDamageUntil?: number;
-    lastWallHitTime?: number; // Cooldown for wall collisions
-    killerHp?: number; // HP of the enemy that killed the player
-    killerMaxHp?: number; // Max HP of the enemy that killed the player
+    lastWallHitTime?: number;
+    killerHp?: number;
+    killerMaxHp?: number;
 
-    // Dash Ability
+
     dashCooldown?: number;
     dashCooldownMax?: number;
     dashUntil?: number;
     dashVx?: number;
     dashVy?: number;
 
-    // Void Marker (Event Horizon Active Ability)
+
     voidMarkerActive?: boolean;
     voidMarkerX?: number;
     voidMarkerY?: number;
@@ -178,16 +216,16 @@ export interface Player {
     voidMarkerVy?: number;
     voidMarkerSpawnTime?: number;
 
-    // Level 4 Boss Debuffs
+
     soulDrainMult?: number;
     healingDisabled?: boolean;
 
-    // Blueprint System
-    temporalGuardActive?: boolean;
-    phaseShiftUntil?: number; // Timestamp for ghost state (no dmg dealt/taken)
-    spawnTimer?: number; // Individual spawn animation timer
 
-    // Hive Mother Skill
+    temporalGuardActive?: boolean;
+    phaseShiftUntil?: number;
+    spawnTimer?: number;
+
+
     queuedNanites?: number;
     naniteFrameCounter?: number;
     naniteDoubleDmgUntil?: number;
@@ -196,7 +234,7 @@ export interface Player {
     orbitalVortexUntil?: number;
     lastVortexActivation?: number;
 
-    // Malware Sandbox (Active Ability)
+
     sandboxActive?: boolean;
     sandboxX?: number;
     sandboxY?: number;
@@ -204,26 +242,27 @@ export interface Player {
     sandboxCooldownStart?: number;
     orbitalVortexCooldownEnd?: number;
 
-    // Boss Capabilities
-    kineticBattery?: boolean; // Arena 2 Boss Drop
-    radCore?: boolean;        // Arena 1 Boss Drop
-    radCoreTick?: number;     // Accumulator for Rad Core damage
-    chronoPlating?: boolean;  // Arena 0 Boss Drop
+
+    kineticBattery?: boolean;
+    radCore?: boolean;
+    radCoreTick?: number;
+    chronoPlating?: boolean;
     lastKineticShockwave?: number;
     kineticShieldTimer?: number;
     cooldownReduction?: number;
     cooldownReductionBonus?: number;
     lastChronoDoubleIndex?: number;
     chronoArmorBonus?: number;
-    // Aigis Optimization
+
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
-    vortexStrength: number; // Unique number that increases over time/progression (Vortex Power)
+    vortexStrength: number;
     kineticTsunamiWaveSouls?: number;
     soulShatterSouls?: number;
     temporalMonolithSouls?: number;
     neutronStarAuraKills?: number;
-    chronoDevourerBuffTime?: number; // Timestamp when 10% CDR buff expires
-    // Inventory
+    chronoDevourerBuffTime?: number;
+    lastStormStrike?: number;
+
     inventory: (import('./types').Meteorite | null)[];
     autoUnsocket?: boolean;
     rerolls: number;
@@ -259,7 +298,7 @@ export interface PlayerClass {
         xpMult?: number;
         regMult?: number;
         armMult?: number;
-        // Malware-Prime Specifics
+
         bounceDmgMult?: number;
         bounceSpeedBonus?: number;
         projLifeMult?: number;
@@ -278,15 +317,15 @@ export interface Bullet {
     vx: number;
     vy: number;
     dmg: number;
-    pierce: number; // Penetration count
+    pierce: number;
     life: number;
     isEnemy: boolean;
-    hits: Set<number>; // Enemy IDs hit
+    hits: Set<number>;
     color?: string;
     size: number;
     isCrit?: boolean;
     critMult?: number;
-    // New Class Modifiers
+
     bounceCount?: number;
     isHyperPulse?: boolean;
     vortexState?: 'orbiting' | 'expanding';
@@ -294,7 +333,7 @@ export interface Bullet {
     orbitDist?: number;
     spawnTime?: number;
     trails?: { x: number; y: number }[];
-    // Nanite Swarm
+
     isNanite?: boolean;
     naniteTargetId?: number;
     isWobbly?: boolean;
@@ -303,35 +342,38 @@ export interface Bullet {
     cloudCenterX?: number;
     cloudCenterY?: number;
     cloudRadius?: number;
-    // Malware Props
+
     bounceDmgMult?: number;
     bounceSpeedBonus?: number;
-    // Aigis Optimization Properties
+
     isRing?: boolean;
     ringRadius?: number;
     ringVisualIntensity?: number;
-    ringAmmo?: number; // Count of fused bullets
-    // Malware Sandbox
+    ringAmmo?: number;
+
     insideSandbox?: boolean;
-    // Turret Props
+
     isTrace?: boolean;
     slowPercent?: number;
     freezeDuration?: number;
     isMist?: boolean;
     isVisualOnly?: boolean;
-    // Turret Logic Extensions
+
     burnDamage?: number;
     isTurretFire?: boolean;
     turretLevel?: number;
+    turretVariant?: 'fire' | 'ice';
     isBomb?: boolean;
     explodeRadius?: number;
-    // Shockwave
+
     isShockwaveCircle?: boolean;
     isSingularity?: boolean;
     isTsunami?: boolean;
     maxSize?: number;
     shockwaveLevel?: number;
     maxLife?: number;
+    startAngle?: number;
+    endAngle?: number;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
@@ -349,12 +391,12 @@ export interface ShapeDef {
 export interface PaletteDef {
     name: string;
     id: string;
-    colors: [string, string, string]; // Core, Inner, Outer
+    colors: [string, string, string];
 }
 
 export interface Enemy {
     id: number;
-    type: ShapeType | 'boss'; // Changed from generic string
+    type: ShapeType | 'boss';
     x: number;
     y: number;
     size: number;
@@ -362,158 +404,161 @@ export interface Enemy {
     maxHp: number;
     spd: number;
     boss: boolean;
-    bossType: number; // Shape index for legendary upgrades
-    bossAttackPattern: number; // 0 = Spread Shot, 1 = Tracking Snipe
+    bossType: number;
+    bossAttackPattern: number;
     lastAttack: number;
-    lastHitTime?: number; // Timestamp of last damage taken from player
+    lastHitTime?: number;
     dead: boolean;
+    puddleDmgAcc?: number;
+    puddleDmgTimer?: number;
 
-    // New Progression Props
+
     shape: ShapeType;
-    shellStage: number; // 0, 1, 2 (Core, Inner, Outer)
-    palette: string[]; // [Core, Inner, Outer]
-    fluxState: number; // 0: Containment, 1: Active, 2: Overload
-    eraPalette?: string[]; // Base era colors [Bright, Med, Dark]
-    pulsePhase: number; // 0-1 for breathing animation
-    rotationPhase: number; // For slow rotation
+    shellStage: number;
+    palette: string[];
+    fluxState: number;
+    eraPalette?: string[];
+    pulsePhase: number;
+    rotationPhase: number;
 
-    // AI States
-    summonState?: number; // 0: moving, 1: wait, 2: cast
-    dashState?: number; // 0: normal, 1: dash
-    dashAngle?: number; // Angle of the dash
-    timer?: number; // General purpose timer
-    dodgeDir?: number; // -1 or 1 for Dodge
 
-    // New Props for Refinements
-    seen?: boolean; // Has been seen by camera? (Pentagon)
-    spiralAngle?: number; // For Minion Black hole movement
-    spiralRadius?: number; // For Minion Black hole movement
-    reachedRange?: boolean; // For Pentagon AI (track if 700 range reached)
+    summonState?: number;
+    dashState?: number;
+    dashAngle?: number;
+    timer?: number;
+    dodgeDir?: number;
 
-    // Diamond Logic
+
+    seen?: boolean;
+    spiralAngle?: number;
+    spiralRadius?: number;
+    reachedRange?: boolean;
+
+
     preferredMinDist?: number;
     preferredMaxDist?: number;
     strafeInterval?: number;
 
-    // Boss Visual Effects
-    wobblePhase?: number; // For wobble animation
-    jitterX?: number; // Jitter offset X
-    jitterY?: number; // Jitter offset Y
-    glitchPhase?: number; // For glitch effects
-    crackPhase?: number; // For crack animations
-    particleOrbit?: number; // For orbiting particles (Pentagon)
-    trails?: { x: number; y: number; alpha: number; rotation: number }[]; // After-images
 
-    // Rare Enemy "Quantum Frame" Props
+    wobblePhase?: number;
+    jitterX?: number;
+    jitterY?: number;
+    glitchPhase?: number;
+    crackPhase?: number;
+    particleOrbit?: number;
+    trails?: { x: number; y: number; alpha: number; rotation: number }[];
+
+
     isRare?: boolean;
-    rarePhase?: number; // 0=Passive, 1=Alert, 2=Panic
-    rareTimer?: number; // Phase duration tracker
-    rareIntent?: number; // Counter for player intent
-    rareReal?: boolean; // True if real, False if decoy
-    canBlock?: boolean; // For Phase 2 defense (replaces blockedShots boolean flag logic)
-    invincibleUntil?: number; // Timestamp for invincibility (Phase 3 start)
-    parentId?: number; // For decoys to know their master
-    isExecuted?: boolean; // Specialist marker for execute skill
+    rarePhase?: number;
+    rareTimer?: number;
+    rareIntent?: number;
+    rareReal?: boolean;
+    canBlock?: boolean;
+    invincibleUntil?: number;
+    parentId?: number;
+    isExecuted?: boolean;
 
-    // Glitcher Properties
+
     glitchDecoy?: boolean;
     lastBlink?: number;
     lastDecoy?: number;
     lastLeak?: number;
-    longTrail?: { x: number; y: number }[]; // Long paint trail
-    forceTeleport?: boolean; // Signal to force teleport logic (Snitch)
+    longTrail?: { x: number; y: number }[];
+    forceTeleport?: boolean;
 
-    // Event Horizon Blackhole Effects
-    voidAmplified?: boolean; // Is enemy in blackhole vortex?
-    voidAmpMult?: number; // Damage amplification multiplier
-    untargetable?: boolean; // If true, player bullets won't home in on it
-    phase3AudioTriggered?: boolean; // Flag for Phase 3 Audio Trigger
-    spawnedAt?: number; // GameTime when spawned
-    spawnGracePeriod?: number; // Countdown where enemy deals no collision damage
 
-    // Snitch AI Props
-    // Snitch AI Props
-    charge?: number; // For Snitch Phase 2 Charge Mechanic
+    voidAmplified?: boolean;
+    voidAmpMult?: number;
+    untargetable?: boolean;
+    phase3AudioTriggered?: boolean;
+    spawnedAt?: number;
+    spawnGracePeriod?: number;
 
-    // Custom Collision Props
-    customCollisionDmg?: number; // If set, overrides standard 15% damage
-    stunOnHit?: boolean; // If true, stuns player on collision
 
-    // XP Reward
-    xpRewardMult?: number; // Multiplier for XP gain (overrides isElite check if present)
-    soulRewardMult?: number; // Multiplier for souls (kill count) gain
+
+    charge?: number;
+
+
+    customCollisionDmg?: number;
+    stunOnHit?: boolean;
+
+
+    xpRewardMult?: number;
+    soulRewardMult?: number;
     mergeState?: 'none' | 'warming_up' | 'merging';
-    mergeId?: string; // Group ID for merging cluster
-    mergeTimer?: number; // Timestamp when merge completes
-    mergeHost?: boolean; // Is this the "host" that becomes elite?
-    mergeCooldown?: number; // Cooldown timestamp before can merge again (after failed merge)
+    beingConsumedBy?: number;
+    mergeId?: string;
+    mergeTimer?: number;
+    mergeHost?: boolean;
+    mergeCooldown?: number;
 
-    // Elite Properties
+
     isElite?: boolean;
-    eliteState?: number; // For elite skills (0=Ready, 1=Active...)
-    originalPalette?: string[]; // Store original palette before ability color changes
-    lockedTargetX?: number; // For Circle Elite bull charge - locked player X position
-    lockedTargetY?: number; // For Circle Elite bull charge - locked player Y position
+    eliteState?: number;
+    originalPalette?: string[];
+    lockedTargetX?: number;
+    lockedTargetY?: number;
 
 
-    // Physics / Status
-    frozen?: number; // Timer for frozen state
-    knockback: { x: number; y: number }; // Knockback vector
-    shieldCd?: number; // For Snitch bullet stoppers (barrels)
-    hideCd?: number; // Cooldown for hiding behind enemies
-    hideTarget?: Vector | null; // Persist target for CD alignment
-    hideCoverId?: number; // ID of the enemy we are currently hiding behind
-    tacticalMode?: number; // 0 = Hide, 1 = Avoid
-    tacticalTimer?: number; // Timestamp for mode switching
-    laserTick?: number; // Timestamp for last laser damage tick (Diamond Elite)
-    dodgeCooldown?: number; // Escape dash timer for diamonds
-    lastDodge?: number; // Last escape dash timestamp (cooldown tracking)
-    lastBarrierTime?: number; // Timestamp when Barrels (Shields) were last used
-    lastCollisionDamage?: number; // Timestamp for last collision damage dealt to player
-    smokeRushEndTime?: number; // Timestamp when smoke rush ends
-    hidingStateEndTime?: number; // Timestamp when hiding behavior ends
-    lastWallHit?: number; // Cooldown for boss wall collision damage
-    vortexRecoveryUntil?: number; // Timestamp for orbital vortex stun recovery
+
+    frozen?: number;
+    knockback: { x: number; y: number };
+    shieldCd?: number;
+    hideCd?: number;
+    hideTarget?: Vector | null;
+    hideCoverId?: number;
+    tacticalMode?: number;
+    tacticalTimer?: number;
+    laserTick?: number;
+    dodgeCooldown?: number;
+    lastDodge?: number;
+    lastBarrierTime?: number;
+    lastCollisionDamage?: number;
+    smokeRushEndTime?: number;
+    hidingStateEndTime?: number;
+    lastWallHit?: number;
+    vortexRecoveryUntil?: number;
     lastVortexVelX?: number;
     lastVortexVelY?: number;
     vortexExitInertiaUntil?: number;
-    isNeutral?: boolean; // If true, ignored by auto-aim (e.g. Barrels)
-    baseColor?: string; // Immutable spawn color for projectiles
-    spiralDelay?: number; // Delay in seconds before starting spiral motion (Minions)
-    isFlanker?: boolean; // New: Smart AI Flanking role
-    flankAngle?: number; // Current target angle for flanking
-    flankDistance?: number; // Desired distance for flanking
-    flankStatus?: number; // 0=Flanking, 1=Striking
-    flankTimer?: number; // Timer for state transitions
+    isNeutral?: boolean;
+    baseColor?: string;
+    spiralDelay?: number;
+    isFlanker?: boolean;
+    flankAngle?: number;
+    flankDistance?: number;
+    flankStatus?: number;
+    flankTimer?: number;
 
 
-    // Minion / Pentagon Guard Props
-    minionState?: number; // 0=Orbit, 1=Attack
+
+    minionState?: number;
     orbitAngle?: number;
     orbitDistance?: number;
-    lastLaunchTime?: number; // Mother's launch throttle
-    suicideTimer?: number; // Mother's delayed explosion
-    triggeredLaunchTime?: number; // Timestamp of proximity trigger
-    angryUntil?: number; // End time for "Angry" red visual
-    panicTimer?: number; // Speed boost duration for Real Snitch escape
-    panicCooldown?: number; // Cooldown for panic escape
-    trollTimer?: number; // Stop duration for Fake Snitch
-    trollRush?: boolean; // If true, Fake Snitch is suicide rushing wall
+    lastLaunchTime?: number;
+    suicideTimer?: number;
+    triggeredLaunchTime?: number;
+    angryUntil?: number;
+    panicTimer?: number;
+    panicCooldown?: number;
+    trollTimer?: number;
+    trollRush?: boolean;
     minionCount?: number;
     orbitingMinionIds?: number[];
     minionIndex?: number;
 
-    // Friendly Zombie Props
+
     isFriendly?: boolean;
     attackTargetId?: number;
 
-    // Status Effects
+
     deathMarkExpiry?: number;
     fearedUntil?: number;
     stunnedUntil?: number;
     temporalMonolithExplosive?: boolean;
 
-    // Friendly Zombie Props (Refined)
+
     isZombie?: boolean;
     zombieState?: 'dead' | 'rising' | 'active' | 'clinging';
     zombieTimer?: number;
@@ -526,11 +571,11 @@ export interface Enemy {
     vy?: number;
     distGoal?: number;
     critGlitchUntil?: number;
-    slowFactor?: number; // 0-1 (e.g. 0.3 = 30% slow)
-    slowUntil?: number; // Timestamp
-    slowPercentVal?: number; // 0-1
-    takenDamageMultiplier?: number; // e.g. 1.2 = +20% dmg taken
-    // Hive-Mother Infection
+    slowFactor?: number;
+    slowUntil?: number;
+    slowPercentVal?: number;
+    takenDamageMultiplier?: number;
+
     isInfected?: boolean;
     infectedUntil?: number;
     infectionDmg?: number;
@@ -538,60 +583,60 @@ export interface Enemy {
     activeNaniteCount?: number;
     activeNaniteDmg?: number;
     lastSpitHitId?: number;
-    // Kinetic Bleed Status (ComLife + Kinetic Battery Fusion)
+
     bleedTimer?: number;
     bleedDmg?: number;
     bleedAccumulator?: number;
-    // Turret Burn Status
+
     burnStack?: number;
     burnTimer?: number;
     isNecroticZombie?: boolean;
     isGhost?: boolean;
     legionId?: string;
     legionLeadId?: number;
-    legionSlot?: { x: number; y: number }; // Index in the grid (e.g. 0-4, 0-3 for 20 enemies)
-    isAssembling?: boolean; // Invisible/Invincible during formation
-    legionShield?: number; // Shared shield value (stored on each member for simplicity or just on lead)
-    maxLegionShield?: number; // Max shield for the bar indicator
-    legionReady?: boolean; // True when formation is complete and shield activates
-    legionCenter?: Vector; // The center of the formation where it builds up
-    legionJoinDelay?: number; // Delay in frames before this unit starts joining the legion
-    wasInLegion?: boolean; // Prevent re-joining or merging after being in a legion
-    hasHitThisBurst?: boolean; // For one-time burst abilities (like Diamond Elite Laser)
+    legionSlot?: { x: number; y: number };
+    isAssembling?: boolean;
+    legionShield?: number;
+    maxLegionShield?: number;
+    legionReady?: boolean;
+    legionCenter?: Vector;
+    legionJoinDelay?: number;
+    wasInLegion?: boolean;
+    hasHitThisBurst?: boolean;
 
-    // Level 2 Boss Mechanics (10min+)
-    thorns?: number; // % damage return (0-1)
-    dashTimer?: number; // Cooldown/State timer for Circle Boss
-    dashLockX?: number; // Locked target X
-    dashLockY?: number; // Locked target Y
-    berserkState?: boolean; // Triangle Boss Berserk
+
+    thorns?: number;
+    dashTimer?: number;
+    dashLockX?: number;
+    dashLockY?: number;
+    berserkState?: boolean;
     berserkTimer?: number;
-    beamState?: number; // 0=Cd, 1=Charge, 2=Fire
-    beamTimer?: number; // Timer for states
-    beamX?: number; // Baked target X
-    beamY?: number; // Baked target Y
+    beamState?: number;
+    beamTimer?: number;
+    beamX?: number;
+    beamY?: number;
     beamAngle?: number;
-    soulLinkTargets?: number[]; // IDs of linked enemies (Pentagon)
-    soulLinkHostId?: number; // ID of the boss linking this enemy
-    bossTier?: number; // 0=Auto (Time based), 1=Tier 1 (Normal), 2=Tier 2 (Enhanced), 3=Tier 3 (Ascended)
+    soulLinkTargets?: number[];
+    soulLinkHostId?: number;
+    bossTier?: number;
 
-    // Level 3 Boss Mechanics (20min+)
-    cycloneState?: number; // 0=Idle, 1=Spinning (Circle)
+
+    cycloneState?: number;
     cycloneTimer?: number;
-    shieldsInitialized?: boolean; // Square Boss - tracks if initial shields have been spawned
+    shieldsInitialized?: boolean;
 
 
-    deflectState?: boolean; // Triangle Spin/Deflect
+    deflectState?: boolean;
 
-    orbitalShields?: number; // Current active shields (Square)
+    orbitalShields?: number;
     maxOrbitalShields?: number;
     shieldRegenTimer?: number;
 
-    satelliteState?: number; // 0=Idle, 1=Charge, 2=Fire (Diamond)
+    satelliteState?: number;
     satelliteTimer?: number;
-    satelliteTargets?: { x: number, y: number }[]; // Locked zones
+    satelliteTargets?: { x: number, y: number }[];
 
-    parasiteLinkActive?: boolean; // Pentagon Link
+    parasiteLinkActive?: boolean;
     parasiteTimer?: number;
     wormId?: string;
     wormRole?: 'head' | 'segment';
@@ -607,22 +652,22 @@ export interface Enemy {
     wormLungeActive?: boolean;
     wormOrbitDir?: number;
     wormOrbitRadius?: number;
-    wormTrueDamage?: number; // True damage percentage (pierces armor/reduction)
-    wormPromotionTimer?: number; // Timing for split promotion
+    wormTrueDamage?: number;
+    wormPromotionTimer?: number;
     isAnomaly?: boolean;
-    anomalyGeneration?: number; // Which summon iteration explains stats scaling
-    bonusBurnPct?: number; // Stage 3 ramping burn damage
-    bonusBurnRadius?: number; // Stage 3 growing burn radius (pixels)
-    stage?: number; // Boss stage (1, 2, 3)
-    stage2StartTime?: number; // Timestamp when Stage 2 started
-    stage3StartTime?: number; // Timestamp when Stage 3 started
-    minionsSpawned?: boolean; // Track stage 2 spawn
+    anomalyGeneration?: number;
+    bonusBurnPct?: number;
+    bonusBurnRadius?: number;
+    stage?: number;
+    stage2StartTime?: number;
+    stage3StartTime?: number;
+    minionsSpawned?: boolean;
     anomalyBurnTimer?: number;
     dieOnCollision?: boolean;
     lastPushX?: number;
     lastPushY?: number;
 
-    // Level 4 Boss Mechanics
+
     isLevel3?: boolean;
     isLevel4?: boolean;
     thornsIgnoresArmor?: boolean;
@@ -634,7 +679,7 @@ export interface Enemy {
     soulSuckUsed?: boolean;
     soulSuckCoreSize?: number;
 
-    // Pentagon Phalanx
+
     phalanxTimer?: number;
     phalanxState?: number;
     phalanxDrones?: string[];
@@ -642,7 +687,7 @@ export interface Enemy {
     isPhalanxDrone?: boolean;
     phalanxDroneAngle?: number;
 
-    // Level 5 Boss Mechanics
+
     crystalPositions?: Vector[];
     crystalState?: number;
     nextAttackCD?: number;
@@ -677,14 +722,14 @@ export interface LegendaryHex {
     level: number;
     killsAtAcquisition: number;
     timeAtAcquisition?: number;
-    killsAtLevel?: Record<number, number>; // Track killCount when each level was unlocked
-    timeAtLevel?: Record<number, number>; // Track gameTime when each level was unlocked
+    killsAtLevel?: Record<number, number>;
+    timeAtLevel?: Record<number, number>;
     customIcon?: string;
     description?: string;
     lore?: string;
     perks?: string[];
     allPerks?: string[][];
-    statBonuses?: Record<string, number>; // Baked-in bonuses per kill (Snapshotted with Efficiency)
+    statBonuses?: Record<string, number>;
     forgedAt?: string[];
 }
 
@@ -726,21 +771,21 @@ export interface MapPOI {
     radius: number;
     arenaId: number;
     active: boolean;
-    progress: number; // For anomaly summoning (0-100)
-    activationProgress: number; // For overclock activation (0-100)
-    activeDuration: number; // How long it's been active (seconds)
-    cooldown: number; // Cooldown timer (seconds)
-    respawnTimer: number; // Timer before relocated POI appears (seconds)
-    lastUsed: number; // Timestamp
-    // Turret Props
+    progress: number;
+    activationProgress: number;
+    activeDuration: number;
+    cooldown: number;
+    respawnTimer: number;
+    lastUsed: number;
+
     turretVariant?: 'fire' | 'ice' | 'heal';
     turretUses?: number;
     turretCost?: number;
     lastShot?: number;
     rotation?: number;
-    anomalySpawnDelay?: number; // Timer before anomaly boss actually spawns
-    anomalySpawnTier?: number; // Stored boss tier for delayed spawn
-    // Turret Extensions
+    anomalySpawnDelay?: number;
+    anomalySpawnTier?: number;
+
     droneSpawned?: boolean;
     lastBomb?: number;
     lastShotRear?: number;
@@ -750,9 +795,9 @@ export interface MapPOI {
 export interface GameEvent {
     type: GameEventType;
     startTime: number;
-    duration: number; // in seconds
+    duration: number;
     endTime: number;
-    data?: any; // Event specific storage (e.g. original values to restore)
+    data?: any;
     pendingZombieSpawns?: Array<{ x: number; y: number; shape: ShapeType; spd: number; maxHp: number; size: number; spawnAt: number }>;
 }
 
@@ -775,38 +820,38 @@ export interface GameState {
     floatingNumbers: FloatingNumber[];
     drones: { a: number; last: number; x: number; y: number }[];
     particles: Particle[];
-    allies?: Ally[]; // For drones/summons
+    allies?: Ally[];
     camera: Vector;
     score: number;
-    killCount: number; // Dedicated kill counter
-    rawKillCount: number; // Unbuffed kill counter for UI display
-    bossKills: number; // Track boss kills separately
+    killCount: number;
+    rawKillCount: number;
+    bossKills: number;
     gameTime: number;
     meteoritesPickedUp: number;
     portalsUsed: number;
     snitchCaught: number;
-    timeInArena: Record<number, number>; // ArenaId -> Seconds
-    frameCount: number; // For throttling particle effects
+    timeInArena: Record<number, number>;
+    frameCount: number;
     isPaused: boolean;
     gameOver: boolean;
     nextBossSpawnTime: number;
-    playerPosHistory?: { x: number; y: number; timestamp: number }[]; // Last 60 positions for laser prediction
-    nextBossId: number; // To track waves
-    rareSpawnCycle: number; // Index of rare spawn cycle
-    rareSpawnActive: boolean; // Is a rare enemy currently alive?
-    rareRewardActive?: boolean; // Flag to show "Increased Rarity" text on next level up
-    snitchRewardActive?: boolean; // Flag to track Snitch rewards for rerolls
-    spawnTimer: number; // For start/restart animation
-    interactPressed?: boolean; // True if interact key was pressed this frame
-    unpauseDelay?: number; // Grace period after closing menus
-    unpauseMode?: 'normal' | 'slow_motion'; // Type of unpause transition
-    flashIntensity?: number; // White flash opacity (0-1)
+    playerPosHistory?: { x: number; y: number; timestamp: number }[];
+    nextBossId: number;
+    rareSpawnCycle: number;
+    rareSpawnActive: boolean;
+    rareRewardActive?: boolean;
+    snitchRewardActive?: boolean;
+    spawnTimer: number;
+    interactPressed?: boolean;
+    unpauseDelay?: number;
+    unpauseMode?: 'normal' | 'slow_motion';
+    flashIntensity?: number;
 
     hasPlayedSpawnSound?: boolean;
-    bossPresence: number; // 0 to 1 smooth transition for boss effects
-    critShake: number; // Screenshake intensity from crits
-    smokeBlindTime?: number; // Timestamp for full-screen white fog effect
-    anomalyBossCount?: number; // Number of times anomaly boss has been summoned
+    bossPresence: number;
+    critShake: number;
+    smokeBlindTime?: number;
+    anomalyBossCount?: number;
     spatialGrid: import('./SpatialGrid').SpatialGrid;
     areaEffects: AreaEffect[];
     activeEvent: GameEvent | null;
@@ -817,73 +862,73 @@ export interface GameState {
         legionSpawned?: boolean;
         activeLegionId?: string;
     };
-    lastLegionWindow?: number; // Track which 10m window last had a legion event
+    lastLegionWindow?: number;
     pois: MapPOI[];
 
-    // Portal / Multiverse Props
-    currentArena: number; // ID of the arena the player is currently in
-    lastArena?: number; // Previous arena to detect transitions
-    portalsUnlocked: boolean; // Are portals usable?
-    arenaLevels: Record<number, number>; // Level of each arena (0 = No Buffs, 1 = Base, 2+ = Enhanced)
+
+    currentArena: number;
+    lastArena?: number;
+    portalsUnlocked: boolean;
+    arenaLevels: Record<number, number>;
     portalState: 'closed' | 'warn' | 'open' | 'transferring';
-    portalTimer: number; // Cycles every 4 minutes (240s)
-    portalOpenDuration: number; // 10s
+    portalTimer: number;
+    portalOpenDuration: number;
     isUpgradeMenuOpen?: boolean;
     shownUpgradeIds?: string[];
     portalBlockedByWorms?: boolean;
     portalBlockedByAbomination?: boolean;
-    transferTimer: number; // 3s delay during teleport
-    nextArenaId: number | null; // Destination
-    portalOneTimeUse?: boolean; // If true, portals close after one use
+    transferTimer: number;
+    nextArenaId: number | null;
+    portalOneTimeUse?: boolean;
     runSubmitted?: boolean;
 
-    // Inventory System
-    meteorites: Meteorite[]; // Dropped items in the world
-    inventory: (Meteorite | null)[];  // Collected items (30 slots)
-    incubator: (IncubatedMeteorite | null)[]; // 3 slots
+
+    meteorites: Meteorite[];
+    inventory: (Meteorite | null)[];
+    incubator: (IncubatedMeteorite | null)[];
     incubatorFuel: number;
     incubatorFuelMax: number;
 
-    // Module Menu System
+
     showModuleMenu: boolean;
-    showStats: boolean; // Synced from React State
-    showSettings: boolean; // Synced from React State
+    showStats: boolean;
+    showSettings: boolean;
     showLegendarySelection: boolean;
     showBossSkillDetail: boolean;
     showAdminConsole: boolean;
     showCheatPanel: boolean;
     showFeedbackModal: boolean;
     legendaryOptions: LegendaryHex[] | null;
-    pendingLegendaryHex: LegendaryHex | null; // Hex waiting to be placed
-    pendingFusionHex?: { hex: LegendaryHex, validHexIndices: number[] } | null; // Fusion waiting to be placed
-    upgradingHexIndex: number | null; // For auto-upgrade animation
-    upgradingHexTimer: number; // Duration of animation
+    pendingLegendaryHex: LegendaryHex | null;
+    pendingFusionHex?: { hex: LegendaryHex, validHexIndices: number[] } | null;
+    upgradingHexIndex: number | null;
+    upgradingHexTimer: number;
     unseenMeteorites: number;
     moduleSockets: {
-        hexagons: (LegendaryHex | null)[];   // 6 outer sockets
-        diamonds: (Meteorite | null)[];       // 6 inner sockets
-        center: PlayerClass | null; // Center slot for class
+        hexagons: (LegendaryHex | null)[];
+        diamonds: (Meteorite | null)[];
+        center: PlayerClass | null;
     };
     chassisDetailViewed: boolean;
     lastPlacement: { type: 'diamond' | 'hex', index: number, timestamp: number } | null;
-    // Frame-based caches (Not persistent)
+
     legionLeads?: Record<string, Enemy>;
     playerName?: string;
     language: import('../../lib/LanguageContext').Language;
 
-    // Blueprint System
-    blueprints: (Blueprint | null)[]; // 10 Slots (8 available, 2 locked)
-    activeBlueprintBuffs: Partial<Record<BlueprintType, number>>; // End-time timestamps
-    activeBlueprintCharges: Partial<Record<BlueprintType, number>>; // Remaining use counts
-    hpRegenBuffMult: number; // For Defense Arena
-    dmgAtkBuffMult: number; // For Combat Arena
-    xpSoulBuffMult: number; // For Economic Arena
-    meteoriteRateBuffMult: number; // For Economic Arena (Not affected by Surge)
-    gameSpeedMult: number; // Global speed multiplier (0.1 - 5.0, default 1.0)
+
+    blueprints: (Blueprint | null)[];
+    activeBlueprintBuffs: Partial<Record<BlueprintType, number>>;
+    activeBlueprintCharges: Partial<Record<BlueprintType, number>>;
+    hpRegenBuffMult: number;
+    dmgAtkBuffMult: number;
+    xpSoulBuffMult: number;
+    meteoriteRateBuffMult: number;
+    gameSpeedMult: number;
     xpDisabled?: boolean;
     chassisResonanceBonus?: number;
 
-    // Extraction System
+
     extractionStatus: 'none' | 'requested' | 'waiting' | 'active' | 'arriving' | 'arrived' | 'departing' | 'complete';
     extractionTimer: number;
     extractionMessageIndex: number;
@@ -892,32 +937,32 @@ export interface GameState {
     extractionTargetArena: number;
     extractionShipPos?: { x: number, y: number };
     extractionStartTime?: number;
-    extractionEndTime?: number; // Target timestamp for countdown
+    extractionEndTime?: number;
     extractionPowerMult: number;
     extractionSectorLabel?: string;
 
-    // Tutorial System
+
     tutorial: TutorialState;
 
-    // Prism Glitcher Random Spawn System
+
     glitcherLastCheckedMinute?: number;
     glitcherScheduledSpawnTime?: number;
 
-    // Void Burrower Random Spawn System
+
     wormLastCheckedMinute?: number;
     wormScheduledSpawnTime?: number;
 
-    // UI Delays
+
     pendingLevelUps: number;
     levelUpTimer: number;
     pendingBossKills: number;
     bossKillTimer: number;
     pendingZaps?: Array<{ targetIds: number[]; dmg: number; nextZapTime: number; currentIndex: number; sourcePos: { x: number, y: number }, applyBleed?: boolean, applyStun?: boolean, history: { x1: number; y1: number; x2: number; y2: number }[], travelProgress?: number, isHunting?: boolean, color?: string }>;
 
-    // Spawn Logic
+
     firstMeteoriteSpawned?: boolean;
 
-    // Multiplayer State
+
     gameMode: 'single' | 'multiplayer';
     players: Record<string, Player>;
     multiplayer: {
@@ -929,14 +974,14 @@ export interface GameState {
     readyStatus: Record<string, boolean>;
     sharedXp: number;
 
-    // AI Assistant (Orbit) Logic
+
     assistant: {
         message: string | null;
         emotion: 'Normal' | 'Dissapointed' | 'Point' | 'Smile' | 'Thinks';
         queue: string[];
         timer: number;
         history: {
-            upgradePicks: Record<string, number>; // upgradeId -> count
+            upgradePicks: Record<string, number>;
             deaths: number;
             totalDamageTaken: number;
             totalSurvivalTime: number;
@@ -966,14 +1011,14 @@ export interface Meteorite {
     y: number;
     rarity: MeteoriteRarity;
     quality: MeteoriteQuality;
-    visualIndex: number; // 1-7
+    visualIndex: number;
     vx: number;
     vy: number;
-    magnetized: boolean; // Is it being pulled to player?
-    isNew?: boolean; // track if player has seen this meteorite
-    discoveredIn: string; // The arena where it was found
+    magnetized: boolean;
+    isNew?: boolean;
+    discoveredIn: string;
     perks: MeteoritePerk[];
-    spawnedAt: number; // Timestamp for despawn logic
+    spawnedAt: number;
     recalibrationCount?: number;
     stats: {
         coreSurge?: number;
@@ -982,17 +1027,17 @@ export interface Meteorite {
         sameType?: number;
         hexType?: number;
     };
-    incubatorBoost?: number; // Total points added by the Void Forge
-    instability?: number; // Persistence of incubator instability
-    // Loot Props
-    type?: 'dust_pile' | 'meteorite' | 'void_flux';
-    amount?: number; // For dust piles
+    incubatorBoost?: number;
+    instability?: number;
 
-    // Blueprint System
+    type?: 'dust_pile' | 'meteorite' | 'void_flux';
+    amount?: number;
+
+
     blueprintBoosted?: boolean;
     isBlueprint?: boolean;
     blueprintType?: BlueprintType;
-    name?: string; // For blueprints to show name instead of rarity
+    name?: string;
     status?: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
     researched?: boolean;
     researchFinishTime?: number;
@@ -1004,10 +1049,10 @@ export interface Meteorite {
 }
 
 export interface IncubatedMeteorite extends Meteorite {
-    insertedAt: number; // gameTime when inserted
-    growthTicks: number; // number of times it has grown (1 tick = 1 minute)
-    instability: number; // 0-100 percentage chance to break on next tick
-    isRuined?: boolean; // Failed the overload check, turned to useless slag
+    insertedAt: number;
+    growthTicks: number;
+    instability: number;
+    isRuined?: boolean;
 }
 
 export type BlueprintType =
@@ -1031,7 +1076,7 @@ export interface Blueprint {
     serial: string;
     desc: string;
     cost: number;
-    duration: number; // in seconds
+    duration: number;
     isBlueprint: boolean;
     researched: boolean;
     status: 'locked' | 'ready' | 'active' | 'broken' | 'researching';
@@ -1043,7 +1088,7 @@ export interface Blueprint {
 
 export enum TutorialStep {
     MOVEMENT = 0,
-    COMBAT = 1, // Hidden but track kill
+    COMBAT = 1,
     KILL_ENEMY = 2,
     LEVEL_UP_MENU = 3,
     UPGRADE_SELECTED_CHECK_STATS = 4,
@@ -1051,15 +1096,15 @@ export enum TutorialStep {
     COLLECT_METEORITE = 5,
     OPEN_MODULE_MENU = 6,
 
-    // Module Menu Tour Steps
+
     MATRIX_WELCOME = 10,
     MATRIX_INVENTORY = 11,
     MATRIX_SOCKETS = 12,
     MATRIX_TYPES = 13,
     MATRIX_ORIGIN = 14,
-    MATRIX_RECYCLE_ACTION = 15, // New: Recycle button highight
-    MATRIX_DUST_USAGE = 16, // New: Dust amount highlight
-    MATRIX_QUOTA_MISSION = 17, // New: Quota highlight
+    MATRIX_RECYCLE_ACTION = 15,
+    MATRIX_DUST_USAGE = 16,
+    MATRIX_QUOTA_MISSION = 17,
     MATRIX_CLASS_DETAIL = 18,
     MATRIX_NON_STATIC_METRICS = 19,
     MATRIX_FILTERS = 20,
@@ -1070,11 +1115,11 @@ export enum TutorialStep {
 export interface TutorialState {
     currentStep: TutorialStep;
     isActive: boolean;
-    stepTimer: number; // Time spent in current step
+    stepTimer: number;
     completedSteps: TutorialStep[];
 
-    // Trackers for verification
-    pressedKeys: Set<string>; // 'w', 'a', 's', 'd'
+
+    pressedKeys: Set<string>;
     hasMoved: boolean;
     hasKilled: boolean;
     hasCollectedMeteorite: boolean;

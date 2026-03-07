@@ -1,6 +1,6 @@
 import type { GameState } from '../core/types';
 
-export const TICK_INTERVAL = 20; // 20 seconds per growth tick
+export const TICK_INTERVAL = 20; 
 
 export function updateIncubator(state: GameState, step: number, onEvent?: (type: string, data?: any) => void) {
     if (!state.incubator) return;
@@ -8,12 +8,12 @@ export function updateIncubator(state: GameState, step: number, onEvent?: (type:
     for (let i = 0; i < state.incubator.length; i++) {
         const met = state.incubator[i];
 
-        // Skip empty slots or already ruined meteorites
+        
         if (!met || met.isRuined) continue;
 
-        // NEW: Fuel Check
+        
         if (state.incubatorFuel <= 0) {
-            met.insertedAt += step; // Shift insertion time forward to "pause" progress
+            met.insertedAt += step; 
             continue;
         }
 
@@ -21,10 +21,10 @@ export function updateIncubator(state: GameState, step: number, onEvent?: (type:
         const expectedTicks = Math.floor(timeInIncubator / TICK_INTERVAL);
 
         if (expectedTicks > met.growthTicks) {
-            // Consume Fuel (1 unit per tick)
+            
             state.incubatorFuel = Math.max(0, state.incubatorFuel - 1);
 
-            // Destruction check happens at the START of a new tick (based on instability from previous tick)
+            
             if (met.instability > 0) {
                 const breakChance = met.instability / 100;
                 if (Math.random() < breakChance) {
@@ -34,15 +34,15 @@ export function updateIncubator(state: GameState, step: number, onEvent?: (type:
                 }
             }
 
-            // Apply growth boost (1% to 2%)
+            
             const boost = Math.floor(Math.random() * 2) + 1;
             met.incubatorBoost = (met.incubatorBoost || 0) + boost;
 
-            // Update instability (always grow from start)
-            const instabilityAdd = Math.floor(Math.random() * 3) + 3; // 3% to 5%
+            
+            const instabilityAdd = Math.floor(Math.random() * 3) + 3; 
             met.instability = (met.instability || 0) + instabilityAdd;
 
-            // Mark tick as processed
+            
             met.growthTicks = expectedTicks;
         }
     }

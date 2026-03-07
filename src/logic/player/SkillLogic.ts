@@ -5,6 +5,8 @@ import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { calcStat } from '../utils/MathUtils';
+import { spawnParticles } from '../effects/ParticleLogic';
+import { playSfx } from '../audio/AudioLogic';
 
 export function castSkill(state: GameState, skillIndex: number) {
     if (skillIndex < 0 || skillIndex >= state.player.activeSkills.length) return;
@@ -50,7 +52,8 @@ export function castSkill(state: GameState, skillIndex: number) {
             creationTime: state.gameTime,
             level,
             casterId: -1,
-            pulseTimer: 100
+            pulseTimer: 100,
+            isGravitationalHarvest: skill.type === 'GravitationalHarvest'
         });
 
         skill.baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
@@ -98,9 +101,13 @@ export function castSkill(state: GameState, skillIndex: number) {
                 if (dist <= radius) {
                     e.frozen = duration;
                     e.temporalMonolithExplosive = true;
+                    spawnParticles(state, e.x, e.y, '#38bdf8', 5, 8, 20, 'shard');
                 }
             }
         });
+
+
+        spawnParticles(state, state.player.x, state.player.y, '#38bdf8', 20, 12, 30, 'shockwave');
 
         state.areaEffects.push({
             id: Math.random(),
@@ -119,42 +126,28 @@ export function castSkill(state: GameState, skillIndex: number) {
         skill.duration = duration;
     }
 
-    if (skill.type === 'ChronoDevourer') {
-        const mult = getHexMultiplier(state, 'ChronoDevourer');
-        const shieldPieces = state.player.shieldChunks || [];
-        const totalShield = shieldPieces.reduce((sum, chunk) => sum + Math.max(0, chunk.amount), 0);
-        const totalArmor = calcStat(state.player.arm);
 
-        const damage = (totalArmor + totalShield) * mult;
-
-        state.player.shieldChunks = [];
-        state.player.shield = 0;
-
-        const radius = 600 * mult;
+    if (skill.type === 'GravityAnchor') {
+        const level = 5;
 
         state.areaEffects.push({
             id: Math.random(),
-            type: 'temporal_burst',
+            type: 'epicenter',
             x: state.player.x,
             y: state.player.y,
-            radius,
-            duration: 0.5,
+            radius: 500,
+            duration: 10,
             creationTime: state.gameTime,
-            level: 5
+            level,
+            casterId: -1,
+            pulseTimer: 100,
+            isGravityAnchor: true
         });
 
-        state.enemies.forEach(e => {
-            if (!e.dead && !e.boss && !e.isFriendly) {
-                const dist = Math.hypot(e.x - state.player.x, e.y - state.player.y);
-                if (dist <= radius) {
-                    e.hp -= damage;
-                }
-            }
-        });
-
-        skill.baseCD = GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN;
+        skill.baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
         skill.lastUsed = now;
         skill.inUse = true;
-        skill.duration = 0.5;
+        skill.duration = 10;
+        playSfx('power-up');
     }
 }

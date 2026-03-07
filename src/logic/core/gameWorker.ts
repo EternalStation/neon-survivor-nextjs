@@ -1,4 +1,4 @@
-// This worker provides a steady heartbeat for the game loop when the main thread is throttled
+
 let intervalId: any = null;
 
 self.onmessage = (e: MessageEvent) => {

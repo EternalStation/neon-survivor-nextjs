@@ -27,7 +27,7 @@ export function updateSingleEnemyBullet(
         const vPower = player.vortexStrength || 1.0;
 
         if (player.orbitalVortexUntil && player.orbitalVortexUntil > state.gameTime) {
-            // ACTIVE VORTEX: Strong Bending (800px)
+            
             if (vdist < GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS && vdist > 0.001) {
                 const perpX = -vdy / vdist;
                 const perpY = vdx / vdist;
@@ -38,11 +38,11 @@ export function updateSingleEnemyBullet(
                 if (speed > cap) { eb.vx = (eb.vx / speed) * cap; eb.vy = (eb.vy / speed) * cap; }
             }
         } else {
-            // PASSIVE DEFLECTION: Orbits 2, 3, 4 (180px to 330px)
+            
             if (vdist > 180 && vdist < 330) {
                 const perpX = -vdy / vdist;
                 const perpY = vdx / vdist;
-                // Subtle passive nudge
+                
                 eb.vx += perpX * 0.05 * vPower;
                 eb.vy += perpY * 0.05 * vPower;
             }
@@ -54,7 +54,7 @@ export function updateSingleEnemyBullet(
         return true;
     }
 
-    // Collision with Zombies
+    
     const nearbyZombies = state.spatialGrid.query(eb.x, eb.y, 50);
     for (const z of nearbyZombies) {
         if (z.isZombie && z.zombieState === 'active' && !z.dead) {
@@ -75,7 +75,7 @@ export function updateSingleEnemyBullet(
         }
     }
 
-    // Collision with Players
+    
     const playersList = Object.values(state.players);
     for (const p of playersList) {
         if (Math.hypot(p.x - eb.x, p.y - eb.y) < p.size + 10) {

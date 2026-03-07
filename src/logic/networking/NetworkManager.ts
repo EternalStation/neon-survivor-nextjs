@@ -44,7 +44,7 @@ export class NetworkManager {
     public initialize(isHost: boolean, onIdAssigned: (id: string) => void): Promise<string> {
         this.isHost = isHost;
         return new Promise((resolve, reject) => {
-            this.peer = new Peer(); // Auto-generate ID (or pass one if we want persistent IDs)
+            this.peer = new Peer(); 
 
             this.peer.on('open', (id) => {
                 this.myId = id;
@@ -75,7 +75,7 @@ export class NetworkManager {
             conn.on('open', () => {
                 console.log('Connected to: ' + conn.peer);
                 this.connections[conn.peer] = conn;
-                this.handleConnection(conn); // Set up other listeners
+                this.handleConnection(conn); 
                 resolve();
             });
 
@@ -86,15 +86,15 @@ export class NetworkManager {
     }
 
     private handleConnection(conn: DataConnection): void {
-        // Remove the 'open' listener from here since we handle it in connectToPeer or it's already open
+        
         if (conn.open && !this.connections[conn.peer]) {
             this.connections[conn.peer] = conn;
         }
 
-        // Ensure we don't double-bind if called multiple times, but for now standard logic:
-        // We only call handleConnection for incoming connections or after open for outgoing.
+        
+        
 
-        // For incoming connections (not initiated by us via connectToPeer), we need to listen to open
+        
         if (!conn.open) {
             conn.on('open', () => {
                 console.log('Connected to: ' + conn.peer);
@@ -110,7 +110,7 @@ export class NetworkManager {
         conn.on('close', () => {
             console.log('Connection closed: ' + conn.peer);
             delete this.connections[conn.peer];
-            // Handle disconnect logic (pause game?)
+            
         });
     }
 
@@ -119,11 +119,11 @@ export class NetworkManager {
             case 'JOIN_REQUEST':
                 if (this.isHost && this.onPlayerJoin) {
                     this.onPlayerJoin(senderId, msg.payload.name);
-                    // Automatically accept for now
+                    
                     this.sendTo(senderId, {
                         type: 'JOIN_ACCEPT',
                         payload: {
-                            state: {}, // TODO: Send actual initial state
+                            state: {}, 
                             peerIds: Object.keys(this.connections)
                         }
                     });
@@ -131,7 +131,7 @@ export class NetworkManager {
                 break;
             case 'JOIN_ACCEPT':
                 console.log('Joined game active!');
-                // Initialize local state based on host
+                
                 break;
             case 'STATE_UPDATE':
                 if (this.onStateUpdate) this.onStateUpdate(msg.payload);
@@ -144,7 +144,7 @@ export class NetworkManager {
                 break;
             case 'INPUT_UPDATE':
                 if (this.onInputUpdate) this.onInputUpdate(msg.payload.id, msg.payload);
-                // IF HOST: Relay to others
+                
                 if (this.isHost) {
                     this.broadcastExcept(senderId, msg);
                 }
@@ -183,7 +183,7 @@ export class NetworkManager {
     }
 
     public broadcastState(state: Partial<GameState>): void {
-        if (!this.isHost) return; // Only host broadcasts state
+        if (!this.isHost) return; 
         this.broadcast({
             type: 'STATE_UPDATE',
             payload: state

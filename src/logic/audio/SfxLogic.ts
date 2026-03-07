@@ -1,11 +1,11 @@
 import { audioCtx, getSfxVolume, getSfxGain } from './AudioBase';
 
-// Shoot System
+
 let shootBuffer: AudioBuffer | null = null;
 let laserBuffer: AudioBuffer | null = null;
 let iceBuffer: AudioBuffer | null = null;
 
-// Ghost System
+
 let ghostBuffer: AudioBuffer | null = null;
 let alertBuffer: AudioBuffer | null = null;
 let shipDepartureBuffer: AudioBuffer | null = null;
@@ -35,7 +35,7 @@ export async function loadSfxAssets() {
 
     if (!laserBuffer) {
         try {
-            const response = await fetch('/audio/Laser.flac'); // User provided file
+            const response = await fetch('/audio/Laser.flac'); 
             const arrayBuffer = await response.arrayBuffer();
             laserBuffer = await audioCtx.decodeAudioData(arrayBuffer);
         } catch (e) {
@@ -45,7 +45,7 @@ export async function loadSfxAssets() {
 
     if (!iceBuffer) {
         try {
-            const response = await fetch('/audio/DefEpi.wav'); // Ice Sound
+            const response = await fetch('/audio/DefEpi.wav'); 
             const arrayBuffer = await response.arrayBuffer();
             iceBuffer = await audioCtx.decodeAudioData(arrayBuffer);
         } catch (e) {
@@ -92,14 +92,14 @@ export function playShootDing() {
     const masterSfxGain = getSfxGain();
     if (!masterSfxGain) return;
 
-    // "Cosmic Photon" - Sci-fi, laser-like, but smooth
-    // Lowered pitch variant (Octave down)
+    
+    
 
-    // 1. The Core Beam (Sine Sweep)
+    
     const osc1 = audioCtx.createOscillator();
     const g1 = audioCtx.createGain();
     osc1.type = 'sine';
-    // Start mid, drop low
+    
     osc1.frequency.setValueAtTime(750, t);
     osc1.frequency.exponentialRampToValueAtTime(150, t + 0.15);
 
@@ -112,12 +112,12 @@ export function playShootDing() {
     osc1.start(t);
     osc1.stop(t + 0.15);
 
-    // 2. The Energy Trail (Triangle Detune)
+    
     const osc2 = audioCtx.createOscillator();
     const g2 = audioCtx.createGain();
     osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(760, t); // Slight detune start
-    osc2.frequency.exponentialRampToValueAtTime(300, t + 0.2); // Slower drop
+    osc2.frequency.setValueAtTime(760, t); 
+    osc2.frequency.exponentialRampToValueAtTime(300, t + 0.2); 
 
     g2.gain.setValueAtTime(0, t);
     g2.gain.linearRampToValueAtTime(sfxVolume * 0.15, t + 0.02);
@@ -136,7 +136,7 @@ export async function playUpgradeSfx(rarityId: string) {
     if (!masterSfxGain) return;
 
     console.log(`[Audio] Selection SFX: ${rarityId} (Context: ${audioCtx.state})`);
-    const t = audioCtx.currentTime + 0.05; // 50ms scheduling buffer
+    const t = audioCtx.currentTime + 0.05; 
     const tone = (freq: number, type: OscillatorType, dur: number, vol: number, startTime: number) => {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
@@ -148,7 +148,7 @@ export async function playUpgradeSfx(rarityId: string) {
         osc.start(startTime); osc.stop(startTime + dur);
     };
 
-    // Rarity frequency map
+    
     const rarityMap: Record<string, number> = {
         'junk': 110,
         'broken': 146.83,
@@ -159,14 +159,14 @@ export async function playUpgradeSfx(rarityId: string) {
         'legendary': 880,
         'mythical': 1174.66,
         'ancient': 1760,
-        'divine': 220 // Base for divine chord
+        'divine': 220 
     };
 
     const baseFreq = rarityMap[rarityId] || 440;
 
     if (rarityId === 'divine') {
-        // Massive Divine Impact
-        const chord = [55, 110, 220, 330, 440, 554, 659, 880, 1320]; // Rich A major stack
+        
+        const chord = [55, 110, 220, 330, 440, 554, 659, 880, 1320]; 
         chord.forEach((f, i) => {
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
@@ -190,7 +190,7 @@ export async function playUpgradeSfx(rarityId: string) {
             osc.stop(t + 4.0);
         });
 
-        // Divine "Aaaa" Choir Formants stack
+        
         [600, 1040, 2250, 2450].forEach(f => {
             const osc = audioCtx.createOscillator();
             const filter = audioCtx.createBiquadFilter();
@@ -208,21 +208,21 @@ export async function playUpgradeSfx(rarityId: string) {
         });
 
     } else {
-        // Universal Indexed Pluck
+        
         const isLow = ['junk', 'broken', 'common'].includes(rarityId);
         const type = isLow ? 'sawtooth' : 'triangle';
         const decay = isLow ? 0.4 : 1.0;
         const volume = isLow ? 0.15 : 0.25;
 
-        // Main Pluck
+        
         tone(baseFreq, type, decay, volume, t);
 
-        // Harmonic / Octave
+        
         if (!isLow) {
             tone(baseFreq * 2, 'sine', decay * 1.5, volume * 0.5, t + 0.05);
             tone(baseFreq * 1.5, 'sine', decay * 1.2, volume * 0.3, t + 0.1);
         } else {
-            // "Dirty" subtle noise for junk/broken
+            
             tone(baseFreq * 0.5, 'sawtooth', 0.2, 0.05, t);
         }
     }
@@ -263,7 +263,7 @@ export function playSfx(type: SfxType) {
             const source = audioCtx.createBufferSource();
             const voiceGain = audioCtx.createGain();
             source.buffer = robotVoiceBuffer;
-            voiceGain.gain.setValueAtTime(sfxVolume * 0.6, t); // Quieter (60% volume)
+            voiceGain.gain.setValueAtTime(sfxVolume * 0.6, t); 
             source.connect(voiceGain);
             voiceGain.connect(masterSfxGain as AudioNode);
             source.start(t);
@@ -273,7 +273,7 @@ export function playSfx(type: SfxType) {
 
     if (type === 'alert') {
         if (alertBuffer) {
-            // Play 2 times with a slight gap
+            
             const playOnce = (delay: number) => {
                 const source = audioCtx.createBufferSource();
                 source.buffer = alertBuffer;
@@ -281,13 +281,13 @@ export function playSfx(type: SfxType) {
                 source.start(t + delay);
             };
             playOnce(0);
-            playOnce(0.8); // 0.8s later
+            playOnce(0.8); 
         }
         return;
     }
 
     if (type === 'shatter') {
-        // Ice Shatter
+        
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         osc.type = 'sawtooth';
@@ -300,7 +300,7 @@ export function playSfx(type: SfxType) {
         osc.start(t);
         osc.stop(t + 0.1);
 
-        // Add noise burst
+        
         const noise = audioCtx.createOscillator();
         const ng = audioCtx.createGain();
         noise.type = 'square';
@@ -313,7 +313,7 @@ export function playSfx(type: SfxType) {
     }
 
     if (type === 'turret-fire') {
-        playShootDing(); // Reuse specific sound if needed, or customize
+        playShootDing(); 
         return;
     }
 
@@ -336,7 +336,7 @@ export function playSfx(type: SfxType) {
             const source = audioCtx.createBufferSource();
             source.buffer = laserBuffer;
             source.connect(masterSfxGain as AudioNode);
-            // Play only the first 1 second
+            
             source.start(t, 0, 1.0);
         }
         return;
@@ -348,11 +348,11 @@ export function playSfx(type: SfxType) {
             source.connect(masterSfxGain as AudioNode);
             source.loop = true;
 
-            // Randomize Pitch/Rate so multiple layers sound distinct (0.8x to 1.2x)
+            
             const randomRate = 0.8 + Math.random() * 0.4;
             source.playbackRate.value = randomRate;
 
-            // Play 1 second slice
+            
             source.start(t, 0, 1.0);
         }
         return;
@@ -375,18 +375,18 @@ export function playSfx(type: SfxType) {
         osc.stop(t + 0.2);
     }
     else if (type === 'rare-spawn') {
-        // Alert Sound
+        
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(600, t);
         osc.frequency.linearRampToValueAtTime(800, t + 0.1);
         osc.frequency.linearRampToValueAtTime(600, t + 0.2);
-        g.gain.setValueAtTime(0.15, t); // Increased by 50% from 0.1
+        g.gain.setValueAtTime(0.15, t); 
         g.gain.linearRampToValueAtTime(0, t + 0.3);
         osc.start(t);
         osc.stop(t + 0.3);
     }
     else if (type === 'rare-kill') {
-        // Jackpot Sound
+        
         osc.type = 'square';
         osc.frequency.setValueAtTime(880, t);
         osc.frequency.setValueAtTime(1100, t + 0.1);
@@ -406,9 +406,9 @@ export function playSfx(type: SfxType) {
         osc.stop(t + 0.5);
     }
     else if (type === 'spawn') {
-        // VOID Cosmic Collapse - "The Connection"
+        
 
-        // 1. Deep Sub-Bass Swell
+        
         const osc1 = audioCtx.createOscillator();
         const g1 = audioCtx.createGain();
         osc1.type = 'sawtooth';
@@ -424,7 +424,7 @@ export function playSfx(type: SfxType) {
         osc1.start(t);
         osc1.stop(t + 1.0);
 
-        // 2. High Ethereal Sweep
+        
         const osc2 = audioCtx.createOscillator();
         const g2 = audioCtx.createGain();
         const filter2 = audioCtx.createBiquadFilter();
@@ -447,7 +447,7 @@ export function playSfx(type: SfxType) {
         osc2.start(t);
         osc2.stop(t + 1.0);
 
-        // 3. The "Snap"
+        
         const snapOsc = audioCtx.createOscillator();
         const snapGain = audioCtx.createGain();
         const snapFilter = audioCtx.createBiquadFilter();
@@ -734,7 +734,7 @@ export function playSfx(type: SfxType) {
         osc.start(t); osc.stop(t + 0.05);
     }
     else if (type === 'upgrade' || type === 'upgrade-confirm') {
-        // Positive Chime
+        
         const base = 440;
         [base, base * 1.25, base * 1.5].forEach((f, i) => {
             const osc = audioCtx.createOscillator();
@@ -749,7 +749,7 @@ export function playSfx(type: SfxType) {
         });
     }
     else if (type === 'reroll') {
-        // Shuffle sound
+        
         for (let i = 0; i < 5; i++) {
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
@@ -771,7 +771,7 @@ export function playTypewriterClick() {
     const masterSfxGain = getSfxGain();
     if (!masterSfxGain) return;
 
-    // High pitched short click
+    
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     osc.type = 'square';

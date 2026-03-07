@@ -9,7 +9,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'ORB-01',
         desc: 'Increases Meteorite drop rate by 50%. Duration 300s.',
         cost: 50,
-        duration: 300 // 5 min
+        duration: 300 
     },
     NEURAL_OVERCLOCK: {
         type: 'NEURAL_OVERCLOCK',
@@ -17,7 +17,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'NEU-77',
         desc: 'Reduces Active skill cooldown by 30%. Duration 180s.',
         cost: 50,
-        duration: 180 // 3 min
+        duration: 180 
     },
     STASIS_FIELD: {
         type: 'STASIS_FIELD',
@@ -25,7 +25,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'STA-X2',
         desc: 'Reduces all nearby Enemy movement speed by 20%. Duration 120s.',
         cost: 50,
-        duration: 120 // 2 min
+        duration: 120 
     },
     PERK_RESONANCE: {
         type: 'PERK_RESONANCE',
@@ -33,7 +33,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'HARM-V',
         desc: 'New meteorites gain a permanent +2% quality shift to all perk value ranges. Duration 180s.',
         cost: 50,
-        duration: 180 // 3 min
+        duration: 180 
     },
     ARENA_SURGE: {
         type: 'ARENA_SURGE',
@@ -41,7 +41,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'SURG-0',
         desc: 'Increases all Arena-specific modifiers by 100%. Duration 300s.',
         cost: 50,
-        duration: 300 // 5 min
+        duration: 300 
     },
     QUANTUM_SCRAPPER: {
         type: 'QUANTUM_SCRAPPER',
@@ -49,7 +49,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'SCRP-Q',
         desc: 'Grants a 25% chance to refund double Dust on recycle. Limit 50 recycles.',
         cost: 50,
-        duration: 0 // Charge based
+        duration: 0 
     },
     MATRIX_OVERDRIVE: {
         type: 'MATRIX_OVERDRIVE',
@@ -57,7 +57,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'MATR-X',
         desc: 'Increases effectiveness of all slotted Meteorite perks by 15%. Duration 300s.',
         cost: 50,
-        duration: 300 // 5 min
+        duration: 300 
     },
     TEMPORAL_GUARD: {
         type: 'TEMPORAL_GUARD',
@@ -65,7 +65,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'GUAR-D',
         desc: 'Block lethal hit, teleport to random safe location (min 2500u offset) and grant 1.5s immunity. Duration 300s.',
         cost: 100,
-        duration: 300 // 5 min
+        duration: 300 
     },
     DIMENSIONAL_GATE: {
         type: 'DIMENSIONAL_GATE',
@@ -73,7 +73,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'GATE-KEY',
         desc: 'Unlocks Neural Portals, allowing travel to other sectors.',
         cost: 0,
-        duration: -1 // Permanent
+        duration: -1 
     },
     SECTOR_UPGRADE_ECO: {
         type: 'SECTOR_UPGRADE_ECO',
@@ -81,7 +81,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'ECO-OVR',
         desc: 'Unlocks Economic Sector Protocol: +30% EXP and Soul Harvest. Permanent.',
         cost: 200,
-        duration: -1 // Permanent
+        duration: -1 
     },
     SECTOR_UPGRADE_COM: {
         type: 'SECTOR_UPGRADE_COM',
@@ -89,7 +89,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'COM-OVR',
         desc: 'Unlocks Combat Sector Protocol: +30% Offensive Output (DMG & Attack Speed). Permanent.',
         cost: 200,
-        duration: -1 // Permanent
+        duration: -1 
     },
     SECTOR_UPGRADE_DEF: {
         type: 'SECTOR_UPGRADE_DEF',
@@ -97,7 +97,7 @@ export const BLUEPRINT_DATA: Record<BlueprintType, Omit<Blueprint, 'id' | 'resea
         serial: 'DEF-OVR',
         desc: 'Unlocks Defense Sector Protocol: +30% Vitality Metrics (Max HP & Regen). Permanent.',
         cost: 200,
-        duration: -1 // Permanent
+        duration: -1 
     }
 };
 
@@ -121,7 +121,7 @@ export function dropBlueprint(state: GameState, type: BlueprintType, x: number, 
         y,
         vx: (Math.random() - 0.5) * 4,
         vy: (Math.random() - 0.5) * 4,
-        rarity: 'divine', // Visual color tier
+        rarity: 'divine', 
         quality: 'New',
         visualIndex: 8,
         magnetized: false,
@@ -140,10 +140,10 @@ export function dropBlueprint(state: GameState, type: BlueprintType, x: number, 
 }
 
 export function trySpawnBlueprint(state: GameState, x: number, y: number) {
-    // DELAY MECHANIC: No Blueprints until 10 minutes (600s)
+    
     if (state.gameTime < 600) return;
 
-    // 15% Drop Rate from Elites
+    
     if (Math.random() > 0.15) return;
 
     const types: BlueprintType[] = [
@@ -158,24 +158,24 @@ export function researchBlueprint(state: GameState, inventoryIndex: number): boo
     const item = state.inventory[inventoryIndex];
     if (!item || !item.isBlueprint || item.status !== 'locked') return false;
 
-    // Convert format if needed
+    
     const blueprint: any = (item as any).blueprintType ? createBlueprint((item as any).blueprintType) : item;
 
     blueprint.researched = false;
     blueprint.status = 'researching';
-    // Random duration between 30 and 60 seconds
+    
     const randomDuration = 30 + Math.random() * 30;
     blueprint.researchDuration = randomDuration;
     blueprint.researchFinishTime = state.gameTime + randomDuration;
 
-    // Try to move to a Safe Slot (0-8) if not already in one
+    
     if (inventoryIndex >= 9) {
         const safeSlotIdx = state.inventory.findIndex((s, idx) => s === null && idx < 9);
         if (safeSlotIdx !== -1) {
             state.inventory[safeSlotIdx] = blueprint;
             state.inventory[inventoryIndex] = null;
         } else {
-            // Slaps it back in current slot if no safe slot available
+            
             state.inventory[inventoryIndex] = blueprint;
         }
     } else {
@@ -208,7 +208,7 @@ export function activateBlueprint(state: GameState, inventoryIndex: number): boo
     const blueprint = item as unknown as Blueprint;
     if (blueprint.status === 'broken') return false;
 
-    // Check if duplicate is active
+    
     if (isBuffActive(state, blueprint.type)) {
         return false;
     }
@@ -216,11 +216,11 @@ export function activateBlueprint(state: GameState, inventoryIndex: number): boo
     state.player.dust -= blueprint.cost;
     blueprint.status = 'active';
 
-    // Handle Permanent Unlocks
+    
     if (blueprint.type === 'DIMENSIONAL_GATE') {
         state.portalsUnlocked = true;
-        playSfx('rare-spawn'); // Placeholder sound
-        blueprint.status = 'broken'; // Mark as broken immediately (One-time use)
+        playSfx('rare-spawn'); 
+        blueprint.status = 'broken'; 
         return true;
     }
     if (blueprint.type === 'SECTOR_UPGRADE_ECO') {
@@ -248,7 +248,7 @@ export function activateBlueprint(state: GameState, inventoryIndex: number): boo
         const endTime = Math.ceil(state.gameTime) + blueprint.duration;
         state.activeBlueprintBuffs[blueprint.type] = endTime;
     } else {
-        // Sync to whole seconds: round gameTime up, then add duration
+        
         const endTime = Math.ceil(state.gameTime) + blueprint.duration;
         state.activeBlueprintBuffs[blueprint.type] = endTime;
     }
@@ -262,11 +262,11 @@ export function activateBlueprint(state: GameState, inventoryIndex: number): boo
 }
 
 export function isBuffActive(state: GameState, type: BlueprintType): boolean {
-    // Check time-based buffs
+    
     const endTime = state.activeBlueprintBuffs[type];
     if (endTime && state.gameTime < endTime) return true;
 
-    // Check charge-based buffs
+    
     const charges = state.activeBlueprintCharges[type];
     if (charges !== undefined && charges > 0) return true;
 
@@ -277,8 +277,8 @@ export function isBuffActive(state: GameState, type: BlueprintType): boolean {
 export function updateBlueprints(state: GameState, step: number) {
     const time = state.gameTime;
 
-    // Handle Research Timers
-    // Handle Research Timers
+    
+    
     checkResearchProgress(state);
 
     for (const type in state.activeBlueprintBuffs) {
@@ -291,7 +291,7 @@ export function updateBlueprints(state: GameState, step: number) {
         }
     }
 
-    // Check for expired blueprints (Broken State Transition)
+    
     state.inventory.forEach(item => {
         if (item && item.isBlueprint && item.status === 'active') {
             const blueprint = item as unknown as Blueprint;
@@ -306,12 +306,12 @@ export function updateBlueprints(state: GameState, step: number) {
         }
     });
 
-    // Clean up expired charges/buffs and mark charge-based blueprints as broken
+    
     for (const type in state.activeBlueprintCharges) {
         const t = type as BlueprintType;
         if (state.activeBlueprintCharges[t]! <= 0) {
             delete state.activeBlueprintCharges[t];
-            // Mark the blueprint as broken in inventory
+            
             const item = state.inventory.find(i => i && i.isBlueprint && (i as any).type === t);
             if (item && item.status === 'active') {
                 item.status = 'broken';

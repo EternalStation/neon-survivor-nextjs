@@ -50,6 +50,10 @@ export const ClassSelection: React.FC<ClassSelectionProps> = ({ onSelect }) => {
             const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
 
+            if (code === 'tab') {
+                e.preventDefault();
+            }
+
             if (code === 'keya' || code === 'arrowleft') {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : PLAYER_CLASSES.length - 1));
             }

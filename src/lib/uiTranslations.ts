@@ -115,12 +115,13 @@ export const UI_TRANSLATIONS = {
                 matrixModule: 'Matrix Module',
                 activatePortal: 'Activate Portal',
                 dash: 'Dash',
-                skill1: 'Class Active Skill',
+                skill1: 'Active Class Skill',
                 skill2: 'Skill 1',
                 skill3: 'Skill 2',
                 skill4: 'Skill 3',
                 skill5: 'Skill 4',
                 skill6: 'Skill 5',
+                skill7: 'Skill 6',
                 selectUpgrade: 'Select Upgrade',
                 interact: 'Interact / Activate',
                 keyAssigned: '⚠ KEY ALREADY ASSIGNED'
@@ -246,15 +247,16 @@ export const UI_TRANSLATIONS = {
                     name: "Malware",
                     title: "THE GLITCHED SOVEREIGN",
                     capabilityName: "QUANTUM FRAGMENTATION",
-                    capabilityDesc: "Manual Targeting. Projectiles have 100% of default range, +1 Piercing, and ricochet off all surfaces infinitely. Each bounce gains 5% Damage and 3% Speed.",
+                    capabilityDesc: "Manual Targeting. Projectiles ricochet off all surfaces. ACTIVE SKILL: Deploy a Sandbox Hexagon for 15s (25s CD). Bullets gain +1% Speed and +20% Damage per bounce inside or on walls.",
                     characteristics: [
                         'Manual Targeting System',
-                        'Quantum Ricochet Rounds'
+                        'Quantum Ricochet Rounds',
+                        'Active Skill: Sandbox'
                     ],
                     metrics: [
                         { label: 'RANGE', description: 'Base projectile range multiplier' },
-                        { label: 'DMG/WALL', description: 'Damage gain per bounce' },
-                        { label: 'SPD/WALL', description: 'Speed gain per bounce' }
+                        { label: 'DMG/WALL', description: 'Damage gain per bounce (+20%)' },
+                        { label: 'SPD/WALL', description: 'Speed gain per bounce (+1%)' }
                     ]
                 },
                 eventhorizon: {
@@ -382,30 +384,30 @@ export const UI_TRANSLATIONS = {
             KineticTsunami: { name: 'THE KINETIC TSUNAMI', desc: 'A devastating fusion of Storm of Steel and Terror Pulse. Sonic avalanches harvest kinetic trauma to amplify your power.', skillDesc: 'Releases a devastating sonic wave. Wave damage is increased by 1% for every 100 souls harvested by Storm of Steel. Wave cooldown permanently reduced by 0.01s for every enemy killed by the wave.' },
             SoulShatterCore: { name: 'THE SOUL-SHATTER CORE', desc: 'A critical fusion of Shattered Fate and Storm of Steel. Extends critical lethality through soul harvesting.' },
             BloodForgedCapacitor: { name: 'THE NECRO-KINETIC ENGINE', desc: 'Kinetic shockwaves trigger lifesteal from damage dealt. Each time a zombie consumes an enemy, there is a chance to cast a green kinetic bolt.', skillDesc: 'Zombie consumption has a 10% chance to cast a Green Kinetic Bolt that deals 20% Armor DMG and chains to 3 targets.' },
-            GravityAnchor: { name: 'THE GRAVITY ANCHOR', desc: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.' },
+            GravityAnchor: { name: 'THE GRAVITY ANCHOR', desc: 'A structural collapse between Aegis Protocol and Epicenter. Crushes enemies under the weight of your armor.', skillDesc: 'Force-stabilizes local space. Deploys a Gravity Anchor dealing damage scaling with 2% of Armor and executing enemies below 5% HP. Executed enemies explode for 10% MAX HP in a 200px radius.' },
             TemporalMonolith: { name: 'THE TEMPORAL MONOLITH', desc: 'A timeless monolith forged from raw endurance. Converts kinetic energy into temporal acceleration.', skillDesc: 'Releases a wave of temporal energy. Freezes all enemies within 400px for 4s. Enemies that die while frozen shatter for 25% MAX HP AOE damage.' },
             NeutronStar: { name: 'THE NEUTRON STAR', desc: 'A stellar collapse between Essence Syphon and Radiation Core. [EVENT HORIZON] Radiation damage increased by 2% for every 100 Max HP. 0.01% Aura DMG increase for kills by your Radiant Aura and double souls for Essence Syphon.' },
             GravitationalHarvest: { name: 'THE GRAVITATIONAL HARVEST', desc: 'A stellar resonance between Essence Syphon and Epicenter. Kills within the well extend its duration. 10% of damage taken is reflected to trapped enemies.', skillDesc: 'Drops crystalline spikes (Radius: 500px) that pull enemies. Duration +0.1s on kill. Reflects 10% damage taken to trapped enemies. Recharges in 30s.' },
             ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Kinetic bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
-            ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Active: Explodes all shields to deal AOE damage (Radius 600px) based on Armor + Shield value. Zombies have 10% chance to consume enemies on first bite. Zombie kills grant 20% Cooldown Recovery Speed for 1s.' },
+            ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Zombies have 10% chance to consume enemies on first bite. Zombie kills reduce all active skill cooldowns by 0.03s.' },
             perks: {
                 EcoDMG: ["+0.05 DMG per kill", "+0.02 ATC per kill", "+0.05% DMG per kill", "+0.5% AOE Chance per Player Level (100px)"],
                 EcoXP: ["+0.05 XP per kill", "+0.02 Dust per kill", "+0.05 Flux per kill", "+0.05% XP per kill"],
                 EcoHP: ["+0.05 Max HP per kill", "+0.02 HP/sec per kill", "+0.05% Max HP per kill", "+0.02% HP/sec per kill"],
-                ComLife: ["3% Lifesteal of DMG dealt by your Projectiles", "5s Overheal becomes Shield", "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)", "10% Zombie Spawn Chance (5s Delay, Feasters)"],
-                ComCrit: ["+15% Crit Chance", "+7% Execute Non Bosses on Hit", "Death Marks Enemy to receive +300% DMG from you (CD 10s)", "+3% Execute Boss on Hit"],
-                ComWave: ["75% of players DMG released in a massive wave around player in 1000 radius", "1.5s Fear for enemies hit by the wave (STATIC)", "1% additional DMG to Terror Pulse for each activation (used)", "3% Movement speed increase for 3 seconds after wave cast"],
+                ComLife: ["+3% Lifesteal of DMG dealt by your Projectiles", "+5s Overheal becomes Shield", "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)", "+10% Zombie Spawn Chance (5s Delay, Feasters)"],
+                ComCrit: ["+15% Crit Chance", "2% chance to execute non-bosses on hit", "Death Mark: Bosses/Elites receive additional damage (10s CD)", "2% chance to deal 10% of Boss Max HP on Hit"],
+                ComWave: ["+75% of players DMG released in a massive wave around player in 1000 radius", "+1.5s Fear for enemies hit by the wave (STATIC)", "+1% additional DMG to Terror Pulse for each activation (used)", "+3% Movement speed increase for 3 seconds after wave cast"],
                 DefPuddle: [
-                    "5% Enemy MAX HP DMG/Sec inside ACID",
-                    "20% Slow Enemies Movement inside ACID",
-                    "25% Max HP and Regen%/sec while in ACID",
-                    "40% increased dmg to enemies inside ACID"
+                    "+5% Enemy MAX HP DMG/Sec inside ACID",
+                    "+20% Slow Enemies Movement inside ACID",
+                    "+25% Max HP and Regen%/sec while in ACID",
+                    "+40% increased dmg to enemies inside ACID"
                 ],
-                DefEpi: ["25% of players DMG dealt every second and slows for 50%", "2% Pull strength towards the center", "20% Radius grows over 10s", "5% MAX HP threshold to execute enemy"],
+                DefEpi: ["+25% of players DMG dealt every second and slows for 50%", "+2% Pull strength towards the center", "+20% Radius grows over 10s", "+5% MAX HP threshold to execute enemy"],
                 CombShield: ["+0.05 Armor per kill", "+0.01% DMG reduction from Collision per kill", "+0.01% DMG reduction from Projectile per kill", "+0.02% Armor per kill"],
-                KineticBattery: ["100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "100% Armor granted as Shield every 1 Minute", "100% Armor increase when HP below 50%", "0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
-                RadiationCore: ["5% of Players MAX HP/sec is dealt to enemies in 500px", "0.2% MAX HP/sec heals player per enemy in Radiation Aura", "1% Additional Radiation Aura DMG per 1% of your Missing HP", "2.0% of MAX HP/sec enemies lose every sec MAP wide"],
-                ChronoPlating: ["1% of your Armor increased your DMG%", "1% of your Armor increased your HP%", "0.25% Cooldown reduction every minute", "1% of your Armor increased your HP/sec%"],
+                KineticBattery: ["+100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "+100% Armor granted as Shield every 1 Minute", "+100% Armor increase when HP below 50%", "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
+                RadiationCore: ["+5% of Players MAX HP/sec is dealt to enemies in 500px", "+0.2% MAX HP/sec heals player per enemy in Radiation Aura", "+1% Additional Radiation Aura DMG per 1% of your Missing HP", "+2.0% of MAX HP/sec enemies lose every sec MAP wide"],
+                ChronoPlating: ["+1% of your Armor increased your DMG%", "+1% of your Armor increased your HP%", "+0.25% Cooldown reduction every minute", "+1% of your Armor increased your HP/sec%"],
                 XenoAlchemist: [
                     "GROUP:REFINERY ZONES",
                     "300% XP, Dust and Flux inside Swamp",
@@ -416,10 +418,10 @@ export const UI_TRANSLATIONS = {
                     "+0.05 Flux per kill",
                     "+0.05% XP per kill",
                     "GROUP:TOXIC SWAMP",
-                    "LVL 1 5% Enemy MAX HP DMG/Sec inside ACID",
-                    "LVL 2 20% Slow Enemies Movement inside ACID",
-                    "LVL 3 25% MaxHP and Regen%/sec while in ACID",
-                    "LVL 4 40% increased DMG to enemies inside ACID"
+                    "+5% Enemy MAX HP DMG/Sec inside ACID",
+                    "+20% Slow Enemies Movement inside ACID",
+                    "+25% MaxHP and Regen%/sec while in ACID",
+                    "+40% increased DMG to enemies inside ACID"
                 ],
                 IrradiatedMire: [
                     "GROUP:IRRADIATED MIRE",
@@ -431,10 +433,10 @@ export const UI_TRANSLATIONS = {
                     "1% Additional Radiation Aura DMG per 1% of your Missing HP",
                     "2.0% of MAX HP/sec enemies lose every sec MAP-WIDE",
                     "GROUP:TOXIC SWAMP",
-                    "LVL 1 5% Enemy MAX HP DMG/Sec inside ACID",
-                    "LVL 2 20% Slow Enemies Movement inside ACID",
-                    "LVL 3 25% MaxHP and Regen%/sec while in ACID",
-                    "LVL 4 40% increased DMG to enemies inside ACID"
+                    "+5% Enemy MAX HP DMG/Sec inside ACID",
+                    "+20% Slow Enemies Movement inside ACID",
+                    "+25% MaxHP and Regen%/sec while in ACID",
+                    "+40% increased DMG to enemies inside ACID"
                 ],
                 NeuralSingularity: [
                     "GROUP:THE NEURAL SINGULARITY",
@@ -446,10 +448,10 @@ export const UI_TRANSLATIONS = {
                     "+0.05 Flux per kill",
                     "+0.05% XP per kill",
                     "GROUP:TERROR PULSE",
-                    "LVL 1 75% of players DMG released in a massive wave around player in 1000 radius",
-                    "LVL 2 1.5s Fear for enemies hit by the wave (STATIC)",
-                    "LVL 3 1% additional DMG to Terror Pulse for each activation (used)",
-                    "LVL 4 3% Movement speed increase for 3 seconds after wave cast"
+                    "+75% of players DMG released in a massive wave around player in 1000 radius",
+                    "+1.5s Fear for enemies hit by the wave (STATIC)",
+                    "+1% additional DMG to Terror Pulse for each activation (used)",
+                    "+3% Movement speed increase for 3 seconds after wave cast"
                 ],
                 KineticTsunami: [
                     "GROUP:THE KINETIC TSUNAMI",
@@ -461,10 +463,10 @@ export const UI_TRANSLATIONS = {
                     "+0.05% DMG per kill",
                     "+0.5% AOE Chance per Player Level (100px)",
                     "GROUP:TERROR PULSE",
-                    "LVL 1 75% of players DMG released in a massive wave around player in 1000 radius",
-                    "LVL 2 1.5s Fear to enemies that are hit by Terror Pulse (STATIC)",
-                    "LVL 3 1% additional DMG to Terror Pulse for each activation (used)",
-                    "LVL 4 3% Movement speed increase for 3 seconds after wave cast"
+                    "+75% of players DMG released in a massive wave around player in 1000 radius",
+                    "+1.5s Fear to enemies that are hit by Terror Pulse (STATIC)",
+                    "+1% additional DMG to Terror Pulse for each activation (used)",
+                    "+3% Movement speed increase for 3 seconds after wave cast"
                 ],
                 SoulShatterCore: [
                     "GROUP:THE SOUL-SHATTER CORE",
@@ -472,9 +474,9 @@ export const UI_TRANSLATIONS = {
                     "5x Souls per Execute (STATIC)",
                     "GROUP:SHATTERED FATE",
                     "+15% Crit Chance",
-                    "+7% Execute Non Bosses on Hit",
-                    "Death Marks Enemy to receive +300% DMG from you (CD 10s)",
-                    "+3% Execute Boss on Hit",
+                    "2% chance to execute non-bosses on hit",
+                    "Death Mark: Bosses/Elites receive additional damage (10s CD)",
+                    "2% chance to deal 10% of Boss Max HP on Hit",
                     "GROUP:STORM OF STEEL",
                     "+0.05 DMG per kill",
                     "+0.02 ATC per kill",
@@ -483,63 +485,63 @@ export const UI_TRANSLATIONS = {
                 ],
                 BloodForgedCapacitor: [
                     "GROUP:THE BLOOD-FORGED CAPACITOR",
-                    "Kinetic Shockwaves trigger 1% Lifesteal from total damage dealt",
-                    "Zombie Consumption has 10% chance to trigger a Green Kinetic Bolt",
+                    "+Kinetic Shockwaves trigger 1% Lifesteal from total damage dealt",
+                    "+Zombie Consumption has 10% chance to trigger a Green Kinetic Bolt",
                     "GROUP:CRIMSON FEAST",
-                    "3% Lifesteal of DMG dealt by your Projectiles",
-                    "5s Overheal becomes Shield",
-                    "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
-                    "10% Zombie Spawn Chance (5s Delay, Feasters)",
+                    "+3% Lifesteal of DMG dealt by your Projectiles",
+                    "+5s Overheal becomes Shield",
+                    "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
+                    "+10% Zombie Spawn Chance (5s Delay, Feasters)",
                     "GROUP:KINETIC BATTERY",
-                    "100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
-                    "100% Armor granted as Shield every 1 Minute",
-                    "100% Armor increase when HP below 50%",
-                    "0.5s Stun enemies hit by Kinetic Bolt (Chain)"
+                    "+100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
+                    "+100% Armor granted as Shield every 1 Minute",
+                    "+100% Armor increase when HP below 50%",
+                    "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"
                 ],
                 GravityAnchor: [
                     "GROUP:THE GRAVITY ANCHOR",
-                    "25% of Total Armor per sec dealt as damage",
-                    "10% of Max HP in 200 radius on Execute explosion",
+                    "+2% of Player Armor added to damage per pulse",
+                    "+10% of Max HP in 200 radius on Execute explosion",
                     "GROUP:AEGIS PROTOCOL",
                     "+0.05 Armor per kill",
                     "+0.01% DMG reduction from Collision per kill",
                     "+0.01% DMG reduction from Projectile per kill",
                     "+0.02% Armor per kill",
                     "GROUP:EPICENTER",
-                    "25% of players DMG dealt every second and slows for 50%",
-                    "2% Pull strength towards the center",
-                    "20% Radius grows over 10s",
-                    "5% MAX HP threshold to execute enemy"
+                    "+25% of players DMG dealt every second and slows for 50%",
+                    "+2% Pull strength towards the center",
+                    "+20% Radius grows over 10s",
+                    "+5% MAX HP threshold to execute enemy"
                 ],
                 TemporalMonolith: [
                     "GROUP:THE TEMPORAL MONOLITH",
-                    "20% Cooldown Recovery Speed for 1 second if any damage received",
-                    "25% Enemies MAX HP as DMG in 200 AOE if being killed while frozen. Freezes everybody in 400px for 4 sec",
+                    "+20% Cooldown Recovery Speed for 1 second if any damage received",
+                    "+25% Enemies MAX HP as DMG in 200 AOE if being killed while frozen. Freezes everybody in 400px for 4 sec",
                     "GROUP:AEGIS PROTOCOL",
                     "+0.05 Armor per kill",
                     "+0.01% DMG reduction from Collision per kill",
                     "+0.01% DMG reduction from Projectile per kill",
                     "+0.02% Armor per kill",
                     "GROUP:CHRONO PLATING",
-                    "1% of your Armor increased your DMG%",
-                    "1% of your Armor increased your HP%",
-                    "0.25% Cooldown reduction every minute",
-                    "1% of your Armor increased your HP/sec%"
+                    "+1% of your Armor increased your DMG%",
+                    "+1% of your Armor increased your HP%",
+                    "+0.25% Cooldown reduction every minute",
+                    "+1% of your Armor increased your HP/sec%"
                 ],
                 NeutronStar: [
                     "GROUP:EVENT HORIZON",
-                    "2% Radiant aura DMG increase for every 100 Max HP",
-                    "0.01% Radiant aura DMG increase for kills. Those kills give double soul for Essence Syphon",
+                    "+2% Radiant aura DMG increase for every 100 Max HP",
+                    "+0.01% Radiant aura DMG increase for kills. Those kills give double soul for Essence Syphon",
                     "GROUP:ESSENCE SYPHON",
                     "+0.1 Max HP per kill",
                     "+0.04 HP/sec per kill",
                     "+0.1% Max HP per kill",
                     "+0.04% HP/sec per kill",
                     "GROUP:RADIATION CORE",
-                    "5% of Player's MAX HP/sec is dealt to enemies in 500px",
-                    "0.2% MAX HP/sec heals player per enemy in Radiation Aura",
-                    "1% Additional Radiation Aura DMG per 1% of your Missing HP",
-                    "2.0% of MAX HP/sec enemies lose every sec MAP-WIDE"
+                    "+5% of Player's MAX HP/sec is dealt to enemies in 500px",
+                    "+0.2% MAX HP/sec heals player per enemy in Radiation Aura",
+                    "+1% Additional Radiation Aura DMG per 1% of your Missing HP",
+                    "+2.0% of MAX HP/sec enemies lose every sec MAP-WIDE"
                 ],
                 GravitationalHarvest: [
                     "GROUP:SINGULARITY HARVEST",
@@ -551,40 +553,40 @@ export const UI_TRANSLATIONS = {
                     "+0.1% Max HP per kill",
                     "+0.04% HP/sec per kill",
                     "GROUP:EPICENTER",
-                    "LVL 1 25% of players DMG dealt every second and slows for 50%",
-                    "LVL 2 2% Pull strength towards the center",
-                    "LVL 3 20% Radius grows over 10s",
-                    "LVL 4 5% MAX HP threshold to execute enemy"
+                    "+25% of players DMG dealt every second and slows for 50%",
+                    "+2% Pull strength towards the center",
+                    "+20% Radius grows over 10s",
+                    "+5% MAX HP threshold to execute enemy"
                 ],
                 ShatteredCapacitor: [
                     "GROUP:THE SHATTERED CAPACITOR",
-                    "20% of Contact/Projectile damage arcs to 2 nearby enemies on Projectile Hit",
-                    "15% of total Armor as Bleed over 3 seconds to enemies hit by Kinetic Bolt",
+                    "+20% of Contact/Projectile damage arcs to 2 nearby enemies on Projectile Hit",
+                    "+15% of total Armor as Bleed over 3 seconds to enemies hit by Kinetic Bolt",
                     "GROUP:SHATTERED FATE",
                     "+15% Crit Chance",
-                    "+7% Execute Non Bosses on Hit",
-                    "Death Marks Enemy to receive +300% DMG from you (CD 10s)",
-                    "+3% Execute Boss on Hit",
+                    "2% chance to execute non-bosses on hit",
+                    "Death Mark: Bosses/Elites receive additional damage (10s CD)",
+                    "2% chance to deal 10% of Boss Max HP on Hit",
                     "GROUP:KINETIC BATTERY",
-                    "100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
-                    "100% Armor granted as Shield every 1 Minute",
-                    "100% Armor increase when HP below 50%",
-                    "0.5s Stun enemies hit by Kinetic Bolt (Chain)"
+                    "+100% Armor DMG Kinetic Bolt, 10 Targets (On Damage, 8s CD)",
+                    "+100% Armor granted as Shield every 1 Minute",
+                    "+100% Armor increase when HP below 50%",
+                    "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"
                 ],
                 ChronoDevourer: [
                     "GROUP:THE CHRONO-DEVOURER",
-                    "10% Cooldown Recovery Speed increase for 1sec every time zombie successfully consumes enemy",
-                    "10% Chance for zombies to consume enemy on first bite",
+                    "-0.03s Active skill cooldown decrease every time zombie successfully consumes enemy",
+                    "+10% Chance for zombies to consume enemy on first bite",
                     "GROUP:CRIMSON FEAST",
-                    "3% Lifesteal of DMG dealt by your Projectiles",
-                    "5s Overheal becomes Shield",
-                    "2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
-                    "10% Zombie Spawn Chance (5s Delay, Feasters)",
+                    "+3% Lifesteal of DMG dealt by your Projectiles",
+                    "+5s Overheal becomes Shield",
+                    "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
+                    "+10% Zombie Spawn Chance (5s Delay, Feasters)",
                     "GROUP:CHRONO PLATING",
-                    "1% of your Armor increased your DMG%",
-                    "1% of your Armor increased your HP%",
-                    "0.25% Cooldown reduction every minute",
-                    "1% of your Armor increased your HP/sec%"
+                    "+1% of your Armor increased your DMG%",
+                    "+1% of your Armor increased your HP%",
+                    "+0.25% Cooldown reduction every minute",
+                    "+1% of your Armor increased your HP/sec%"
                 ]
             }
         },
@@ -676,11 +678,13 @@ export const UI_TRANSLATIONS = {
         statsMenu: {
             tabs: {
                 system: 'SYSTEM',
-                threat: 'THREAT'
+                threat: 'THREAT',
+                damage: 'DAMAGE'
             },
             headers: {
                 system: 'SYSTEM DIAGNOSTICS',
-                threat: 'THREAT PROGRESSION'
+                threat: 'THREAT PROGRESSION',
+                damage: 'DAMAGE ATTRIBUTION'
             },
             labels: {
                 health: 'Health',
@@ -696,7 +700,36 @@ export const UI_TRANSLATIONS = {
                 xpGain: 'XP Gain per kill',
                 meteoriteChance: 'Meteorite Drop Chance',
                 pierce: 'Pierce',
-                knockback: 'AOE Chance'
+                knockback: 'AOE Chance',
+                critChance: 'Critical Chance',
+                critDamage: 'Critical Damage',
+                damageSources: {
+                    projectile: 'Projectile',
+                    shockwave: 'Shockwave',
+                    naniteSwarm: 'Nanite Swarm',
+                    fireTurret: 'Fire Turret',
+                    iceTurret: 'Ice Turret',
+                    radiationAura: 'Radiation Aura',
+                    collision: 'Collision',
+                    epicenter: 'Epicenter',
+                    toxicPuddle: 'Toxic Puddle',
+                    staticBolt: 'Static Bolt',
+                    kineticBolt: 'Kinetic Bolt',
+                    zombie: 'Zombie',
+                    crimsonFeast: 'Crimson Feast',
+                    stormofSteel: 'Storm of Steel',
+                    temporalMonolith: 'Temporal Monolith',
+                    gravityAnchor: 'Gravity Anchor',
+                    wallImpact: 'Wall Impact',
+                    shatteredFateExecute: 'Shattered Fate',
+                    shatteredFateCrit: 'Shattered Fate',
+                    shatteredFateDeathMark: 'Shattered Fate',
+                    stormCircle: 'Storm Circle',
+                    orbitalVortex: 'Orbital Vortex',
+                    voidSingularity: 'Void Singularity',
+                    total: 'Total Damage'
+                }
+
             },
             threat: {
                 hpGrowth: 'Enemy Health Growth',
@@ -1569,11 +1602,13 @@ export const UI_TRANSLATIONS = {
         statsMenu: {
             tabs: {
                 system: 'СИСТЕМА',
-                threat: 'УГРОЗА'
+                threat: 'УГРОЗА',
+                damage: 'DAMAGE'
             },
             headers: {
                 system: 'ДИАГНОСТИКА СИСТЕМЫ',
-                threat: 'ПРОГРЕССИЯ УГРОЗЫ'
+                threat: 'ПРОГРЕССИЯ УГРОЗЫ',
+                damage: 'DAMAGE ATTRIBUTION'
             },
             labels: {
                 health: 'Здоровье',
@@ -1589,7 +1624,32 @@ export const UI_TRANSLATIONS = {
                 xpGain: 'Опыт за убийство',
                 meteoriteChance: 'Шанс выпадения метеорита',
                 pierce: 'Пробитие',
-                knockback: 'Шанс AOE'
+                knockback: 'Шанс AOE',
+                critChance: 'Шанс крита',
+                critDamage: 'Крит. урон',
+                damageSources: {
+                    projectile: 'Projectile',
+                    shockwave: 'Shockwave',
+                    naniteSwarm: 'Nanite Swarm',
+                    fireTurret: 'Огненная турель',
+                    iceTurret: 'Ледяная турель',
+                    radiationAura: 'Radiation Aura',
+                    collision: 'Collision',
+                    epicenter: 'Epicenter',
+                    toxicPuddle: 'Toxic Puddle',
+                    staticBolt: 'Static Bolt',
+                    kineticBolt: 'Kinetic Bolt',
+                    zombie: 'Zombie',
+                    wallImpact: 'Wall Impact',
+                    shatteredFateExecute: 'Разбитая судьба',
+                    shatteredFateCrit: 'Разбитая судьба',
+                    shatteredFateDeathMark: 'Разбитая судьба',
+                    stormCircle: 'Штормовой Круг',
+                    orbitalVortex: 'Орбитальный Вихрь',
+                    voidSingularity: 'Сингулярность Пустоты',
+                    total: 'Total Damage'
+                }
+
             },
             threat: {
                 hpGrowth: 'Рост здоровья врагов',

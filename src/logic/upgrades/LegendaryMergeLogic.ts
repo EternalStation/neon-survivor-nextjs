@@ -342,9 +342,12 @@ export function performTemporalMonolithMerge(state: GameState) {
     state.player.temporalMonolithSouls = 0;
 
     const usedKeys = state.player.activeSkills.map(s => s.keyBind);
-    const availableKeys = ['1', '2', '3', '4', '5'];
-    const key = availableKeys.find(k => !usedKeys.includes(k));
-    if (key) {
+    const availableKeys = ['1', '2', '3', '4', '5', '6'];
+    const key = availableKeys.find(k => !usedKeys.includes(k)) || '1';
+
+
+    const existingSkillIdx = state.player.activeSkills.findIndex(s => s.type === 'TemporalMonolith');
+    if (existingSkillIdx === -1) {
         state.player.activeSkills.push({
             type: 'TemporalMonolith',
             baseCD: GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN,
@@ -353,6 +356,10 @@ export function performTemporalMonolithMerge(state: GameState) {
             keyBind: key,
             icon: mergedHex.customIcon
         });
+    } else {
+
+        state.player.activeSkills[existingSkillIdx].baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
+        state.player.activeSkills[existingSkillIdx].icon = mergedHex.customIcon;
     }
 }
 
@@ -523,18 +530,5 @@ export function performChronoDevourerMerge(state: GameState) {
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [lifeIdx, chronoIdx] };
     syncLegendaryHex(state, mergedHex);
 
-    const usedKeys = state.player.activeSkills.map(s => s.keyBind);
-    const availableKeys = ['1', '2', '3', '4', '5'];
-    const key = availableKeys.find(k => !usedKeys.includes(k));
-    if (key) {
-        state.player.activeSkills.push({
-            type: 'ChronoDevourer',
-            baseCD: GAME_CONFIG.SKILLS.CHRONO_DEVOURER_COOLDOWN,
-            lastUsed: -999999,
-            inUse: false,
-            keyBind: key,
-            icon: mergedHex.customIcon
-        });
-    }
 }
 

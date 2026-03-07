@@ -259,7 +259,7 @@ export const SettingsMenu = ({ onClose, onRestart, onQuit, onFeedback, mode = 'g
                     )}
                 </div>
 
-                <div className="settings-actions">
+                <div className="settings-actions" style={{ marginTop: '30px' }}>
                     <button className="btn-settings-primary" onClick={onClose}>
                         {mode === 'game' ? t.resumeMission : t.backToMenu}
                     </button>

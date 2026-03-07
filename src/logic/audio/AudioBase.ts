@@ -1,4 +1,4 @@
-// AudioBase.ts - SSR Safe version
+
 export let audioCtx: AudioContext;
 
 if (typeof window !== 'undefined') {
@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
     audioCtx = new AudioContextClass();
 }
 
-// Shared State
+
 let musicVolume = 0.425;
 let sfxVolume = 0.5;
 

@@ -33,6 +33,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
     // Handle ESC key to close modals
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Tab' || e.key === 'Tab') {
+                e.preventDefault();
+            }
             if (e.code === 'Escape') {
                 if (showBlueprint) setShowBlueprint(false);
                 if (showSettings) setShowSettings(false);

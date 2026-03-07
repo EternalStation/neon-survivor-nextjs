@@ -29,40 +29,60 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (listening) {
                 e.preventDefault();
-                const code = e.code; // Use raw code (e.g. 'KeyC')
-                const lowerCode = code.toLowerCase();
-
-                // Prevent unbindable keys
-                if (lowerCode === 'escape') {
-                    setListening(null);
-                    return;
-                }
-
-                // Check for duplicates in current keybinds
-                const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === code);
-                // Check for duplicates in reserved movement keys
-                const isReserved = FORBIDDEN_CODES.includes(lowerCode);
-
-                if (isDuplicate || isReserved) {
-                    setConflict(listening);
-                    setTimeout(() => setConflict(null), 1000);
-                    return; // REJECT INPUT
-                }
-
-                const newKeybinds = { ...keybinds, [listening]: code };
-                setKeybinds(newKeybinds);
-                saveKeybinds(newKeybinds);
-                setListening(null);
-                setConflict(null);
+                processInput(e.code);
             }
+        };
+
+        const handleMouseDown = (e: MouseEvent) => {
+            if (listening) {
+                e.preventDefault();
+                let code = '';
+                if (e.button === 0) code = 'Mouse0';
+                else if (e.button === 1) code = 'Mouse1';
+                else if (e.button === 2) code = 'Mouse2';
+                else code = `Mouse${e.button}`;
+                processInput(code);
+            }
+        };
+
+        const processInput = (code: string) => {
+            const lowerCode = code.toLowerCase();
+
+            // Prevent unbindable keys
+            if (lowerCode === 'escape') {
+                setListening(null);
+                return;
+            }
+
+            // Check for duplicates in current keybinds
+            const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === code);
+            // Check for duplicates in reserved movement keys
+            const isReserved = FORBIDDEN_CODES.includes(lowerCode);
+
+            if (isDuplicate || isReserved) {
+                setConflict(listening);
+                setTimeout(() => setConflict(null), 1000);
+                return; // REJECT INPUT
+            }
+
+            const newKeybinds = { ...keybinds, [listening as string]: code };
+            setKeybinds(newKeybinds);
+            saveKeybinds(newKeybinds);
+            setListening(null);
+            setConflict(null);
         };
 
         if (listening) {
             window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('mousedown', handleMouseDown);
+            // prevent context menu to allow binding right click
+            window.addEventListener('contextmenu', e => listening && e.preventDefault());
         }
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('mousedown', handleMouseDown);
+            window.removeEventListener('contextmenu', e => listening && e.preventDefault());
         };
     }, [listening, keybinds]);
 
@@ -81,7 +101,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
         { label: t.skill4, key: 'skill3' },
         { label: t.skill5, key: 'skill4' },
         { label: t.skill6, key: 'skill5' },
-        { label: 'SKILL 6', key: 'skill6' }, // Fallback for the last one if needed, or I can add it to translations
+        { label: (t as any).skill7 || 'Skill 6', key: 'skill6' },
     ];
 
     const renderBindItem = (item: { label: string; key: keyof Keybinds }) => (

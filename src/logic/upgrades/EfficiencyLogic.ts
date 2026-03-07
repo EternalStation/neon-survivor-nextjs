@@ -30,7 +30,7 @@ export interface PerkResult {
 export function getSector(idx: number): 'Economic' | 'Combat' | 'Defensive' {
     if (idx === 0 || idx === 1 || idx === 6 || idx === 7) return 'Combat';
     if (idx === 2 || idx === 3 || idx === 8 || idx === 9) return 'Defensive';
-    return 'Economic'; // 4, 5, 10, 11
+    return 'Economic'; 
 }
 
 function getArenaKey(arenaName: string): 'eco' | 'com' | 'def' {
@@ -62,12 +62,12 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
         meteorite.perks.forEach(perk => {
             let count = 0;
             const pts = perk.id.split('_');
-            const level = pts[0]; // 'lvl1', 'lvl2' etc.
+            const level = pts[0]; 
             const conns: { diamonds: number[], hexagons: number[], sectors: string[] } = { diamonds: [], hexagons: [], sectors: [] };
 
             switch (level) {
                 case 'lvl1': {
-                    // lvl1_{sector}_{hexType}
+                    
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const targetHexType = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     if (sector === targetSector) {
@@ -85,7 +85,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     break;
                 }
                 case 'lvl2': {
-                    // lvl2_{sector}_{neighborQuality}
+                    
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
                     if (sector === targetSector) {
@@ -99,8 +99,8 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     break;
                 }
                 case 'lvl3': {
-                    // lvl3_{arena}_{neighborQuality}
-                    const targetArena = pts[1].toUpperCase(); // 'ECO', 'COM', 'DEF'
+                    
+                    const targetArena = pts[1].toUpperCase(); 
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
                     const matchingNeighbors = neighbors.indices.filter(nIdx => {
                         const m = state.moduleSockets.diamonds[nIdx];
@@ -113,7 +113,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     break;
                 }
                 case 'lvl4': {
-                    // lvl4_{arena}_{neighborQuality} (Secondary)
+                    
                     const targetArena = pts[1].toUpperCase();
                     const targetQuality = pts[2] === 'bro' ? 'Broken' : (pts[2] === 'dam' ? 'Damaged' : 'New');
                     const matchingNeighbors = secondaryNeighbors.indices.filter(nIdx => {
@@ -127,7 +127,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     break;
                 }
                 case 'lvl5': {
-                    // lvl5_{sector}_{t1}_{t2}
+                    
                     const targetSector = pts[1] === 'eco' ? 'Economic' : (pts[1] === 'com' ? 'Combat' : 'Defensive');
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
@@ -143,7 +143,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     break;
                 }
                 case 'lvl6': {
-                    // lvl6_{neighborQual}_{t1}_{t2}
+                    
                     const targetQuality = pts[1] === 'bro' ? 'Broken' : (pts[1] === 'dam' ? 'Damaged' : 'New');
                     const t1 = pts[2] === 'eco' ? 'Economic' : (pts[2] === 'com' ? 'Combat' : 'Defensive');
                     const t2 = pts[3] === 'eco' ? 'Economic' : (pts[3] === 'com' ? 'Combat' : 'Defensive');
@@ -159,7 +159,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
                     }
                     break;
                 }
-                // Deprecated Fallback
+                
                 case 'base_efficiency': count = 1; break;
             }
 
@@ -173,7 +173,7 @@ export function calculateMeteoriteEfficiency(state: GameState, meteoriteIdx: num
 
     const matrixActive = isBuffActive(state, 'MATRIX_OVERDRIVE');
     const finalBoost = (totalActiveBoostPct / 100) * (matrixActive ? 1.15 : 1.0);
-    // User Request: MATR-X is 15% of the WHOLE meteorite efficiency (Base 100% + Perks)
+    
     const bpBoost = matrixActive ? (1 + (totalActiveBoostPct / 100)) * 0.15 : 0;
 
     return {
@@ -197,29 +197,29 @@ function getMeteoriteNeighbors(state: GameState, idx: number, secondary: boolean
             neighborIdxs = [idx - 6];
         }
     } else {
-        // SECONDARY NEIGHBORS (LVL 4)
-        // Jump over 1.
+        
+        
         if (isInner) {
-            // Inner (i) connections: (i-1), (i+1), i+6.
-            // Jump over (i-1) -> (i-2)
-            // Jump over (i+1) -> (i+2)
-            // Jump over (i+6)? If i+6 had outer neighbors j, then j would be secondary. 
-            // In our current grid, outer j is only connected to inner j-6.
-            // So if I'm at inner 0, jump over 0+6 (outer 6) -> nothing.
-            // BUT, if I am at inner 0, jump over inner 5 -> outer 11? 
-            // No, jumping over a primary neighbor to find what IT connects to (excluding the source).
-            // Inner 0 -> Inner 1 -> {2, 7}
-            // Inner 0 -> Inner 5 -> {4, 11}
-            // Secondary neighbors for Inner 0: 2, 7, 4, 11. (Total 4 as requested).
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             neighborIdxs = [
-                (idx + 2) % 6,   // Inner jump
+                (idx + 2) % 6,   
                 (idx - 2 + 6) % 6,
-                ((idx + 1) % 6) + 6, // Outer jump via adjacent inner
+                ((idx + 1) % 6) + 6, 
                 ((idx - 1 + 6) % 6) + 6
             ];
         } else {
-            // Outer (o) connects to Inner (o-6).
-            // Jump over (o-6) -> (o-6-1) and (o-6+1). (Total 2 as requested).
+            
+            
             neighborIdxs = [
                 (idx - 6 + 1) % 6,
                 (idx - 6 - 1 + 6) % 6
@@ -250,7 +250,7 @@ function getMeteoriteHexConnections(state: GameState, idx: number): { hexes: Leg
 
 
 export function getChassisResonance(state: GameState): number {
-    // The center slot (chassis) connects to the FIRST 6 diamonds (inner ring)
+    
     const connectedDiamondIdxs = [0, 1, 2, 3, 4, 5];
     let totalBoost = 0;
 

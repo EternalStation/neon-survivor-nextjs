@@ -21,13 +21,13 @@ export class SpatialGrid {
         const col = Math.floor(enemy.x / this.cellSize);
         const row = Math.floor(enemy.y / this.cellSize);
 
-        // Add to main cell
+        
         this.addToCell(col, row, enemy);
 
-        // Handle edge cases: If enemy overlaps cell boundaries, add to neighbors?
-        // Simpler approach for "Point" insertion:
-        // Just insert into the cell containing the center.
-        // Query will check neighbor cells.
+        
+        
+        
+        
     }
 
     private addToCell(col: number, row: number, enemy: Enemy) {
@@ -40,9 +40,9 @@ export class SpatialGrid {
 
     query(x: number, y: number, radius: number): Enemy[] {
         const enemies: Enemy[] = [];
-        const seen = new Set<number>(); // Dedupe by ID
+        const seen = new Set<number>(); 
 
-        // Calculate range of cells to check
+        
         const startCol = Math.floor((x - radius) / this.cellSize);
         const endCol = Math.floor((x + radius) / this.cellSize);
         const startRow = Math.floor((y - radius) / this.cellSize);

@@ -31,10 +31,8 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
         return () => window.removeEventListener('keybindsChanged', h);
     }, []);
 
-    // Track previous HP for damage animation
     const [prevHp, setPrevHp] = useState(player.curHp);
 
-    // HP Bar Animation Control
     const currentHpPercent = (player.curHp / maxHp) * 100;
     const prevHpPercent = (prevHp / maxHp) * 100;
     const isHealing = currentHpPercent > prevHpPercent;
@@ -45,14 +43,12 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
     return (
         <div style={{
-            position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
+            position: 'absolute', bottom: 50, left: '50%', transform: 'translateX(-50%)',
             width: Math.min(CANVAS_WIDTH * 0.8, 300), display: 'flex', flexDirection: 'column', gap: 6, zIndex: 100,
             alignItems: 'center'
         }}>
 
-
             <div style={{ display: 'flex', gap: 12, marginBottom: 8, justifyContent: 'center', alignItems: 'center' }}>
-                {/* DASH INDICATOR */}
                 {(() => {
                     const dashCd = player.dashCooldown ?? 0;
                     const dashCdMax = player.dashCooldownMax || 4.0;
@@ -64,39 +60,47 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         <div style={{ position: 'relative', width: 42, height: 48 }}>
                             <div style={{
                                 width: '100%', height: '100%',
-                                backgroundColor: isDashing ? '#0ea5e9' : isReady ? '#22d3ee' : '#475569',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: isReady ? '0 0 12px #22d3ee' : 'none',
-                                transition: 'all 0.2s'
+                                backgroundColor: isReady ? 'rgba(34, 211, 238, 0.2)' : 'rgba(15, 23, 42, 0.8)',
+                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                position: 'relative'
                             }}>
-                                <div style={{
-                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
-                                    backgroundColor: '#0f172a',
-                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                    position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                <div className="dash-icon-container" style={{
+                                    display: 'flex',
+                                    color: isReady ? '#22d3ee' : '#475569',
+                                    fontSize: 14,
+                                    fontWeight: 900,
+                                    filter: isReady ? 'drop-shadow(0 0 5px #22d3ee)' : 'none'
                                 }}>
-                                    <div style={{ fontSize: 16, filter: isReady ? 'drop-shadow(0 0 5px #22d3ee)' : 'none' }}>
-                                        ⚡
-                                    </div>
-                                    {cdPct > 0 && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${cdPct * 100}%`,
-                                            background: 'rgba(0, 0, 0, 0.7)',
-                                            transition: 'height 0.1s linear'
-                                        }} />
-                                    )}
-                                    {cdPct > 0 && (
-                                        <div style={{
-                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                            color: '#fff', fontSize: 11, fontWeight: 900, textShadow: '0 0 2px #000', zIndex: 1
-                                        }}>
-                                            {Math.ceil(dashCd)}
-                                        </div>
-                                    )}
+                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear' : 'none' }}>»</span>
+                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear 0.1s' : 'none' }}>»</span>
+                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear 0.2s' : 'none' }}>»</span>
                                 </div>
+
+                                {cdPct > 0 && (
+                                    <div style={{
+                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                        height: `${cdPct * 100}%`,
+                                        background: 'rgba(0, 0, 0, 0.7)',
+                                        transition: 'height 0.1s linear'
+                                    }} />
+                                )}
+                                {cdPct > 0 && (
+                                    <div style={{
+                                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                        color: '#fff', fontSize: 11, fontWeight: 900, textShadow: '0 0 2px #000', zIndex: 1
+                                    }}>
+                                        {Math.ceil(dashCd)}
+                                    </div>
+                                )}
                             </div>
+                            <style>{`
+                                @keyframes dash-pulse {
+                                    0% { opacity: 0.3; transform: translateX(-2px); }
+                                    50% { opacity: 1; transform: translateX(0px); }
+                                    100% { opacity: 0.3; transform: translateX(2px); }
+                                }
+                            `}</style>
                             <div style={{
                                 position: 'absolute', top: -4, right: -4,
                                 background: '#0f172a', border: '1px solid #475569',
@@ -110,7 +114,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         </div>
                     );
                 })()}
-                {/* CLASS CAPABILITY (Skill 0) - Automatic */}
+
                 {(() => {
                     const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
                     if (!pClass) return null;
@@ -167,11 +171,10 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         const isDelaying = now < cooldownEnd;
 
                         if (isDelaying) {
-                            const delayDuration = (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_DURATION || 2) + (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RECHARGE_DELAY || 3);
                             const remainingDelay = cooldownEnd - now;
                             cdPct = remainingDelay / (GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RECHARGE_DELAY || 3);
                             isReady = false;
-                            isStormCooldown = true; // Reuse the grey-bar state variable
+                            isStormCooldown = true;
                             remainingDisplay = remainingDelay.toFixed(1);
                         } else {
                             const remaining = getRemainingCD(lastUsed, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_COOLDOWN, cdMod, now);
@@ -191,77 +194,65 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                     const themeColor = pClass.themeColor || '#fff';
                     const iconUrl = pClass.iconUrl || '';
-
                     const markerFlying = player.playerClass === 'eventhorizon' && !!player.voidMarkerActive;
 
                     return (
                         <div style={{ position: 'relative', width: 42, height: 48 }}>
-                            {/* Hexagon Border Container */}
                             <div style={{
                                 width: '100%', height: '100%',
-                                backgroundColor: markerFlying ? '#a855f7' : isReady ? themeColor : '#475569',
+                                backgroundColor: 'rgba(15, 23, 42, 0.8)',
                                 clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: markerFlying ? '0 0 15px #a855f7' : isReady ? `0 0 15px ${themeColor}` : 'none',
-                                transition: 'background-color 0.1s'
+                                position: 'relative',
+                                overflow: 'hidden'
                             }}>
-                                {/* Inner Content */}
-                                <div style={{
-                                    width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
-                                    backgroundColor: '#0f172a',
-                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                    position: 'relative'
-                                }}>
-                                    {/* Icon */}
-                                    {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.6 }} />}
+                                {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.4 }} />}
 
-                                    {(player.playerClass === 'stormstrike' || player.playerClass === 'aigis') ? (
-                                        <>
-                                            {isStormCooldown && cdPct > 0 && (
-                                                <div style={{
-                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                    height: `${cdPct * 100}%`,
-                                                    backgroundColor: 'rgba(120, 120, 120, 0.85)',
-                                                    transition: 'height 0.1s linear'
-                                                }} />
-                                            )}
-                                            {!isStormCooldown && cdPct > 0 && (
-                                                <div style={{
-                                                    position: 'absolute', top: 0, left: 0, width: '100%',
-                                                    height: `${cdPct * 100}%`,
-                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                                    transition: 'height 0.1s linear'
-                                                }} />
-                                            )}
-                                            {!isStormCooldown && stormChargePct > 0 && (
-                                                <div style={{
-                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                    height: `${stormChargePct * 100}%`,
-                                                    backgroundColor: 'rgba(234, 179, 8, 0.4)',
-                                                    transition: 'height 0.1s linear'
-                                                }} />
-                                            )}
-                                        </>
-                                    ) : (
-                                        cdPct > 0 && (
+                                {(player.playerClass === 'stormstrike' || player.playerClass === 'aigis') ? (
+                                    <>
+                                        {isStormCooldown && cdPct > 0 && (
                                             <div style={{
                                                 position: 'absolute', bottom: 0, left: 0, width: '100%',
                                                 height: `${cdPct * 100}%`,
-                                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                backgroundColor: 'rgba(120, 120, 120, 0.85)',
                                                 transition: 'height 0.1s linear'
                                             }} />
-                                        )
-                                    )}
-
-                                    {cdPct > 0 && remainingDisplay && (
+                                        )}
+                                        {!isStormCooldown && cdPct > 0 && (
+                                            <div style={{
+                                                position: 'absolute', top: 0, left: 0, width: '100%',
+                                                height: `${cdPct * 100}%`,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                transition: 'height 0.1s linear'
+                                            }} />
+                                        )}
+                                        {!isStormCooldown && stormChargePct > 0 && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${stormChargePct * 100}%`,
+                                                backgroundColor: 'rgba(234, 179, 8, 0.4)',
+                                                transition: 'height 0.1s linear'
+                                            }} />
+                                        )}
+                                    </>
+                                ) : (
+                                    cdPct > 0 && (
                                         <div style={{
-                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                            color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
-                                        }}>
-                                            {remainingDisplay}
-                                        </div>
-                                    )}
-                                </div>
+                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                            height: `${cdPct * 100}%`,
+                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                            transition: 'height 0.1s linear'
+                                        }} />
+                                    )
+                                )}
+
+                                {cdPct > 0 && remainingDisplay && (
+                                    <div style={{
+                                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                        color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
+                                    }}>
+                                        {remainingDisplay}
+                                    </div>
+                                )}
                             </div>
 
                             {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike' || player.playerClass === 'hivemother' || player.playerClass === 'aigis' || player.playerClass === 'malware') && (
@@ -276,68 +267,53 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                                     {getKeyDisplay(keybinds.classAbility)}
                                 </div>
                             )}
-
-
                         </div>
                     );
                 })()}
 
-                {/* ACTIVE SKILLS - Manual */}
                 {player.activeSkills && player.activeSkills.map((skill, idx) => (
                     <div key={idx} style={{ position: 'relative', width: 42, height: 48 }}>
-                        {/* Hexagon Border Container */}
                         <div style={{
                             width: '100%', height: '100%',
-                            backgroundColor: skill.inUse ? '#22d3ee' : '#475569',
+                            backgroundColor: 'rgba(15, 23, 42, 0.8)',
                             clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: skill.inUse ? '0 0 10px #22d3ee' : 'none',
-                            transition: 'all 0.2s'
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}>
-                            {/* Inner Content */}
-                            <div style={{
-                                width: 'calc(100% - 4px)', height: 'calc(100% - 4px)',
-                                backgroundColor: '#0f172a',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                position: 'relative'
-                            }}>
-                                {/* Icon (Placeholder or Actual) */}
-                                {(() => {
-                                    const skillCdMod = getCdMod(gameState, player);
-                                    const skillNow = gameState.gameTime;
-                                    const skillProgress = getCDProgress(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
-                                    const skillRemaining = getRemainingCD(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
-                                    const onCd = skillProgress > 0;
-                                    return (<>
-                                        {skill.icon ? (
-                                            <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: onCd ? 0.5 : 1 }} />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
-                                                {t.skill}
-                                            </div>
-                                        )}
-                                        {onCd && (
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                height: `${skillProgress * 100}%`,
-                                                background: 'rgba(0, 0, 0, 0.7)',
-                                                transition: 'height 0.1s linear'
-                                            }} />
-                                        )}
-                                        {onCd && (
-                                            <div style={{
-                                                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                                color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
-                                            }}>
-                                                {Math.ceil(skillRemaining)}
-                                            </div>
-                                        )}
-                                    </>);
-                                })()}
-                            </div>
+                            {(() => {
+                                const skillCdMod = getCdMod(gameState, player);
+                                const skillNow = gameState.gameTime;
+                                const skillProgress = getCDProgress(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
+                                const skillRemaining = getRemainingCD(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
+                                const onCd = skillProgress > 0;
+                                return (<>
+                                    {skill.icon ? (
+                                        <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: onCd ? 0.3 : 1 }} />
+                                    ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
+                                            {t.skill}
+                                        </div>
+                                    )}
+                                    {onCd && (
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                            height: `${skillProgress * 100}%`,
+                                            background: 'rgba(0, 0, 0, 0.7)',
+                                            transition: 'height 0.1s linear'
+                                        }} />
+                                    )}
+                                    {onCd && (
+                                        <div style={{
+                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                            color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
+                                        }}>
+                                            {Math.ceil(skillRemaining)}
+                                        </div>
+                                    )}
+                                </>);
+                            })()}
                         </div>
 
-                        {/* Keybind Badge */}
                         <div style={{
                             position: 'absolute', top: -4, right: -4,
                             background: '#0f172a', border: '1px solid #475569',
@@ -348,8 +324,6 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                         }}>
                             {skill.keyBind}
                         </div>
-
-
                     </div>
                 ))}
 
@@ -368,84 +342,66 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                     return (
                         <div style={{ display: 'flex', gap: 8 }}>
-                            {/* BOLT TIMER */}
                             <div style={{ position: 'relative', width: 42, height: 48 }}>
                                 <div style={{
                                     width: '100%', height: '100%',
-                                    backgroundColor: boltCD <= 0 ? '#3b82f6' : '#475569',
-                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: boltCD <= 0 ? '0 0 10px #3b82f6' : 'none'
+                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                    position: 'relative',
+                                    overflow: 'hidden'
                                 }}>
-                                    <div style={{
-                                        width: 'calc(100% - 3px)', height: 'calc(100% - 3px)',
-                                        backgroundColor: '#0f172a',
-                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                        position: 'relative'
-                                    }}>
-                                        <img src="/assets/hexes/DefBattery.png" alt="Kinetic Bolt" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+                                    <img src="/assets/hexes/DefBattery.png" alt="Kinetic Bolt" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
 
-                                        {/* Cooldown Overlay */}
-                                        {boltCD > 0 && (
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                height: `${boltPct * 100}%`,
-                                                backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                                            }} />
-                                        )}
+                                    {boltCD > 0 && (
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                            height: `${boltPct * 100}%`,
+                                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                                        }} />
+                                    )}
 
-                                        {/* Lightning Icon Overlay */}
-                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #3b82f6)' }}>
-                                            ⚡
-                                        </div>
-
-                                        {boltCD > 0 && (
-                                            <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
-                                                {boltCD.toFixed(1)}s
-                                            </div>
-                                        )}
+                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #3b82f6)' }}>
+                                        ⚡
                                     </div>
+
+                                    {boltCD > 0 && (
+                                        <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                            {boltCD.toFixed(1)}s
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* SHIELD TIMER (Lvl 2+) */}
                             {kinLvl >= 2 && (
                                 <div style={{ position: 'relative', width: 42, height: 48 }}>
                                     <div style={{
                                         width: '100%', height: '100%',
-                                        backgroundColor: shieldTimeLeft <= 0 ? '#60a5fa' : '#475569',
-                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        boxShadow: shieldTimeLeft <= 0 ? '0 0 10px #60a5fa' : 'none'
+                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                        position: 'relative',
+                                        overflow: 'hidden'
                                     }}>
-                                        <div style={{
-                                            width: 'calc(100% - 3px)', height: 'calc(100% - 3px)',
-                                            backgroundColor: '#0f172a',
-                                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                            position: 'relative'
-                                        }}>
-                                            <img src="/assets/hexes/DefBattery.png" alt="Kinetic Shield" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
+                                        <img src="/assets/hexes/DefBattery.png" alt="Kinetic Shield" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.2 }} />
 
-                                            {/* Cooldown Overlay */}
-                                            {shieldTimeLeft > 0 && (
-                                                <div style={{
-                                                    position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                    height: `${shieldPct * 100}%`,
-                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                                                }} />
-                                            )}
+                                        {shieldTimeLeft > 0 && (
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                                height: `${shieldPct * 100}%`,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                                            }} />
+                                        )}
 
-                                            {/* Shield Icon Overlay */}
-                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #60a5fa)' }}>
-                                                🛡️
-                                            </div>
-
-                                            {shieldTimeLeft > 0 && (
-                                                <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
-                                                    {Math.ceil(shieldTimeLeft)}s
-                                                </div>
-                                            )}
+                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #60a5fa)' }}>
+                                            🛡️
                                         </div>
+
+                                        {shieldTimeLeft > 0 && (
+                                            <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                                {Math.ceil(shieldTimeLeft)}s
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -453,10 +409,50 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     );
                 })()}
 
+                {(() => {
+                    const critLvl = getHexLevel(gameState, 'ComCrit');
+                    const shatterLvl = getHexLevel(gameState, 'SoulShatterCore');
+                    const shatteredCapLvl = getHexLevel(gameState, 'ShatteredCapacitor');
+                    if (critLvl < 3 && shatterLvl <= 0 && shatteredCapLvl <= 0) return null;
 
+                    const cdMod = getCdMod(gameState, player);
+                    const markNow = gameState.gameTime;
+                    const markCD = getRemainingCD(player.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, markNow);
+                    const markProgress = getCDProgress(player.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, markNow);
 
+                    return (
+                        <div style={{ position: 'relative', width: 42, height: 48 }}>
+                            <div style={{
+                                width: '100%', height: '100%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                                backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                <img src="/assets/hexes/ComCrit.png" alt="Death Mark" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
 
+                                {markCD > 0 && (
+                                    <div style={{
+                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
+                                        height: `${markProgress * 100}%`,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                                    }} />
+                                )}
 
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #8800FF)' }}>
+                                    💀
+                                </div>
+
+                                {markCD > 0 && (
+                                    <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                        {markCD.toFixed(1)}s
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             <div style={{
@@ -477,7 +473,6 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                 </div>
             </div>
 
-            {/* Shield Bar (Blue) */}
             {(() => {
                 const totalShield = (player.shieldChunks || []).reduce((sum, c) => sum + c.amount, 0);
                 if (totalShield <= 0) return null;
@@ -487,15 +482,15 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                 let lifeCapacity = 0;
                 if (lifeLvl >= 2) {
-                    lifeCapacity = maxHp * getHexMultiplier(gameState, 'ComLife');
+                    lifeCapacity = maxHp * 0.5 * getHexMultiplier(gameState, 'ComLife');
                 }
 
                 let kinCapacity = 0;
                 if (kinLvl >= 2) {
-                    kinCapacity = calcStat(player.arm) * 5;
+                    kinCapacity = calcStat(player.arm);
                 }
 
-                const dynamicMaxShield = Math.max(lifeCapacity + kinCapacity, totalShield); // Include overheal shields
+                const dynamicMaxShield = Math.max(lifeCapacity + kinCapacity, totalShield);
                 const shieldPct = (totalShield / dynamicMaxShield) * 100;
                 return (
                     <div style={{
@@ -523,3 +518,4 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
         </div>
     );
 };
+

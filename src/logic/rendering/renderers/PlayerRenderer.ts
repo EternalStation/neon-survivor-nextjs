@@ -6,35 +6,42 @@ import { GAME_CONFIG } from '../../core/GameConfig';
 import { getHexLevel } from '../../upgrades/LegendaryLogic';
 
 export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
-    // const { player } = state; // No longer extracting from state
-    ctx.save();
 
-    // Ghost Mode (Temporal Guard)
+    ctx.save();
     const now = state.gameTime;
     const ghostAlpha = (player.phaseShiftUntil && now < player.phaseShiftUntil)
-        ? (0.5 + Math.sin(now * 20) * 0.3) // Rapid blink
+        ? (0.5 + Math.sin(now * 20) * 0.3)
         : 1.0;
 
-    // Apply ghost alpha to context initially, but internal overrides must also respect it
     ctx.globalAlpha = ghostAlpha;
-
     ctx.translate(player.x, player.y);
 
-    // Radiation Core Aura (Level 1+)
+
     const radLevel = getHexLevel(state, 'RadiationCore');
-    if (radLevel >= 1) {
+    const mireLvl = getHexLevel(state, 'IrradiatedMire');
+    const neutronLvl = getHexLevel(state, 'NeutronStar');
+
+    if (radLevel >= 1 || mireLvl >= 1 || neutronLvl >= 1) {
         ctx.save();
-        const radius = 500;
+        const radius = (mireLvl >= 1 || neutronLvl >= 1) ? 666 : 500;
         const t = state.gameTime;
 
-        // Subtle pulsing base
         const pulse = 0.98 + Math.sin(t * 2) * 0.02;
 
-        // Gradient for radioactive field
         const grad = ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius);
-        grad.addColorStop(0, 'rgba(163, 230, 53, 0.16)');
-        grad.addColorStop(0.5, 'rgba(34, 197, 94, 0.09)');
-        grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+        if (neutronLvl >= 1) {
+            grad.addColorStop(0, 'rgba(250, 204, 21, 0.16)');
+            grad.addColorStop(0.5, 'rgba(163, 230, 53, 0.09)');
+            grad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+        } else if (mireLvl >= 1) {
+            grad.addColorStop(0, 'rgba(34, 197, 94, 0.16)');
+            grad.addColorStop(0.5, 'rgba(22, 163, 74, 0.09)');
+            grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+        } else {
+            grad.addColorStop(0, 'rgba(163, 230, 53, 0.16)');
+            grad.addColorStop(0.5, 'rgba(34, 197, 94, 0.09)');
+            grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+        }
 
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -49,7 +56,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
     const drawHexagon = (x: number, y: number, r: number) => {
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - Math.PI / 2; // Pointy-top to match UI
+            const angle = (Math.PI / 3) * i - Math.PI / 2;
             const px = x + r * Math.cos(angle);
             const py = y + r * Math.sin(angle);
             if (i === 0) ctx.moveTo(px, py);
@@ -68,17 +75,15 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Use individual player spawnTimer, default 0 for safety (Visible)
+
     const spawnTimer = (player.spawnTimer !== undefined) ? player.spawnTimer : 0;
 
     if (spawnTimer > 0) {
         ctx.shadowBlur = 30 * (spawnTimer / GAME_CONFIG.PLAYER.SPAWN_DURATION);
         ctx.shadowColor = themeColor;
 
-        // Progress reach 1.0 when spawnTimer hits 0
-        // To remove "delay", we could scale progress to reach 1.0 when timer is at e.g. 0.1s
         const duration = GAME_CONFIG.PLAYER.SPAWN_DURATION;
-        const progress = Math.min(1.0, Math.max(0, duration - spawnTimer) / (duration * 0.9)); // Reaches 1.0 at 90% of duration
+        const progress = Math.min(1.0, Math.max(0, duration - spawnTimer) / (duration * 0.9));
         const ease = 1 - Math.pow(1 - progress, 3);
         const spin = (1.0 - ease) * Math.PI * 4;
         ctx.rotate(spin);
@@ -89,7 +94,6 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
             ctx.scale(scale, scale);
             drawHexagon(0, 0, cellSize);
 
-            // Draw Class Icon in center during spawn
             const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
             if (pClass) {
                 let imgKey = '';
@@ -101,7 +105,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
 
                 const img = meteoriteImages[imgKey];
                 if (img && img.complete) {
-                    const iconSize = cellSize * 2.1; // Increased from 1.8 to 2.1
+                    const iconSize = cellSize * 2.1;
                     ctx.save();
                     ctx.globalAlpha = 0.8 * Math.min(1, ease * 2);
                     ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
@@ -118,20 +122,18 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.globalAlpha = Math.min(1, ease * 2);
         const hexSockets = player.moduleSockets?.hexagons || [];
         for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i; // Match UI placement (0, 60, 120...)
+            const angle = (Math.PI / 3) * i;
             const cx = currentDist * Math.cos(angle);
             const cy = currentDist * Math.sin(angle);
             drawHexagon(cx, cy, cellSize);
 
-
-            // Draw Legendary Icon in spawn
             const hex = hexSockets[i];
             if (hex) {
                 const iconName = hex.customIcon?.split('/').pop()?.split('.')[0];
                 if (iconName) {
                     const img = meteoriteImages[iconName];
                     if (img && img.complete) {
-                        const iconSize = cellSize * 2.2; // Increased from 1.9 to 2.2
+                        const iconSize = cellSize * 2.2;
                         ctx.save();
                         ctx.globalAlpha = 0.7 * Math.min(1, ease * 2);
                         ctx.drawImage(img, cx - iconSize / 2, cy - iconSize / 2, iconSize, iconSize);
@@ -145,7 +147,6 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.shadowBlur = 0;
         drawHexagon(0, 0, cellSize);
 
-        // Draw Class Icon in center
         const pClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
         if (pClass) {
             let imgKey = '';
@@ -157,7 +158,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
 
             const img = meteoriteImages[imgKey];
             if (img && img.complete) {
-                const iconSize = cellSize * 2.1; // Increased from 1.8 to 2.1
+                const iconSize = cellSize * 2.1;
                 ctx.save();
                 ctx.globalAlpha = 0.8 * ghostAlpha;
                 ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
@@ -168,13 +169,12 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         const cellDistance = cellSize * Math.sqrt(3);
         const hexSockets = player.moduleSockets?.hexagons || [];
         for (let i = 0; i < 6; i++) {
-            ctx.save(); // STRICT ISOLATION START
+            ctx.save();
 
-            const angle = (Math.PI / 3) * i; // Match UI placement (0, 60, 120...)
+            const angle = (Math.PI / 3) * i;
             const cx = cellDistance * Math.cos(angle);
             const cy = cellDistance * Math.sin(angle);
 
-            // Strict reset of styles
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.setLineDash([]);
@@ -185,7 +185,6 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
             ctx.fillStyle = '#020617';
             ctx.lineWidth = 2.5;
 
-            // Draw Base Hexagon (Fill Only)
             ctx.beginPath();
             for (let j = 0; j < 6; j++) {
                 const ang = (Math.PI / 3) * j - Math.PI / 2;
@@ -198,21 +197,19 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
             ctx.fillStyle = '#020617';
             ctx.fill();
 
-            // Draw Legendary Icon if socketed
             const hex = hexSockets[i];
             if (hex) {
                 const iconName = hex.customIcon?.split('/').pop()?.split('.')[0];
                 if (iconName) {
                     const img = meteoriteImages[iconName];
                     if (img && img.complete) {
-                        const iconSize = cellSize * 2.0; // Increased from 1.7 to 2.0
+                        const iconSize = cellSize * 2.0;
                         ctx.globalAlpha = 0.8 * ghostAlpha;
                         ctx.drawImage(img, cx - iconSize / 2, cy - iconSize / 2, iconSize, iconSize);
                     }
                 }
             }
 
-            // Draw Hexagon Border (Stroke Only) - Drawn LAST to overlap icon
             ctx.beginPath();
             for (let j = 0; j < 6; j++) {
                 const ang = (Math.PI / 3) * j - Math.PI / 2;
@@ -226,22 +223,20 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
             ctx.lineWidth = 2.5;
             ctx.stroke();
 
-
-            ctx.restore(); // STRICT ISOLATION END
+            ctx.restore();
         }
 
-        // --- SONIC SPEED EFFECTS (Level 4 ComWave / Singularity) ---
+
         if (player.buffs?.waveSpeed && state.gameTime < player.buffs.waveSpeed) {
-            // Spawn localized particles (Sonic Dust) - Ejected from bottom edges
             if (Math.random() > 0.8) {
-                const angle = Math.atan2(player.knockback.y, player.knockback.x) + Math.PI; // Opposite to movement
+                const angle = Math.atan2(player.knockback.y, player.knockback.x) + Math.PI;
                 const scatter = (Math.random() - 0.5) * 1.2;
                 const pAngle = angle + scatter;
                 const speed = 1.5 + Math.random() * 2.5;
 
                 state.particles.push({
                     x: player.x + (Math.random() - 0.5) * cellSize,
-                    y: player.y + cellSize * 0.8, // Spawn at the bottom area of the hex
+                    y: player.y + cellSize * 0.8,
                     vx: Math.cos(pAngle) * speed,
                     vy: Math.sin(pAngle) * speed,
                     life: 12 + Math.random() * 8,
@@ -258,63 +253,78 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
 
     ctx.restore();
 
-    // --- SHIELD RIPPLE (Active Shield Chunks) ---
+
     const totalShield = (player.shieldChunks || []).reduce((sum: number, c: any) => sum + c.amount, 0);
     if (totalShield > 0) {
         ctx.save();
         ctx.translate(player.x, player.y);
         const time = state.gameTime;
         const pulse = 0.8 + Math.sin(time * 6) * 0.2;
-        const shieldColor = '#3b82f6'; // Bright Blue
+        const shieldColor = '#3b82f6';
+        const cellDistance = cellSize * Math.sqrt(3);
 
         ctx.strokeStyle = shieldColor;
-        ctx.lineWidth = 2.5;
-        ctx.shadowBlur = 15;
+        ctx.lineWidth = 2.0;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = shieldColor;
-        ctx.globalAlpha = 0.4 * pulse;
 
-        // Draw multiple expanding hexagonal rings
+        const centers: [number, number][] = [[0, 0]];
+        for (let i = 0; i < 6; i++) {
+            const ang = (Math.PI / 3) * i;
+            centers.push([cellDistance * Math.cos(ang), cellDistance * Math.sin(ang)]);
+        }
+
         for (let i = 0; i < 2; i++) {
             const ringProgress = (time * 1.5 + i * 0.5) % 1.0;
-            const r = cellSize * (1.8 + ringProgress * 0.6);
-            ctx.globalAlpha = 0.3 * (1 - ringProgress) * pulse;
+            const expansion = 1.1 + ringProgress * 0.25;
+            ctx.globalAlpha = 0.25 * (1 - ringProgress) * pulse;
 
+            centers.forEach(([cx, cy]) => {
+                ctx.beginPath();
+                for (let j = 0; j < 6; j++) {
+                    const ang = (Math.PI / 3) * j - Math.PI / 2;
+                    const r = cellSize * expansion;
+                    const px = cx + Math.cos(ang) * r;
+                    const py = cy + Math.sin(ang) * r;
+                    if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            });
+        }
+
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = shieldColor;
+        centers.forEach(([cx, cy]) => {
             ctx.beginPath();
             for (let j = 0; j < 6; j++) {
                 const ang = (Math.PI / 3) * j - Math.PI / 2;
-                const px = Math.cos(ang) * r;
-                const py = Math.sin(ang) * r;
+                const r = cellSize * 1.15;
+                const px = cx + Math.cos(ang) * r;
+                const py = cy + Math.sin(ang) * r;
                 if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
             }
             ctx.closePath();
-            ctx.stroke();
-        }
+            ctx.fill();
 
-        // Inner solid-ish barrier
-        ctx.globalAlpha = 0.15;
-        ctx.fillStyle = shieldColor;
-        ctx.beginPath();
-        for (let j = 0; j < 6; j++) {
-            const ang = (Math.PI / 3) * j - Math.PI / 2;
-            const r = cellSize * 2.0;
-            const px = Math.cos(ang) * r;
-            const py = Math.sin(ang) * r;
-            if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fill();
+            ctx.save();
+            ctx.globalAlpha = 0.3 * pulse;
+            ctx.stroke();
+            ctx.restore();
+        });
 
         ctx.restore();
     }
 
-    // --- ORBITAL VORTEX AURA ---
+
+
     if (player.orbitalVortexUntil && now < player.orbitalVortexUntil) {
         ctx.save();
         ctx.translate(player.x, player.y);
 
         const vPulse = 0.8 + Math.sin(now * 10) * 0.2;
         const vortexGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS);
-        vortexGrad.addColorStop(0, 'rgba(245, 158, 11, 0.05)'); // amber core
+        vortexGrad.addColorStop(0, 'rgba(245, 158, 11, 0.05)');
         vortexGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.02)');
         vortexGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
 
@@ -323,7 +333,6 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.arc(0, 0, GAME_CONFIG.SKILLS.ORBITAL_VORTEX_RADIUS, 0, Math.PI * 2);
         ctx.fill();
 
-        // Spinning wind trails
         ctx.rotate(now * 3);
         ctx.strokeStyle = '#f59e0b';
         ctx.lineWidth = 2;
@@ -339,7 +348,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.restore();
     }
 
-    // Stun VFX
+
     if (player.stunnedUntil && now < player.stunnedUntil) {
         ctx.save();
         ctx.translate(player.x, player.y);
@@ -366,27 +375,23 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.restore();
     }
 
-    // Mortality Curse Visual (Triangle Boss L4)
+
     if (player.healingDisabled) {
         ctx.save();
-        ctx.translate(player.x, player.y - 80); // Higher above the player
+        ctx.translate(player.x, player.y - 80);
         const time = state.gameTime;
         const pulse = 0.8 + Math.sin(time * 10) * 0.2;
         ctx.globalAlpha = pulse;
 
-        // Draw Heart Shape (Green)
         const size = 20;
-        ctx.fillStyle = '#22c55e'; // Green Heart
+        ctx.fillStyle = '#22c55e';
         ctx.beginPath();
         ctx.moveTo(0, size * 0.7);
-        // Left curve
         ctx.bezierCurveTo(-size, 0, -size, -size, 0, -size * 0.3);
-        // Right curve
         ctx.bezierCurveTo(size, -size, size, 0, 0, size * 0.7);
         ctx.fill();
 
-        // Cross-out (X) indicating "Disabled"
-        ctx.strokeStyle = '#ef4444'; // Red for the X
+        ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.beginPath();
@@ -400,21 +405,13 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.restore();
     }
 
-    // Glitched Visual (Inverted Controls)
+
     if (player.invertedControlsUntil && now < player.invertedControlsUntil) {
         ctx.save();
-        ctx.translate(0, 0); // We are already translated to player.x, y or we should be...
-        // Wait, line 21 already translated to player.x, player.y.
-        // But some effects use ctx.translate(player.x, player.y) if they were called after a restore.
-        // The current function structure is:
-        // ctx.save()
-        // ctx.translate(player.x, player.y)
-        // ... draw stuff ...
-        // ctx.restore() (at the very end)
+        ctx.translate(0, 0);
 
         const t = state.gameTime;
 
-        // Glitch noise around the player
         for (let i = 0; i < 8; i++) {
             const offX = Math.sin(i * 123 + t * 40) * 40;
             const offY = Math.cos(i * 456 + t * 40) * 40;
@@ -424,7 +421,6 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
             ctx.fillRect(offX, offY, sz, sz);
         }
 
-        // Draw "SYSTEM GLITCH" text pulsing
         if (Math.sin(t * 15) > 0) {
             ctx.font = "900 12px 'Outfit', sans-serif";
             ctx.fillStyle = "#fff";
@@ -437,7 +433,8 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
         ctx.restore();
     }
 
-    ctx.restore(); // Final restore for line 10
+
+    ctx.restore();
 }
 
 export function renderVoidMarker(ctx: CanvasRenderingContext2D, state: GameState) {

@@ -16,17 +16,17 @@ export function renderAllies(ctx: CanvasRenderingContext2D, state: GameState) {
             ctx.save();
             ctx.translate(a.x, a.y);
 
-            // Outer pulse glow
+            
             const pulse = (Math.sin(state.gameTime * 5) + 1) * 2;
             ctx.shadowBlur = 10 + pulse;
             ctx.shadowColor = '#4ade80';
 
-            // Drone body
+            
             ctx.fillStyle = '#1e293b';
             ctx.strokeStyle = '#4ade80';
             ctx.lineWidth = 2;
 
-            // Diamond shape
+            
             ctx.beginPath();
             ctx.moveTo(0, -10 - pulse / 2);
             ctx.lineTo(8 + pulse / 2, 0);
@@ -36,13 +36,13 @@ export function renderAllies(ctx: CanvasRenderingContext2D, state: GameState) {
             ctx.fill();
             ctx.stroke();
 
-            // Center core
+            
             ctx.fillStyle = '#4ade80';
             ctx.beginPath();
             ctx.arc(0, 0, 3, 0, Math.PI * 2);
             ctx.fill();
 
-            // Rotors/Flanges
+            
             ctx.strokeStyle = '#22c55e';
             ctx.lineWidth = 1;
             const rot = state.gameTime * 10;
@@ -64,7 +64,7 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
         ctx.save();
         ctx.translate(m.x, m.y);
 
-        // Subtle scaling animation, and enable image smoothing to lessen sharpness
+        
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         const pulseScale = 1 + Math.sin(state.gameTime * 3 + m.id) * 0.08;
@@ -90,7 +90,7 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 ctx.fill();
             }
         } else if (m.type === 'dust_pile') {
-            const size = 24; // slightly smaller than void_flux (32) to match standard drops
+            const size = 24; 
             const img = (meteoriteImages as any).dust_pile;
             if (img && img.complete && img.naturalWidth !== 0) {
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
@@ -108,19 +108,19 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
                 const size = 32;
                 ctx.drawImage(img, -size / 2, -size / 2, size, size);
             } else {
-                let color = '#EAB308'; // Radiant (Gold)
-                if (m.rarity === 'anomalous') color = '#60a5fa'; // Blue
-                else if (m.rarity === 'abyss') color = '#4F46E5'; // Abyss (Indigo)
-                else if (m.rarity === 'eternal') color = '#B8860B'; // Eternal (Dark Gold)
-                else if (m.rarity === 'divine') color = '#FFFFFF'; // Divine (White)
-                else if (m.rarity === 'singularity') color = '#E942FF'; // Singularity (Magenta)
+                let color = '#EAB308'; 
+                if (m.rarity === 'anomalous') color = '#60a5fa'; 
+                else if (m.rarity === 'abyss') color = '#4F46E5'; 
+                else if (m.rarity === 'eternal') color = '#B8860B'; 
+                else if (m.rarity === 'divine') color = '#FFFFFF'; 
+                else if (m.rarity === 'singularity') color = '#E942FF'; 
 
                 ctx.fillStyle = color;
                 ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -6); ctx.lineTo(12, 6); ctx.lineTo(0, 12); ctx.lineTo(-10.5, 7.5); ctx.lineTo(-9, -7.5); ctx.closePath(); ctx.fill();
                 ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
             }
         }
-        // Tutorial Highlight (First Meteorite Only)
+        
         if (state.tutorial.isActive &&
             state.tutorial.currentStep === TutorialStep.COLLECT_METEORITE &&
             state.gameTime >= 60 &&
@@ -130,13 +130,13 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
             const pulse = 1 + Math.sin(state.gameTime * 5) * 0.2;
             ctx.filter = `drop-shadow(0 0 10px #00ffff)`;
             ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 3 / pulse; // Keep stroke consistent visually
+            ctx.lineWidth = 3 / pulse; 
             ctx.beginPath();
             ctx.arc(0, 0, 40 * pulse, 0, Math.PI * 2);
             ctx.stroke();
             ctx.filter = 'none';
 
-            // Floating Arrow
+            
             ctx.fillStyle = '#00ffff';
             ctx.beginPath();
             ctx.moveTo(0, -60 - (pulse * 10));
@@ -145,7 +145,7 @@ export function renderMeteorites(ctx: CanvasRenderingContext2D, state: GameState
             ctx.closePath();
             ctx.fill();
 
-            // Text
+            
             ctx.font = '900 12px Orbitron';
             ctx.textAlign = 'center';
             ctx.fillText("COLLECT", 0, -90 - (pulse * 10));
@@ -165,7 +165,7 @@ export function renderExtractionShip(ctx: CanvasRenderingContext2D, state: GameS
     ctx.save();
     ctx.translate(x, y);
 
-    // Hover effect
+    
     const hover = Math.sin(state.gameTime * 2) * 20;
     ctx.translate(0, hover);
 
@@ -173,7 +173,7 @@ export function renderExtractionShip(ctx: CanvasRenderingContext2D, state: GameS
         const size = 300;
         ctx.drawImage(img, -size / 2, -size / 2, size, size);
 
-        // Engine Glow
+        
         ctx.globalCompositeOperation = 'lighter';
         const glow = 20 + Math.sin(state.gameTime * 10) * 10;
         const grad = ctx.createRadialGradient(0, size * 0.4, 0, 0, size * 0.4, glow * 2);
@@ -184,7 +184,7 @@ export function renderExtractionShip(ctx: CanvasRenderingContext2D, state: GameS
         ctx.arc(0, size * 0.4, glow * 2, 0, Math.PI * 2);
         ctx.fill();
     } else {
-        // Placeholder Ship (Arrow shape)
+        
         ctx.fillStyle = '#60a5fa';
         ctx.beginPath();
         ctx.moveTo(0, -60);
@@ -198,7 +198,7 @@ export function renderExtractionShip(ctx: CanvasRenderingContext2D, state: GameS
         ctx.stroke();
     }
 
-    // Arrival/Beacon Animation
+    
     if (state.extractionStatus === 'active') {
         const progress = 1 - (state.extractionTimer / 65);
         ctx.strokeStyle = '#ef4444';
@@ -215,28 +215,28 @@ export function renderExtractionShip(ctx: CanvasRenderingContext2D, state: GameS
 
 export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameState, width: number, height: number, camera: { x: number, y: number }, scaleFactor: number) {
     if (state.bossPresence > 0.01) {
-        // Red vignettte or indicators?
-        // Logic handled in GameRenderer.ts main overlay
+        
+        
     }
     const dpr = window.devicePixelRatio || 1;
     const zoom = scaleFactor * 0.58 * dpr;
 
-    // Boss Indicators (Skull + Shape/Color)
+    
     const activeBosses = state.enemies.filter(e => e.boss && !e.dead);
     activeBosses.forEach((e, index) => {
         const screenX = (e.x - camera.x) * zoom + width / 2;
         const screenY = (e.y - camera.y) * zoom + height / 2;
         const pad = 60 * dpr;
 
-        // Show indicator if off-screen
+        
         if (screenX < pad || screenX > width - pad || screenY < pad || screenY > height - pad) {
             let ix = Math.max(pad, Math.min(width - pad, screenX));
             let iy = Math.max(pad, Math.min(height - pad, screenY));
 
-            // Offset overlapping indicators slightly
+            
             if (activeBosses.length > 1) {
                 const offset = (index - (activeBosses.length - 1) / 2) * (40 * dpr);
-                // Offset along the perimeter
+                
                 if (ix === pad || ix === width - pad) iy += offset;
                 else ix += offset;
             }
@@ -244,28 +244,28 @@ export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameSt
             ctx.save();
             ctx.translate(ix, iy);
 
-            // Pulse synced with game time to avoid 'laging' feel of Date.now()
+            
             const pulse = 1 + Math.sin(state.gameTime * 8) * 0.15;
             ctx.scale(pulse, pulse);
 
-            const bossColor = '#ff0000'; // Force to clean red
+            const bossColor = '#ff0000'; 
             ctx.fillStyle = bossColor;
             ctx.shadowBlur = 15;
             ctx.shadowColor = bossColor;
 
             const size = 45 * dpr;
 
-            // 1. Draw Skull Base
+            
             ctx.beginPath();
             ctx.arc(0, 0, size * 0.45, 0, Math.PI * 2);
             ctx.fill();
 
-            // Rounded Jaw
+            
             ctx.beginPath();
             ctx.roundRect(-size * 0.25, size * 0.25, size * 0.5, size * 0.3, 4 * dpr);
             ctx.fill();
 
-            // Eyes (Black)
+            
             ctx.fillStyle = '#000000';
             ctx.beginPath();
             ctx.arc(-size * 0.18, size * 0.05, size * 0.12, 0, Math.PI * 2);
@@ -276,7 +276,7 @@ export function renderBossIndicator(ctx: CanvasRenderingContext2D, state: GameSt
         }
     });
 
-    // Rare/Snitch Indicators (Circle Ping)
+    
     state.enemies.filter(e => e.isRare && !e.dead).forEach(e => {
         const screenX = (e.x - camera.x) * zoom + width / 2;
         const screenY = (e.y - camera.y) * zoom + height / 2;
