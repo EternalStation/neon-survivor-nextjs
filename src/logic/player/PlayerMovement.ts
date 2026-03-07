@@ -10,6 +10,7 @@ import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { recordDamage } from '../utils/DamageTracking';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
+import { getKeybinds } from '../utils/Keybinds';
 
 export function triggerDash(state: GameState, keys: Record<string, boolean>, inputVector?: { x: number, y: number }, overridePlayer?: any) {
     const player = overridePlayer || state.player;
@@ -22,10 +23,20 @@ export function triggerDash(state: GameState, keys: Record<string, boolean>, inp
 
     let vx = 0, vy = 0;
 
-    if (keys['keyw'] || keys['arrowup']) vy--;
-    if (keys['keys'] || keys['arrowdown']) vy++;
-    if (keys['keya'] || keys['arrowleft']) vx--;
-    if (keys['keyd'] || keys['arrowright']) vx++;
+    const binds = getKeybinds();
+    const useDefault = binds.useDefaultMovement ?? true;
+
+    if (useDefault) {
+        if (keys['keyw'] || keys['arrowup']) vy--;
+        if (keys['keys'] || keys['arrowdown']) vy++;
+        if (keys['keya'] || keys['arrowleft']) vx--;
+        if (keys['keyd'] || keys['arrowright']) vx++;
+    } else {
+        if (keys[(binds.moveUp || '').toLowerCase()]) vy--;
+        if (keys[(binds.moveDown || '').toLowerCase()]) vy++;
+        if (keys[(binds.moveLeft || '').toLowerCase()]) vx--;
+        if (keys[(binds.moveRight || '').toLowerCase()]) vx++;
+    }
 
     if (inputVector) {
         vx += inputVector.x;
@@ -108,10 +119,20 @@ export function handlePlayerMovement(
     const isInverted = player.invertedControlsUntil && state.gameTime < player.invertedControlsUntil;
 
     if (!isStunned) {
-        if (keys['keyw'] || keys['arrowup']) vy--;
-        if (keys['keys'] || keys['arrowdown']) vy++;
-        if (keys['keya'] || keys['arrowleft']) vx--;
-        if (keys['keyd'] || keys['arrowright']) vx++;
+        const binds = getKeybinds();
+        const useDefault = binds.useDefaultMovement ?? true;
+
+        if (useDefault) {
+            if (keys['keyw'] || keys['arrowup']) vy--;
+            if (keys['keys'] || keys['arrowdown']) vy++;
+            if (keys['keya'] || keys['arrowleft']) vx--;
+            if (keys['keyd'] || keys['arrowright']) vx++;
+        } else {
+            if (keys[(binds.moveUp || '').toLowerCase()]) vy--;
+            if (keys[(binds.moveDown || '').toLowerCase()]) vy++;
+            if (keys[(binds.moveLeft || '').toLowerCase()]) vx--;
+            if (keys[(binds.moveRight || '').toLowerCase()]) vx++;
+        }
 
         if (inputVector) {
             vx += inputVector.x;

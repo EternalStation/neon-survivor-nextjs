@@ -25,6 +25,7 @@ import { updateTutorial } from '../logic/core/TutorialLogic';
 import { updateTurrets, updateAllies, relocateTurretsToArena } from '../logic/mission/TurretLogic';
 
 import { updateAreaEffects } from './useAreaEffectLogic';
+import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface UseGameLogicProps {
     gameState: React.MutableRefObject<GameState>;
@@ -211,7 +212,16 @@ export function useGameLogic({
         }
 
         if (state.tutorial.isActive && state.tutorial.currentStep === TutorialStep.MOVEMENT) {
-            ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].forEach(k => {
+            const movementOptions = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+            const binds = getKeybinds();
+            if (!binds.useDefaultMovement) {
+                if (binds.moveUp) movementOptions.push(binds.moveUp.toLowerCase());
+                if (binds.moveDown) movementOptions.push(binds.moveDown.toLowerCase());
+                if (binds.moveLeft) movementOptions.push(binds.moveLeft.toLowerCase());
+                if (binds.moveRight) movementOptions.push(binds.moveRight.toLowerCase());
+            }
+
+            movementOptions.forEach(k => {
                 if (keys.current[k]) state.tutorial.pressedKeys.add(k);
             });
             if (Math.abs(inputVector.current.x) > 0.1 || Math.abs(inputVector.current.y) > 0.1) {

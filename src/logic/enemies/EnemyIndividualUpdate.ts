@@ -362,6 +362,9 @@ export function updateSingleEnemy(
     let pushY = e.lastPushY || 0;
 
     let currentSpd = e.spd * (state.gameSpeedMult ?? 1);
+    if (e.boss) {
+        currentSpd *= 0.8;
+    }
 
 
     const knockbackMag = e.knockback ? Math.hypot(e.knockback.x, e.knockback.y) : 0;

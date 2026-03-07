@@ -25,6 +25,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
     };
 
     const FORBIDDEN_CODES = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+    const useDefaultMovement = keybinds.useDefaultMovement ?? true;
 
     useEffect(() => {
         const processInput = (code: string) => {
@@ -36,7 +37,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             }
 
             const isDuplicate = Object.entries(keybinds).some(([k, v]) => k !== listening && v === code);
-            const isReserved = FORBIDDEN_CODES.includes(lowerCode);
+            const isReserved = useDefaultMovement && FORBIDDEN_CODES.includes(lowerCode);
 
             if (isDuplicate || isReserved) {
                 setConflict(listening);
@@ -138,7 +139,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                         letterSpacing: '1px'
                     }}
                 >
-                    {isConflict ? '!' : (isListening ? '...' : getKeyDisplay(keybinds[item.key]))}
+                    {isConflict ? '!' : (isListening ? '...' : getKeyDisplay(keybinds[item.key] as string))}
                 </button>
             </div>
         );
@@ -151,8 +152,23 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
             <div style={{ display: 'flex', gap: 20, paddingRight: 5 }}>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <h4 style={{ color: '#22d3ee', fontSize: 9, margin: '0 0 2px 0', letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
-                        {Object.entries(RESERVED_KEYS).map(([label, display]) => (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h4 style={{ color: '#22d3ee', fontSize: 9, margin: 0, letterSpacing: 1.5, opacity: 0.8 }}>{t.movement}</h4>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={useDefaultMovement}
+                                    onChange={(e) => {
+                                        const newKeybinds = { ...keybinds, useDefaultMovement: e.target.checked };
+                                        setKeybinds(newKeybinds);
+                                        saveKeybinds(newKeybinds);
+                                    }}
+                                    style={{ margin: 0 }}
+                                />
+                                <span style={{ color: '#94a3b8', fontSize: 9, whiteSpace: 'nowrap' }}>Default</span>
+                            </label>
+                        </div>
+                        {useDefaultMovement ? Object.entries(RESERVED_KEYS).map(([label, display]) => (
                             <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ color: '#64748b', fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{label}</span>
                                 <div style={{
@@ -170,7 +186,12 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
                                     {display}
                                 </div>
                             </div>
-                        ))}
+                        )) : [
+                            { label: 'Move Up', key: 'moveUp' as keyof Keybinds },
+                            { label: 'Move Down', key: 'moveDown' as keyof Keybinds },
+                            { label: 'Move Left', key: 'moveLeft' as keyof Keybinds },
+                            { label: 'Move Right', key: 'moveRight' as keyof Keybinds },
+                        ].map(item => renderBindItem(item))}
                     </div>
                 </div>
 

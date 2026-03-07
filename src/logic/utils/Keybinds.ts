@@ -1,4 +1,9 @@
 export interface Keybinds {
+    useDefaultMovement?: boolean;
+    moveUp?: string;
+    moveDown?: string;
+    moveLeft?: string;
+    moveRight?: string;
     stats: string;
     matrix: string;
     portal: string;
@@ -15,6 +20,11 @@ export interface Keybinds {
 }
 
 const DEFAULT_KEYBINDS: Keybinds = {
+    useDefaultMovement: true,
+    moveUp: 'KeyW',
+    moveDown: 'KeyS',
+    moveLeft: 'KeyA',
+    moveRight: 'KeyD',
     stats: 'Tab',
     matrix: 'KeyX',
     portal: 'KeyP',
@@ -34,6 +44,8 @@ const STORAGE_KEY = 'neon_survivor_keybinds';
 const KEYBINDS_VERSION_KEY = 'neon_survivor_keybinds_v';
 const CURRENT_KEYBINDS_VERSION = '2';
 
+let cachedKeybinds: Keybinds | null = null;
+
 export const initKeybinds = () => {
     if (typeof window === 'undefined') return;
     try {
@@ -41,6 +53,7 @@ export const initKeybinds = () => {
         if (storedVersion !== CURRENT_KEYBINDS_VERSION) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_KEYBINDS));
             localStorage.setItem(KEYBINDS_VERSION_KEY, CURRENT_KEYBINDS_VERSION);
+            cachedKeybinds = DEFAULT_KEYBINDS;
             window.dispatchEvent(new Event('keybindsChanged'));
         }
     } catch (e) {
@@ -49,21 +62,25 @@ export const initKeybinds = () => {
 };
 
 export const getKeybinds = (): Keybinds => {
+    if (cachedKeybinds) return cachedKeybinds;
     if (typeof window === 'undefined') return DEFAULT_KEYBINDS;
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-            return { ...DEFAULT_KEYBINDS, ...JSON.parse(stored) };
+            cachedKeybinds = { ...DEFAULT_KEYBINDS, ...JSON.parse(stored) };
+            return cachedKeybinds as Keybinds;
         }
     } catch (e) {
         console.warn('Failed to load keybinds', e);
     }
+    cachedKeybinds = DEFAULT_KEYBINDS;
     return DEFAULT_KEYBINDS;
 };
 
 export const saveKeybinds = (keybinds: Keybinds) => {
     if (typeof window === 'undefined') return;
     try {
+        cachedKeybinds = keybinds;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(keybinds));
         localStorage.setItem(KEYBINDS_VERSION_KEY, CURRENT_KEYBINDS_VERSION);
         window.dispatchEvent(new Event('keybindsChanged'));
