@@ -126,11 +126,11 @@ export const PLAYER_CLASSES: PlayerClass[] = [
             'ACTIVE SKILL: Nanite Spitter'
         ],
         capabilityName: 'Nanite Swarm',
-        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 4 (+1 per 10 lvls) nanites to each. 14s CD.',
+        capabilityDesc: 'On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.',
         capabilityMetrics: [
             { label: 'Active CD', value: 14, unit: 's', isPercentage: false, isStatic: true, description: 'Active Skill Cooldown' },
             { label: 'Infection Rate', value: 30, unit: '%', isPercentage: true, description: '' },
-            { label: 'Swarm DMG / sec', value: 5, unit: '%', isPercentage: true, isResonant: true, description: '' },
+            { label: 'Swarm DMG / sec', value: 5, unit: '% Max HP', isPercentage: true, isResonant: true, description: '' },
             { label: 'Jump Range', value: 400, unit: 'px', isPercentage: false, isStatic: true, description: 'Static jump distance' }
         ],
         stats: {

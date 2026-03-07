@@ -27,7 +27,7 @@
 | Dissipation | Cloud expands up to 2.2× radius while fading to transparent |
 | Nanite Drift Speed | 0.3–1.0 units/frame (capped at 1.5) |
 | Nanite Containment | Pulled back toward center when >70% radius |
-| Multi-Infection | Each cloud hit applies a separate group of 4 (+1 per 10 lvls) nanites. |
+| Multi-Infection | Each cloud hit applies a separate group of 3 (+1 per 10 lvls) nanites. |
 
 ### Nanite Targeting
 | Parameter | Meaning |
