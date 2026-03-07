@@ -318,7 +318,7 @@ export const UI_TRANSLATIONS = {
                     name: "Hive Mother",
                     title: "THE SWARM OVERLORD",
                     capabilityName: "Nanite Swarm",
-                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 4 (+1 per 10 lvls) nanites to each. 14s CD.",
+                    capabilityDesc: "On hit, bullets dissolve into nanites dealing damage. On death, nanite jumps to next host. ACTIVE SKILL: Spits a 40-degree cone of nanites up to 800px. Slows enemies and applies 3 (+1 per 10 lvls) nanites to each. 14s CD.",
                     characteristics: [
                         'Damage-over-time specialist',
                         'Organic growth scaling',

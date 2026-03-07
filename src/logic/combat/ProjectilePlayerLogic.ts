@@ -401,10 +401,10 @@ export function updateSinglePlayerBullet(
                     b.life = 0;
 
                     if (e.lastSpitHitId !== b.hiveMotherSpitId) {
-                        const nanitesToApply = 4 + Math.floor(owner.level / 10);
+                        const nanitesToApply = 3 + Math.floor(owner.level / 10);
                         const resonance = getChassisResonance(state);
                         const baseSwarmPct = 0.05 * (1 + resonance);
-                        const groupDmg = b.dmg * baseSwarmPct * nanitesToApply;
+                        const groupDmg = e.maxHp * baseSwarmPct * nanitesToApply;
 
                         e.slowFactor = Math.max(e.slowFactor || 0, 0.3);
                         e.slowUntil = 999999999;
