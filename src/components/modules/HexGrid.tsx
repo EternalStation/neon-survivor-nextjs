@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
 import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/types';
 import { calculateMeteoriteEfficiency, getSector } from '../../logic/upgrades/EfficiencyLogic';
-import { getHexPoints, getMeteoriteImage, getLegendaryInfo, findClosestVertices, RARITY_COLORS, getMeteoriteColor } from './ModuleUtils';
-import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
-import { BestiaryView } from './BestiaryView';
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
-
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { FusionMenu } from './FusionMenu';
 import { playSfx } from '../../logic/audio/AudioLogic';
-import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
-import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryLogic';
-
-export const FUSIONS = [
-    { id: 'XenoAlchemist', result: 'XenoAlchemist', bases: ['EcoXP', 'DefPuddle'], perform: MergeLogic.performXenoAlchemistMerge },
-    { id: 'IrradiatedMire', result: 'IrradiatedMire', bases: ['DefPuddle', 'RadiationCore'], perform: MergeLogic.performIrradiatedMireMerge },
-    { id: 'NeuralSingularity', result: 'NeuralSingularity', bases: ['EcoXP', 'ComWave'], perform: MergeLogic.performNeuralSingularityMerge },
-    { id: 'KineticTsunami', result: 'KineticTsunami', bases: ['EcoDMG', 'ComWave'], perform: MergeLogic.performKineticTsunamiMerge },
-    { id: 'SoulShatterCore', result: 'SoulShatterCore', bases: ['ComCrit', 'EcoDMG'], perform: MergeLogic.performSoulShatterCoreMerge },
-    { id: 'BloodForgedCapacitor', result: 'BloodForgedCapacitor', bases: ['ComLife', 'KineticBattery'], perform: MergeLogic.performBloodForgedCapacitorMerge },
-    { id: 'GravityAnchor', result: 'GravityAnchor', bases: ['CombShield', 'DefEpi'], perform: MergeLogic.performGravityAnchorMerge },
-    { id: 'TemporalMonolith', result: 'TemporalMonolith', bases: ['CombShield', 'ChronoPlating'], perform: MergeLogic.performTemporalMonolithMerge },
-    { id: 'NeutronStar', result: 'NeutronStar', bases: ['EcoHP', 'RadiationCore'], perform: MergeLogic.performNeutronStarMerge },
-    { id: 'GravitationalHarvest', result: 'GravitationalHarvest', bases: ['EcoHP', 'DefEpi'], perform: MergeLogic.performGravitationalHarvestMerge },
-    { id: 'ShatteredCapacitor', result: 'ShatteredCapacitor', bases: ['ComCrit', 'KineticBattery'], perform: MergeLogic.performShatteredCapacitorMerge },
-    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge },
-    { id: 'VitalMire', result: 'VitalMire', bases: ['EcoHP', 'DefPuddle'], perform: MergeLogic.performVitalMireMerge }
-];
+import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryData';
+import { EfficiencyLabel } from './EfficiencyLabel';
+import { FUSIONS } from '../../logic/upgrades/FusionData';
+import { BestiaryView } from './BestiaryView';
+import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
+import {
+    getHexPoints,
+    getMeteoriteImage,
+    getLegendaryInfo,
+    findClosestVertices,
+    RARITY_COLORS,
+    getMeteoriteColor,
+    isSocketActive,
+    getHexColors,
+    makeVineBundle,
+    getMetColor
+} from './ModuleUtils';
 
 interface HexGridProps {
     gameState: GameState;
@@ -50,7 +45,7 @@ interface HexGridProps {
     onUpdate?: () => void;
 }
 
-import { EfficiencyLabel } from './EfficiencyLabel';
+
 
 export const HexGrid: React.FC<HexGridProps> = ({
     gameState,
@@ -98,6 +93,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
     const edgeRadius = 350;
 
     const INACTIVE_STROKE = "rgba(74, 85, 104, 0.2)";
+
+    const ownedLegendaries = new Set<string>();
+    moduleSockets.hexagons.forEach((hex: any) => {
+        if (hex && hex.level >= 1) {
+            ownedLegendaries.add(hex.type);
+        }
+    });
 
     const level4Hexes = new Set<string>();
     moduleSockets.hexagons.forEach((hex: any) => {
@@ -253,74 +255,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
         );
     }
 
-    const isSocketActive = (item: any) => {
-        if (!item) return false;
-        if (item.status && item.status !== 'active' && item.status !== 'ready') return false;
-        if (item.isRuined) return false;
-        return true;
-    };
 
-    const getMetColor = (met: any) => {
-        if (!met) return "#4A5568";
-        // Map rarity safely (case-insensitive for UI robustness)
-        const rawRarity = met.rarity || 'Common';
-        const rKey = Object.keys(RARITY_COLORS).find(k => k.toLowerCase() === rawRarity.toLowerCase());
-        return (rKey && RARITY_COLORS[rKey]) || "#4A5568";
-    };
-
-    const getHexColors = (hex: any) => {
-        if (!hex) return ["#4A5568"];
-        const colors: string[] = [];
-        const cats = hex.categories || [hex.category];
-        cats.forEach((cat: string) => {
-            if (cat === 'Economic') colors.push('#fbbf24');
-            else if (cat === 'Combat') colors.push('#ef4444');
-            else if (cat === 'Defensive') colors.push('#3b82f6');
-        });
-        if (colors.length === 0) colors.push('#4A5568');
-        return colors;
-    };
-
-    const makeVineBundle = (x1: number, y1: number, x2: number, y2: number, seed: number = 0, colors: string[] = ["#EF4444"]) => {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const nx = -dy / dist || 0;
-        const ny = dx / dist || 0;
-
-        const strands = [];
-
-        // Stable, smooth snake-like strands
-        for (let i = 0; i < 4; i++) {
-            // Use deterministic wave patterns instead of random
-            const phase = i * 1.5 + seed;
-            const freq = 1.2 + i * 0.4;
-            const amp = 12 + i * 4;
-
-            // Time-based oscillation for "breathing" / "snake" movement
-            const wiggle1 = Math.sin(time * freq + phase) * amp;
-            const wiggle2 = Math.cos(time * freq * 0.8 + phase * 1.2) * amp;
-
-            // Control points with smooth wiggle
-            const cp1x = x1 + dx * 0.3 + nx * wiggle1;
-            const cp1y = y1 + dy * 0.3 + ny * wiggle1;
-            const cp2x = x1 + dx * 0.7 + nx * wiggle2;
-            const cp2y = y1 + dy * 0.7 + ny * wiggle2;
-
-            // Slightly offset start/end for fiber look
-            const startOff = Math.sin(phase) * 3;
-            const endOff = Math.cos(phase * 1.5) * 3;
-
-            strands.push({
-                d: `M ${x1 + nx * startOff} ${y1 + ny * startOff} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${x2 + nx * endOff} ${y2 + ny * endOff}`,
-                opacity: 0.2 + (i % 3) * 0.15,
-                width: 1.2 + (i % 2) * 1.2,
-                color: colors[i % colors.length]
-            });
-        }
-
-        return strands;
-    };
 
     return (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -502,7 +437,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                     return (
                         <g key={`ms-ii-adj-group-${i}`}>
-                            {makeVineBundle(pos.x, pos.y, nextPos.x, nextPos.y, i * 10, colors).map((strand, sIdx) => (
+                            {makeVineBundle(pos.x, pos.y, nextPos.x, nextPos.y, time, i * 10, colors).map((strand, sIdx) => (
                                 <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
                                     className={isPowered ? "synergy-trail" : ""}
                                     style={{ color: strand.color }} />
@@ -526,7 +461,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                     return (
                         <g key={`ms-io-rad-group-${i}`}>
-                            {makeVineBundle(ePos.x, ePos.y, iPos.x, iPos.y, i * 20 + 50, colors).map((strand, sIdx) => (
+                            {makeVineBundle(ePos.x, ePos.y, iPos.x, iPos.y, time, i * 20 + 50, colors).map((strand, sIdx) => (
                                 <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
                                     className={isPowered ? "synergy-trail" : ""}
                                     style={{ color: strand.color }} />
@@ -550,7 +485,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
 
                     return (
                         <g key={`xms-ci-perp-group-${i}`}>
-                            {makeVineBundle(centerSideMidpoints[i].x, centerSideMidpoints[i].y, pos.x, pos.y, i * 5 + 100, colors).map((strand, sIdx) => (
+                            {makeVineBundle(centerSideMidpoints[i].x, centerSideMidpoints[i].y, pos.x, pos.y, time, i * 5 + 100, colors).map((strand, sIdx) => (
                                 <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity}
                                     className={isPowered ? "synergy-trail" : ""}
                                     style={{ color: strand.color }} />
@@ -582,7 +517,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     if (active1) {
                         elems.push(
                             <g key={`xms-hi-group-${i}-1`}>
-                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 3, colors1).map((strand, sIdx) => (
+                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, time, i * 3, colors1).map((strand, sIdx) => (
                                     <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7}
                                         className={isPowered1 ? "synergy-trail" : ""}
                                         style={{ color: strand.color }} />
@@ -593,7 +528,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     if (active2) {
                         elems.push(
                             <g key={`xms-hi-group-${i}-2`}>
-                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 7 + 10, colors2).map((strand, sIdx) => (
+                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, time, i * 7 + 10, colors2).map((strand, sIdx) => (
                                     <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.7}
                                         className={isPowered2 ? "synergy-trail" : ""}
                                         style={{ color: strand.color }} />
@@ -627,7 +562,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     if (active1) {
                         elems.push(
                             <g key={`xms-he-group-${i}-1`}>
-                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, i * 4 + 20, colors1).map((strand, sIdx) => (
+                                {makeVineBundle(pair1.v1.x, pair1.v1.y, pair1.v2.x, pair1.v2.y, time, i * 4 + 20, colors1).map((strand, sIdx) => (
                                     <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8}
                                         className={isPowered1 ? "synergy-trail" : ""}
                                         style={{ color: strand.color }} />
@@ -638,7 +573,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                     if (active2) {
                         elems.push(
                             <g key={`xms-he-group-${i}-2`}>
-                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, i * 9 + 30, colors2).map((strand, sIdx) => (
+                                {makeVineBundle(pair2.v1.x, pair2.v1.y, pair2.v2.x, pair2.v2.y, time, i * 9 + 30, colors2).map((strand, sIdx) => (
                                     <path key={sIdx} d={strand.d} fill="none" stroke={strand.color} strokeWidth={strand.width} opacity={strand.opacity * 0.8}
                                         className={isPowered2 ? "synergy-trail" : ""}
                                         style={{ color: strand.color }} />
@@ -783,7 +718,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {hexPositions.map((pos, i) => {
                     const hex = gameState.moduleSockets.hexagons[i];
                     const info = hex ? getLegendaryInfo(hex.category, hex.type) : null;
-                    const isHexFusable = hex && hex.level === 4 && FUSIONS.some(f => f.bases.includes(hex.type) && level4Hexes.has(f.bases[0]) && level4Hexes.has(f.bases[1]) && !(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])));
+                    const isHexFusable = hex && hex.level >= 1 && FUSIONS.some(f => f.bases.includes(hex.type) && !(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])));
                     return (
                         <g key={`hex-socket-${i}`}
                             onClick={() => {
@@ -794,7 +729,7 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                         onSocketUpdate('hex', i, { ...gameState.pendingFusionHex.hex });
                                         playSfx('power-up');
                                     }
-                                } else if (hex && hex.level === 4) {
+                                } else if (hex && hex.level >= 1) {
                                     setFusionFocus(hex.type);
                                     setView('fusions');
                                     playSfx('ui-click');

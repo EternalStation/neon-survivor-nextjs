@@ -1,5 +1,6 @@
 import type { GameState, LegendaryHex } from '../core/types';
-import { LEGENDARY_UPGRADES, syncLegendaryHex } from './LegendaryLogic';
+import { syncLegendaryHex } from './LegendaryLogic';
+import { LEGENDARY_UPGRADES } from './LegendaryData';
 import { GAME_CONFIG } from '../core/GameConfig';
 
 function combineForgedAt(h1: LegendaryHex, h2: LegendaryHex): string[] {

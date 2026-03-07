@@ -3,7 +3,6 @@ import type { GameState, Enemy } from '../../core/types';
 export function renderEliteEffects(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     if (!e.isElite) return;
 
-    // Diamond Elite Dash/Laser
     if (e.shape === 'diamond') {
         if (e.eliteState === 1) {
             ctx.save();
@@ -44,5 +43,33 @@ export function renderEliteEffects(ctx: CanvasRenderingContext2D, e: Enemy, stat
             ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.lockedTargetX, e.lockedTargetY); ctx.stroke();
             ctx.restore();
         }
+    }
+
+    if (e.shape === 'pentagon') {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        if (e.rotationPhase) ctx.rotate(e.rotationPhase);
+
+        const glowSize = e.size * 2.2;
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+        grad.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
+        grad.addColorStop(0.5, 'rgba(34, 211, 238, 0.05)');
+        grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (state.frameCount % 5 === 0) {
+            const rx = (Math.random() - 0.5) * e.size * 2;
+            const ry = (Math.random() - 0.5) * e.size * 2;
+            ctx.fillStyle = '#22d3ee';
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.arc(rx, ry, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { GameState } from '../../logic/core/types';
-import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryLogic';
+import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryData';
 import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -325,9 +325,9 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
     const { language } = useLanguage();
     const translations = getUiTranslation(language);
 
-    const level4Hexes = new Set<string>();
+    const ownedLevels = new Map<string, number>();
     gameState.moduleSockets.hexagons.forEach(hex => {
-        if (hex && hex.level >= 4) level4Hexes.add(hex.type);
+        if (hex) ownedLevels.set(hex.type, hex.level);
     });
 
     useEffect(() => {
@@ -341,12 +341,16 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
     }, []);
 
     const fusionCards: CardData[] = FUSIONS
-        .filter(f => level4Hexes.has(f.bases[0]) || level4Hexes.has(f.bases[1]))
         .map(f => {
-            const h1 = level4Hexes.has(f.bases[0]);
-            const h2 = level4Hexes.has(f.bases[1]);
+            const l1 = ownedLevels.get(f.bases[0]) || 0;
+            const l2 = ownedLevels.get(f.bases[1]) || 0;
+            const hasLvl4_1 = l1 >= 4;
+            const hasLvl4_2 = l2 >= 4;
             return {
-                fusion: f, hasBase1: h1, hasBase2: h2, canMerge: h1 && h2,
+                fusion: f,
+                hasBase1: l1 >= 1,
+                hasBase2: l2 >= 1,
+                canMerge: hasLvl4_1 && hasLvl4_2,
                 wasConsumed: !!(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])),
                 isActiveTarget: initialHighlightType === f.bases[0] || initialHighlightType === f.bases[1],
                 base1Data: LEGENDARY_UPGRADES[f.bases[0]],
@@ -363,7 +367,8 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
         });
 
     const readyCount = fusionCards.filter(f => f.canMerge && !f.wasConsumed).length;
-    const partialCount = fusionCards.filter(f => !f.canMerge && !f.wasConsumed).length;
+    const partialCount = fusionCards.filter(f => !f.canMerge && !f.wasConsumed && (f.hasBase1 || f.hasBase2)).length;
+
 
     return (
         <div style={{
@@ -480,7 +485,7 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
                                 NO FUSIONS DETECTED
                             </div>
                             <div style={{ color: '#334155', fontSize: '10px', letterSpacing: '1px' }}>
-                                Requires at least one Level 4 Legendary Module
+                                Fusions represent the ultimate evolution of your abilities.
                             </div>
                         </div>
                     )}

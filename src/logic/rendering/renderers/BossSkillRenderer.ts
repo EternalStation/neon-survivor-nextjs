@@ -418,7 +418,7 @@ export function renderPentagonSoulLinks(ctx: CanvasRenderingContext2D, e: Enemy,
         const dist = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
 
-        const segments = 24;
+        const segments = 12;
         const wobbleAmp = 15 + Math.sin(t * 2 + idx) * 5;
 
         for (let layer = 0; layer < 2; layer++) {
@@ -464,9 +464,9 @@ export function renderPentagonSoulLinks(ctx: CanvasRenderingContext2D, e: Enemy,
         ctx.arc(target.x, target.y, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        const energyCount = 3;
+        const energyCount = 1;
         for (let p = 0; p < energyCount; p++) {
-            const eFrac = ((t * 1.5 + p * 0.33 + idx * 0.2) % 1);
+            const eFrac = ((t * 1.2 + idx * 0.2) % 1);
             const eX = e.x + dx * eFrac;
             const eY = e.y + dy * eFrac;
             const perpX = -Math.sin(angle);
@@ -578,20 +578,18 @@ export function renderPentagonParasiteLink(ctx: CanvasRenderingContext2D, e: Ene
 }
 
 export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState, coreColor?: string, innerColor?: string, outerColor?: string) {
-    if (!e.isPhalanxDrone || e.dead) return;
+    if (e.dead) return;
 
     const t = state.gameTime;
     const angle = e.rotationPhase || 0;
     const size = e.size;
 
-    // Use passed era colors or fallback to defaults
     const coreC = coreColor || '#ffffff';
     const innerC = innerColor || '#334155';
     const outerC = outerColor || '#eab308';
 
-    // The user wants them to be "kind of blue"
-    // We'll overlay a slight blue-cyan glow/tint
-    const blueTint = 'rgba(103, 232, 249, 0.4)'; // Cyan-300 with alpha
+    const lightColor = e.isPhalanxDrone ? '#22d3ee' : outerC;
+    const glowColor = e.isPhalanxDrone ? 'rgba(103, 232, 249, 0.4)' : `${outerC}66`;
 
     ctx.save();
     ctx.rotate(-(e.rotationPhase || 0));
@@ -619,8 +617,7 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Secondary Blue Tint Stroke for that "ghostly/tech" blue look
-    ctx.strokeStyle = '#22d3ee';
+    ctx.strokeStyle = lightColor;
     ctx.lineWidth = 0.8;
     ctx.globalAlpha = 0.6;
     ctx.stroke();
@@ -656,7 +653,7 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
     }
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = '#22d3ee'; // Blue light instead of amber
+    ctx.fillStyle = lightColor;
     ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.3;
     ctx.beginPath();
     ctx.arc(bodyLength * 0.35, 0, 3, 0, Math.PI * 2);
@@ -665,16 +662,19 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
 
     ctx.restore();
 
-    const host = state.enemies.find(h => h.id === e.soulLinkHostId && !h.dead);
+    let host = state.enemies.find(h => h.id === e.soulLinkHostId && !h.dead);
+    if (!host) host = state.enemies.find(h => h.id === e.parentId && !h.dead);
+
     const isMoving = Math.hypot(e.vx || 0, e.vy || 0) > 2 || (host && host.phalanxState === 3);
     if (isMoving) {
-        renderDroneTrail(ctx, e, state);
+        renderDroneTrail(ctx, e, state, lightColor);
     }
 }
 
-function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
+function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState, lightColor?: string) {
     const t = state.gameTime;
     const angle = e.rotationPhase || 0;
+    const lC = lightColor || '#22d3ee';
 
     ctx.save();
     ctx.rotate(-(e.rotationPhase || 0));
@@ -694,9 +694,7 @@ function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameSt
 
         ctx.globalAlpha = (1 - frac) * 0.6 * flicker;
         const segGrad = ctx.createRadialGradient(segX, segY, 0, segX, segY, spread);
-        segGrad.addColorStop(0, i < 2 ? '#ffffff' : '#22d3ee'); // Cyan
-        segGrad.addColorStop(0.4, '#06b6d4'); // Blue-darker
-        segGrad.addColorStop(0.7, '#0891b2'); // Darker cyan
+        segGrad.addColorStop(0, i < 2 ? '#ffffff' : lC);
         segGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = segGrad;
         ctx.beginPath();
@@ -708,8 +706,7 @@ function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameSt
     ctx.globalAlpha = 0.8;
     const flameGrad = ctx.createLinearGradient(tailX, 0, tailX - coreFlameLen, 0);
     flameGrad.addColorStop(0, '#ffffff');
-    flameGrad.addColorStop(0.3, '#22d3ee');
-    flameGrad.addColorStop(0.7, '#06b6d4');
+    flameGrad.addColorStop(0.3, lC);
     flameGrad.addColorStop(1, 'transparent');
 
     const flameW = 5 + Math.sin(t * 25) * 2;
@@ -724,3 +721,4 @@ function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameSt
 
     ctx.restore();
 }
+

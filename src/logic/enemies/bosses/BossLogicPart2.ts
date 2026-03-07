@@ -601,7 +601,11 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
 
     const pMod = isLevel2 ? 0.8 : 1.0;
     const angle = Math.atan2(dy, dx);
-    const vx = Math.cos(angle) * (currentSpd * pMod) + pushX;
-    const vy = Math.sin(angle) * (currentSpd * pMod) + pushY;
+    const targetVx = Math.cos(angle) * (currentSpd * pMod) + pushX;
+    const targetVy = Math.sin(angle) * (currentSpd * pMod) + pushY;
+
+    const smoothing = 0.12;
+    const vx = (e.vx || 0) * (1 - smoothing) + targetVx * smoothing;
+    const vy = (e.vy || 0) * (1 - smoothing) + targetVy * smoothing;
     return { vx, vy };
 }

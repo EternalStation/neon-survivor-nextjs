@@ -118,7 +118,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
             let nearestDist = Infinity;
             players.forEach(p => {
                 const d = Math.hypot(p.x - poi.x, p.y - poi.y);
-                if (d < poi.radius) inRange = true;
+                if (d < poi.radius + 50) inRange = true;
                 if (d < nearestDist) {
                     nearestDist = d;
                     nearestPlayer = p;
@@ -154,7 +154,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
 
                 if (poi.progress > 0) {
 
-                    poi.progress += step * 20;
+                    poi.progress += step * 50;
 
                     if (poi.progress >= 100) {
                         const minutesRaw = state.gameTime / 60;

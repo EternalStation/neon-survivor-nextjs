@@ -15,7 +15,8 @@ import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
 import { BlueprintType } from '../logic/core/types';
 
 import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
-import { applyLegendarySelection, LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryLogic';
+import { applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';
+import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
 
 interface GameInputProps {
     gameState: React.MutableRefObject<GameState>;

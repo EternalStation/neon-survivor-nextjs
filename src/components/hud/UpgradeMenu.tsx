@@ -20,7 +20,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
     const { language } = useLanguage();
     const t = getUiTranslation(language).hud;
 
-    // Initial Reset & Delay
+
     useEffect(() => {
         setSelectedIndex(0);
         setCanSelect(false);
@@ -28,7 +28,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
         return () => clearTimeout(timer);
     }, [upgradeChoices]);
 
-    // Keyboard Navigation
+
     useEffect(() => {
         const handleKeys = (e: KeyboardEvent) => {
             if (e.repeat) return;
@@ -49,7 +49,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
         return () => window.removeEventListener('keydown', handleKeys);
     }, [upgradeChoices]);
 
-    // Selection Confirmation
+
     useEffect(() => {
         if (!canSelect) return;
         const handleSelect = (e: KeyboardEvent) => {
@@ -99,11 +99,18 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                 zIndex: 20,
                 perspective: '1000px',
                 gap: '60px',
-                marginTop: '-40px' // Shifted down further
+                marginTop: '-40px'
             }}>
 
                 {upgradeChoices.map((c, i) => (
                     <div key={i} className={`upgrade-card-container ${!canSelect ? 'locked' : ''}`}>
+                        {!canSelect && (
+                            <div className="scan-overlay">
+                                <div className="scan-noise" />
+                                <div className="scan-line" />
+                                <span className="decrypt-text">DECRYPTING...</span>
+                            </div>
+                        )}
                         <UpgradeCard
                             choice={c}
                             index={i}

@@ -403,7 +403,7 @@ export interface Bullet {
     endAngle?: number;
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'elite_minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
 
 export interface ShapeDef {
     type: ShapeType;

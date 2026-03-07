@@ -305,6 +305,7 @@ export function useGameLoop(gameStarted: boolean) {
 
             const FIXED_STEP = 1 / 60;
 
+            let steps = 0;
             if (!state.isPaused && !state.gameOver) {
                 // Update Flash Decay
                 if (state.flashIntensity && state.flashIntensity > 0) {
@@ -366,7 +367,6 @@ export function useGameLoop(gameStarted: boolean) {
                     // For 'slow_motion', accRef grows slowly, so fewer updates happen.
                 }
 
-                let steps = 0;
                 while (accRef.current >= FIXED_STEP && steps < 20 && !state.isPaused && !state.gameOver) {
                     accRef.current -= FIXED_STEP;
                     steps++;
@@ -440,7 +440,9 @@ export function useGameLoop(gameStarted: boolean) {
                 lastFpsUpdateRef.current = now;
             }
 
-            state.interactPressed = false;
+            if (steps > 0) {
+                state.interactPressed = false;
+            }
             requestRef.current = requestAnimationFrame(loop);
         };
 

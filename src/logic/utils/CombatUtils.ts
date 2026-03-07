@@ -44,13 +44,13 @@ export function applyDamageToPlayer(
 
     if (options.sourceType === 'collision') {
         const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill', false, player);
-        const colRedReduction = getDefenseReduction(colRedRaw, 0.80);
+        const colRedReduction = Math.min(0.80, colRedRaw / 100);
         const dmgAfterCol = dmg * (1 - colRedReduction);
         blockedByReduc = dmg - dmgAfterCol;
         dmg = dmgAfterCol;
     } else if (options.sourceType === 'projectile') {
         const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, player);
-        const projRedReduction = getDefenseReduction(projRedRaw, 0.80);
+        const projRedReduction = Math.min(0.80, projRedRaw / 100);
         const dmgAfterProj = dmg * (1 - projRedReduction);
         blockedByReduc = dmg - dmgAfterProj;
         dmg = dmgAfterProj;

@@ -6,11 +6,11 @@ export interface ColorPalette {
 }
 
 export const COLOR_PALETTES: ColorPalette[] = [
-    { name: 'Green', core: '#4ade80', inner: '#22c55e', outer: '#166534' },
-    { name: 'Blue', core: '#60a5fa', inner: '#3b82f6', outer: '#1e40af' },
-    { name: 'Purple', core: '#c084fc', inner: '#a855f7', outer: '#6b21a8' },
-    { name: 'Orange', core: '#fb923c', inner: '#f97316', outer: '#9a3412' },
-    { name: 'Red', core: '#f87171', inner: '#ef4444', outer: '#991b1b' },
+    { name: 'Green', core: '#4ade80', inner: '#22c55e', outer: '#064e3b' },
+    { name: 'Blue', core: '#00ffff', inner: '#3b82f6', outer: '#1e3a8a' },
+    { name: 'Purple', core: '#e9d5ff', inner: '#a855f7', outer: '#581c87' },
+    { name: 'Orange', core: '#fff7ed', inner: '#f97316', outer: '#7c2d12' },
+    { name: 'Red', core: '#fee2e2', inner: '#ef4444', outer: '#7f1d1d' },
 ];
 
 export function getCurrentPalette(gameTime: number): ColorPalette {
@@ -23,10 +23,13 @@ export function getShellVisibility(gameTime: number): { core: number; inner: num
     const stage = Math.floor(timeInEra / 300);
 
     if (stage === 0) {
-        return { core: 1.0, inner: 0.25, outer: 0.0 };
+        // Stage 0: "Raw Core" - High core visibility, visible outer structure
+        return { core: 1.0, inner: 0.2, outer: 0.4 };
     } else if (stage === 1) {
-        return { core: 0.3, inner: 1.0, outer: 0.6 };
+        // Stage 1: "Energy Flux" - Intense inner ring/glow, dimmed core
+        return { core: 0.4, inner: 1.0, outer: 0.5 };
     } else {
-        return { core: 1.0, inner: 0.35, outer: 1.0 };
+        // Stage 2: "Solidified" - Full outer shell, pulsing core, structured look
+        return { core: 0.8, inner: 0.4, outer: 1.0 };
     }
 }

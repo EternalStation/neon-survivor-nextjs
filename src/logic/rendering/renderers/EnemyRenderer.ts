@@ -6,9 +6,13 @@ import { renderEliteEffects } from './EliteRenderer';
 import { renderUniqueEnemy } from './UniqueEnemyRenderer';
 import { renderBossDistortion, drawDistortedBossShape, renderBossAfterglow, drawAbominationPath } from './BossVisualFX';
 import { renderCircleSoulSuck, renderOrbitalShield, renderDiamondBeamChargeUp, renderDiamondSatelliteStrike, renderPentagonSoulLinks, renderPentagonParasiteLink, renderPhalanxDrone } from './BossSkillRenderer';
+import { renderMergeConnections } from './MergeRenderer';
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
     const { enemies, player } = state;
+
+    renderMergeConnections(ctx, state);
+
     const enemyMap = new Map<number, Enemy>();
     enemies.forEach(e => { if (!e.dead) enemyMap.set(e.id, e); });
 
@@ -64,7 +68,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
 
         const visibility = getShellVisibility(state.gameTime);
 
-        if (e.isPhalanxDrone || e.shape === 'minion') {
+        if (e.isPhalanxDrone) {
             renderPhalanxDrone(ctx, e, state, coreColor, innerColor, outerColor);
             ctx.restore();
             return;
@@ -90,6 +94,9 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             });
         }
 
+        const stage = Math.floor((state.gameTime % 900) / 300);
+
+
         ctx.beginPath();
         if (e.boss) {
             drawDistortedBossShape(ctx, e, e.size, state);
@@ -97,18 +104,44 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             drawShapePath(ctx, e, e.size, state);
         }
 
-        if (e.boss) {
-            ctx.lineWidth = 6; ctx.strokeStyle = outerColor; ctx.globalAlpha = 0.4 * visibility.outer; ctx.stroke();
-            ctx.lineWidth = 1.5; ctx.globalAlpha = 1.0;
-        }
+
+        const mainStrokeAlpha = e.boss ? 1.0 : Math.max(0.35, visibility.outer);
+        ctx.globalAlpha = mainStrokeAlpha;
         ctx.strokeStyle = outerColor;
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = visibility.outer;
+        ctx.lineWidth = e.boss ? 3 : (stage === 2 ? 2.5 : 1.5);
         ctx.stroke();
 
+
+        if (stage === 2 && !e.boss) {
+            ctx.save();
+            ctx.beginPath();
+            drawShapePath(ctx, e, e.size + 2.5, state);
+            ctx.globalAlpha = 0.3 * visibility.outer;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+
         ctx.fillStyle = innerColor;
-        ctx.globalAlpha = visibility.inner;
+        ctx.globalAlpha = visibility.inner * 0.15;
         ctx.fill();
+
+
+        const isMinion = e.shape === 'minion' || e.shape === 'elite_minion';
+
+        if (!isMinion) {
+            ctx.beginPath();
+            const pulseSpeed = stage === 1 ? 4 : 2;
+            const pulseAmount = stage === 1 ? 0.08 : 0.03;
+            const innerRingSize = e.size * (0.65 + Math.sin(state.gameTime * pulseSpeed + e.id) * pulseAmount);
+            ctx.arc(0, 0, innerRingSize, 0, Math.PI * 2);
+
+            ctx.strokeStyle = innerColor;
+            ctx.lineWidth = stage === 1 ? 2 : 1.2;
+            ctx.globalAlpha = visibility.inner * (stage === 1 ? 0.9 : 0.7);
+            ctx.stroke();
+        }
 
         if (e.boss) {
             ctx.globalAlpha = 1.0;
@@ -117,21 +150,41 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             renderBossAfterglow(ctx, e, state);
         }
 
+
         if (e.isElite && e.shape === 'pentagon') {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#06b6d4'; // Cyan/Blue glow
             ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth = 2;
-            ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 5) * 0.2;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.4 + Math.sin(state.gameTime * 5) * 0.2;
             ctx.stroke();
-            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1.0;
         }
 
-        ctx.fillStyle = coreColor;
-        ctx.globalAlpha = visibility.core;
-        drawCore(ctx, e);
-        ctx.fill();
+
+        ctx.beginPath();
+        const coreSize = e.size * (isMinion ? 0.15 : (stage === 0 ? 0.45 : 0.35));
+        drawShapePath(ctx, e, coreSize, state);
+
+
+        if (stage === 0 && !isMinion) {
+
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = coreColor;
+            ctx.fillStyle = coreColor;
+            ctx.globalAlpha = visibility.core;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else {
+
+            ctx.fillStyle = isMinion ? coreColor : '#ffffff';
+            ctx.globalAlpha = visibility.core * (isMinion ? 1.0 : 0.5);
+            ctx.fill();
+
+            if (!isMinion) {
+                ctx.fillStyle = coreColor;
+                ctx.globalAlpha = visibility.core;
+                ctx.fill();
+            }
+        }
 
         ctx.globalAlpha = 1.0;
 
@@ -166,32 +219,39 @@ function drawShapePath(ctx: CanvasRenderingContext2D, e: Enemy, size: number, st
                 const ang = (i * 2 * Math.PI / 5) - Math.PI / 2;
                 ctx.lineTo(Math.cos(ang) * size, Math.sin(ang) * size);
             }
-            ctx.closePath(); break;
+            ctx.closePath();
+            break;
         case 'snitch': ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2); break;
         case 'minion':
-        case 'long_drone':
             ctx.moveTo(size * 1.2, 0);
             ctx.lineTo(-size * 0.6, -size * 0.8);
             ctx.lineTo(-size * 0.3, 0);
             ctx.lineTo(-size * 0.6, size * 0.8);
             ctx.closePath();
             break;
+        case 'elite_minion':
+            ctx.moveTo(size * 1.2, 0);
+            ctx.lineTo(-size * 0.6, -size * 0.8);
+            ctx.lineTo(-size * 0.3, 0);
+            ctx.lineTo(-size * 0.6, size * 0.8);
+            ctx.closePath();
+            break;
+        case 'long_drone':
+
+            ctx.moveTo(size * 1.5, 0);
+            ctx.lineTo(-size * 0.5, -size * 0.7);
+            ctx.lineTo(-size * 1.0, 0);
+            ctx.lineTo(-size * 0.5, size * 0.7);
+            ctx.closePath();
+            break;
         default: ctx.arc(0, 0, size, 0, Math.PI * 2);
     }
 }
 
-function drawCore(ctx: CanvasRenderingContext2D, e: Enemy) {
-    const s = e.size * 0.5;
-    ctx.beginPath();
-    if (e.shape === 'circle') ctx.arc(0, 0, s, 0, Math.PI * 2);
-    else if (e.shape === 'triangle') {
-        ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath();
-    } else ctx.rect(-s / 2, -s / 2, s, s);
-}
 
 function renderStatusOverlays(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     const isUnique = e.isZombie || e.shape === 'worm' || e.shape === 'glitcher' || (e as any).meteoriteDrop;
-    if ((e.isElite || e.boss || isUnique) && e.maxHp > 0 && e.hp < e.maxHp) {
+    if ((e.isElite || isUnique) && e.maxHp > 0 && e.hp < e.maxHp) {
         ctx.save();
         if (e.rotationPhase) {
             ctx.rotate(-e.rotationPhase);

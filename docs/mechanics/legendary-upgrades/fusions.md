@@ -1,6 +1,14 @@
 # LEGENDARY FUSIONS
 
-Fusions are powerful legendary upgrades created by merging two specific Max Level (Lvl 5) legendaries.
+Fusions are powerful legendary upgrades created by merging two specific legendary modules.
+
+### Fusion Menu Visibility
+The Fusion Menu (accessible via the `FUSIONS` button in the Matrix) allows players to plan their build by showing all possible fusions from the start:
+- **All Possible Fusions**: Every fusion in the game is visible in the menu for tactical planning.
+- **Early Analysis**: Players can view the full stats, descriptions, and perks of any fusion as long as they own at least **Level 1** of one of the required base modules.
+- **Merge Requirements**: Actual fusion requires both base modules to reach **Level 4**.
+- **Visual Cues**: Sockets in the Matrix will glow when a module is part of a potential fusion that can be inspected in the Forge.
+
 
 ## Current Fusions
 

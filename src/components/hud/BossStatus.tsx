@@ -49,10 +49,10 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
     const hudT = t.hud;
 
     const activeBosses = gameState.enemies.filter(e => e.boss && !e.dead);
-    // Sort by spawn time to keep order consistent with appearance
+
     activeBosses.sort((a, b) => (a.spawnedAt || 0) - (b.spawnedAt || 0));
 
-    // Remove local state, use props
+
     const [localSkillData, setLocalSkillData] = useState<{ name: string; desc: string; color: string; iconLabel: string; iconUrl?: string } | null>(null);
 
     React.useEffect(() => {
@@ -79,7 +79,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                     const isLevel3 = boss.bossTier === 3 || (gameState.gameTime > 1200 && boss.bossTier !== 1) || isLevel4;
                     const isLevel2 = boss.bossTier === 2 || gameState.gameTime > 600 || isLevel3;
 
-                    // Collect Skills for THIS boss
+
                     const skills = [];
                     if (isLevel2 && BOSS_SKILLS[boss.shape]) skills.push(BOSS_SKILLS[boss.shape]);
                     if (isLevel3 && BOSS_SKILLS_L3[boss.shape]) skills.push(BOSS_SKILLS_L3[boss.shape]);
@@ -88,7 +88,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
 
                     return (
                         <div key={boss.id} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {/* BOSS NAME & LEVEL */}
+
                             <div style={{
                                 display: 'flex', justifyContent: 'space-between', width: '100%',
                                 color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase',
@@ -100,7 +100,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                 </span>
                             </div>
 
-                            {/* HP BAR SECTION */}
+
                             <div style={{
                                 width: '100%', height: 16, background: 'rgba(0,0,0,0.8)', border: '1px solid #ef4444',
                                 borderRadius: 2, overflow: 'hidden', position: 'relative',
@@ -111,12 +111,26 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                     background: 'linear-gradient(90deg, #ef4444, #991b1b)',
                                     transition: 'width 0.1s linear'
                                 }} />
-                                {boss.isAnomaly && (
-                                    <>
-                                        <div style={{ position: 'absolute', left: '30%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.5)', zIndex: 2, boxShadow: '0 0 5px rgba(255,255,255,0.2)' }} />
-                                        <div style={{ position: 'absolute', left: '60%', top: 0, width: 1, height: '100%', background: 'rgba(255,255,255,0.5)', zIndex: 2, boxShadow: '0 0 5px rgba(255,255,255,0.2)' }} />
-                                    </>
-                                )}
+                                {[33.33, 66.66].map((pct) => (
+                                    <div key={pct} style={{
+                                        position: 'absolute', left: `${pct}%`, top: 0, bottom: 0,
+                                        width: 1, background: 'rgba(255, 255, 255, 0.2)',
+                                        zIndex: 3
+                                    }}>
+                                        <div style={{
+                                            position: 'absolute', top: 0, left: -2, width: 5, height: 3,
+                                            background: '#ef4444', boxShadow: '0 0 5px #ef4444'
+                                        }} />
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: -2, width: 5, height: 3,
+                                            background: '#ef4444', boxShadow: '0 0 5px #ef4444'
+                                        }} />
+                                        <div style={{
+                                            position: 'absolute', top: '50%', left: -0.5, width: 2, height: 4,
+                                            transform: 'translateY(-50%)', background: '#fff', boxShadow: '0 0 8px #fff'
+                                        }} />
+                                    </div>
+                                ))}
                                 <div style={{
                                     position: 'absolute', width: '100%', textAlign: 'center', top: 0,
                                     color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
@@ -137,7 +151,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                                 )}
                             </div>
 
-                            {/* SKILL ICONS SECTION for THIS boss */}
+
                             {skills.length > 0 && (
                                 <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                                     {skills.map((skill, idx) => (
@@ -186,7 +200,7 @@ export const BossStatus: React.FC<BossStatusProps> = ({ gameState, showSkillDeta
                 })}
             </div>
 
-            {/* SKILL DESCRIPTION MODAL */}
+
             {showSkillDetail && localSkillData && (
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',

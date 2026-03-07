@@ -4,14 +4,6 @@ import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
-
-
-
-
-
-
-
-
 import { spawnMinion } from './UniqueEnemyLogic';
 
 
@@ -228,26 +220,6 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number, _onEvent?: (event: string, data?: any) => void) {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if (!e.originalPalette) e.originalPalette = e.palette;
 
     const nearestCenter = ARENA_CENTERS.reduce((best, center) => {
@@ -270,7 +242,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         speedMult = 1.5;
     } else if (dist < e.distGoal - 50) {
         moveAngle = angleToPlayerP + Math.PI;
-        speedMult = 1.5;
+        speedMult = 0.85;
     } else if (dist > e.distGoal + 50) {
         moveAngle = angleToPlayerP + (Math.sin(state.gameTime) * 0.2);
     } else {
@@ -279,12 +251,16 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         speedMult = 0.8;
     }
 
-    let vx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
-    let vy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
+    const targetVx = Math.cos(moveAngle) * currentSpd * speedMult + pushX;
+    const targetVy = Math.sin(moveAngle) * currentSpd * speedMult + pushY;
+
+    const smoothing = 0.12;
+    let vx = (e.vx || 0) * (1 - smoothing) + targetVx * smoothing;
+    let vy = (e.vy || 0) * (1 - smoothing) + targetVy * smoothing;
 
 
     if (e.minionCount === undefined || state.frameCount % 10 === 0) {
-        const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && m.shape === 'minion');
+        const myMinions = state.enemies.filter(m => m.parentId === e.id && !m.dead && (m.shape === 'minion' || m.shape === 'elite_minion'));
         e.minionCount = myMinions.length;
         e.orbitingMinionIds = myMinions.filter(m => m.minionState === 0).map(m => m.id);
     }
@@ -334,7 +310,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
         if ((e.minionCount || 0) > 0) {
 
             if (!e.lastAttack) e.lastAttack = state.gameTime;
-            if (state.gameTime - (e.lastAttack || 0) > 2.0) {
+            if (state.gameTime - (e.lastAttack || 0) > 1.0) {
                 const victim = state.enemies.find(m => m.parentId === e.id && m.minionState === 0 && !m.dead);
                 if (victim) {
                     victim.minionState = 1;
@@ -371,7 +347,7 @@ export function updateElitePentagon(e: Enemy, state: GameState, dist: number, dx
             if (e.originalPalette) e.palette = e.originalPalette;
         }
     } else {
-        const spawnInterval = 20.0;
+        const spawnInterval = 15.0;
         if (state.gameTime - (e.lastAttack || 0) > spawnInterval && (e.minionCount || 0) < 9) {
             e.summonState = 1;
             e.timer = state.gameTime + 3.0;

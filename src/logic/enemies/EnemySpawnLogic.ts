@@ -122,8 +122,21 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         hp *= (1.5 + (gen * 0.8));
     }
 
-    const baseSizeRaw = isBoss ? 110 : (20 * SHAPE_DEFS[chosenShape].sizeMult);
-    const baseSize = (isBoss && chosenShape === 'pentagon') ? Math.floor(baseSizeRaw * 0.7) : baseSizeRaw;
+    const isElite = (chosenShape === 'pentagon' && Math.random() < 0.2);
+
+    const baseSizeRaw = isBoss ? (isAnomaly ? 110 : 77) : (20 * SHAPE_DEFS[chosenShape].sizeMult);
+    let baseSize = (isBoss && chosenShape === 'pentagon') ? Math.floor(baseSizeRaw * 0.7) : baseSizeRaw;
+
+    if (isBoss && !isAnomaly) {
+        const bossLevel = isLvl4 ? 4 : (isLvl3 ? 3 : (isLvl2 ? 2 : 1));
+        const bossSizeMult = 1.0 + (bossLevel - 2) * 0.2;
+        baseSize *= bossSizeMult;
+    }
+
+    if (isElite) {
+        baseSize *= 1.4;
+    }
+
     const size = isAnomaly ? baseSize * 0.8 : baseSize;
 
     const eventPalette = getEventPalette(state);
@@ -138,9 +151,9 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         type: (isBoss ? 'boss' : chosenShape) as 'boss' | ShapeType,
         x: spawnPos.x, y: spawnPos.y,
         size,
-        hp,
-        maxHp: hp,
-        spd: isAnomaly ? player.speed * 0.84 : player.speed * SHAPE_DEFS[chosenShape].speedMult * (isBoss ? 0.9 : 1.0),
+        hp: (isBoss ? baseHp * bossHpMult : baseHp) * hpMult * (isElite ? 2.5 : 1.0),
+        maxHp: (isBoss ? baseHp * bossHpMult : baseHp) * hpMult * (isElite ? 2.5 : 1.0),
+        spd: isAnomaly ? player.speed * 0.84 : player.speed * SHAPE_DEFS[chosenShape].speedMult * (isBoss ? 0.9 : (isElite ? 1.1 : 1.0)),
         boss: isBoss,
         bossType: isBoss ? Math.floor(Math.random() * 2) : 0,
         bossAttackPattern: 0,
@@ -162,7 +175,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         glitchPhase: 0, crackPhase: 0,
         knockback: { x: 0, y: 0 },
         isRare: false,
-        isElite: false,
+        isElite: isElite,
         isAnomaly: isAnomaly,
         anomalyGeneration: isAnomaly ? (state.anomalyBossCount || 0) : undefined,
         spawnedAt: state.gameTime,
@@ -237,8 +250,8 @@ export function spawnRareEnemy(state: GameState) {
         boss: false, bossType: 0, bossAttackPattern: 0, lastAttack: 0, dead: false,
         shape: 'snitch',
         shellStage: 2,
-        palette: ['#FACC15', '#EAB308', '#CA8A04'],
-        eraPalette: ['#FACC15', '#EAB308', '#CA8A04'],
+        palette: ['#fefce8', '#facc15', '#854d0e'],
+        eraPalette: ['#fefce8', '#facc15', '#854d0e'],
         fluxState: 0,
         pulsePhase: 0, rotationPhase: 0, timer: state.gameTime,
         isRare: true, size: 18,

@@ -38,7 +38,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
     const currentClass = PLAYER_CLASSES.find(c => c.id === player.playerClass);
     const classColor = currentClass?.themeColor || '#a855f7';
 
-    // Helper to safely convert hex `#RRGGBB` to rgba without alpha hex logic
     const hexToRgb = (hex: string) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '168, 85, 247';
@@ -48,7 +47,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
 
     return (
         <div className="stats-panel-slide open">
-            {/* TABS */}
             <div style={{ display: 'flex', borderBottom: '1px solid #334155', marginBottom: 10 }}>
                 <button
                     onClick={() => setActiveTab('system')}
@@ -106,7 +104,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 </button>
             </div>
 
-            {/* HEADER */}
             <div style={{
                 padding: '0 10px 10px 10px',
                 textAlign: 'center',
@@ -121,17 +118,14 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 {activeTab === 'system' ? t.statsMenu.headers.system : (activeTab === 'threat' ? t.statsMenu.headers.threat : t.statsMenu.headers.damage)}
             </div>
 
-            {/* CONTENT */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: activeTab === 'system' ? 'block' : 'none' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {/* Radar Chart */}
                     <div className="radar-chart-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 0 }}>
                         <div className="radar-chart-wrapper" style={{ display: 'inline-block', padding: '15px 5px 5px 5px' }}>
                             <RadarChart player={player} size={140} />
                         </div>
                     </div>
 
-                    {/* Stats Table */}
                     <div className="stats-calculations" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0, marginTop: -10 }}>
                         {(() => {
                             return (
@@ -340,7 +334,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                     </div>
 
 
-                                    {/* --- CONDITIONAL STATS --- */}
                                     {(() => {
                                         const lifesteal = calculateLegendaryBonus(gameState, 'lifesteal');
                                         if (lifesteal <= 0) return null;
@@ -376,12 +369,10 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 </div>
             </div>
 
-            {/* THREAT CONTENT */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: activeTab === 'threat' ? 'flex' : 'none', flexDirection: 'column', gap: 20 }}>
                 <ThreatProgression gameState={gameState} t={t} />
             </div>
 
-            {/* DAMAGE CONTENT */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: activeTab === 'damage' ? 'flex' : 'none', flexDirection: 'column', gap: 10, padding: '0 10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: classRgbaBg, borderRadius: 8, border: `1px solid ${classRgbaBorder}`, marginBottom: 10 }}>
                     <span style={{ color: classColor, fontSize: 13, fontWeight: 900, letterSpacing: '1px' }}>{t.statsMenu.labels.damageSources.total}</span>
@@ -524,4 +515,3 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
         </div>
     );
 };
-

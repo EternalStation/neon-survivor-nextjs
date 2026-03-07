@@ -111,6 +111,75 @@ export const getLegendaryInfo = (category: string, type: string) => {
     }
 };
 
+export const isSocketActive = (item: any) => {
+    if (!item) return false;
+    if (item.status && item.status !== 'active' && item.status !== 'ready') return false;
+    if (item.isRuined) return false;
+    return true;
+};
+
+export const getMetColor = (met: any) => {
+    if (!met) return "#4A5568";
+    // Map rarity safely (case-insensitive for UI robustness)
+    const rawRarity = met.rarity || 'Common';
+    const rKey = Object.keys(RARITY_COLORS).find(k => k.toLowerCase() === rawRarity.toLowerCase());
+    return (rKey && RARITY_COLORS[rKey]) || "#4A5568";
+};
+
+export const getHexColors = (hex: any) => {
+    if (!hex) return ["#4A5568"];
+    const colors: string[] = [];
+    const cats = hex.categories || [hex.category];
+    cats.forEach((cat: string) => {
+        if (cat === 'Economic') colors.push('#fbbf24');
+        else if (cat === 'Combat') colors.push('#ef4444');
+        else if (cat === 'Defensive') colors.push('#3b82f6');
+    });
+    if (colors.length === 0) colors.push('#4A5568');
+    return colors;
+};
+
+export const makeVineBundle = (x1: number, y1: number, x2: number, y2: number, time: number, seed: number = 0, colors: string[] = ["#EF4444"]) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const nx = -dy / dist || 0;
+    const ny = dx / dist || 0;
+
+    const strands = [];
+
+    // Stable, smooth snake-like strands
+    for (let i = 0; i < 4; i++) {
+        // Use deterministic wave patterns instead of random
+        const phase = i * 1.5 + seed;
+        const freq = 1.2 + i * 0.4;
+        const amp = 12 + i * 4;
+
+        // Time-based oscillation for "breathing" / "snake" movement
+        const wiggle1 = Math.sin(time * freq + phase) * amp;
+        const wiggle2 = Math.cos(time * freq * 0.8 + phase * 1.2) * amp;
+
+        // Control points with smooth wiggle
+        const cp1x = x1 + dx * 0.3 + nx * wiggle1;
+        const cp1y = y1 + dy * 0.3 + ny * wiggle1;
+        const cp2x = x1 + dx * 0.7 + nx * wiggle2;
+        const cp2y = y1 + dy * 0.7 + ny * wiggle2;
+
+        // Slightly offset start/end for fiber look
+        const startOff = Math.sin(phase) * 3;
+        const endOff = Math.cos(phase * 1.5) * 3;
+
+        strands.push({
+            d: `M ${x1 + nx * startOff} ${y1 + ny * startOff} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${x2 + nx * endOff} ${y2 + ny * endOff}`,
+            opacity: 0.2 + (i % 3) * 0.15,
+            width: 1.2 + (i % 2) * 1.2,
+            color: colors[i % colors.length]
+        });
+    }
+
+    return strands;
+};
+
 export const getMeteoriteColor = (discoveredIn: string | undefined) => {
     if (!discoveredIn) return '#94a3b8';
     const up = discoveredIn.toUpperCase();

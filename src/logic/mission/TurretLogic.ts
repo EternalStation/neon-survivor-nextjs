@@ -55,7 +55,7 @@ export function updateTurrets(state: GameState, step: number) {
             const dToPlayer = Math.hypot(state.player.x - turret.x, state.player.y - turret.y);
 
 
-            if (dToPlayer < turret.radius + 100) {
+            if (dToPlayer < turret.radius + 200) {
                 // turret.activationProgress = 100;
                 const uses = turret.turretUses || 0;
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
