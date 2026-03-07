@@ -24,7 +24,7 @@ import { spawnNanitesFromCloud } from '../logic/player/PlayerCombat';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import { updateTurrets, updateAllies, relocateTurretsToArena } from '../logic/mission/TurretLogic';
 
-import { updateAreaEffects } from './useAreaEffectLogic';
+import { updateAreaEffects } from './UseAreaEffectLogic';
 import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface UseGameLogicProps {

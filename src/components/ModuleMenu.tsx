@@ -172,13 +172,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
             if ((e.code === 'Tab' || e.key === 'Tab') && isOpen) {
                 e.preventDefault();
             }
-            if (e.code === 'Escape' && isOpen) {
-                // Prevent closing if pending placement or if extraction dialogue is active
-                const isExtractionActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
-                if (!gameState.pendingLegendaryHex && !isExtractionActive) {
-                    onClose();
-                }
-            }
         };
 
         window.addEventListener('keydown', handleKeyDown);

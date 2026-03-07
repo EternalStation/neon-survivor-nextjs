@@ -373,46 +373,34 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
     const sizeMult = 1 + (level - 1) * 0.1;
     const baseSize = 25 * sizeMult;
 
-    if (level >= 3) {
-        ctx.save();
-        ctx.globalAlpha = 0.2 + Math.sin(time * 3) * 0.1;
-        ctx.fillStyle = baseColor;
-        ctx.beginPath();
-        ctx.arc(0, 0, baseSize * 1.5, 0, Math.PI * 2);
-        ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseSize * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
-        ctx.globalAlpha = 0.3;
-        ctx.strokeStyle = baseColor;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 10]);
-        ctx.rotate(time);
-        ctx.beginPath();
-        ctx.arc(0, 0, baseSize * 1.8, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + Math.PI / 6;
+        const x = Math.cos(angle) * (baseSize + 5);
+        const y = Math.sin(angle) * (baseSize + 5);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
-
-    if (level >= 6) {
-        ctx.save();
-        const pulse = 1 + Math.sin(time * 10) * 0.05;
-        ctx.scale(pulse, pulse);
-
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#fbbf24';
-
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(0, 0, baseSize * 1.1, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
 
     ctx.save();
     ctx.fillStyle = '#1e293b';
     ctx.strokeStyle = level >= 6 ? '#fbbf24' : color;
-    ctx.lineWidth = level >= 6 ? 4 : 3;
-
+    ctx.lineWidth = level >= 6 ? 4 : 2;
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2;
@@ -423,68 +411,143 @@ function renderTurret(ctx: CanvasRenderingContext2D, state: GameState, poi: MapP
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const x = Math.cos(angle) * (baseSize - 4);
+        const y = Math.sin(angle) * (baseSize - 4);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
     ctx.restore();
+
+    if (level >= 3) {
+        ctx.save();
+        ctx.rotate(time * 0.5);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.4;
+        for (let i = 0; i < 3; i++) {
+            ctx.rotate(Math.PI * 2 / 3);
+            ctx.beginPath();
+            ctx.moveTo(baseSize, -5);
+            ctx.lineTo(baseSize + 15, -8);
+            ctx.lineTo(baseSize + 15, 8);
+            ctx.lineTo(baseSize, 5);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    if (level >= 6) {
+        ctx.save();
+        ctx.rotate(-time * 1.2);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#fbbf24';
+        for (let i = 0; i < 4; i++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.beginPath();
+            ctx.arc(baseSize + 20, 0, 5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = 0.5 + Math.sin(time * 10) * 0.3;
+            ctx.fill();
+        }
+        ctx.restore();
+    }
 
     ctx.save();
     ctx.scale(sizeMult, sizeMult);
-
     let headRotation = poi.rotation || 0;
     if (variant === 'heal') {
         headRotation = Math.atan2(state.player.y - poi.y, state.player.x - poi.x);
     } else if (isActive && !poi.rotation) {
         headRotation = Math.sin(time) * 0.5;
     }
-
     ctx.rotate(headRotation);
 
     if (variant === 'heal') {
+        ctx.save();
         ctx.fillStyle = '#14532d';
         ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
+        ctx.rotate(time * 2);
         ctx.fillStyle = '#4ade80';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#4ade80';
-        ctx.beginPath();
-        ctx.arc(8, 0, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(-4, 0);
-        ctx.lineTo(8, 0);
-        ctx.stroke();
-
+        for (let i = 0; i < 4; i++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.fillRect(10, -2, 8, 4);
+        }
+        ctx.restore();
     } else if (variant === 'ice') {
-        ctx.fillStyle = color;
-
+        ctx.save();
+        const grad = ctx.createLinearGradient(0, 0, 25, 0);
+        grad.addColorStop(0, '#0c4a6e');
+        grad.addColorStop(1, '#7dd3fc');
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.moveTo(0, -8);
-        ctx.lineTo(24, -12);
-        ctx.lineTo(24, 12);
-        ctx.lineTo(0, 8);
+        ctx.moveTo(0, -10);
+        ctx.lineTo(28, -6);
+        ctx.lineTo(28, 6);
+        ctx.lineTo(0, 10);
         ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-        ctx.fillStyle = '#bae6fd';
-        ctx.beginPath();
-        ctx.moveTo(12, -10); ctx.lineTo(8, -18); ctx.lineTo(20, -10);
-        ctx.moveTo(12, 10); ctx.lineTo(8, 18); ctx.lineTo(20, 10);
-        ctx.fill();
-
+        if (level >= 3) {
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.moveTo(15, -12); ctx.lineTo(22, -20); ctx.lineTo(25, -12);
+            ctx.moveTo(15, 12); ctx.lineTo(22, 20); ctx.lineTo(25, 12);
+            ctx.fill();
+        }
+        ctx.restore();
     } else {
-        ctx.fillStyle = color;
-        ctx.fillRect(-8, -8, 24, 6);
-        ctx.fillRect(-8, 2, 24, 6);
+        ctx.save();
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(-10, -12, 30, 8);
+        ctx.fillRect(-10, 4, 30, 8);
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(15, -11, 12, 6);
+        ctx.fillRect(15, 5, 12, 6);
+
+        if (level >= 3) {
+            ctx.fillStyle = '#ef4444';
+            ctx.globalAlpha = 0.6 + Math.sin(time * 15) * 0.4;
+            ctx.fillRect(27, -11, 4, 6);
+            ctx.fillRect(27, 5, 4, 6);
+        }
+        ctx.restore();
     }
 
-    ctx.fillStyle = '#fff';
-    ctx.shadowBlur = 0;
+    ctx.save();
+    const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
+    coreGrad.addColorStop(0, '#fff');
+    coreGrad.addColorStop(0.5, color);
+    coreGrad.addColorStop(1, '#000');
+    ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
 

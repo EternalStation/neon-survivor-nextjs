@@ -24,6 +24,7 @@ interface GameInputProps {
     setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
     setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowBossSkillDetail?: React.Dispatch<React.SetStateAction<boolean>>;
     setShowAdminConsole?: React.Dispatch<React.SetStateAction<boolean>>;
     setShowCheatPanel?: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,7 +34,7 @@ interface GameInputProps {
     windowScaleFactor: React.MutableRefObject<number>;
 }
 
-export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime, windowScaleFactor }: GameInputProps) {
+export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowBossSkillDetail, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime, windowScaleFactor }: GameInputProps) {
     const localKeys = useRef<Record<string, boolean>>({});
     const keys = providedKeys || localKeys;
     const inputVector = useRef({ x: 0, y: 0 });
@@ -77,11 +78,27 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             }
 
             if (key === 'escape' || code === 'escape') {
-                if (gameState.current.showModuleMenu || gameState.current.showBossSkillDetail) {
+                if (gameState.current.showModuleMenu) {
+                    const isExtractionActive = ['requested', 'waiting'].includes(gameState.current.extractionStatus);
+                    if (!gameState.current.pendingLegendaryHex && !isExtractionActive) {
+                        setShowModuleMenu(false);
+                    }
+                    return;
+                }
+                if (gameState.current.showBossSkillDetail && setShowBossSkillDetail) {
+                    setShowBossSkillDetail(false);
                     return;
                 }
                 if (gameState.current.showStats) {
                     setShowStats(false);
+                    return;
+                }
+                if (gameState.current.showAdminConsole && setShowAdminConsole) {
+                    setShowAdminConsole(false);
+                    return;
+                }
+                if (gameState.current.showCheatPanel && setShowCheatPanel) {
+                    setShowCheatPanel(false);
                     return;
                 }
                 setShowSettings(prev => !prev);

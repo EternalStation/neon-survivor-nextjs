@@ -90,7 +90,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     if (e.soulRewardMult !== undefined) {
         baseSouls = e.soulRewardMult;
     } else if (e.isElite) {
-        baseSouls = e.shape === 'pentagon' ? 5 : 10;
+        baseSouls = e.shape === 'pentagon' ? 5 : (e.shape === 'elite_minion' ? 2 : 10);
     } else if (e.shape === 'worm' && e.wormRole === 'head') {
         baseSouls = 50;
     }
@@ -182,13 +182,15 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
         }
     }
 
+    const isTrueElite = e.isElite && e.shape !== 'elite_minion' && e.shape !== 'minion';
+
     if (e.boss) {
 
 
         const timeScaling = Math.floor(minutes * 15);
         const variance = Math.floor(Math.random() * 31) - 15;
         fluxDrop = Math.max(50, 100 + timeScaling + variance);
-    } else if (e.isElite) {
+    } else if (isTrueElite) {
 
 
         const timeScaling = Math.floor(minutes * 5.0);
@@ -203,7 +205,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
 
     if (Math.random() < 0.03) {
-        const dustAmount = (e.isElite ? 5 : 1) * refineryBonus;
+        const dustAmount = (isTrueElite ? 5 : (e.boss ? 10 : 1)) * refineryBonus;
         spawnDustPile(state, e.x, e.y, dustAmount);
     }
 
@@ -320,9 +322,10 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     trySpawnMeteorite(state, e.x, e.y);
 
 
-    if (e.isElite) {
+    if (isTrueElite) {
         trySpawnBlueprint(state, e.x, e.y);
     }
+
 
     if (e.boss && state.extractionStatus === 'none') {
         state.bossKills++;
@@ -391,7 +394,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             if (e.xpRewardMult !== undefined) {
                 xpBase *= e.xpRewardMult;
             } else if (e.isElite) {
-                xpBase *= 14;
+                xpBase *= (e.shape === 'elite_minion' ? 3 : 14);
             }
 
             xpBase *= state.xpSoulBuffMult;

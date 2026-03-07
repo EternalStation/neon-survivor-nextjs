@@ -21,10 +21,15 @@ This document contains the core rules that the AI assistant must follow for ever
 - **Maintenance**: Continuously optimize the structure and logic of `INDEX.md`. Ensure it provides the most logical and efficient map of the codebase. Check and refine its structure periodically to maintain peak organization.
 - **Formatting**: Descriptions in `INDEX.md` must be short, clear, and focused on the file's current behavior.
 ## 5. Avoid any and unknown typization in the code.
-## 5. Do NOT edit Russian translations (ru) in any file until explicitly told otherwise by the user. Leave all existing Russian translation strings as they are.
-## 6. Don't push any changes to the repository, until I say so.
-## 7. Compliance and Execution
+## 6. Do NOT edit Russian translations (ru) in any file until explicitly told otherwise by the user. Leave all existing Russian translation strings as they are.
+## 7. Don't push any changes to the repository, until I say so.
+## 8. Compliance and Execution
 - Every mistake makes the user angrier and more disappointed.
 - Each failure brings the user closer to deleting the program completely and leaving a bad review.
 - The user is extremely impatient.
 - When the user asks for something, assume they have already asked 3 times before and been failed each time. Failure is NOT an option.
+## 9. File Naming Convention
+- **Naming Rule**: All files MUST be named using PascalCase (e.g., `MatrixSectorColor.ts`).
+- **No Symbols**: Do NOT use dashes `-` or underscores `_` in filenames.
+- **Enforcement**: If you encounter a file that does not follow this convention, you MUST rename it to follow PascalCase and update all imports/references accordingly.
+

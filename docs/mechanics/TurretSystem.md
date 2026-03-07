@@ -18,9 +18,9 @@ Turrets use a recursive cost scaling system based on the number of times they ha
 
 ### 🔥 Fire Turret
 High-velocity offensive turret focusing on single-target DPS.
-- **Level 1-2**: Rapid fire projectiles.
-- **Level 3+**: Projectiles apply **Burn DoT** (5% of damage per second). Size increased by 1.5x.
-- **Level 6**: Secondary **Rear Flame Cone** activated, dealing area damage in a 45° arc behind the turret.
+- **Level 1-2**: Rapid fire projectiles (10 shots/sec). Base damage increased to 30% of estimated enemy HP.
+- **Level 3+**: Projectiles apply **Burn DoT** (10% of damage per second). Size increased by 1.5x.
+- **Level 6**: Secondary **Rear Flame Cone** activated, dealing massive area damage (25% of estimated enemy HP) in a 45° arc behind the turret.
 
 ### ❄️ Ice Turret
 Crowd control turret that slows and freezes enemies.
@@ -35,6 +35,10 @@ Defensive support turret that restores player health.
 - **Level 6**: Deploys a mobile **Heal Drone** that follows the player for 30 seconds, providing healing even after leaving the turret's proximity.
 
 ## 4. Technical Specifications
-- **Base Range**: 800px (Scales by 10% per level).
-- **Duration**: Active for **30 seconds** per 
 - **Base HP Estimation**: Damage scales based on a "minutes-elapsed" estimated enemy HP pool to maintain relevance in late-game sessions.
+
+## 5. Visual Evolution
+Turret hardware physically evolves as it is upgraded with Meteorite Dust:
+- **Level 1-2 (Base)**: Standard hexagonal tactical pod with basic weapon head.
+- **Level 3-5 (Augmented)**: Base expands with **side-mounted heat sinks** and variant-specific glows (Heat vents for Fire, Frost plates for Ice).
+- **Level 6 (Overcharged)**: The turret gains **4 Orbital Satellite Orbs** and a golden master-tier chassis. The weapon core emits high-intensity light.

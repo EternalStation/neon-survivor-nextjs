@@ -12,5 +12,23 @@ This document contains the core rules that the AI assistant must follow for ever
 - **Rule**: If a file exceeds (or is approaching) 800 lines, it must be split into logical sub-modules or parts.
 - **Goal**: Facilitate easier navigation, maintainability, and more efficient AI processing (matching the 800-line tool visibility limit).
 ## 2. Do not leave any comments in the code, and delete any you find!
-## 3. Describe all changes and new functionality in the docs folder in the project root.
-## 4. Avoid any and unknown typization in the code.
+## 3. Documentation Rules in `docs/` folder:
+- **New Features**: If adding a completely new mechanic, enemy, class, or any other feature, create a new description file in the `docs` folder (or appropriate subfolder like `docs/mechanics`, `docs/enemies`, etc.).
+- **Existing Features**: If editing an existing feature, update its corresponding documentation file in the `docs` folder.
+- **Missing Documentation**: If a feature being edited does not yet have a documentation file, you must create one that describes its functionality, class, or mechanics.
+- **Pure Descriptions**: Descriptions must ONLY describe the feature, functionality, or mechanics. **NEVER** use words like "updated", "edit", "changed", "added", or similar "update" text in descriptions or filenames. Filenames must be purely descriptive of the feature (e.g., `EnemyDamage.md`, NOT `EnemyDamageUpdated.md`).
+- **INDEX.md Integration**: Every new or updated documentation file MUST be accurately indexed in `docs/INDEX.md`. If a file is missing from `INDEX.md`, it must be added immediately with a concise description.
+- **Goal**: Maintain a comprehensive and up-to-date archive of all game mechanics, classes, and enemies.
+## 4. Library & Navigation (`docs/INDEX.md`)
+- **Primary Map**: Use `docs/INDEX.md` as the authoritative library and navigation map for the project. 
+- **Efficiency**: Consult `INDEX.md` at the start of every request to identify relevant files efficiently and minimize context/token consumption.
+- **Maintenance**: Continuously optimize the structure and logic of `INDEX.md`. Ensure it provides the most logical and efficient map of the codebase. Check and refine its structure periodically to maintain peak organization.
+- **Formatting**: Descriptions in `INDEX.md` must be short, clear, and focused on the file's current behavior.
+## 5. Avoid any and unknown typization in the code.
+## 6. Do NOT edit Russian translations (ru) in any file until explicitly told otherwise by the user. Leave all existing Russian translation strings as they are.
+## 7. Don't push any changes to the repository, until I say so.
+## 8. Compliance and Execution
+- Every mistake makes the user angrier and more disappointed.
+- Each failure brings the user closer to deleting the program completely and leaving a bad review.
+- The user is extremely impatient.
+- When the user asks for something, assume they have already asked 3 times before and been failed each time. Failure is NOT an option.

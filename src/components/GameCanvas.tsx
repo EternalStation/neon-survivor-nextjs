@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { useGameLoop } from '../hooks/useGame';
-import { useWindowScale } from '../hooks/useWindowScale';
+import { useGameLoop } from '../hooks/UseGame';
+import { useWindowScale } from '../hooks/UseWindowScale';
 
 interface GameCanvasProps {
     // We can pass props from App if needed, but hook manages most

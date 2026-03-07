@@ -52,19 +52,47 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
 export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     let vx = 0, vy = 0;
     if (!e.eliteState) e.eliteState = 0;
+
     if (e.eliteState === 0) {
-        if ((!e.timer || state.gameTime > e.timer) && dist < 600) {
-            e.eliteState = 1; e.timer = state.gameTime + 2.0;
-        }
         const a = Math.atan2(dy, dx);
         vx = Math.cos(a) * currentSpd + pushX; vy = Math.sin(a) * currentSpd + pushY;
-    } else {
-        e.rotationPhase = (e.rotationPhase || 0) + 0.5;
-        const a = Math.atan2(dy, dx) + Math.sin(state.gameTime * 20) * 0.5;
-        const fast = currentSpd * 1.75;
-        vx = Math.cos(a) * fast + pushX; vy = Math.sin(a) * fast + pushY;
+
+        if ((!e.timer || state.gameTime > e.timer) && dist < 600) {
+            e.eliteState = 1; e.timer = state.gameTime + 0.5;
+            playSfx('warning');
+        }
+    } else if (e.eliteState === 1) {
+        vx = 0; vy = 0;
+        e.rotationPhase = (e.rotationPhase || 0) + 0.1;
+
         if (state.gameTime > (e.timer || 0)) {
-            e.eliteState = 0; e.timer = state.gameTime + 5.0 + Math.random() * 2.0;
+            const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
+            let nearestP: any = players[0];
+            let minD = Infinity;
+            players.forEach(p => {
+                const d = Math.hypot(p.x - e.x, p.y - e.y);
+                if (d < minD) { minD = d; nearestP = p; }
+            });
+
+            const ta = Math.atan2(nearestP.y - e.y, nearestP.x - e.x);
+            e.lockedTargetX = nearestP.x + Math.cos(ta) * 200;
+            e.lockedTargetY = nearestP.y + Math.sin(ta) * 200;
+            e.eliteState = 2;
+            e.timer = state.gameTime + 1.5;
+        }
+    } else {
+        if (e.lockedTargetX !== undefined && e.lockedTargetY !== undefined) {
+            const rDx = e.lockedTargetX - e.x, rDy = e.lockedTargetY - e.y, rDist = Math.hypot(rDx, rDy);
+
+            if (rDist > 10 && state.gameTime < (e.timer || 0)) {
+                e.rotationPhase = (e.rotationPhase || 0) + 0.5;
+                const a = Math.atan2(rDy, rDx) + Math.sin(state.gameTime * 20) * 0.4;
+                vx = Math.cos(a) * 10 + pushX; vy = Math.sin(a) * 10 + pushY;
+            } else {
+                e.eliteState = 0;
+                e.timer = state.gameTime + 4.0 + Math.random() * 2.0;
+                e.lockedTargetX = undefined; e.lockedTargetY = undefined;
+            }
         }
     }
     return { vx, vy };

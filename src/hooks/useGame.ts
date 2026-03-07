@@ -5,13 +5,13 @@ import { updateExtraction } from '../logic/mission/ExtractionLogic';
 import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, fadeOutMusic } from '../logic/audio/AudioLogic';
 import { syncAllLegendaries } from '../logic/upgrades/LegendaryLogic';
 import { renderGame } from '../logic/rendering/GameRenderer';
-import { useGameInput } from './useGameInput';
-import { useGameLogic } from './useGameLogic';
-import { useOrbit } from './useOrbit';
-import { useGameUIHandlers } from './useGameUIHandlers';
+import { useGameInput } from './UseGameInput';
+import { useGameLogic } from './UseGameLogic';
+import { useOrbit } from './UseOrbit';
+import { useGameUIHandlers } from './UseGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
-import { useMultiplayerGame } from './useMultiplayerGame';
+import { useMultiplayerGame } from './UseMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
 import { getKeybinds } from '../logic/utils/Keybinds';
 
@@ -138,6 +138,7 @@ export function useGameLoop(gameStarted: boolean) {
         setShowSettings,
         setShowStats,
         setShowModuleMenu,
+        setShowBossSkillDetail,
         setShowAdminConsole,
         setShowCheatPanel,
         setGameOver,

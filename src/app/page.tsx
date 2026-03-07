@@ -22,8 +22,8 @@ import { AssistantOverlay } from '@/components/hud/AssistantOverlay';
 import { type PlayerClass } from '@/logic/core/types';
 import { PLAYER_CLASSES } from '@/logic/core/classes';
 
-import { useGameLoop } from '@/hooks/useGame';
-import { useWindowScale } from '@/hooks/useWindowScale';
+import { useGameLoop } from '@/hooks/UseGame';
+import { useWindowScale } from '@/hooks/UseWindowScale';
 import { startBGM } from '@/logic/audio/AudioLogic';
 import api from '@/api/client';
 import '@/styles/menu_additions.css';

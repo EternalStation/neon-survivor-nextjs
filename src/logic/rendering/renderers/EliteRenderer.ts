@@ -72,4 +72,23 @@ export function renderEliteEffects(ctx: CanvasRenderingContext2D, e: Enemy, stat
         }
         ctx.restore();
     }
+
+    if (e.shape === 'triangle') {
+        if (e.eliteState === 1) {
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            const pulse = 1.2 + Math.sin(state.gameTime * 20) * 0.3;
+            ctx.strokeStyle = '#EF4444';
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.6 + Math.sin(state.gameTime * 20) * 0.4;
+            ctx.beginPath();
+            const warningSize = e.size * pulse;
+            ctx.moveTo(0, -warningSize);
+            ctx.lineTo(warningSize * 0.866, warningSize * 0.5);
+            ctx.lineTo(-warningSize * 0.866, warningSize * 0.5);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
 }

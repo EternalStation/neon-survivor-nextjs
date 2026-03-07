@@ -24,7 +24,8 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
     useEffect(() => {
         setSelectedIndex(0);
         setCanSelect(false);
-        const timer = setTimeout(() => setCanSelect(true), 1000);
+        const delay = upgradeChoices[0]?.isSpecial ? 1000 : 500;
+        const timer = setTimeout(() => setCanSelect(true), delay);
         return () => clearTimeout(timer);
     }, [upgradeChoices]);
 
