@@ -4,7 +4,12 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(find:*)",
-      "Bash(cmd.exe:*)"
+      "Bash(cmd.exe:*)",
+      "Bash(python:*)",
+      "Read(//c/Users/riot1/AppData/Local/Programs/Python//**)",
+      "Read(//c/Users/riot1/AppData/Roaming/Python//**)",
+      "Read(//c/Users/riot1/.local/bin//**)",
+      "Read(//c/Users/riot1/AppData/Local/**)"
     ]
   }
 }

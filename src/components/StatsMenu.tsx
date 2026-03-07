@@ -133,11 +133,53 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
 
                     {/* Stats Table */}
                     <div className="stats-calculations" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0, marginTop: -10 }}>
+                    <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '4px 0', borderBottom: '1px solid #334155', marginBottom: 4 }}>
+                        {(t.statsMenu.labels as any).baseStats || 'BASE STATS'}
+                    </div>
                         {(() => {
+                            const subGroup = (label: string, first = false) => (
+                                <div style={{ color: '#334155', fontSize: 9, fontWeight: 900, letterSpacing: '3px', paddingTop: first ? 2 : 10, paddingBottom: 3 }}>
+                                    {label}
+                                </div>
+                            );
+                            const lifesteal = calculateLegendaryBonus(gameState, 'lifesteal');
+                            const colRed = calculateLegendaryBonus(gameState, 'col_red_per_kill');
+                            const projRed = calculateLegendaryBonus(gameState, 'proj_red_per_kill');
+                            const hasAOEPerk = gameState.moduleSockets.hexagons.some(h =>
+                                h && (h.type === 'EcoDMG' || h.type === 'KineticTsunami' || h.type === 'SoulShatterCore') && h.level >= 4
+                            );
+                            const aoeChance = calculateLegendaryBonus(gameState, 'aoe_chance_per_kill');
                             return (
                                 <>
+                                    {subGroup('HEALTH & DEFENSE', true)}
                                     <StatRow label={t.statsMenu.labels.health} stat={player.hp} t={t} legendaryBonusFlat={player.hp.hexFlat || 0} legendaryBonusPct={player.hp.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} />
                                     <StatRow label={t.statsMenu.labels.regeneration} stat={player.reg} t={t} legendaryBonusFlat={player.reg.hexFlat || 0} legendaryBonusPct={player.reg.hexMult || 0} arenaMult={gameState.hpRegenBuffMult} isDisabled={player.healingDisabled} />
+                                    {lifesteal > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                            <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.lifesteal}</span>
+                                            <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
+                                                {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    )}
+                                    <StatRow
+                                        label={t.statsMenu.labels.armor}
+                                        stat={player.arm}
+                                        t={t}
+                                        legendaryBonusFlat={player.arm.hexFlat || 0}
+                                        legendaryBonusPct={player.arm.hexMult || 0}
+                                        extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.collisionReduction}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{Math.min(80, colRed).toFixed(1)}%</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.projectileReduction}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{Math.min(80, projRed).toFixed(1)}%</span>
+                                    </div>
+
+                                    {subGroup('COMBAT')}
                                     <StatRow label={t.statsMenu.labels.damage} stat={player.dmg} t={t} legendaryBonusFlat={player.dmg.hexFlat || 0} legendaryBonusPct={player.dmg.hexMult || 0} arenaMult={gameState.dmgAtkBuffMult} />
                                     <StatRow
                                         label={t.statsMenu.labels.attackSpeed}
@@ -152,39 +194,26 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             return `(${sps.toFixed(2)} ${t.units.sps})`;
                                         })()}
                                     />
-                                    <StatRow
-                                        label={t.statsMenu.labels.armor}
-                                        stat={player.arm}
-                                        t={t}
-                                        legendaryBonusFlat={player.arm.hexFlat || 0}
-                                        legendaryBonusPct={player.arm.hexMult || 0}
-                                        extraInfo={`(${(getDefenseReduction(calcStat(player.arm)) * 100).toFixed(1)}%)`}
-                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.critChance}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{player.critChance.toFixed(1)}%</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.critDamage}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{player.critDamage.toFixed(0)}%</span>
+                                    </div>
+                                    {hasAOEPerk && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                            <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.knockback}</span>
+                                            <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{aoeChance.toFixed(1)}%</span>
+                                        </div>
+                                    )}
 
-                                    {(() => {
-                                        const colRed = calculateLegendaryBonus(gameState, 'col_red_per_kill');
-                                        return (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.collisionReduction}</span>
-                                                <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {Math.min(80, colRed).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        );
-                                    })()}
-
-                                    {(() => {
-                                        const projRed = calculateLegendaryBonus(gameState, 'proj_red_per_kill');
-                                        return (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.projectileReduction}</span>
-                                                <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {Math.min(80, projRed).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        );
-                                    })()}
-
+                                    {subGroup('UTILITY')}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
+                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>{((1 - getCdMod(gameState, player)) * 100).toFixed(1)}%</span>
+                                    </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.xpGain}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -198,7 +227,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                 const refineryMult = (player as any).inRefineryZone ? 4.0 : 1.0;
                                                 const total = baseSum * normalMult * hexMult * classMult * refineryMult;
                                                 const showBreakdown = hexFlat > 0;
-
                                                 return (
                                                     <>
                                                         {showBreakdown ? (
@@ -237,7 +265,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             })()}
                                         </div>
                                     </div>
-
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
                                         <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.meteoriteChance}</span>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -248,7 +275,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                                 const hexFlat = calculateLegendaryBonus(gameState, 'met_drop_per_kill');
                                                 const bluePrintMult = isBuffActive(gameState, 'METEOR_SHOWER') ? (1 + (0.5 * surge)) : 1;
                                                 const total = ((baseChance / 100 * arenaMult) + hexFlat) * bluePrintMult * 100;
-
                                                 return (
                                                     <>
                                                         <span style={{ color: '#64748b', fontSize: 12 }}>{baseChance.toFixed(1)}%</span>
@@ -279,99 +305,104 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                             })()}
                                         </div>
                                     </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.cooldownReduction}</span>
-                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {((1 - getCdMod(gameState, player)) * 100).toFixed(1)}%
-                                        </span>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                                            {player.playerClass === 'stormstrike' && (
-                                                <>
-                                                    {(() => {
-                                                        const ct = player.stormCircleChargeTime ?? 0;
-                                                        const maxCharge = GAME_CONFIG.SKILLS.STORM_CIRCLE_MAX_CHARGE;
-                                                        const p = Math.max(0, Math.min(1, ct / maxCharge));
-                                                        let stormMod = 1;
-                                                        if (p < 0.05) {
-                                                            stormMod = 0.9 + (p / 0.05) * 0.1;
-                                                        } else {
-                                                            stormMod = 1.0 + ((p - 0.05) / 0.95) * 0.1;
-                                                        }
-                                                        const baseSpeed = calcStat(player.spd);
-                                                        return (
-                                                            <>
-                                                                <span style={{ color: '#64748b', fontSize: 12 }}>({baseSpeed.toFixed(1)} <span style={{ color: '#fbbf24' }}>x {Math.round(stormMod * 100)}%</span>)</span>
-                                                                <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </>
-                                            )}
-                                            <span style={{ color: '#4ade80', fontSize: 18, fontWeight: 600 }}>
-                                                {player.speed.toFixed(1)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
-                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {player.pierce}
-                                        </span>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.critChance}</span>
-                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {player.critChance.toFixed(1)}%
-                                        </span>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                        <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.critDamage}</span>
-                                        <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                            {player.critDamage.toFixed(0)}%
-                                        </span>
-                                    </div>
-
-
-                                    {/* --- CONDITIONAL STATS --- */}
-                                    {(() => {
-                                        const lifesteal = calculateLegendaryBonus(gameState, 'lifesteal');
-                                        if (lifesteal <= 0) return null;
-                                        return (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.lifesteal}</span>
-                                                <span style={{ color: player.healingDisabled ? '#ef4444' : '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {player.healingDisabled ? '0.0' : lifesteal.toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        );
-                                    })()}
-                                    {(() => {
-                                        const hasAOEPerk = gameState.moduleSockets.hexagons.some(h =>
-                                            h && (h.type === 'EcoDMG' || h.type === 'KineticTsunami' || h.type === 'SoulShatterCore') && h.level >= 4
-                                        );
-                                        if (!hasAOEPerk) return null;
-
-                                        const aoeChance = calculateLegendaryBonus(gameState, 'aoe_chance_per_kill');
-                                        return (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
-                                                <span style={{ color: '#94a3b8', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.knockback}</span>
-                                                <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 600 }}>
-                                                    {aoeChance.toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        );
-                                    })()}
                                 </>
                             );
                         })()}
+                    </div>
+
+                    {/* CLASS STATS */}
+                    {currentClass && (
+                        <div style={{ marginTop: 8 }}>
+                            <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '8px 0 4px 0', borderBottom: '1px solid #334155', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ color: classColor }}>◆</span>
+                                {(t.statsMenu.labels as any).classStats || 'CLASS STATS'}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1e293b' }}>
+                                {currentClass.iconUrl && (
+                                    <img src={currentClass.iconUrl} alt="" style={{ width: 20, height: 20, objectFit: 'contain', filter: `drop-shadow(0 0 4px ${classColor})` }} />
+                                )}
+                                <span style={{ color: classColor, fontSize: 12, fontWeight: 900, letterSpacing: '1px' }}>{currentClass.capabilityName}</span>
+                            </div>
+
+                            {currentClass.capabilityMetrics.map((metric, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', borderBottom: '1px solid #1e293b' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700 }}>{metric.label}</span>
+                                        {metric.isResonant && <span style={{ color: classColor, fontSize: 8, fontWeight: 900, letterSpacing: '1px' }}>RESONANT</span>}
+                                        {metric.isStatic && <span style={{ color: '#475569', fontSize: 8, fontWeight: 900, letterSpacing: '1px' }}>STATIC</span>}
+                                    </div>
+                                    <span style={{ color: metric.isResonant ? classColor : '#64748b', fontSize: 16, fontWeight: 600 }}>
+                                        {metric.value}{metric.unit}
+                                    </span>
+                                </div>
+                            ))}
+                            {([
+                                { key: 'hpMult', label: t.statsMenu.labels.health },
+                                { key: 'spdMult', label: t.statsMenu.labels.movementSpeed },
+                                { key: 'dmgMult', label: t.statsMenu.labels.damage },
+                                { key: 'atkMult', label: t.statsMenu.labels.attackSpeed },
+                                { key: 'armMult', label: t.statsMenu.labels.armor },
+                                { key: 'xpMult', label: t.statsMenu.labels.xpGain },
+                                { key: 'regMult', label: t.statsMenu.labels.regeneration },
+                                { key: 'pierce', label: t.statsMenu.labels.pierce },
+                            ] as { key: string; label: string }[])
+                                .filter(({ key }) => (currentClass.stats as Record<string, number | undefined>)[key] !== undefined && (currentClass.stats as Record<string, number | undefined>)[key] !== 0)
+                                .map(({ key, label }) => {
+                                    const val = (currentClass.stats as Record<string, number>)[key];
+                                    const isPct = key !== 'pierce';
+                                    const isPositive = val > 0;
+                                    const display = isPct ? `${isPositive ? '+' : ''}${Math.round(val * 100)}%` : `+${val}`;
+                                    return (
+                                        <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', borderBottom: '1px solid #1e293b' }}>
+                                            <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 700 }}>{label}</span>
+                                            <span style={{ color: isPositive ? classColor : '#ef4444', fontSize: 16, fontWeight: 600 }}>{display}</span>
+                                        </div>
+                                    );
+                                })}
+                        </div>
+                    )}
+
+                    {/* SPECIAL STATS */}
+                    <div style={{ marginTop: 8 }}>
+                        <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '8px 0 4px 0', borderBottom: '1px solid #334155', marginBottom: 4 }}>
+                            {(t.statsMenu.labels as any).specialStats || 'SPECIAL STATS'}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                            <span style={{ color: '#475569', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.movementSpeed}</span>
+                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                {(() => {
+                                    const s = player.spd;
+                                    const preClass = (s.base + s.flat + (s.hexFlat || 0)) * (1 + (s.mult || 0) / 100) * (1 + ((s.hexMult || 0) + (s.hexMult2 || 0)) / 100);
+                                    const classMod = 1 + (s.classMult || 0) / 100;
+                                    const final = preClass * classMod;
+                                    const pctMod = final > 0 ? Math.round(((player.speed / final) - 1) * 100) : 0;
+                                    return (
+                                        <>
+                                            {(s.classMult || 0) !== 0 ? (
+                                                <>
+                                                    <span style={{ color: '#64748b', fontSize: 12 }}>{preClass.toFixed(1)}</span>
+                                                    <span style={{ color: '#64748b', fontSize: 12 }}> x </span>
+                                                    <span style={{ color: classColor, fontSize: 12 }}>{Math.round(classMod * 100)}%</span>
+                                                    <span style={{ color: '#64748b', fontSize: 12 }}> = </span>
+                                                    <span style={{ color: '#64748b', fontSize: 18, fontWeight: 600 }}>{final.toFixed(1)}</span>
+                                                </>
+                                            ) : (
+                                                <span style={{ color: '#64748b', fontSize: 18, fontWeight: 600 }}>{final.toFixed(1)}</span>
+                                            )}
+                                            {pctMod !== 0 && (
+                                                <span style={{ color: '#475569', fontSize: 13, fontWeight: 700 }}>
+                                                    {pctMod > 0 ? '+' : ''}{pctMod}%
+                                                </span>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #1e293b' }}>
+                            <span style={{ color: '#475569', fontSize: 16, fontWeight: 700 }}>{t.statsMenu.labels.pierce}</span>
+                            <span style={{ color: '#64748b', fontSize: 18, fontWeight: 600 }}>{player.pierce}</span>
+                        </div>
                     </div>
                 </div>
             </div>

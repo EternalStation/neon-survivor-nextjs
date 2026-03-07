@@ -719,6 +719,10 @@ export const UI_TRANSLATIONS = {
                 knockback: 'AOE Chance',
                 critChance: 'Critical Chance',
                 critDamage: 'Critical Damage',
+                baseStats: 'BASE STATS',
+                classStats: 'CLASS STATS',
+                utility: 'UTILITY',
+                specialStats: 'SPECIAL STATS',
                 damageSources: {
                     projectile: 'Projectile',
                     shockwave: 'Shockwave',
