@@ -101,9 +101,12 @@ export type DamageSource =
     | 'Void Singularity'
     | 'Wall Shockwave'
     | 'Malware Wall Bonus'
+    | 'Malware Wall damage increase'
+    | 'Aegis Rings'
+    | 'Infernal Combustion'
     | 'Other';
 
-export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
+export type AreaEffectType = 'puddle' | 'epicenter' | 'blackhole' | 'orbital_strike' | 'crater' | 'glitch_cloud' | 'afk_strike' | 'afk_strike_hit' | 'temporal_burst' | 'temporal_freeze_wave' | 'storm_laser' | 'storm_zone' | 'storm_hit' | 'nanite_cloud';
 export interface AreaEffect {
     id: number;
     type: AreaEffectType;
@@ -164,6 +167,7 @@ export interface Player {
     damageBlockedByProjectileReduc: number;
     damageBlockedByShield: number;
     damageBreakdown: Record<string, number>;
+    activeSkillDamageByMinute?: Record<number, number>;
     wallsHit: number;
     upgradesCollected: import('./types').UpgradeChoice[];
     reg: PlayerStats;

@@ -12,6 +12,22 @@ export function getDamageMapping(playerClass?: string) {
     const currentClass = PLAYER_CLASSES.find(c => c.id === playerClass?.toLowerCase() || c.name.toLowerCase() === playerClass?.toLowerCase());
     const classColor = currentClass?.themeColor || '#60a5fa';
     const classIcon = currentClass?.iconUrl || '';
+    const classIconSmall = classIcon;
+
+    const sourceIcons: Record<string, string> = {
+        'Projectile': classIcon,
+        'Nanite Swarm': classIcon,
+        'Storm of Steel (LVL 4)': '/assets/hexes/EcoDMG.png',
+        'Shockwave': '/assets/hexes/ComWave.png',
+        'Radiation Aura': '/assets/hexes/ComRad.png',
+        'Neutron Star (Aura)': '/assets/Fusions/THE NEUTRON STAR.png',
+        'Fire Turret': '🔥',
+        'Ice Turret': '❄️',
+        'Wall Shockwave': '🧱',
+        'Malware Wall Bonus': classIconSmall || '/assets/hexes/MalwarePrime.png',
+        'Aegis Rings': '/assets/hexes/AigisVortex.PNG',
+        'Collision': '💥'
+    };
 
     const sourceColors: Record<string, string> = {
         'Projectile': classColor,
@@ -54,6 +70,7 @@ export function getDamageMapping(playerClass?: string) {
         'Wall Shockwave': '#ef4444',
         'Storm Circle': '#06b6d4',
         'Orbital Vortex': '#f59e0b',
+        'Aegis Rings': '#22d3ee',
         'Void Singularity': '#8b5cf6'
     };
 
@@ -77,7 +94,7 @@ export function getDamageMapping(playerClass?: string) {
 
     const groupMap: Record<string, DamageGroupConfig> = {
         'Projectile': {
-            children: ['Projectile', 'Shattered Fate (Crit)', 'Shattered Fate (Death Mark)', 'Shattered Fate (Execute)', 'Storm of Steel (LVL 4)'],
+            children: ['Projectile', 'Shattered Fate (Crit)', 'Shattered Fate (Death Mark)', 'Shattered Fate (Execute)', 'Storm of Steel (LVL 4)', 'Crimson Feast (LVL 3)', 'Toxic Puddle (LVL 4)'],
             icon: classIcon || '/assets/hexes/MalwarePrime.png',
             color: classColor,
             childLabels: {
@@ -85,15 +102,19 @@ export function getDamageMapping(playerClass?: string) {
                 'Shattered Fate (Crit)': 'Crit Bonus',
                 'Shattered Fate (Death Mark)': 'Death Mark',
                 'Shattered Fate (Execute)': 'Execution',
-                'Storm of Steel (LVL 4)': 'Steel Storm'
+                'Storm of Steel (LVL 4)': 'Steel Storm',
+                'Crimson Feast (LVL 3)': 'Crimson Feast',
+                'Toxic Puddle (LVL 4)': 'Acid AMP',
+
             }
         },
         'Collision': {
             children: ['Collision'],
-            icon: '',
+            icon: '💥',
             color: '#ef4444',
             childLabels: {
-                'Collision': 'Enemy Collision'
+                'Collision': 'Enemy Collision',
+
             }
         },
         'Wall Shockwave': {
@@ -104,30 +125,36 @@ export function getDamageMapping(playerClass?: string) {
                 'Wall Shockwave': 'Shockwave'
             }
         },
+        'Aegis Rings': {
+            children: ['Aegis Rings'],
+            icon: '/assets/hexes/AigisVortex.PNG',
+            color: '#22d3ee',
+            childLabels: {
+                'Aegis Rings': 'Orbital Pulsar'
+            }
+        },
         'Malware Wall Bonus': {
             children: ['Malware Wall Bonus'],
-            icon: '/assets/hexes/MalwarePrime.png',
+            icon: classIcon || '/assets/hexes/MalwarePrime.png',
             color: '#d946ef',
             childLabels: {
                 'Malware Wall Bonus': 'Ricochet Bonus'
             }
         },
         'Crimson Feast': {
-            children: ['Crimson Feast (LVL 3)', 'Crimson Feast (LVL 4)'],
+            children: ['Crimson Feast (LVL 4)'],
             icon: '/assets/hexes/ComLife.png',
             color: '#ef4444',
             childLabels: {
-                'Crimson Feast (LVL 3)': 'LVL 3 (Bonus Damage)',
                 'Crimson Feast (LVL 4)': 'LVL 4 (Zombies)'
             }
         },
         'Toxic Swamp': {
-            children: ['Toxic Puddle (LVL 1)', 'Toxic Puddle (LVL 4)'],
+            children: ['Toxic Puddle (LVL 1)'],
             icon: '/assets/hexes/DefPuddle.png',
             color: '#22c55e',
             childLabels: {
-                'Toxic Puddle (LVL 1)': 'LVL 1 (Acid DOT)',
-                'Toxic Puddle (LVL 4)': 'LVL 4 (AMP Bonus)'
+                'Toxic Puddle (LVL 1)': 'LVL 1 (Acid DOT)'
             }
         },
         'Epicenter': {
@@ -242,5 +269,5 @@ export function getDamageMapping(playerClass?: string) {
         }
     };
 
-    return { sourceColors, sourceGradients, groupMap, classColor, classIcon };
+    return { sourceColors, sourceIcons, sourceGradients, groupMap, classColor, classIcon };
 }

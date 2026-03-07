@@ -538,7 +538,41 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
             }
         }
 
+        if (isLevel2 && !isLevel4) {
+            if (e.phalanxTimer === undefined) e.phalanxTimer = 0;
+            e.phalanxTimer++;
 
+            const interval = isLevel3 ? 300 : 450;
+            if (e.phalanxTimer > interval) {
+                e.phalanxTimer = 0;
+                const angleToPlayer = Math.atan2(state.player.y - e.y, state.player.x - e.x);
+                const count = isLevel3 ? 5 : 3;
+
+                for (let i = 0; i < count; i++) {
+                    const spread = (i - (count - 1) / 2) * 0.25;
+                    const rAngle = angleToPlayer + spread;
+                    const rocket: Enemy = {
+                        id: Math.random(),
+                        shape: 'long_drone',
+                        type: 'minion',
+                        x: e.x, y: e.y,
+                        hp: 300, maxHp: 300,
+                        size: 20,
+                        spd: 12,
+                        isPhalanxDrone: true,
+                        soulLinkHostId: e.id,
+                        palette: e.palette,
+                        knockback: { x: 0, y: 0 },
+                        dead: false,
+                        spawnedAt: state.gameTime,
+                        rotationPhase: rAngle,
+                        boss: false, bossType: 0, bossAttackPattern: 0, shellStage: 0, isLevel3: false, isLevel4: false
+                    } as any;
+                    state.enemies.push(rocket);
+                }
+                playSfx('dash');
+            }
+        }
 
         e.soulLinkTargets = [];
         state.enemies.forEach(other => {

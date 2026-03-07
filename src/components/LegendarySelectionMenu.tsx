@@ -8,6 +8,8 @@ interface LegendarySelectionMenuProps {
     onSelect: (selection: LegendaryHex) => void;
 }
 
+import { getKeybinds } from '../logic/utils/Keybinds';
+
 export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ options, onSelect }) => {
     const { language } = useLanguage();
     const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -19,9 +21,13 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
             if (code === 'tab') {
                 e.preventDefault();
             }
-            if (code === 'keya' || code === 'arrowleft') {
+            const binds = getKeybinds();
+            const leftBind = (binds.moveLeft || 'keya').toLowerCase();
+            const rightBind = (binds.moveRight || 'keyd').toLowerCase();
+
+            if (code === leftBind || code === 'arrowleft' || (binds.useDefaultMovement && code === 'keya')) {
                 setSelectedIndex(prev => (prev - 1 + options.length) % options.length);
-            } else if (code === 'keyd' || code === 'arrowright') {
+            } else if (code === rightBind || code === 'arrowright' || (binds.useDefaultMovement && code === 'keyd')) {
                 setSelectedIndex(prev => (prev + 1) % options.length);
             } else if (code === 'enter' || code === 'space') {
                 onSelect(options[selectedIndex]);

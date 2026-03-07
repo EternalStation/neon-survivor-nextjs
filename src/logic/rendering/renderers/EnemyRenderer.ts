@@ -1,9 +1,10 @@
 import type { GameState, Enemy } from '../../core/types';
+import { getShellVisibility } from '../ColorPalettes';
 import { PALETTES } from '../../core/constants';
-import { renderAnomalyAura, renderAnomalyStats, drawAbominationPath, renderBossSkills, renderLegionShield, renderBossBodyPre, renderBossBodyPost } from './BossRenderer';
+import { renderAnomalyAura, renderBossSkills, renderLegionShield, renderBossBodyPre, renderBossBodyPost } from './BossRenderer';
 import { renderEliteEffects } from './EliteRenderer';
 import { renderUniqueEnemy } from './UniqueEnemyRenderer';
-import { renderBossDistortion, drawDistortedBossShape, renderBossAfterglow } from './BossVisualFX';
+import { renderBossDistortion, drawDistortedBossShape, renderBossAfterglow, drawAbominationPath } from './BossVisualFX';
 import { renderCircleSoulSuck, renderOrbitalShield, renderDiamondBeamChargeUp, renderDiamondSatelliteStrike, renderPentagonSoulLinks, renderPentagonParasiteLink, renderPhalanxDrone } from './BossSkillRenderer';
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
@@ -48,12 +49,23 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         ctx.scale(pulse, pulse);
 
         const p = e.palette || PALETTES[0].colors;
-        const coreColor = e.eraPalette?.[2] || p[0];
-        const innerColor = e.eraPalette?.[1] || p[1];
-        const outerColor = e.eraPalette?.[0] || p[2];
+        const eraPalette = e.eraPalette;
 
-        if (e.isPhalanxDrone) {
-            renderPhalanxDrone(ctx, e, state);
+        let coreColor: string, innerColor: string, outerColor: string;
+        if (eraPalette && Array.isArray(eraPalette)) {
+            coreColor = eraPalette[0];
+            innerColor = eraPalette[1];
+            outerColor = eraPalette[2];
+        } else {
+            coreColor = p[0];
+            innerColor = p[1];
+            outerColor = p[2];
+        }
+
+        const visibility = getShellVisibility(state.gameTime);
+
+        if (e.isPhalanxDrone || e.shape === 'minion') {
+            renderPhalanxDrone(ctx, e, state, coreColor, innerColor, outerColor);
             ctx.restore();
             return;
         }
@@ -86,26 +98,45 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         }
 
         if (e.boss) {
-            ctx.lineWidth = 6; ctx.strokeStyle = outerColor; ctx.globalAlpha = 0.4; ctx.stroke();
+            ctx.lineWidth = 6; ctx.strokeStyle = outerColor; ctx.globalAlpha = 0.4 * visibility.outer; ctx.stroke();
             ctx.lineWidth = 1.5; ctx.globalAlpha = 1.0;
         }
-        ctx.strokeStyle = outerColor; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.fillStyle = innerColor; ctx.fill();
+        ctx.strokeStyle = outerColor;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = visibility.outer;
+        ctx.stroke();
+
+        ctx.fillStyle = innerColor;
+        ctx.globalAlpha = visibility.inner;
+        ctx.fill();
 
         if (e.boss) {
+            ctx.globalAlpha = 1.0;
             renderBossBodyPost(ctx, e, state);
             renderBossDistortion(ctx, e, state);
             renderBossAfterglow(ctx, e, state);
         }
 
+        if (e.isElite && e.shape === 'pentagon') {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#06b6d4'; // Cyan/Blue glow
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 5) * 0.2;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1.0;
+        }
+
         ctx.fillStyle = coreColor;
+        ctx.globalAlpha = visibility.core;
         drawCore(ctx, e);
         ctx.fill();
 
+        ctx.globalAlpha = 1.0;
+
         renderStatusOverlays(ctx, e, state);
         ctx.restore();
-
-        if (e.isAnomaly) renderAnomalyStats(ctx, e, state);
     });
 }
 
@@ -137,6 +168,14 @@ function drawShapePath(ctx: CanvasRenderingContext2D, e: Enemy, size: number, st
             }
             ctx.closePath(); break;
         case 'snitch': ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2); break;
+        case 'minion':
+        case 'long_drone':
+            ctx.moveTo(size * 1.2, 0);
+            ctx.lineTo(-size * 0.6, -size * 0.8);
+            ctx.lineTo(-size * 0.3, 0);
+            ctx.lineTo(-size * 0.6, size * 0.8);
+            ctx.closePath();
+            break;
         default: ctx.arc(0, 0, size, 0, Math.PI * 2);
     }
 }
@@ -151,12 +190,24 @@ function drawCore(ctx: CanvasRenderingContext2D, e: Enemy) {
 }
 
 function renderStatusOverlays(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
-    if ((e.isElite || e.shape === 'worm') && e.maxHp > 0 && e.hp < e.maxHp) {
-        const barW = e.size * 2.5;
-        const barH = 4;
-        const y = -e.size * 1.8;
+    const isUnique = e.isZombie || e.shape === 'worm' || e.shape === 'glitcher' || (e as any).meteoriteDrop;
+    if ((e.isElite || e.boss || isUnique) && e.maxHp > 0 && e.hp < e.maxHp) {
+        ctx.save();
+        if (e.rotationPhase) {
+            ctx.rotate(-e.rotationPhase);
+        }
+
+        const barW = e.boss ? e.size * 3.5 : e.size * 2.5;
+        const barH = e.boss ? 6 : 4;
+        const y = e.boss ? -e.size * 2.2 : -e.size * 1.8;
+
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(-barW / 2, y, barW, barH);
-        ctx.fillStyle = e.palette[1] || '#ff0000'; ctx.fillRect(-barW / 2, y, barW * (e.hp / e.maxHp), barH);
+
+        const hpColor = (e.palette && e.palette[1]) ? e.palette[1] : '#ff0000';
+        ctx.fillStyle = hpColor;
+        ctx.fillRect(-barW / 2, y, barW * (e.hp / e.maxHp), barH);
+
+        ctx.restore();
     }
 
     if (e.frozen && e.frozen > 0) {

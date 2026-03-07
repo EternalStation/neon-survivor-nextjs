@@ -63,7 +63,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     ComCrit: {
         id: 'com_crit',
         name: 'SHATTERED FATE',
-        desc: '+15% Crit Chance',
+        desc: '+5% Crit Chance',
         description: 'Quantum-synchronized targeting sensors that identify and exploit structural weaknesses in real-time.',
         lore: 'Fate is calculated, not random. These sensors scan for the exact micro-second of vulnerability, allowing your munitions to tear through the toughest armor like glass.',
         category: 'Combat',

@@ -616,22 +616,43 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             ctx.stroke();
 
 
-            if (progress > 0.95) {
-                const beamAlpha = (progress - 0.95) / 0.05;
+            ctx.restore();
+        } else if (effect.type === 'afk_strike_hit') {
+            const lifeTime = state.gameTime - effect.creationTime;
+            const beamDuration = effect.duration;
+            const radius = effect.radius || 300;
+
+            ctx.save();
+            ctx.translate(effect.x, effect.y);
+
+            if (lifeTime < beamDuration) {
+                const beamAlpha = 1 - (lifeTime / beamDuration);
+
+                // Deep crater lines matching the circle
+                ctx.strokeStyle = `rgba(139, 0, 0, ${0.8 * beamAlpha})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.stroke();
+
                 const beamHeight = 2000;
                 const beamWidth = 600;
                 const beamGrad = ctx.createLinearGradient(-beamWidth / 2, 0, beamWidth / 2, 0);
                 beamGrad.addColorStop(0, 'rgba(139, 0, 0, 0)');
-                beamGrad.addColorStop(0.5, `rgba(255, 0, 0, ${0.9 * beamAlpha})`);
+                beamGrad.addColorStop(0.2, `rgba(255, 0, 0, ${0.5 * beamAlpha})`);
+                beamGrad.addColorStop(0.5, `rgba(255, 255, 255, ${1.0 * beamAlpha})`);
+                beamGrad.addColorStop(0.8, `rgba(255, 0, 0, ${0.5 * beamAlpha})`);
                 beamGrad.addColorStop(1, 'rgba(139, 0, 0, 0)');
+
                 ctx.fillStyle = beamGrad;
-                ctx.globalAlpha = 1.0;
+                ctx.globalCompositeOperation = 'lighter';
                 ctx.fillRect(-beamWidth / 2, -beamHeight, beamWidth, beamHeight);
 
-
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * beamAlpha})`;
+                // Intense core
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * beamAlpha})`;
                 const coreWidth = 200;
                 ctx.fillRect(-coreWidth / 2, -beamHeight, coreWidth, beamHeight);
+                ctx.globalCompositeOperation = 'source-over';
             }
 
             ctx.restore();
@@ -1070,20 +1091,10 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
             grad.addColorStop(1, '#450a0a');
             ctx.fillStyle = grad;
         } else {
-
             ctx.fillStyle = fn.color || '#ffffff';
-
-            if (style === 'alert') {
-                ctx.shadowColor = fn.color;
-                ctx.shadowBlur = 8;
-            }
         }
 
         ctx.fillText(fn.value, 0, 0);
-
-        if (style === 'alert') {
-            ctx.shadowBlur = 0;
-        }
 
         ctx.restore();
     });

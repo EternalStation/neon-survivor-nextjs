@@ -404,7 +404,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             );
                         }
 
-                        const { groupMap, sourceColors, sourceGradients, classColor } = getDamageMapping(player.playerClass);
+                        const { groupMap, sourceColors, sourceIcons, sourceGradients, classColor } = getDamageMapping(player.playerClass);
 
                         const processedSources = new Set<string>();
                         const groupedRows: { key: string; total: number; element: React.ReactNode }[] = [];
@@ -465,16 +465,6 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                                 'Necro-Kinetic Engine': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
                             };
 
-                            const baseIconMap: Record<string, string> = {
-                                'Storm of Steel (LVL 4)': '/assets/hexes/EcoDMG.png',
-                                'Radiation Aura': '/assets/hexes/ComRad.png',
-                                'Shockwave': '/assets/hexes/ComWave.png',
-                                'Fire Turret': '🔥',
-                                'Ice Turret': '❄️',
-                                'Wall Shockwave': '🧱',
-                                'Malware Wall Bonus': '/assets/hexes/MalwarePrime.png',
-                            };
-
                             const classSkills = [
                                 'Orbital Vortex',
                                 'Magnetic Vortex',
@@ -486,7 +476,7 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             ].filter(Boolean);
 
                             const icon = fusionIconMap[source] ||
-                                baseIconMap[source] ||
+                                sourceIcons[source] ||
                                 (classSkills.includes(source) ? currentClass?.iconUrl : undefined);
 
                             const subLabelMap: Record<string, string> = {

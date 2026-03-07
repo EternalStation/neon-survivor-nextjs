@@ -241,117 +241,129 @@ export const useOrbit = (
         }
 
         // --- AFK STRIKE LOGIC ---
-        if (keysRef) {
-            const h = history as any;
-            const isMenuOpen = gameState.current.isUpgradeMenuOpen || gameState.current.showModuleMenu;
+        const h = history as any;
 
-            // Check if ANY movement keys are pressed
-            const moveKeys = ['keyw', 'keya', 'keys', 'keyd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
-            const isMovingInput = moveKeys.some(k => keysRef.current[k.toLowerCase()]);
+        // Initialize last positions if not present
+        if (h.lastAfkX === undefined) h.lastAfkX = player.x;
+        if (h.lastAfkY === undefined) h.lastAfkY = player.y;
+        if (h.afkTimer === undefined) h.afkTimer = 0;
 
-            if (isMovingInput) {
-                // Point of No Return: If phase >= 3, moving doesn't cancel the strike
-                if (h.afkPhase > 0 && (h.afkPhase as number) < 3) {
-                    const lang = getStoredLanguage();
-                    pushOrbitMessage(getAfkLineStillAlive(lang), true);
-                    h.afkPhase = 0;
-                }
-                h.lastMovementTime = gameState.current.gameTime;
+        if (gameState.current.player.curHp <= 0 || gameState.current.gameOver) {
+            h.afkPhase = 0;
+            h.afkTimer = 0;
+            h.afkStrikeActive = false;
+            return;
+        }
+
+        // Coordinate-based movement detection
+        const distSq = (player.x - h.lastAfkX) ** 2 + (player.y - h.lastAfkY) ** 2;
+
+        if (distSq > 25) { // Moved more than 5 units
+            // Point of No Return: If phase >= 3, moving doesn't cancel the strike
+            if (h.afkPhase > 0 && h.afkPhase < 3) {
+                const lang = getStoredLanguage();
+                pushOrbitMessage(getAfkLineStillAlive(lang), true);
+                h.afkPhase = 0;
             }
+            h.lastAfkX = player.x;
+            h.lastAfkY = player.y;
+            h.afkTimer = 0;
+        } else if (!gameState.current.isPaused) {
+            // Stationary: Tick the timer only during active gameplay (in-game time only)
+            h.afkTimer += dt;
+        }
 
-            const afkTime = gameState.current.gameTime - (h.lastMovementTime || 0);
+        const afkTime = h.afkTimer;
 
-            if (h.afkPhase === 0 || h.afkPhase === undefined) {
-                if (afkTime >= 10) {
-                    const lang = getStoredLanguage();
-                    pushOrbitMessage(getAfkLine1a(lang), true);
-                    h.afkPhase = 1;
-                }
-            } else if (h.afkPhase === 1) {
-                if (afkTime >= 16) {
-                    const lang = getStoredLanguage();
-                    pushOrbitMessage(getAfkLine1b(lang), true);
-                    h.afkPhase = 2;
-                }
-            } else if (h.afkPhase === 2) {
-                if (afkTime >= 22) {
-                    // LOCK-IN STARTED
-                    h.afkPhase = 3;
-                    h.afkLockX = player.x;
-                    h.afkLockY = player.y;
-                    h.afkPhase3StartTime = gameState.current.gameTime;
-                    h.afkDroneSeenCount = (h.afkDroneSeenCount || 0) + 1;
+        if (h.afkPhase === 0 || h.afkPhase === undefined) {
+            if (afkTime >= 10) {
+                const lang = getStoredLanguage();
+                pushOrbitMessage(getAfkLine1a(lang), true);
+                h.afkPhase = 1;
+            }
+        } else if (h.afkPhase === 1) {
+            if (afkTime >= 16) {
+                const lang = getStoredLanguage();
+                pushOrbitMessage(getAfkLine1b(lang), true);
+                h.afkPhase = 2;
+            }
+        } else if (h.afkPhase === 2) {
+            if (afkTime >= 22) {
+                // LOCK-IN STARTED
+                h.afkPhase = 3;
+                h.afkLockX = player.x;
+                h.afkLockY = player.y;
+                h.afkPhase3StartTime = gameState.current.gameTime;
+                h.afkDroneSeenCount = (h.afkDroneSeenCount || 0) + 1;
 
-                    const lang = getStoredLanguage();
-                    const isFastTrack = h.afkDroneSeenCount >= 3;
+                const lang = getStoredLanguage();
+                const isFastTrack = h.afkDroneSeenCount >= 3;
 
-                    if (isFastTrack) {
-                        pushOrbitMessage(getAfkLine2FastAlready(lang), true);
-                        // SPAWN FAST LASER IMMEDIATELY
-                        gameState.current.areaEffects.push({
-                            id: Date.now(),
-                            type: 'afk_strike',
-                            x: h.afkLockX,
-                            y: h.afkLockY,
-                            radius: 300,
-                            duration: 1.0,
-                            creationTime: gameState.current.gameTime,
-                            level: 1
-                        });
-                        h.afkStrikeActive = true;
-                        h.afkStrikeStartTime = gameState.current.gameTime;
-                        h.afkIsFastStrike = true;
-                        playSfx('warning');
-                        h.afkPhase = 5; // Skip to active strike tracking
-                    } else {
-                        pushOrbitMessage(getAfkLine2(lang), true);
-                        // Normal sequence continues to phase 4 (3s delay)
-                    }
-                }
-            } else if (h.afkPhase === 3) {
-                // Wait for Message 2 to finish (7s)
-                if (gameState.current.gameTime >= h.afkPhase3StartTime + 7) {
-                    h.afkPhase = 4;
-                    h.afkPhase4StartTime = gameState.current.gameTime;
-                }
-            } else if (h.afkPhase === 4) {
-                // 3s Suspense Delay
-                if (gameState.current.gameTime >= h.afkPhase4StartTime + 3) {
+                if (isFastTrack) {
+                    pushOrbitMessage(getAfkLine2FastAlready(lang), true);
+                    // SPAWN FAST LASER IMMEDIATELY
                     gameState.current.areaEffects.push({
                         id: Date.now(),
                         type: 'afk_strike',
                         x: h.afkLockX,
                         y: h.afkLockY,
                         radius: 300,
-                        duration: 5.0,
+                        duration: 1.0,
                         creationTime: gameState.current.gameTime,
                         level: 1
                     });
                     h.afkStrikeActive = true;
                     h.afkStrikeStartTime = gameState.current.gameTime;
-                    h.afkIsFastStrike = false;
+                    h.afkIsFastStrike = true;
                     playSfx('warning');
-                    h.afkPhase = 5;
+                    h.afkPhase = 5; // Skip to active strike tracking
+                } else {
+                    pushOrbitMessage(getAfkLine2(lang), true);
+                    // Normal sequence continues to phase 4 (3s delay)
                 }
             }
-
-            // Check if strike finished and player survived
-            const strikeDuration = h.afkIsFastStrike ? 1.0 : 5.0;
-            if (h.afkStrikeActive && gameState.current.gameTime >= h.afkStrikeStartTime + strikeDuration) {
-                h.afkStrikeActive = false;
-                h.afkPhase = 0; // Return to idle for potential next iteration
-                if (gameState.current.player.curHp > 0) {
-                    h.afkStillAliveTriggerTime = gameState.current.gameTime + 3.0;
-                }
+        } else if (h.afkPhase === 3) {
+            // Wait for Message 2 to finish (7s)
+            if (gameState.current.gameTime >= h.afkPhase3StartTime + 7) {
+                h.afkPhase = 4;
+                h.afkPhase4StartTime = gameState.current.gameTime;
             }
-
-            if (h.afkStillAliveTriggerTime && gameState.current.gameTime >= h.afkStillAliveTriggerTime) {
-                const lang = getStoredLanguage();
-                pushOrbitMessage(getAfkLineStillAlive(lang), true);
-                h.afkStillAliveTriggerTime = 0;
+        } else if (h.afkPhase === 4) {
+            // 3s Suspense Delay
+            if (gameState.current.gameTime >= h.afkPhase4StartTime + 3) {
+                gameState.current.areaEffects.push({
+                    id: Date.now(),
+                    type: 'afk_strike',
+                    x: h.afkLockX,
+                    y: h.afkLockY,
+                    radius: 300,
+                    duration: 5.0,
+                    creationTime: gameState.current.gameTime,
+                    level: 1
+                });
+                h.afkStrikeActive = true;
+                h.afkStrikeStartTime = gameState.current.gameTime;
+                h.afkIsFastStrike = false;
+                playSfx('warning');
+                h.afkPhase = 5;
             }
         }
 
+        // Check if strike finished and player survived
+        const strikeDuration = (h.afkIsFastStrike ? 1.0 : 5.0) + 0.6;
+        if (h.afkStrikeActive && gameState.current.gameTime >= h.afkStrikeStartTime + strikeDuration) {
+            h.afkStrikeActive = false;
+            h.afkPhase = 0; // Return to idle for potential next iteration
+            if (gameState.current.player.curHp > 0) {
+                h.afkStillAliveTriggerTime = gameState.current.gameTime + 3.0;
+            }
+        }
+
+        if (h.afkStillAliveTriggerTime && gameState.current.gameTime >= h.afkStillAliveTriggerTime) {
+            const lang = getStoredLanguage();
+            pushOrbitMessage(getAfkLineStillAlive(lang), true);
+            h.afkStillAliveTriggerTime = 0;
+        }
     }, [gameState, refreshUI, keysRef, pushOrbitMessage]);
 
     // Triggers

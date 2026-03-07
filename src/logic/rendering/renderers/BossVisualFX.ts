@@ -267,10 +267,59 @@ export function drawDistortedBossShape(
         case 'pentagon':
             drawDistortedPentagon(ctx, size, t, e, warpIntensity, spikeFactor);
             break;
+        case 'abomination':
+            drawAbominationPath(ctx, size, e, state);
+            break;
         default:
             ctx.arc(0, 0, size, 0, Math.PI * 2);
             break;
     }
+}
+
+export function drawAbominationPath(ctx: CanvasRenderingContext2D, size: number, e: Enemy, state: GameState) {
+    const dx = state.player.x - e.x;
+    const dy = state.player.y - e.y;
+    const angleToPlayer = Math.atan2(dy, dx);
+    const relativeAngle = angleToPlayer - (e.rotationPhase || 0) + Math.PI / 2;
+
+    ctx.save();
+    ctx.rotate(relativeAngle);
+
+    const s = size;
+    const snoutW = s * 0.5;
+    const headCW = s * 0.8;
+    const headCY = -s * 0.2;
+
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.8);
+    ctx.lineTo(s * 0.5, -s * 0.8);
+    ctx.lineTo(headCW, -s * 0.5);
+    ctx.lineTo(headCW, headCY);
+    ctx.lineTo(snoutW, s * 0.4);
+    ctx.lineTo(snoutW * 1.2, s * 0.7);
+    ctx.lineTo(0, s * 1.0);
+    ctx.lineTo(-snoutW * 1.2, s * 0.7);
+    ctx.lineTo(-snoutW, s * 0.4);
+    ctx.lineTo(-headCW, headCY);
+    ctx.lineTo(-headCW, -s * 0.5);
+    ctx.lineTo(-s * 0.5, -s * 0.8);
+    ctx.lineTo(0, -s * 0.8);
+    ctx.closePath();
+
+    const drawHorn = (side: number) => {
+        const hornBaseX = side * s * 0.5;
+        const hornBaseY = -s * 0.8;
+        const hornTipX = side * s * 2.2;
+        const hornTipY = -s * 1.4;
+
+        ctx.moveTo(hornBaseX, hornBaseY);
+        ctx.quadraticCurveTo(side * s * 1.5, -s * 0.7, hornTipX, hornTipY);
+        ctx.quadraticCurveTo(side * s * 0.9, -s * 0.4, hornBaseX - (side * s * 0.2), hornBaseY + (s * 0.3));
+    };
+    drawHorn(1);
+    drawHorn(-1);
+
+    ctx.restore();
 }
 
 function drawDistortedCircle(

@@ -58,11 +58,11 @@ export const SHAPE_DEFS: Record<string, { type: string; hpMult: number; speedMul
 };
 
 export const PALETTES = [
-    { name: 'Neon Green', colors: ['#00FF00', '#408040', '#204020'] },
-    { name: 'Cyber Blue', colors: ['#00FFFF', '#206080', '#103040'] },
-    { name: 'Void Purple', colors: ['#BF00FF', '#602080', '#301040'] },
-    { name: 'Solar Orange', colors: ['#FF9900', '#805020', '#402510'] },
-    { name: 'Crimson Red', colors: ['#FF0000', '#802020', '#401010'] }
+    { name: 'Neon Green', colors: ['#4ade80', '#22c55e', '#166534'] },
+    { name: 'Cyber Blue', colors: ['#60a5fa', '#3b82f6', '#1e40af'] },
+    { name: 'Void Purple', colors: ['#c084fc', '#a855f7', '#6b21a8'] },
+    { name: 'Solar Orange', colors: ['#fb923c', '#f97316', '#9a3412'] },
+    { name: 'Crimson Red', colors: ['#f87171', '#ef4444', '#991b1b'] }
 ];
 
 export const PULSE_RATES = [

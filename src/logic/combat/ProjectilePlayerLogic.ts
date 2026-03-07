@@ -254,11 +254,12 @@ export function updateSinglePlayerBullet(
             }
         }
 
-        const nearbyEnemies = state.spatialGrid.query(b.x, b.y, b.ringRadius! + 100);
+        const nearbyEnemies = state.spatialGrid.query(b.x, b.y, b.ringRadius! + 250);
         for (const e of nearbyEnemies) {
             if (e.dead || e.isFriendly || e.isZombie || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
-            const entityHitRadius = e.size + 20;
+            const ringThickness = 25;
+            const entityHitRadius = e.size + ringThickness;
             if (Math.abs(dist - b.ringRadius!) < entityHitRadius) {
                 const ringData = owner.aigisRings![b.ringRadius!];
                 if (ringData.count <= 0) break;
@@ -269,7 +270,7 @@ export function updateSinglePlayerBullet(
                 e.hp -= avgDmg;
                 e.lastHitTime = state.gameTime;
                 owner.damageDealt += avgDmg;
-                recordDamage(state, 'Projectile', avgDmg);
+                recordDamage(state, 'Aegis Rings', avgDmg);
                 if (Math.random() < 0.2) spawnFloatingNumber(state, e.x, e.y, Math.round(avgDmg).toString(), b.color || '#22d3ee', false);
                 spawnParticles(state, e.x, e.y, b.color || '#22d3ee', 1);
                 if (e.hp <= 0 && !e.dead) {
@@ -293,7 +294,7 @@ export function updateSinglePlayerBullet(
         if (e.dead || b.hits.has(e.id) || e.isFriendly || e.isZombie || (e.legionId && !e.legionReady) || e.wormBurrowState === 'underground' || e.soulSuckActive || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) continue;
 
         const dist = Math.hypot(e.x - b.x, e.y - b.y);
-        let hitRadius = e.size + 10;
+        let hitRadius = e.size + (e.boss ? 35 : 10);
         if (b.isShockwaveCircle && typeof b.size === 'number') hitRadius += b.size;
 
         if (e.shape === 'square' && e.boss && e.orbitalShields && e.orbitalShields > 0 && dist < 110) {
@@ -358,7 +359,7 @@ export function updateSinglePlayerBullet(
                     if (t.id !== e.id && !t.dead && !t.isFriendly && Math.hypot(t.x - e.x, t.y - e.y) <= aoeRadius) {
                         t.hp -= aoeDmg;
                         owner.damageDealt += aoeDmg;
-                        recordDamage(state, 'Storm of Steel (LVL 4)', aoeDmg);
+                        recordDamage(state, 'Storm of Steel (LVL 4)', aoeDmg, t);
                         if (t.hp <= 0 && !t.dead) {
                             if (b.isTsunami) owner.kineticTsunamiWaveSouls = (owner.kineticTsunamiWaveSouls || 0) + (t.isElite ? 10 : 1);
                             handleEnemyDeath(state, t, onEvent);
@@ -372,7 +373,7 @@ export function updateSinglePlayerBullet(
                 const bonusDmg = e.maxHp * 0.02;
                 e.hp -= bonusDmg;
                 owner.damageDealt += bonusDmg;
-                recordDamage(state, 'Crimson Feast (LVL 3)', bonusDmg);
+                recordDamage(state, 'Projectile', bonusDmg, e);
             }
 
             if (b.burnDamage) {
@@ -386,7 +387,7 @@ export function updateSinglePlayerBullet(
                 playSfx('shatter');
                 state.spatialGrid.query(b.x, b.y, b.explodeRadius).forEach(t => {
                     if (!t.dead && !t.isFriendly && Math.hypot(t.x - b.x, t.y - b.y) <= b.explodeRadius!) {
-                        t.frozen = (t.frozen || 0) + (b.freezeDuration || 3.0);
+                        t.frozen = Math.max(t.frozen || 0, Math.min(3.0, b.freezeDuration || 3.0));
                     }
                 });
                 b.life = 0;
@@ -521,13 +522,14 @@ export function updateSinglePlayerBullet(
                     }
                     else if (b.isNanite) source = 'Nanite Swarm';
                     else if (b.isTurretFire) source = b.turretVariant === 'ice' ? 'Ice Turret' : 'Fire Turret';
+                    else if (b.vortexState === 'orbiting') source = 'Aegis Rings';
                     else if (b.id === -1) source = 'Kinetic Bolt (LVL 1)';
 
                     const total = finalDmg;
                     const lvl4PuddlePart = (lvl4PuddleBonus / (damageAmount || 1)) * total;
                     const selfPart = total - lvl4PuddlePart;
 
-                    if (lvl4PuddlePart > 0) recordDamage(state, 'Toxic Puddle (LVL 4)', lvl4PuddlePart);
+                    if (lvl4PuddlePart > 0) recordDamage(state, 'Toxic Puddle (LVL 4)', lvl4PuddlePart, t);
 
                     if (source === 'Projectile') {
                         const dMarkPart = (deathMarkBonus / (damageAmount || 1)) * total;
@@ -544,13 +546,13 @@ export function updateSinglePlayerBullet(
                                     rawPart = origPart;
                                 }
                             }
-                            if (rawPart > 0) recordDamage(state, 'Projectile', rawPart);
-                            if (bouncePart > 0) recordDamage(state, 'Malware Wall Bonus', bouncePart);
+                            if (rawPart > 0) recordDamage(state, 'Projectile', rawPart, t);
+                            if (bouncePart > 0) recordDamage(state, 'Malware Wall Bonus', bouncePart, t);
                         }
-                        if (critPart > 0) recordDamage(state, 'Shattered Fate (Crit)', critPart);
-                        if (dMarkPart > 0) recordDamage(state, 'Shattered Fate (Death Mark)', dMarkPart);
+                        if (critPart > 0) recordDamage(state, 'Shattered Fate (Crit)', critPart, t);
+                        if (dMarkPart > 0) recordDamage(state, 'Shattered Fate (Death Mark)', dMarkPart, t);
                     } else {
-                        if (selfPart > 0) recordDamage(state, source, selfPart);
+                        if (selfPart > 0) recordDamage(state, source, selfPart, t);
                     }
                     if (b.isCrit) { t.critGlitchUntil = now + 150; spawnParticles(state, t.x, t.y, b.color || '#fff', 5); }
                     if (targets.length > 1) spawnParticles(state, t.x, t.y, '#ff00ff', 2);

@@ -2,6 +2,7 @@ import React from 'react';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
+import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface ArenaSelectionProps {
     onSelect: (arenaId: number, tutorialEnabled: boolean) => void;
@@ -23,11 +24,14 @@ export const ArenaSelection: React.FC<ArenaSelectionProps> = ({ onSelect }) => {
             if (code === 'tab') {
                 e.preventDefault();
             }
+            const binds = getKeybinds();
+            const leftBind = (binds.moveLeft || 'keya').toLowerCase();
+            const rightBind = (binds.moveRight || 'keyd').toLowerCase();
 
-            if (code === 'keya' || code === 'arrowleft') {
+            if (code === leftBind || code === 'arrowleft' || (binds.useDefaultMovement && code === 'keya')) {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : arenas.length - 1));
             }
-            if (code === 'keyd' || code === 'arrowright') {
+            if (code === rightBind || code === 'arrowright' || (binds.useDefaultMovement && code === 'keyd')) {
                 setSelectedIndex(prev => (prev < arenas.length - 1 ? prev + 1 : 0));
             }
             if (code === 'space' || code === 'enter') {

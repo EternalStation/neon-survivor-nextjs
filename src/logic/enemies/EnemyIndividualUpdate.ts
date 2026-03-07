@@ -53,6 +53,7 @@ export function updateSingleEnemy(
                         sourceType: 'other',
                         deathCause: "Overlord Burn"
                     });
+                    recordDamage(state, 'Infernal Combustion', dmg);
                 }
             }
         });
@@ -78,12 +79,16 @@ export function updateSingleEnemy(
         let host = state.enemies.find(h => h.id === e.soulLinkHostId);
         if (!host) host = state.enemies.find(h => h.boss && h.shape === 'pentagon');
         const age = state.gameTime - (e.spawnedAt || 0);
-        if (!host || host.dead || (host.phalanxState === 0 && age > 0.5)) {
+
+        // Allow 'Free Rockets' to live without a phalanxState host
+        const isFreeRocket = !host || (host.phalanxState === undefined && e.spd > 0);
+
+        if (!isFreeRocket && (!host || host.dead || (host.phalanxState === 0 && age > 0.5))) {
             e.dead = true;
             return;
         }
 
-        if (host.phalanxState === 1) {
+        if (host && host.phalanxState === 1) {
             const aimAngle = Math.atan2(state.player.y - host.y, state.player.x - host.x);
             const perp = aimAngle + Math.PI / 2;
             const offset = ((e.phalanxDroneAngle || 0) - 3.5) * 80;
@@ -91,7 +96,7 @@ export function updateSingleEnemy(
             e.y = host.y + Math.sin(perp) * offset;
             e.rotationPhase = aimAngle;
             e.vx = 0; e.vy = 0;
-        } else if (host.phalanxState === 2) {
+        } else if (host && host.phalanxState === 2) {
             const aimAngle = host.phalanxAngle || 0;
             const perp = aimAngle + Math.PI / 2;
             const offset = ((e.phalanxDroneAngle || 0) - 3.5) * 80;
@@ -100,7 +105,7 @@ export function updateSingleEnemy(
             e.rotationPhase = aimAngle;
             e.vx = 0; e.vy = 0;
             if (state.frameCount % 10 < 5) spawnParticles(state, e.x, e.y, '#FFFFFF', 1, 4, 10);
-        } else if (host.phalanxState === 3) {
+        } else if (host && host.phalanxState === 3) {
             const spd = 15 * (state.gameSpeedMult ?? 1);
             const moveAngle = host.phalanxAngle || 0;
             e.x += Math.cos(moveAngle) * spd;
@@ -111,7 +116,7 @@ export function updateSingleEnemy(
                 const oneShotDmg = calcStat(state.player.hp) * 1.5;
                 applyDamageToPlayer(state, state.player, oneShotDmg, {
                     sourceType: 'collision',
-                    deathCause: `Pentagon Boss Level ${host.bossTier || 1} Phalanx Drone Charge`,
+                    deathCause: `Pentagon Boss Level ${(host && host.bossTier) || 1} Phalanx Drone Charge`,
                     floatingNumberColor: '#ef4444'
                 });
                 spawnFloatingNumber(state, state.player.x, state.player.y, "CRIT", '#ef4444', true);
@@ -119,6 +124,29 @@ export function updateSingleEnemy(
                 spawnParticles(state, e.x, e.y, '#eab308', 15);
                 playSfx('impact');
             }
+        } else if (isFreeRocket) {
+            const spd = (e.spd || 12) * (state.gameSpeedMult ?? 1);
+            const ang = e.rotationPhase || 0;
+            e.vx = Math.cos(ang) * spd;
+            e.vy = Math.sin(ang) * spd;
+            e.x += e.vx;
+            e.y += e.vy;
+
+            const distToPlayer = Math.hypot(state.player.x - e.x, state.player.y - e.y);
+            if (distToPlayer < (e.size + state.player.size)) {
+                const dmg = calcStat(state.player.hp) * 0.4;
+                applyDamageToPlayer(state, state.player, dmg, {
+                    sourceType: 'collision',
+                    deathCause: `Pentagon Boss Rocket Projectile`,
+                    floatingNumberColor: '#ef4444'
+                });
+                e.dead = true;
+                spawnParticles(state, e.x, e.y, '#eab308', 10);
+                playSfx('impact');
+            }
+
+            // Die if far away
+            if (Math.hypot(e.x - state.player.x, e.y - state.player.y) > 2000) e.dead = true;
         }
         return;
     }
@@ -295,9 +323,14 @@ export function updateSingleEnemy(
             e.y += normal.y * (Math.abs(dist) + 50);
             return;
         } else {
+            const isVortex = !!((e as any).vortexRecoveryUntil && (e as any).vortexRecoveryUntil > state.gameTime) || !!((e as any).vortexExitInertiaUntil && state.gameTime < (e as any).vortexExitInertiaUntil);
             e.dead = true;
             e.hp = 0;
-            spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 20);
+            if (isVortex) {
+                spawnParticles(state, e.x, e.y, '#eab308', 8, 4, 30, 'shard');
+            } else {
+                spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 5, 2, 20);
+            }
             return;
         }
     }
@@ -481,7 +514,7 @@ export function updateSingleEnemy(
 
 
 
-            const circlesIn2s = Math.max(0.1, 0.2 + 0.32 * Math.log(Math.max(1, pullBase)));
+            const circlesIn2s = Math.max(0.02, 0.07 + 0.2 * Math.log(Math.max(1, pullBase)));
             const tangentialStrength = (circlesIn2s * (e.boss ? 0.35 : 1.0) * Math.PI * vdist) / 60;
             const vortexVx = perpX * tangentialStrength;
             const vortexVy = perpY * tangentialStrength;
@@ -629,6 +662,9 @@ export function updateSingleEnemy(
             if (isRecoveringFromVortex || isInInertia) {
                 recordDamage(state, 'Orbital Vortex', e.hp > 0 ? e.hp : e.maxHp);
                 state.player.damageDealt += e.hp > 0 ? e.hp : e.maxHp;
+                spawnParticles(state, e.x, e.y, '#eab308', 8, 4, 30, 'shard');
+            } else {
+                spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 5, 2, 20);
             }
 
             handleEnemyDeath(state, e, onEvent);

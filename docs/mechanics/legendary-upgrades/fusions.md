@@ -74,7 +74,7 @@ Inherits all perks from **Essence Syphon** (Lvl 1-4) and **Radiation Core** (Lvl
     - 5% of Player's MAX HP/sec to enemies (500px)
     - 0.2% MAX HP/sec heals player per enemy in aura
     - +1% Aura DMG per 1% of your Missing HP
-    - 2.0% of MAX HP/sec enemies lose map-wide
+    - 0.5% of Current HP/sec enemies lose map-wide
 
 ### Fusion Mechanics: [EVENT HORIZON]
 - **Gravitational Intensity**: Radiation Aura damage is increased by **2% for every 100 Max HP** you have.

@@ -299,12 +299,18 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             <div className="meta-section">
                 <div className="meta-section-title">{t.metaDamageCharts || 'AVERAGE ACTIVE SKILL DAMAGE PER MINUTE (LOG SCALE)'}</div>
                 <div className="meta-card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                    {['Malware', 'Oblivion', 'Zenith', 'Aegis', 'Hive Mother'].map(cls => {
-                        const avg = stats.averagedTotal[cls] || stats.averagedTotal[cls.toLowerCase()] || 0;
-                        const classColor = getClassColor(cls);
+                    {[
+                        { name: 'Malware', id: 'malware' },
+                        { name: 'Oblivion', id: 'eventhorizon' },
+                        { name: 'Zenith', id: 'stormstrike' },
+                        { name: 'Aegis', id: 'aigis' },
+                        { name: 'Hive Mother', id: 'hivemother' }
+                    ].map(cls => {
+                        const avg = stats.averagedTotal[cls.id] || 0;
+                        const classColor = getClassColor(cls.id);
                         return (
-                            <div key={cls} className="meta-card" style={{ padding: '10px', textAlign: 'center', borderLeft: `3px solid ${classColor}` }}>
-                                <div className="meta-card-title" style={{ fontSize: '9px', color: classColor }}>{cls.toUpperCase()} AVG / RUN</div>
+                            <div key={cls.id} className="meta-card" style={{ padding: '10px', textAlign: 'center', borderLeft: `3px solid ${classColor}` }}>
+                                <div className="meta-card-title" style={{ fontSize: '9px', color: classColor }}>{cls.name.toUpperCase()} AVG / RUN</div>
                                 <div className="meta-card-value" style={{ fontSize: '14px', color: '#fff' }}>{formatLargeNumber(Math.round(avg))}</div>
                             </div>
                         );
@@ -375,9 +381,9 @@ const DamageLineChart: React.FC<{ data: Record<string, number[]>, getClassColor:
                             strokeLinejoin="round"
                             style={{ filter: `drop-shadow(0 0 2px ${color})` }}
                         />
-                        {/* Hover circles */}
-                        {history.filter((_, i) => i % 5 === 0).map((d, i) => (
-                            <circle key={i} cx={getX(i * 5)} cy={getY(d)} r="3" fill={color} />
+                        {/* Hover circles - Show every minute for granularity */}
+                        {history.map((d, i) => (
+                            <circle key={i} cx={getX(i)} cy={getY(d)} r="2" fill={color} style={{ opacity: 0.8 }} />
                         ))}
                     </g>
                 );

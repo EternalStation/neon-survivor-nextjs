@@ -329,20 +329,20 @@ export function generateMapPOIs(): MapPOI[] {
         });
 
 
-        let abPos;
+        let abPos = { x: 0, y: 0 };
         let attempts = 0;
-        while (attempts < 10) {
+        while (attempts < 30) {
             abPos = getRandomPositionInArena(arena.id, 400);
-            const distToOC = Math.hypot(abPos.x - ocPos.x, abPos.y - ocPos.y);
-            if (distToOC > 1000) break;
+            const tooClose = pois.some(p => p.arenaId === arena.id && Math.hypot(p.x - abPos.x, p.y - abPos.y) < 1000);
+            if (!tooClose) break;
             attempts++;
         }
 
         pois.push({
             id: idCounter++,
             type: 'anomaly',
-            x: abPos!.x,
-            y: abPos!.y,
+            x: abPos.x,
+            y: abPos.y,
             radius: 300,
             arenaId: arena.id,
             active: true,
@@ -363,11 +363,11 @@ export function generateMapPOIs(): MapPOI[] {
         let tPos: { x: number, y: number } = { x: 0, y: 0 };
         let tries = 0;
 
-        while (tries < 20) {
+        while (tries < 50) {
             tPos = getRandomPositionInArena(0, 400);
 
 
-            const tooCloseToPoi = pois.some(p => p.arenaId === 0 && Math.hypot(p.x - tPos.x, p.y - tPos.y) < 600);
+            const tooCloseToPoi = pois.some(p => p.arenaId === 0 && Math.hypot(p.x - tPos.x, p.y - tPos.y) < 1000);
 
             if (!tooCloseToPoi) break;
             tries++;
@@ -398,11 +398,37 @@ export function generateMapPOIs(): MapPOI[] {
     return pois;
 }
 
-export function relocatePOI(poi: MapPOI) {
+export function findSafePoiPosition(allPois: MapPOI[], arenaId: number, minWallDist: number, excludeId?: number): { x: number, y: number } {
+    const otherPois = allPois.filter(p => (excludeId === undefined || p.id !== excludeId) && p.arenaId === arenaId && p.respawnTimer <= 0);
+
+    let bestPos = { x: 0, y: 0 };
+    let maxMinDist = -1;
+
+    for (let i = 0; i < 30; i++) {
+        const pos = getRandomPositionInArena(arenaId, minWallDist);
+        let minDist = 10000;
+        otherPois.forEach(other => {
+            const d = Math.hypot(pos.x - other.x, pos.y - other.y);
+            if (d < minDist) minDist = d;
+        });
+
+        if (minDist > maxMinDist) {
+            maxMinDist = minDist;
+            bestPos = pos;
+        }
+
+        if (maxMinDist > 1000) break;
+    }
+
+    return bestPos;
+}
+
+export function relocatePOI(allPois: MapPOI[], poi: MapPOI) {
     const minWall = (poi.type === 'anomaly' || poi.type === 'overclock') ? 400 : 200;
-    const newPos = getRandomPositionInArena(poi.arenaId, minWall);
-    poi.x = newPos.x;
-    poi.y = newPos.y;
+    const bestPos = findSafePoiPosition(allPois, poi.arenaId, minWall, poi.id);
+
+    poi.x = bestPos.x;
+    poi.y = bestPos.y;
     poi.progress = 0;
     poi.activationProgress = 0;
     poi.activeDuration = 0;

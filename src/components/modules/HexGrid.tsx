@@ -405,9 +405,9 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {/* SECTORS BACKGROUND (Integrated Pods) */}
                 <g className="sectors-bg" style={{ pointerEvents: 'none' }}>
                     {[
-                        { name: t.matrix.sector02, code: 'SEC-02', color: '#ef4444', indices: [0, 1] }, // Combat - Crimson Red
-                        { name: t.matrix.sector03, code: 'SEC-03', color: '#3b82f6', indices: [2, 3] }, // Defensive - Blue
-                        { name: t.matrix.sector01, code: 'SEC-01', color: '#fbbf24', indices: [4, 5] }  // Economic - Yellow
+                        { name: t.matrix.sector02, code: 'SEC-02', color: '#c084fc', indices: [0, 1] }, // Combat - Purple
+                        { name: t.matrix.sector03, code: 'SEC-03', color: '#a855f7', indices: [2, 3] }, // Defensive - Deep Purple
+                        { name: t.matrix.sector01, code: 'SEC-01', color: '#e9d5ff', indices: [4, 5] }  // Economic - Light Purple
                     ].map((sector, sIdx) => {
                         const idx0 = sector.indices[0];
                         const idx1 = sector.indices[1];

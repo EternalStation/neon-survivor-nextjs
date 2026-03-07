@@ -93,9 +93,6 @@ export function updateParticles(state: GameState) {
 
     if (state.floatingNumbers) {
         state.floatingNumbers = state.floatingNumbers.filter(fn => {
-            fn.x += fn.vx;
-            fn.y += fn.vy;
-            fn.vy += 0.05;
             fn.life--;
             return fn.life > 0;
         });
@@ -113,10 +110,8 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
         displayValue = formatLargeNumber(value);
     }
 
-    const angle = Math.random() * Math.PI * 2;
-    const offsetDist = 15;
-    const ox = x + Math.cos(angle) * offsetDist;
-    const oy = y + Math.sin(angle) * offsetDist;
+    const ox = x + (Math.random() - 0.5) * 10;
+    const oy = y - 25 - Math.random() * 10;
 
     const isCombatText = /^[+-]?\d+(?:\.\d+)?[a-zA-Z]?$/.test(displayValue) || displayValue === "CRIT";
     const isAlert = isCrit && !isCombatText;
@@ -125,8 +120,8 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
     state.floatingNumbers.push({
         x: ox,
         y: oy,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: isAlert ? -1 - Math.random() * 0.5 : -2 - Math.random() * 1.5,
+        vx: 0,
+        vy: 0,
         value: displayValue,
         color,
         backgroundColor,

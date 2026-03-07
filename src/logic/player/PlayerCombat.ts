@@ -58,26 +58,40 @@ export function handlePlayerCombat(
             const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
+            // Pre-filter puddles outside the loop for performance
+            const puddles = mireActive ? state.areaEffects.filter(ef => ef.type === 'puddle') : [];
+
             state.enemies.forEach(e => {
                 if (e.dead || e.isNeutral || e.wormBurrowState === 'underground' || (e.wormPromotionTimer && e.wormPromotionTimer > state.gameTime)) return;
 
-                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                const dx = e.x - player.x;
+                const dy = e.y - player.y;
+                const distSq = dx * dx + dy * dy;
+                const rangeSq = range * range;
+                const inRange = distSq < rangeSq;
                 let tickDmg = 0;
 
-
                 if (radLvl >= 4) {
-                    tickDmg += (e.maxHp * 0.02 * dmgAmp) / 6;
+                    tickDmg += (e.hp * 0.005 * dmgAmp) / 6;
                 }
 
-                if (d < range) {
+                if (inRange) {
                     enemiesInAura.push(e);
                     const auraPct = 0.05 * dmgAmp;
                     tickDmg += (playerMaxHp * auraPct) / 6;
                 }
 
-
-                if (mireActive && d < range) {
-                    const isInAcid = state.areaEffects.some(ef => ef.type === 'puddle' && Math.hypot(e.x - ef.x, e.y - ef.y) < ef.radius);
+                if (mireActive && inRange && puddles.length > 0) {
+                    let isInAcid = false;
+                    for (let i = 0; i < puddles.length; i++) {
+                        const p = puddles[i];
+                        const pdx = e.x - p.x;
+                        const pdy = e.y - p.y;
+                        if (pdx * pdx + pdy * pdy < p.radius * p.radius) {
+                            isInAcid = true;
+                            break;
+                        }
+                    }
                     if (isInAcid) {
                         const mireMult = getHexMultiplier(state, 'IrradiatedMire');
                         tickDmg *= (1 + 1.0 * mireMult);
@@ -99,17 +113,18 @@ export function handlePlayerCombat(
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
                         const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
-                        recordDamage(state, auraSrc as import('../core/types').DamageSource, finalTickDmg);
-                        const isAuraSource = d < range;
-                        const shouldShowText = isAuraSource ? (Math.random() < 0.3) : (state.frameCount % 30 === 0);
+                        recordDamage(state, auraSrc as import('../core/types').DamageSource, finalTickDmg, e);
+
+                        // Disable text for global damage to avoid heavy performance hit
+                        const shouldShowText = inRange ? (Math.random() < 0.3) : false;
 
                         if (shouldShowText) {
-                            const color = neutronActive ? '#facc15' : (isAuraSource ? '#22c55e' : '#4ade80');
+                            const color = neutronActive ? '#facc15' : (inRange ? '#22c55e' : '#4ade80');
                             spawnFloatingNumber(state, e.x, e.y, Math.round(tickDmg * 6).toString(), color, false);
                         }
 
                         if (e.hp <= 0 && !e.dead) {
-                            if (neutronActive && isAuraSource) {
+                            if (neutronActive && inRange) {
                                 player.neutronStarAuraKills = (player.neutronStarAuraKills || 0) + 1;
                             }
                             handleEnemyDeath(state, e, onEvent);
@@ -225,7 +240,7 @@ export function handleEnemyContact(
                     linkedTargets.forEach(target => {
                         target.hp -= splitDmg;
                         player.damageDealt += splitDmg;
-                        recordDamage(state, 'Collision', splitDmg);
+                        recordDamage(state, 'Collision', splitDmg, target);
                         spawnFloatingNumber(state, target.x, target.y, Math.round(splitDmg).toString(), linkColor, false);
                     });
                     if (!e.boss) e.hp = 0;
@@ -243,16 +258,13 @@ export function handleEnemyContact(
                         rawDmg = playerMaxHp * 0.15;
                         e.wormTrueDamage = 15;
                     } else {
-
-                        rawDmg = e.hp * 0.05;
+                        rawDmg = e.hp * 0.075;
                     }
                 }
 
-
-                if (e.boss && !e.isLevel4) rawDmg *= 1.5;
-
-
-                if (e.isAnomaly) rawDmg *= 1.5;
+                if (e.boss && !e.isLevel4) {
+                    if (!e.isAnomaly) rawDmg *= 1.5;
+                }
             }
 
 
@@ -276,7 +288,7 @@ export function handleEnemyContact(
                                 if (d < ae.radius) {
                                     target.hp -= reflectedDmg;
                                     player.damageDealt += reflectedDmg;
-                                    recordDamage(state, 'Gravitational Harvest', reflectedDmg);
+                                    recordDamage(state, 'Gravitational Harvest', reflectedDmg, target);
                                     spawnFloatingNumber(state, target.x, target.y, Math.round(reflectedDmg).toString(), '#ef4444', false);
                                     if (target.hp <= 0 && !target.dead) {
                                         handleEnemyDeath(state, target, onEvent);
@@ -315,7 +327,7 @@ export function handleEnemyContact(
                 if (e.hp > 0) {
                     const colDmg = e.hp;
                     player.damageDealt += colDmg;
-                    recordDamage(state, 'Collision', colDmg);
+                    recordDamage(state, 'Collision', colDmg, e);
                 }
                 handleEnemyDeath(state, e, onEvent);
             }
@@ -657,7 +669,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                     source = kinLvl > 0 ? 'Kinetic Bolt (LVL 1)' : 'Static Bolt';
                 }
 
-                recordDamage(state, source, zap.dmg);
+                recordDamage(state, source, zap.dmg, target);
 
                 spawnFloatingNumber(state, target.x, target.y, Math.round(zap.dmg).toString(), '#3b82f6', true);
                 if (target.hp <= 0) handleEnemyDeath(state, target, onEvent);

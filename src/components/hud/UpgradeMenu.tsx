@@ -28,13 +28,16 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
     useEffect(() => {
         const handleKeys = (e: KeyboardEvent) => {
             if (e.repeat) return;
-            const key = e.key.toLowerCase();
             const code = e.code.toLowerCase();
+            const binds = getKeybinds();
 
-            if (code === 'keya' || code === 'arrowleft') {
+            const leftBind = (binds.moveLeft || 'keya').toLowerCase();
+            const rightBind = (binds.moveRight || 'keyd').toLowerCase();
+
+            if (code === leftBind || code === 'arrowleft' || (binds.useDefaultMovement && code === 'keya')) {
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : upgradeChoices.length - 1));
             }
-            if (code === 'keyd' || code === 'arrowright') {
+            if (code === rightBind || code === 'arrowright' || (binds.useDefaultMovement && code === 'keyd')) {
                 setSelectedIndex(prev => (prev < upgradeChoices.length - 1 ? prev + 1 : 0));
             }
         };

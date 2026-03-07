@@ -17,7 +17,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         bhPullSpeed = (0.66 + (resonance * 0.85));
     }
 
-    
+
     if (state.lastArena === undefined) state.lastArena = state.currentArena;
     if (state.lastArena !== state.currentArena) {
         state.lastArena = state.currentArena;
@@ -32,7 +32,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         });
     }
 
-    
+
     let overclockActive = false;
     state.pois.forEach(poi => {
         if (poi.type === 'overclock') {
@@ -48,8 +48,8 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 poi.cooldown -= step;
                 if (poi.cooldown <= 0) {
                     poi.cooldown = 0;
-                    
-                    relocatePOI(poi);
+
+                    relocatePOI(state.pois, poi);
                     poi.active = false;
                     poi.activationProgress = 0;
                 }
@@ -73,12 +73,15 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                     poi.cooldown = 60;
                 }
             } else if (poi.cooldown === 0) {
-                if (inRange && state.interactPressed) {
-                    poi.active = true;
-                    poi.activeDuration = 0;
-                    poi.activationProgress = 100;
-                    playSfx('power-up');
-                    spawnFloatingNumber(state, poi.x, poi.y, "OVERCLOCK ACTIVE", '#22d3ee', true);
+                if (inRange) {
+                    poi.activationProgress += step * 33.3; // Approx 3s to fill
+                    if (poi.activationProgress >= 100) {
+                        poi.active = true;
+                        poi.activeDuration = 0;
+                        poi.activationProgress = 100;
+                        playSfx('power-up');
+                        spawnFloatingNumber(state, poi.x, poi.y, "OVERCLOCK ACTIVE", '#22d3ee', true);
+                    }
                 } else {
                     if (poi.activationProgress > 0) {
                         poi.activationProgress -= step * 40;
@@ -89,7 +92,7 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
         }
     });
 
-    
+
     state.pois.forEach(poi => {
         if (poi.type === 'anomaly') {
             if (poi.respawnTimer > 0) {
@@ -102,9 +105,9 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 poi.cooldown -= step;
                 if (poi.cooldown <= 0) {
                     poi.cooldown = 0;
-                    
-                    relocatePOI(poi);
-                    poi.active = true; 
+
+                    relocatePOI(state.pois, poi);
+                    poi.active = true;
                     poi.progress = 0;
                 }
             }
@@ -141,16 +144,16 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                 }
             }
 
-            
+
             if (poi.active && poi.cooldown === 0) {
                 if (inRange && state.interactPressed && poi.progress === 0) {
-                    poi.progress = 1; 
+                    poi.progress = 1;
                     playSfx('warning');
                     spawnFloatingNumber(state, poi.x, poi.y, "INFERNAL BREACH", '#ef4444', true);
                 }
 
                 if (poi.progress > 0) {
-                    
+
                     poi.progress += step * 20;
 
                     if (poi.progress >= 100) {
@@ -165,10 +168,10 @@ export function handleWorldSystems(state: GameState, step: number): { bhPullSpee
                         spawnFloatingNumber(state, poi.x, poi.y, "OVERLORD RISING", '#ef4444', true);
                         playSfx('warning');
 
-                        poi.anomalySpawnDelay = 0.1; 
+                        poi.anomalySpawnDelay = 0.1;
                         poi.anomalySpawnTier = tier;
                         poi.progress = 0;
-                        poi.active = false; 
+                        poi.active = false;
                     }
                 }
             }
@@ -223,12 +226,12 @@ export function handleScheduledSpawns(state: GameState) {
     const { gameTime } = state;
     const currentMinute = Math.floor(gameTime / 60);
 
-    
+
     if (state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         manageRareSpawnCycles(state);
     }
 
-    
+
     if (state.glitcherLastCheckedMinute === undefined) state.glitcherLastCheckedMinute = 9;
     const glitcherAlive = state.enemies.some(e => e.shape === 'glitcher' && !e.dead);
     if (currentMinute > state.glitcherLastCheckedMinute && !state.glitcherScheduledSpawnTime && !glitcherAlive && currentMinute >= 10) {
@@ -249,7 +252,7 @@ export function handleScheduledSpawns(state: GameState) {
         state.glitcherScheduledSpawnTime = undefined;
     }
 
-    
+
     if (state.wormLastCheckedMinute === undefined) state.wormLastCheckedMinute = 4;
     const wormAlive = state.enemies.some(e => e.shape === 'worm' && !e.dead);
     if (currentMinute > state.wormLastCheckedMinute && !state.wormScheduledSpawnTime && !wormAlive && currentMinute >= 5) {
@@ -272,7 +275,7 @@ export function handleScheduledSpawns(state: GameState) {
         state.wormScheduledSpawnTime = undefined;
     }
 
-    
+
     if (gameTime >= state.nextBossSpawnTime && state.portalState !== 'transferring' && state.extractionStatus === 'none') {
         const minutesRaw = gameTime / 60;
         const current10MinCycle = Math.floor(minutesRaw / 10);
@@ -297,7 +300,7 @@ export function handleScheduledSpawns(state: GameState) {
 }
 
 export function handleLegionAndMerges(state: GameState, step: number) {
-    
+
     const legionGroups = new Map<string, { lead: Enemy | null, members: Enemy[] }>();
     state.legionLeads = {};
     state.enemies.forEach(e => {
@@ -325,7 +328,7 @@ export function handleLegionAndMerges(state: GameState, step: number) {
 
     const activeLegionIds = Array.from(legionGroups.keys());
 
-    
+
     if (state.activeEvent?.type === 'legion_formation' && !state.directorState?.legionSpawned) {
         const { shapeDef, eraPalette } = getProgressionParams(state.gameTime);
         const legionId = `legion_${Math.random()}`;
@@ -429,7 +432,7 @@ export function handleLegionAndMerges(state: GameState, step: number) {
         }
     }
 
-    
+
     const anyLegionAlive = activeLegionIds.length > 0;
     const compromisedMergeIds = new Set<string>();
     state.enemies.forEach(e => {

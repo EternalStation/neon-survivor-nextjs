@@ -2,6 +2,9 @@ import type { GameState, MapPOI } from '../../core/types';
 import { getInfernalBossHp } from '../../enemies/EnemySpawnLogic';
 import type { Language } from '../../../lib/LanguageContext';
 import { getUiTranslation } from '../../../lib/uiTranslations';
+import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
+import { calculateLegendaryBonus } from '../../upgrades/LegendaryLogic';
+import { formatLargeNumber } from '../../../utils/format';
 
 export function renderPOIs(ctx: CanvasRenderingContext2D, state: GameState, language: Language = 'en') {
     const t = getUiTranslation(language).render;
@@ -272,47 +275,98 @@ function renderAnomaly(ctx: CanvasRenderingContext2D, state: GameState, poi: Map
     } else {
 
         const d = Math.hypot(state.player.x - poi.x, state.player.y - poi.y);
-        if (d < poi.radius && poi.cooldown === 0) {
-            const yOffset = 70;
-            const interactKey = state.player.currentInput?.keys ? (Object.keys(state.player.currentInput.keys).find(k => state.player.currentInput?.keys[k])) : 'E';
+        const gen = state.anomalyBossCount || 0;
+        const projectedHp = getInfernalBossHp(state);
 
-            const keyText = 'E';
+        const activeBoss = state.enemies.find(e => e.isAnomaly && !e.dead);
+        const curHPValue = activeBoss ? activeBoss.hp : projectedHp;
+        const maxHPValue = activeBoss ? activeBoss.maxHp : projectedHp;
+
+        const player = state.player;
+        const armorValue = calcStat(player.arm);
+        const armorReduction = getDefenseReduction(armorValue);
+        const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill', false, player);
+        const colRedReduction = getDefenseReduction(colRedRaw, 0.80);
+
+        const rawColDmg = maxHPValue * 0.075;
+        const finalColDmg = rawColDmg * (1 - armorReduction) * (1 - colRedReduction);
+
+        const burnDmgPct = 0.05 + (gen * 0.01) + (activeBoss?.bonusBurnPct || 0);
+        const rawBurnDmgPerSec = calcStat(player.hp) * burnDmgPct;
+        const finalBurnDmgPerSec = rawBurnDmgPerSec * (1 - armorReduction);
 
 
+
+        if (d < poi.radius + 300 && poi.cooldown === 0) {
             ctx.save();
-            ctx.translate(0, yOffset);
+            const boxY = -120;
+            const padding = 12;
+            const lineH = 16;
+            const rectW = 200;
+            const rectH = 92;
 
+            ctx.translate(0, boxY);
 
             ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = '#ef4444';
             ctx.lineWidth = 2;
-            renderRoundRect(ctx, -20, -20, 40, 40, 8);
+            renderRoundRect(ctx, -rectW / 2, -rectH / 2, rectW, rectH, 6);
             ctx.fill();
             ctx.stroke();
 
+            ctx.globalAlpha = 0.1;
+            ctx.fillStyle = '#ff0000';
+            for (let i = 0; i < rectH; i += 4) {
+                ctx.fillRect(-rectW / 2, -rectH / 2 + i, rectW, 1);
+            }
+            ctx.globalAlpha = 1.0;
 
-            ctx.font = 'bold 24px Orbitron';
             ctx.fillStyle = '#fff';
+            ctx.font = '900 12px Orbitron, sans-serif';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(keyText, 0, 0);
+            ctx.fillText(`OVERLORD DATA - GEN ${gen + 1}`, 0, -rectH / 2 + 20);
 
+            ctx.textAlign = 'left';
+            ctx.font = '700 11px Orbitron, sans-serif';
+            ctx.fillStyle = '#cbd5e1';
 
-            const bossT = getUiTranslation(state.language).hud;
-            ctx.font = 'bold 16px Orbitron';
-            ctx.fillStyle = '#fca5a5';
-            ctx.fillText(bossT.bossWord, 0, 40);
+            const statsX = -rectW / 2 + padding;
+            let statsY = -rectH / 2 + 38;
 
-
-            const bossHp = getInfernalBossHp(state);
-            ctx.font = 'bold 14px Orbitron';
+            ctx.fillText(`HP:`, statsX, statsY);
+            ctx.textAlign = 'right';
             ctx.fillStyle = '#ef4444';
-            ctx.fillText(`${bossHp.toLocaleString()} HP`, 0, 60);
+            ctx.fillText(`${formatLargeNumber(Math.round(curHPValue))} / ${formatLargeNumber(Math.round(maxHPValue))}`, rectW / 2 - padding, statsY);
+
+            statsY += lineH;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText(`BURN:`, statsX, statsY);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText(`${formatLargeNumber(Math.round(finalBurnDmgPerSec))} / SEC`, rectW / 2 - padding, statsY);
+
+            statsY += lineH;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText(`COLLISION:`, statsX, statsY);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText(`${formatLargeNumber(Math.round(finalColDmg))} IMPACT`, rectW / 2 - padding, statsY);
+
+
+
+            if (poi.progress === 0 && d < poi.radius) {
+                statsY += lineH;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Orbitron';
+                ctx.fillText(`PRESS [E] TO SUMMON`, 0, rectH / 2 - 8);
+            }
 
             ctx.restore();
         }
     }
-
 
     if (poi.cooldown > 0) {
         ctx.font = 'bold 14px Orbitron';

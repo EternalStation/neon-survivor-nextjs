@@ -38,6 +38,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    try {
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_breakdown JSONB DEFAULT '{}'::jsonb`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS class_skill_dmg_history JSONB DEFAULT '[]'::jsonb`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS blueprints JSONB DEFAULT '[]'::jsonb`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS final_stats JSONB DEFAULT '{}'::jsonb`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_armor NUMERIC DEFAULT 0`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_collision NUMERIC DEFAULT 0`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_projectile NUMERIC DEFAULT 0`;
+      await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_shield NUMERIC DEFAULT 0`;
+    } catch (e) { }
+
     const results = await sql`
       SELECT 
         gr.id,
@@ -64,7 +75,9 @@ export async function GET(request: NextRequest) {
         gr.death_cause,
         gr.patch_version,
         gr.final_stats,
-        gr.blueprints
+        gr.blueprints,
+        gr.damage_breakdown,
+        gr.class_skill_dmg_history
       FROM game_runs gr
 
       JOIN players p ON gr.player_id = p.id

@@ -81,7 +81,7 @@ export const GAME_CONFIG = {
         SANDBOX_RADIUS: 176,
 
 
-        CRIT_BASE_CHANCE: 0.15,
+        CRIT_BASE_CHANCE: 0.05,
         CRIT_BASE_MULT: 2.0,
         DEATH_MARK_DURATION: Infinity,
         DEATH_MARK_COOLDOWN: 10,

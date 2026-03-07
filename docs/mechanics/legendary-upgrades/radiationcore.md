@@ -9,7 +9,7 @@
 | 1 | Damage Aura 500px: 5%–10% of player's MaxHP/sec (closer = more) |
 | 2 | Healing: 0.2% MaxHP/sec for each enemy in the aura |
 | 3 | +1% aura damage for every 1% of player's HP missed |
-| 4 | Global Decay: All enemies lose 2% of their MaxHP/sec |
+| 4 | Global Decay: All enemies lose 0.5% of their Current HP/sec |
 | 5 | MAX LEVEL |
 
 ## Mechanics
@@ -39,7 +39,7 @@ dmgAmp += missing (every 1% missing HP → +1% to dmgAmp)
 
 **L4 - Global Decay (no range limitation):**
 ```
-tickDmg += (enemy.maxHp × 0.02 × dmgAmp) / 6
+tickDmg += (enemy.hp * 0.005 * dmgAmp) / 6
 ```
 
 Applies to **all** enemies on the map regardless of distance.

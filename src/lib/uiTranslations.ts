@@ -396,7 +396,7 @@ export const UI_TRANSLATIONS = {
                 EcoXP: ["+0.05 XP per kill", "+0.02 Dust per kill", "+0.05 Flux per kill", "+0.05% XP per kill"],
                 EcoHP: ["+0.05 Max HP per kill", "+0.02 HP/sec per kill", "+0.05% Max HP per kill", "+0.02% HP/sec per kill"],
                 ComLife: ["+3% Lifesteal of DMG dealt by your Projectiles", "+5s Overheal becomes Shield", "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)", "+10% Zombie Spawn Chance (5s Delay, Feasters)"],
-                ComCrit: ["+15% Crit Chance", "2% chance to execute non-bosses on hit", "Death Mark: Bosses/Elites receive additional damage (10s CD)", "2% chance to deal 10% of Boss Max HP on Hit"],
+                ComCrit: ["+5% Crit Chance", "2% chance to execute non-bosses on hit", "Death Mark: Bosses/Elites receive additional damage (10s CD)", "2% chance to deal 10% of Boss Max HP on Hit"],
                 ComWave: ["+75% of players DMG released in a massive wave around player in 1000 radius", "+1.5s Fear for enemies hit by the wave (STATIC)", "+1% additional DMG to Terror Pulse for each activation (used)", "+3% Movement speed increase for 3 seconds after wave cast"],
                 DefPuddle: [
                     "+5% Enemy MAX HP DMG/Sec inside ACID",
@@ -407,7 +407,7 @@ export const UI_TRANSLATIONS = {
                 DefEpi: ["+25% of players DMG dealt every second and slows for 50%", "+2% Pull strength towards the center", "+20% Radius grows over 10s", "+5% MAX HP threshold to execute enemy"],
                 CombShield: ["+0.05 Armor per kill", "+0.01% DMG reduction from Collision per kill", "+0.01% DMG reduction from Projectile per kill", "+0.02% Armor per kill"],
                 KineticBattery: ["+100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "+100% Armor granted as Shield every 1 Minute", "+100% Armor increase when HP below 50%", "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
-                RadiationCore: ["+5% of Players MAX HP/sec is dealt to enemies in 500px", "+0.2% MAX HP/sec heals player per enemy in Radiation Aura", "+1% Additional Radiation Aura DMG per 1% of your Missing HP", "+2.0% of MAX HP/sec enemies lose every sec MAP wide"],
+                RadiationCore: ["+5% of Players MAX HP/sec is dealt to enemies in 500px", "+0.2% MAX HP/sec heals player per enemy in Radiation Aura", "+1% Additional Radiation Aura DMG per 1% of your Missing HP", "0.5% of Current HP/sec enemies lose every sec MAP WIDE"],
                 ChronoPlating: ["+1% of your Armor increased your DMG%", "+1% of your Armor increased your HP%", "+0.25% Cooldown reduction every minute", "+1% of your Armor increased your HP/sec%"],
                 XenoAlchemist: [
                     "GROUP:REFINERY ZONES",
@@ -432,7 +432,7 @@ export const UI_TRANSLATIONS = {
                     "5% of Player's MAX HP/sec is dealt to enemies in 500px",
                     "0.2% MAX HP/sec heals player per enemy in Radiation Aura",
                     "1% Additional Radiation Aura DMG per 1% of your Missing HP",
-                    "2.0% of MAX HP/sec enemies lose every sec MAP-WIDE",
+                    "0.5% of Current HP/sec enemies lose every sec MAP WIDE",
                     "GROUP:TOXIC SWAMP",
                     "+5% Enemy MAX HP DMG/Sec inside ACID",
                     "+20% Slow Enemies Movement inside ACID",
@@ -474,7 +474,7 @@ export const UI_TRANSLATIONS = {
                     "+5% Crit DMG per 500 Storm Souls",
                     "5x Souls per Execute (STATIC)",
                     "GROUP:SHATTERED FATE",
-                    "+15% Crit Chance",
+                    "+5% Crit Chance",
                     "2% chance to execute non-bosses on hit",
                     "Death Mark: Bosses/Elites receive additional damage (10s CD)",
                     "2% chance to deal 10% of Boss Max HP on Hit",
@@ -542,7 +542,7 @@ export const UI_TRANSLATIONS = {
                     "+5% of Player's MAX HP/sec is dealt to enemies in 500px",
                     "+0.2% MAX HP/sec heals player per enemy in Radiation Aura",
                     "+1% Additional Radiation Aura DMG per 1% of your Missing HP",
-                    "+2.0% of MAX HP/sec enemies lose every sec MAP-WIDE"
+                    "0.5% of Current HP/sec enemies lose every sec MAP WIDE"
                 ],
                 GravitationalHarvest: [
                     "GROUP:SINGULARITY HARVEST",
@@ -564,7 +564,7 @@ export const UI_TRANSLATIONS = {
                     "+20% of Contact/Projectile damage arcs to 2 nearby enemies on Projectile Hit",
                     "+15% of total Armor as Bleed over 3 seconds to enemies hit by Kinetic Bolt",
                     "GROUP:SHATTERED FATE",
-                    "+15% Crit Chance",
+                    "+5% Crit Chance",
                     "2% chance to execute non-bosses on hit",
                     "Death Mark: Bosses/Elites receive additional damage (10s CD)",
                     "2% chance to deal 10% of Boss Max HP on Hit",
@@ -726,7 +726,7 @@ export const UI_TRANSLATIONS = {
                     fireTurret: 'Fire Turret',
                     iceTurret: 'Ice Turret',
                     radiationAura: 'Radiation Aura',
-                    collision: 'Collision',
+                    collision: 'Enemy Collision',
                     epicenter: 'Epicenter',
                     toxicPuddle: 'Toxic Puddle',
                     staticBolt: 'Static Bolt',
@@ -754,6 +754,7 @@ export const UI_TRANSLATIONS = {
                     gravitationalHarvest: 'Gravitational Harvest',
                     wallShockwave: 'Wall Shockwave',
                     malwareWallBonus: 'Malware Wall Bonus',
+                    aegisRings: 'Aegis Rings',
                     total: 'Total Damage'
                 }
 
@@ -765,7 +766,7 @@ export const UI_TRANSLATIONS = {
                 unitsSec: 'UNITS / SEC',
                 analysis: 'Real-time Threat Analysis',
                 nextBossHp: 'Next Boss Health',
-                collisionDmg: 'Collision Damage'
+                collisionDmg: 'Collision Damage (including your damage reduction)'
             },
             radar: {
                 dps: 'DPS',
@@ -1357,7 +1358,7 @@ export const UI_TRANSLATIONS = {
                 DefEpi: ["25% от урона игрока наносится каждую секунду и замедляет на 50%", "2% Сила притяжения врагов к центру", "20% Увеличение радиуса в течение 10 секунд", "5% Порог от МАКС ОЗ для казни врага"],
                 CombShield: ["+0.01 Брони за убийство", "+0.01% Защиты от столкновений за убийство", "+0.01% Защиты от снарядов за убийство", "+0.05% Брони за убийство"],
                 KineticBattery: ["100% урона Брони — Кинетический заряд (Цепь) по 10 целям (При уроне, 8с КД)", "100% Брони выдаётся как Щит каждую 1 минуту", "100% доп. Броня при ОЗ ниже 50%", "0.5s Оглушение врагов, попавших под Кинетический заряд (Цепь)"],
-                RadiationCore: ["5% Макс. ОЗ игрока/сек наносится врагам в радиусе 500px", "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре", "1% Доп. урона Ауры за каждый 1% недостающего ОЗ", "2.0% Макс. ОЗ/сек враги теряют каждую сек по всей КАРТЕ"],
+                RadiationCore: ["5% Макс. ОЗ игрока/сек наносится врагам в радиусе 500px", "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре", "1% Доп. урона Ауры за каждый 1% недостающего ОЗ", "0.5% Текущего ОЗ/сек враги теряют каждую сек по всей КАРТЕ"],
                 ChronoPlating: ["1% от твоей Брони увеличивает Урон%", "1% от твоей Брони увеличивает Здоровье%", "0.25% перезарядки каждую минуту", "1% от твоей Брони увеличивает Регенерацию%"],
                 XenoAlchemist: [
                     "GROUP:ЗАВОД ПЕРЕРАБОТКИ",
@@ -1382,7 +1383,7 @@ export const UI_TRANSLATIONS = {
                     "5% Макс. ОЗ игрока/сек наносится врагам в радиусе 500px",
                     "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре",
                     "1% Доп. урона Ауры за каждый 1% недостающего ОЗ",
-                    "2.0% Макс. ОЗ/сек враги теряют каждую сек по всей КАРТЕ",
+                    "0.5% Текущего ОЗ/сек враги теряют каждую сек по всей КАРТЕ",
                     "GROUP:ЯДОВИТОЕ БОЛОТО",
                     "УР 1 5% Урон от МАКС HP врага/сек внутри КИСЛОТЫ",
                     "УР 2 20% Замедление передвижения врагов внутри КИСЛОТЫ",
@@ -1492,7 +1493,7 @@ export const UI_TRANSLATIONS = {
                     "5% Макс. ОЗ игрока/сек наносится врагам в радиусе 500px",
                     "0.2% Макс. ОЗ/сек лечения за каждого врага в Ауре",
                     "1% Доп. урона Ауры за каждый 1% недостающего ОЗ",
-                    "2.0% Макс. ОЗ/сек враги теряют каждую сек по всей КАРТЕ"
+                    "0.5% Текущего ОЗ/сек враги теряют каждую сек по всей КАРТЕ"
                 ],
                 GravitationalHarvest: [
                     "GROUP:ГРАВИТАЦИОННАЯ ЖАТВА",
@@ -1676,6 +1677,7 @@ export const UI_TRANSLATIONS = {
                     voidSingularity: 'Сингулярность Пустоты',
                     wallShockwave: 'Wall Shockwave',
                     malwareWallBonus: 'Malware Wall Bonus',
+                    aegisRings: 'Aegis Rings',
                     total: 'Total Damage'
                 }
 
@@ -1722,19 +1724,19 @@ export const UI_TRANSLATIONS = {
             moduleTitle: 'МОДУЛЬ ПЕРЕКАЛИБРОВКИ',
             all: 'Все',
             sectors: {
-                s1: 'Сектор-01',
-                s2: 'Сектор-02',
-                s3: 'Сектор-03'
+                s1: 'СЕКТОР-01',
+                s2: 'СЕКТОР-02',
+                s3: 'СЕКТОР-03'
             },
             arenas: {
-                eco: 'Эко Арена',
-                com: 'Боевая Арена',
-                def: 'Защитная Арена'
+                eco: 'ЭКОНОМИЧЕСКАЯ АРЕНА',
+                com: 'БОЕВАЯ АРЕНА',
+                def: 'ЗАЩИТНАЯ АРЕНА'
             },
             legendary: {
-                eco: 'Эко Лег.',
-                com: 'Боевой Лег.',
-                def: 'Защ. Лег.'
+                eco: 'ЭКЗИС',
+                com: 'АПЕКС',
+                def: 'БАСТИОН'
             },
             qualities: {
                 bro: 'Сломан',
@@ -1822,19 +1824,19 @@ export const UI_TRANSLATIONS = {
             bpBroken: 'СЛОМАН',
             dust: 'ПЫЛЬ',
             flux: 'ПОТОК ПУСТОТЫ',
-            fluxSub: 'ВАЛЮТА ПЕРЕБРОСКА',
-            sector01: 'СЕКТОР 01',
-            sector02: 'СЕКТОР 02',
-            sector03: 'СЕКТОР 03',
-            ecoArena: 'Эко Арена',
-            comArena: 'Боевая Арена',
-            defArena: 'Защитная Арена',
-            ecoLeg: 'Эко Легенд. Гекс',
-            comLeg: 'Боев. Легенд. Гекс',
-            defLeg: 'Защ. Легенд. Гекс',
+            fluxSub: 'ВАЛЮТА ПЕРЕКАЛИБРОВКИ',
+            sector01: 'СЕКТОР-01',
+            sector02: 'СЕКТОР-02',
+            sector03: 'СЕКТОР-03',
+            ecoArena: 'ЭКОНОМИЧЕСКАЯ АРЕНА',
+            comArena: 'БОЕВАЯ АРЕНА',
+            defArena: 'ЗАЩИТНАЯ АРЕНА',
+            ecoLeg: 'ЭКЗИС',
+            comLeg: 'АПЕКС',
+            defLeg: 'БАСТИОН',
             all: 'ВСЁ',
             sel: 'ВЫБ',
-            title: 'МАТРИЧНЫЙ МОДУЛЬ',
+            title: 'МОДУЛЬ МАТРИЦЫ',
             synergyText: 'СОЗДАВАЙТЕ СИНЕРГИИ, УСТАНАВЛИВАЯ МЕТЕОРИТЫ И ЛЕГЕНДАРНЫЕ ГЕКСЫ',
             perk1: '1-й ПЕРК',
             perk2: '2-й ПЕРК',

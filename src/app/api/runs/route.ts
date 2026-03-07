@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
             deathCause,
             finalStats,
             blueprints,
+            damageBreakdown,
+            class_skill_dmg_history
         } = body;
 
 
@@ -70,7 +72,9 @@ export async function POST(request: NextRequest) {
                 ALTER COLUMN damage_blocked_armor TYPE NUMERIC,
                 ALTER COLUMN damage_blocked_collision TYPE NUMERIC,
                 ALTER COLUMN damage_blocked_projectile TYPE NUMERIC,
-                ALTER COLUMN damage_blocked_shield TYPE NUMERIC
+                ALTER COLUMN damage_blocked_shield TYPE NUMERIC,
+                ADD COLUMN IF NOT EXISTS damage_breakdown JSONB DEFAULT '{}'::jsonb,
+                ADD COLUMN IF NOT EXISTS class_skill_dmg_history JSONB DEFAULT '[]'::jsonb
             `;
         } catch (schemaErr) {
             // Likely already upgraded or insufficient perms, log and continue
@@ -85,7 +89,8 @@ export async function POST(request: NextRequest) {
         patch_version, damage_dealt, damage_taken, damage_blocked,
         damage_blocked_armor, damage_blocked_collision, damage_blocked_projectile,
         damage_blocked_shield, radar_counts, meteorites_collected, portals_used,
-        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats, blueprints
+        arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats, blueprints, damage_breakdown,
+        class_skill_dmg_history
       ) VALUES (
         ${user.id}, ${score.toString()}, ${survivalTime}, ${kills}, ${bossKills || 0},
         ${classUsed}, ${patchVersion}, ${damageDealt?.toString() || '0'}, ${damageTaken?.toString() || '0'},
@@ -95,7 +100,8 @@ export async function POST(request: NextRequest) {
         ${portalsUsed || 0}, ${JSON.stringify(arenaTimes || { 0: 0, 1: 0, 2: 0 })},
         ${JSON.stringify(legendaryHexes || [])}, ${JSON.stringify(hexLevelupOrder || [])},
         ${snitchesCaught || 0}, ${deathCause || 'Unknown'}, ${JSON.stringify(finalStats || {})},
-        ${JSON.stringify(blueprints || [])}
+        ${JSON.stringify(blueprints || [])}, ${JSON.stringify(damageBreakdown || {})},
+        ${JSON.stringify(class_skill_dmg_history || [])}
       )
 
       RETURNING id, score, completed_at, survival_time

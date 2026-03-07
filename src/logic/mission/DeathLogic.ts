@@ -53,7 +53,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                 if (dist <= radius) {
                     other.hp -= aoeDmg;
                     state.player.damageDealt += aoeDmg;
-                    recordDamage(state, 'Temporal Monolith (Explosion)', aoeDmg);
+                    recordDamage(state, 'Temporal Monolith (Explosion)', aoeDmg, other);
                     if (Math.random() < 0.3 || e.boss) {
                         spawnFloatingNumber(state, other.x, other.y, Math.round(aoeDmg).toString(), '#38bdf8', true);
                     }
@@ -147,7 +147,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             if (dist <= 200) {
                 other.hp -= explodeDmg;
                 state.player.damageDealt += explodeDmg;
-                recordDamage(state, 'Gravity Anchor (Explosion)', explodeDmg);
+                recordDamage(state, 'Gravity Anchor (Explosion)', explodeDmg, other);
                 spawnFloatingNumber(state, other.x, other.y, Math.round(explodeDmg).toString(), '#ef4444', false);
                 if (other.hp <= 0 && !other.dead) handleEnemyDeath(state, other, onEvent);
             }
@@ -340,7 +340,7 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             if (anomalyPoi) {
 
                 import('./MapLogic').then(({ relocatePOI }) => {
-                    relocatePOI(anomalyPoi);
+                    relocatePOI(state.pois, anomalyPoi);
 
                     anomalyPoi.respawnTimer = 30;
                     spawnFloatingNumber(state, anomalyPoi.x, anomalyPoi.y, "RITUAL CLEARED", '#4ade80', true);

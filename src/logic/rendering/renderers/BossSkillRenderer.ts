@@ -577,12 +577,21 @@ export function renderPentagonParasiteLink(ctx: CanvasRenderingContext2D, e: Ene
     ctx.restore();
 }
 
-export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
+export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState, coreColor?: string, innerColor?: string, outerColor?: string) {
     if (!e.isPhalanxDrone || e.dead) return;
 
     const t = state.gameTime;
     const angle = e.rotationPhase || 0;
     const size = e.size;
+
+    // Use passed era colors or fallback to defaults
+    const coreC = coreColor || '#ffffff';
+    const innerC = innerColor || '#334155';
+    const outerC = outerColor || '#eab308';
+
+    // The user wants them to be "kind of blue"
+    // We'll overlay a slight blue-cyan glow/tint
+    const blueTint = 'rgba(103, 232, 249, 0.4)'; // Cyan-300 with alpha
 
     ctx.save();
     ctx.rotate(-(e.rotationPhase || 0));
@@ -601,13 +610,21 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
 
     const bodyGrad = ctx.createLinearGradient(-bodyLength * 0.5, 0, bodyLength * 0.5, 0);
     bodyGrad.addColorStop(0, '#1e293b');
-    bodyGrad.addColorStop(0.5, '#334155');
+    bodyGrad.addColorStop(0.5, innerC);
     bodyGrad.addColorStop(1, '#475569');
     ctx.fillStyle = bodyGrad;
     ctx.fill();
-    ctx.strokeStyle = '#eab308';
+
+    ctx.strokeStyle = outerC;
     ctx.lineWidth = 1.5;
     ctx.stroke();
+
+    // Secondary Blue Tint Stroke for that "ghostly/tech" blue look
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.6;
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
 
     for (let w = 0; w < 2; w++) {
         const wingY = w === 0 ? -1 : 1;
@@ -619,7 +636,7 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
         ctx.closePath();
         ctx.fillStyle = '#475569';
         ctx.fill();
-        ctx.strokeStyle = '#eab308';
+        ctx.strokeStyle = outerC;
         ctx.lineWidth = 1;
         ctx.stroke();
     }
@@ -633,13 +650,13 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
         ctx.lineTo(arrowX - arrowSize * 0.3, 0);
         ctx.lineTo(arrowX - arrowSize * 0.5, arrowSize * 0.6);
         ctx.closePath();
-        ctx.fillStyle = '#eab308';
+        ctx.fillStyle = coreC;
         ctx.globalAlpha = 0.7 - a * 0.15;
         ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = '#f59e0b';
+    ctx.fillStyle = '#22d3ee'; // Blue light instead of amber
     ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.3;
     ctx.beginPath();
     ctx.arc(bodyLength * 0.35, 0, 3, 0, Math.PI * 2);
@@ -649,7 +666,8 @@ export function renderPhalanxDrone(ctx: CanvasRenderingContext2D, e: Enemy, stat
     ctx.restore();
 
     const host = state.enemies.find(h => h.id === e.soulLinkHostId && !h.dead);
-    if (host && host.phalanxState === 3) {
+    const isMoving = Math.hypot(e.vx || 0, e.vy || 0) > 2 || (host && host.phalanxState === 3);
+    if (isMoving) {
         renderDroneTrail(ctx, e, state);
     }
 }
@@ -676,9 +694,9 @@ function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameSt
 
         ctx.globalAlpha = (1 - frac) * 0.6 * flicker;
         const segGrad = ctx.createRadialGradient(segX, segY, 0, segX, segY, spread);
-        segGrad.addColorStop(0, i < 2 ? '#ffffff' : '#fbbf24');
-        segGrad.addColorStop(0.4, '#f59e0b');
-        segGrad.addColorStop(0.7, '#ea580c');
+        segGrad.addColorStop(0, i < 2 ? '#ffffff' : '#22d3ee'); // Cyan
+        segGrad.addColorStop(0.4, '#06b6d4'); // Blue-darker
+        segGrad.addColorStop(0.7, '#0891b2'); // Darker cyan
         segGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = segGrad;
         ctx.beginPath();
@@ -690,8 +708,8 @@ function renderDroneTrail(ctx: CanvasRenderingContext2D, e: Enemy, state: GameSt
     ctx.globalAlpha = 0.8;
     const flameGrad = ctx.createLinearGradient(tailX, 0, tailX - coreFlameLen, 0);
     flameGrad.addColorStop(0, '#ffffff');
-    flameGrad.addColorStop(0.3, '#fbbf24');
-    flameGrad.addColorStop(0.7, '#ea580c');
+    flameGrad.addColorStop(0.3, '#22d3ee');
+    flameGrad.addColorStop(0.7, '#06b6d4');
     flameGrad.addColorStop(1, 'transparent');
 
     const flameW = 5 + Math.sin(t * 25) * 2;

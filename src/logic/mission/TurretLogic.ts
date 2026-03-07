@@ -2,7 +2,7 @@ import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
-import { getRandomPositionInArena } from './MapLogic';
+import { getRandomPositionInArena, findSafePoiPosition } from './MapLogic';
 
 export const TURRET_RANGE = 800;
 const TURRET_BASE_COST = 2;
@@ -18,7 +18,7 @@ export function relocateTurretsToArena(state: GameState, arenaId: number) {
         turret.arenaId = arenaId;
 
 
-        const newPos = getRandomPositionInArena(arenaId, 400);
+        const newPos = findSafePoiPosition(state.pois, arenaId, 400, turret.id);
         turret.x = newPos.x;
         turret.y = newPos.y;
 

@@ -10,6 +10,7 @@ import { submitRunToLeaderboard } from '../utils/leaderboard';
 import { formatLargeNumber } from '../utils/format';
 import { useLanguage } from '../lib/LanguageContext';
 import { getDamageMapping } from '../utils/damageMapping';
+import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface DeathScreenProps {
     stats: {
@@ -65,8 +66,12 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             if (code === 'tab') {
                 e.preventDefault();
             }
-            if (code === 'keya' || code === 'arrowleft') setActiveTab('overview');
-            if (code === 'keyd' || code === 'arrowright') setActiveTab('modules');
+            const binds = getKeybinds();
+            const leftBind = (binds.moveLeft || 'keya').toLowerCase();
+            const rightBind = (binds.moveRight || 'keyd').toLowerCase();
+
+            if (code === leftBind || code === 'arrowleft' || (binds.useDefaultMovement && code === 'keya')) setActiveTab('overview');
+            if (code === rightBind || code === 'arrowright' || (binds.useDefaultMovement && code === 'keyd')) setActiveTab('modules');
         };
         window.addEventListener('keydown', handleKeys);
         return () => window.removeEventListener('keydown', handleKeys);

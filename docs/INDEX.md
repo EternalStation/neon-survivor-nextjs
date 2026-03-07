@@ -31,6 +31,7 @@ Source of truth: source code. Comments are not used in the code.
 | [view/class-selection.md](viewlass-selection.md) | Class selection screen before the start of the session: cards, badges, navigation. |
 | [view/stats-menu.md](view/stats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
 | [DamageBreakdownUI.md](DamageBreakdownUI.md) | Damage Attribution tab: source breakdown, visual progress bars, real-time counters. |
+| [DamageAttributionRefinement.md](DamageAttributionRefinement.md) | Damage Attribution Refinement: Projectile grouping, Malware bonuses, and filtered Collision damage. |
 
 ---
 
@@ -65,6 +66,13 @@ Source of truth: source code. Comments are not used in the code.
 | [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | All debug codes: resources, bosses, improvements, time, turrets, events. |
 | [mechanics/LeaderboardRounding.md](mechanics/LeaderboardRounding.md) | Leaderboard Rounding: Consistent integer and 2-decimal rounding for submission data. |
 | [KeybindRefinement.md](KeybindRefinement.md) | Keybind Refinement: Separated Class Ability (Q) and numerical Skill bar (1-6). |
+
+### Assistant (ORBIT)
+
+| File | Description |
+|-----------|---------|
+| [mechanics/orbit_afk_refactor.md](mechanics/orbit_afk_refactor.md) | AFK Logic refactor: Coordinate-based detection and real-time tracking behavior. |
+
 
 ---
 
@@ -107,6 +115,8 @@ Source of truth: source code. Comments are not used in the code.
 | File | Description |
 |-----------|---------|
 | [enemies/snitch.md](enemies/snitch.md) | Quantum Snitch - evasive rare target, 1 HP, orbital behavior, tactical teleports, spawn cycle every 2 minutes. |
+| [mechanics/PentagonBossUpdate.md](mechanics/PentagonBossUpdate.md) | Pentagon Boss: Rocket transformation, fire trails, and Level 2/3 Rocket Barrage mechanics. |
+| [mechanics/BossHitboxOptimization.md](mechanics/BossHitboxOptimization.md) | Boss Hitbox Optimization: Increased base size (110px) and collision padding to align with visual models. |
 
 ---
 

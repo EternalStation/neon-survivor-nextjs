@@ -8,6 +8,7 @@ import { calcStat } from '../logic/utils/MathUtils';
 import { PLAYER_CLASSES } from '../logic/core/classes';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
+import { applyDamageToPlayer } from '../logic/utils/CombatUtils';
 
 export function updateAreaEffects(state: GameState, step: number, onEvent?: (event: string, data?: any) => void) {
     const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
@@ -126,7 +127,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isMirePuddle = state.moduleSockets.hexagons.some(h => h?.type === 'IrradiatedMire');
                         const isVital = effect.isVitalMire || state.moduleSockets.hexagons.some(h => h?.type === 'VitalMire');
                         const puddleSource = isXeno ? 'Xeno Alchemist (Puddle)' : (isMirePuddle ? 'Irradiated Mire (Puddle)' : (isVital ? 'Vital Mire (Puddle)' : (effect.level >= 4 ? 'Toxic Puddle (LVL 4)' : 'Toxic Puddle (LVL 1)')));
-                        recordDamage(state, puddleSource as import('../logic/core/types').DamageSource, dotDmg);
+                        recordDamage(state, puddleSource as import('../logic/core/types').DamageSource, dotDmg, e);
 
                         e.puddleDmgAcc = (e.puddleDmgAcc || 0) + dotDmg;
                         e.puddleDmgTimer = (e.puddleDmgTimer || 0) + step;
@@ -177,7 +178,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isHarvestExec = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
                         const isGravityExec = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
                         const execSource = isHarvestExec ? 'Gravitational Harvest' : (isGravityExec ? 'Gravity Anchor' : 'Epicenter (LVL 4)');
-                        recordDamage(state, execSource as import('../logic/core/types').DamageSource, executedHp);
+                        recordDamage(state, execSource as import('../logic/core/types').DamageSource, executedHp, e);
                         e.hp = 0;
                         e.isExecuted = true;
                         spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#0ea5e9', true, undefined, 12);
@@ -203,7 +204,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isHarvest = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
                         const isGravityAnc = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
                         const epicSource = isHarvest ? 'Gravitational Harvest' : (isGravityAnc ? 'Gravity Anchor' : 'Epicenter (LVL 1)');
-                        recordDamage(state, epicSource as import('../logic/core/types').DamageSource, dmg);
+                        recordDamage(state, epicSource as import('../logic/core/types').DamageSource, dmg, e);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#0ea5e9', false);
                         if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                     }
@@ -236,19 +237,19 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const dmg = (e.maxHp * bossDps) * step;
                         e.hp -= dmg;
                         state.player.damageDealt += dmg;
-                        recordDamage(state, 'Void Singularity', dmg);
+                        recordDamage(state, 'Void Singularity', dmg, e);
                         if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
                     } else if ((e.isElite || e.isRare) && e.shape !== 'snitch') {
                         const dmg = (e.maxHp * eliteDps) * step;
                         e.hp -= dmg;
                         state.player.damageDealt += dmg;
-                        recordDamage(state, 'Void Singularity', dmg);
+                        recordDamage(state, 'Void Singularity', dmg, e);
                         if (state.frameCount % 30 === 0) spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#8b5cf6', false);
                     } else {
                         if (dist < minionCoreRadius) {
                             e.hp = 0;
                             state.player.damageDealt += e.maxHp;
-                            recordDamage(state, 'Void Singularity', e.maxHp);
+                            recordDamage(state, 'Void Singularity', e.maxHp, e);
                             spawnParticles(state, e.x, e.y, '#8b5cf6', 5, 2, 30, 'void');
                             handleEnemyDeath(state, e, eventHandler);
                         } else if (e.shape !== 'worm' && e.shape !== 'snitch') {
@@ -272,7 +273,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                     if (Math.hypot(e.x - effect.x, e.y - effect.y) < effect.radius + (e.size || 20)) {
                         e.hp -= dmg;
                         state.player.damageDealt += dmg;
-                        recordDamage(state, 'Storm Circle', dmg);
+                        recordDamage(state, 'Storm Circle', dmg, e);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true);
                         spawnParticles(state, e.x, e.y, '#06b6d4', 4);
                         if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
@@ -302,7 +303,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                     if (dist < range + (e.size || 20)) {
                         e.hp -= dmg;
                         state.player.damageDealt += dmg;
-                        recordDamage(state, 'Storm Circle', dmg);
+                        recordDamage(state, 'Storm Circle', dmg, e);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#06b6d4', true);
                         spawnParticles(state, e.x, e.y, '#06b6d4', 5);
                         if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
@@ -322,6 +323,53 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                 });
 
                 playSfx('impact');
+            } else if (effect.type === 'afk_strike') {
+                const owner = effect.ownerId
+                    ? (state.players?.[effect.ownerId] || state.player)
+                    : state.player;
+
+                newEffects.push({
+                    id: Date.now() + Math.random(),
+                    type: 'crater',
+                    x: effect.x,
+                    y: effect.y,
+                    radius: effect.radius,
+                    duration: 12.0,
+                    creationTime: state.gameTime,
+                    level: 1
+                });
+
+                newEffects.push({
+                    id: Date.now() + Math.random(),
+                    type: 'afk_strike_hit',
+                    x: effect.x,
+                    y: effect.y,
+                    radius: effect.radius,
+                    duration: 0.6,
+                    ownerId: effect.ownerId,
+                    creationTime: state.gameTime,
+                    level: 1
+                });
+
+                playSfx('impact');
+            } else if (effect.type === 'afk_strike_hit') {
+                const owner = effect.ownerId
+                    ? (state.players?.[effect.ownerId] || state.player)
+                    : state.player;
+
+                const dist = Math.hypot(owner.x - effect.x, owner.y - effect.y);
+                if (dist < effect.radius + owner.size) {
+                    const playerMaxHp = calcStat(owner.hp, state.hpRegenBuffMult, state.assistant?.history?.curseIntensity || 1.0);
+                    const exactLethalDmg = playerMaxHp * 1.05;
+
+                    applyDamageToPlayer(state, owner, exactLethalDmg, {
+                        bypassArmor: true,
+                        bypassShield: true,
+                        deathCause: 'Coffee Spilled',
+                        sourceType: 'other',
+                        floatingNumberColor: '#dc2626'
+                    });
+                }
             }
             return false;
         }

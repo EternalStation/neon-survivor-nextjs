@@ -4,6 +4,8 @@ import { getCycleHpMult } from '../logic/enemies/EnemySpawnLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/constants';
 import { formatLargeNumber } from '../utils/format';
+import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
+import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 
 interface ThreatProgressionProps {
     gameState: GameState;
@@ -358,8 +360,14 @@ export const ThreatProgression: React.FC<ThreatProgressionProps> = ({ gameState,
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>{t.statsMenu.threat.collisionDmg}</span>
                                     <span style={{ color: '#f87171', fontSize: 16, fontWeight: 900, position: 'relative', left: -30 }}>
-                                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginRight: 8 }}>7.5% /</span>
-                                        {formatLargeNumber(Math.round(collisionDmg))}
+                                        {(() => {
+                                            const armorValue = calcStat(gameState.player.arm);
+                                            const armorReduction = getDefenseReduction(armorValue);
+                                            const colRedRaw = calculateLegendaryBonus(gameState, 'col_red_per_kill', false, gameState.player);
+                                            const colRedReduction = getDefenseReduction(colRedRaw, 0.80);
+                                            const finalDmg = collisionDmg * (1 - armorReduction) * (1 - colRedReduction);
+                                            return formatLargeNumber(Math.round(finalDmg));
+                                        })()}
                                     </span>
                                 </div>
                             </>

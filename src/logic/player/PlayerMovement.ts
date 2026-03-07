@@ -210,7 +210,7 @@ export function handlePlayerMovement(
             player.wallsHit++;
             triggerWallIncompetence?.();
 
-            const impactRange = 300;
+            const impactRange = 360;
             const maxHp = calcStat(player.hp);
             let wallDmgMult = GAME_CONFIG.PLAYER.WALL_DAMAGE_PERCENT;
             const isEscalated = !!(player.tripleWallDamageUntil && state.gameTime < player.tripleWallDamageUntil);
@@ -233,10 +233,11 @@ export function handlePlayerMovement(
                 const dx = enemy.x - player.x;
                 const dy = enemy.y - player.y;
                 const distSq = dx * dx + dy * dy;
-                if (distSq < impactRange * impactRange) {
+                const actualRange = impactRange + enemy.size;
+                if (distSq < actualRange * actualRange) {
                     enemy.hp -= finalImpactDmg;
                     state.player.damageDealt += finalImpactDmg;
-                    recordDamage(state, 'Wall Shockwave', finalImpactDmg);
+                    recordDamage(state, 'Wall Shockwave', finalImpactDmg, enemy);
                     spawnFloatingNumber(state, enemy.x, enemy.y, Math.floor(finalImpactDmg).toString(), isEscalated ? '#ef4444' : '#fff');
                     spawnParticles(state, enemy.x, enemy.y, isEscalated ? '#ef4444' : '#eee', 4, 2, 20, 'spark');
                 }
