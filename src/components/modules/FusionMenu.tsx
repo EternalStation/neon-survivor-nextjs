@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { GameState } from '../../logic/core/Types';
+import React, { useState, useEffect } from 'react';
+import type { GameState, LegendaryHex, LegendaryCategory } from '../../logic/core/Types';
 import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryData';
 import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
+import styles from './FusionMenu.module.css';
 
 interface FusionMenuProps {
     gameState: GameState;
@@ -13,7 +14,14 @@ interface FusionMenuProps {
     initialHighlightType?: string;
 }
 
-const FUSIONS = [
+interface FusionConfig {
+    id: string;
+    result: string;
+    bases: string[];
+    perform: (gameState: GameState) => void;
+}
+
+const FUSIONS: FusionConfig[] = [
     { id: 'XenoAlchemist', result: 'XenoAlchemist', bases: ['EcoXP', 'DefPuddle'], perform: MergeLogic.performXenoAlchemistMerge },
     { id: 'IrradiatedMire', result: 'IrradiatedMire', bases: ['DefPuddle', 'RadiationCore'], perform: MergeLogic.performIrradiatedMireMerge },
     { id: 'NeuralSingularity', result: 'NeuralSingularity', bases: ['EcoXP', 'ComWave'], perform: MergeLogic.performNeuralSingularityMerge },
@@ -28,37 +36,41 @@ const FUSIONS = [
     { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'ChronoPlating'], perform: MergeLogic.performChronoDevourerMerge },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
+const CATEGORY_COLORS: Record<LegendaryCategory, string> = {
     Economic: '#fbbf24',
     Combat: '#ef4444',
     Defensive: '#3b82f6',
     Fusion: '#c084fc'
 };
 
-function getCatColor(categories: string[] | undefined): string {
+function getCatColor(categories: LegendaryCategory[] | undefined): string {
     if (!categories || categories.length === 0) return '#c084fc';
-    return CATEGORY_COLORS[categories[0]] || '#c084fc';
+    return CATEGORY_COLORS[categories[0]] ?? '#c084fc';
 }
 
-function getSecColor(categories: string[] | undefined): string {
+function getSecColor(categories: LegendaryCategory[] | undefined): string {
     if (!categories || categories.length < 2) return getCatColor(categories);
-    return CATEGORY_COLORS[categories[1]] || '#c084fc';
+    return CATEGORY_COLORS[categories[1]] ?? '#c084fc';
 }
+
+type LegendaryTransEntry = { name?: string; desc?: string; skillDesc?: string };
+type LegendaryTranslationsIndex = Record<string, LegendaryTransEntry> & { perks?: Record<string, string[]> };
 
 interface CardData {
-    fusion: typeof FUSIONS[0];
+    fusion: FusionConfig;
     hasBase1: boolean;
     hasBase2: boolean;
     canMerge: boolean;
     wasConsumed: boolean;
     isActiveTarget: boolean;
-    base1Data: typeof LEGENDARY_UPGRADES[string];
-    base2Data: typeof LEGENDARY_UPGRADES[string];
-    resultData: typeof LEGENDARY_UPGRADES[string];
+    base1Data: LegendaryHex;
+    base2Data: LegendaryHex;
+    resultData: LegendaryHex;
 }
 
 function getFusionPerkGroups(fusionId: string, translations: ReturnType<typeof getUiTranslation>): { title: string; perks: string[] }[] {
-    const raw = (translations.legendaries as any)?.perks?.[fusionId];
+    const legTrans = translations.legendaries as object as LegendaryTranslationsIndex;
+    const raw = legTrans.perks?.[fusionId];
     if (!raw) return [];
     const groups: { title: string; perks: string[] }[] = [];
     let current: { title: string; perks: string[] } | null = null;
@@ -74,14 +86,22 @@ function getFusionPerkGroups(fusionId: string, translations: ReturnType<typeof g
     return groups;
 }
 
-const FusionCard: React.FC<{
+interface CardCSSVariables extends React.CSSProperties {
+    '--primary': string;
+    '--secondary': string;
+    '--status': string;
+}
+
+interface FusionCardProps {
     data: CardData;
     isSelected: boolean;
     onSelect: () => void;
     onFuse: () => void;
     animDelay: number;
     translations: ReturnType<typeof getUiTranslation>;
-}> = ({ data, isSelected, onSelect, onFuse, animDelay, translations }) => {
+}
+
+const FusionCard: React.FC<FusionCardProps> = ({ data, isSelected, onSelect, onFuse, animDelay, translations }) => {
     const { hasBase1, hasBase2, canMerge, wasConsumed, base1Data, base2Data, resultData } = data;
     const [entered, setEntered] = useState(false);
 
@@ -99,134 +119,91 @@ const FusionCard: React.FC<{
     else if (canMerge) { statusLabel = 'READY'; statusColor = '#10b981'; }
     else if (hasBase1 || hasBase2) { statusLabel = 'PARTIAL'; statusColor = '#f59e0b'; }
 
-    const fusionTrans = (translations.legendaries as any)?.[data.fusion.result];
-    const skillDesc = fusionTrans?.skillDesc || "";
+    const legTrans = translations.legendaries as object as LegendaryTranslationsIndex;
+    const fusionTrans = legTrans[data.fusion.result];
+    const skillDesc = fusionTrans?.skillDesc ?? '';
     const perkGroups = getFusionPerkGroups(data.fusion.result, translations);
+
+    const cardClass = [
+        styles.card,
+        wasConsumed ? styles.cardConsumed : '',
+        entered ? (isSelected ? styles.cardEnteredSelected : styles.cardEntered) : '',
+    ].join(' ');
+
+    const cardInnerClass = [
+        styles.cardInner,
+        isSelected ? styles.cardInnerSelected : '',
+    ].join(' ');
+
+    const topBarClass = [
+        styles.topBar,
+        canMerge ? styles.topBarActive : '',
+    ].join(' ');
 
     return (
         <div
             onClick={onSelect}
-            style={{
-                width: '100%',
-                opacity: entered ? 1 : 0,
-                transform: entered ? (isSelected ? 'scale(1.02)' : 'scale(1)') : 'translateY(20px) scale(0.95)',
-                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                cursor: 'pointer',
-                position: 'relative',
-                filter: wasConsumed ? 'grayscale(0.7) brightness(0.5)' : 'none'
-            }}
+            className={cardClass}
+            style={{ '--primary': primaryColor, '--secondary': secondaryColor, '--status': statusColor } as CardCSSVariables}
         >
-            <div style={{
-                background: isSelected
-                    ? `linear-gradient(135deg, ${primaryColor}15 0%, rgba(5,5,15,0.95) 40%, ${secondaryColor}10 100%)`
-                    : 'linear-gradient(135deg, rgba(12,16,30,0.98) 0%, rgba(6,8,20,0.99) 100%)',
-                border: isSelected ? `2px solid ${primaryColor}88` : '1px solid rgba(255,255,255,0.06)',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: isSelected ? `0 0 40px ${primaryColor}22, inset 0 1px 0 ${primaryColor}15` : '0 2px 12px rgba(0,0,0,0.4)',
-                transition: 'all 0.3s ease'
-            }}>
-                <div style={{
-                    height: '3px',
-                    background: canMerge
-                        ? `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`
-                        : `linear-gradient(90deg, ${primaryColor}33, ${secondaryColor}33)`,
-                    opacity: canMerge ? 1 : 0.4
-                }} />
+            <div className={cardInnerClass}>
+                <div className={topBarClass} />
 
-                <div style={{ padding: '14px 18px 10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div style={{
-                            fontSize: '12px', fontWeight: 900, color: canMerge ? '#e2e8f0' : '#64748b',
-                            letterSpacing: '1.5px', textTransform: 'uppercase',
-                            textShadow: canMerge ? `0 0 15px ${primaryColor}44` : 'none'
-                        }}>
+                <div className={styles.cardBody}>
+                    <div className={styles.cardHeader}>
+                        <div className={`${styles.cardName} ${canMerge ? styles.cardNameActive : ''}`}>
                             {resultData.name}
                         </div>
-                        <div style={{
-                            fontSize: '8px', fontWeight: 900, letterSpacing: '2px',
-                            color: statusColor, padding: '2px 8px', borderRadius: '4px',
-                            background: `${statusColor}12`, border: `1px solid ${statusColor}28`
-                        }}>
+                        <div className={styles.cardStatus}>
                             {statusLabel}
                         </div>
                     </div>
 
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        gap: '0', padding: '4px 0', position: 'relative'
-                    }}>
-                        <div style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            flex: '0 0 90px',
-                            filter: hasBase1 ? 'none' : 'grayscale(100%) brightness(0.35)',
-                            transition: 'filter 0.3s'
-                        }}>
+                    <div className={styles.cardVisuals}>
+                        <div className={`${styles.baseSlot} ${!hasBase1 ? styles.baseSlotInactive : ''}`}>
                             <img
-                                src={base1Data.customIcon || `/assets/hexes/${base1Data.type}.png`}
-                                style={{
-                                    width: '72px', height: '72px', objectFit: 'contain',
-                                    filter: hasBase1 ? `drop-shadow(0 0 8px ${primaryColor}66)` : 'none',
-                                    transition: 'filter 0.3s'
-                                }}
+                                src={base1Data.customIcon ?? `/assets/hexes/${base1Data.type}.png`}
+                                className={`${styles.baseImg} ${hasBase1 ? styles.baseImgPrimary : ''}`}
                                 alt={base1Data.name}
                             />
                         </div>
 
-                        <div style={{ flex: '1', display: 'flex', justifyContent: 'center' }}>
-                            <svg width="40" height="20" viewBox="0 0 40 20" style={{ overflow: 'visible' }}>
+                        <div className={styles.flowArrow}>
+                            <svg width="40" height="20" viewBox="0 0 40 20" className={styles.flowSvg}>
                                 <line x1="0" y1="10" x2="40" y2="10"
-                                    stroke={canMerge ? primaryColor : '#334155'} strokeWidth="2" opacity="0.3" />
+                                    stroke={canMerge ? 'var(--primary)' : '#334155'} strokeWidth="2" opacity="0.3" />
                                 {canMerge && (
                                     <line x1="0" y1="10" x2="40" y2="10"
-                                        stroke={primaryColor} strokeWidth="2" strokeDasharray="6 6"
-                                        className="fusion-flow-anim" />
+                                        stroke="var(--primary)" strokeWidth="2" strokeDasharray="6 6"
+                                        className={styles.fusionFlowLine} />
                                 )}
                             </svg>
                         </div>
 
-                        <div style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            flex: '0 0 90px',
-                            filter: hasBase2 ? 'none' : 'grayscale(100%) brightness(0.35)',
-                            transition: 'filter 0.3s'
-                        }}>
+                        <div className={`${styles.baseSlot} ${!hasBase2 ? styles.baseSlotInactive : ''}`}>
                             <img
-                                src={base2Data.customIcon || `/assets/hexes/${base2Data.type}.png`}
-                                style={{
-                                    width: '72px', height: '72px', objectFit: 'contain',
-                                    filter: hasBase2 ? `drop-shadow(0 0 8px ${secondaryColor}66)` : 'none',
-                                    transition: 'filter 0.3s'
-                                }}
+                                src={base2Data.customIcon ?? `/assets/hexes/${base2Data.type}.png`}
+                                className={`${styles.baseImg} ${hasBase2 ? styles.baseImgSecondary : ''}`}
                                 alt={base2Data.name}
                             />
                         </div>
 
-                        <div style={{ flex: '1', display: 'flex', justifyContent: 'center' }}>
-                            <svg width="40" height="20" viewBox="0 0 40 20" style={{ overflow: 'visible' }}>
+                        <div className={styles.flowArrow}>
+                            <svg width="40" height="20" viewBox="0 0 40 20" className={styles.flowSvg}>
                                 <line x1="0" y1="10" x2="40" y2="10"
-                                    stroke={canMerge ? '#22d3ee' : '#334155'} strokeWidth="2" opacity="0.3" />
+                                    stroke={canMerge ? 'var(--secondary)' : '#334155'} strokeWidth="2" opacity="0.3" />
                                 {canMerge && (
                                     <line x1="0" y1="10" x2="40" y2="10"
-                                        stroke="#22d3ee" strokeWidth="2" strokeDasharray="6 6"
-                                        className="fusion-flow-anim" />
+                                        stroke="var(--secondary)" strokeWidth="2" strokeDasharray="6 6"
+                                        className={styles.fusionFlowLine} />
                                 )}
                             </svg>
                         </div>
 
-                        <div style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            flex: '0 0 120px',
-                            filter: canMerge ? 'none' : 'grayscale(50%) brightness(0.55)',
-                            transition: 'filter 0.3s'
-                        }}>
+                        <div className={`${styles.resultSlot} ${!canMerge ? styles.resultSlotInactive : ''}`}>
                             <img
-                                src={resultData.customIcon || `/assets/hexes/${resultData.type}.png`}
-                                style={{
-                                    width: '104px', height: '104px', objectFit: 'contain',
-                                    filter: canMerge ? 'drop-shadow(0 0 16px rgba(34,211,238,0.7))' : 'none',
-                                    transition: 'filter 0.3s'
-                                }}
+                                src={resultData.customIcon ?? `/assets/hexes/${resultData.type}.png`}
+                                className={`${styles.resultImg} ${canMerge ? styles.resultImgActive : ''}`}
                                 alt={resultData.name}
                             />
                         </div>
@@ -234,39 +211,20 @@ const FusionCard: React.FC<{
                 </div>
 
                 {isSelected && (
-                    <div style={{
-                        padding: '0 18px 16px',
-                        borderTop: '1px solid rgba(255,255,255,0.04)',
-                        marginTop: '2px',
-                        animation: 'fusionDetailSlideIn 0.3s ease-out'
-                    }}>
-                        <div style={{
-                            fontSize: '10px', color: '#22d3ee', lineHeight: '1.6',
-                            padding: '10px 0 8px', fontWeight: 700, letterSpacing: '0.3px',
-                            borderLeft: '2px solid #22d3ee44', paddingLeft: '10px'
-                        }}>
+                    <div className={styles.cardDetail}>
+                        <div className={styles.skillDesc}>
                             ⚡ {skillDesc}
                         </div>
 
                         {perkGroups.length > 0 && (
-                            <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.perkGroups}>
                                 {perkGroups.map((group, gIdx) => (
                                     <div key={gIdx}>
-                                        <div style={{
-                                            fontSize: '8px', fontWeight: 900, letterSpacing: '2px',
-                                            color: gIdx === 0 ? '#22d3ee' : '#64748b',
-                                            marginBottom: '4px', textTransform: 'uppercase',
-                                            borderBottom: `1px solid ${gIdx === 0 ? '#22d3ee22' : '#1e293b'}`,
-                                            paddingBottom: '3px'
-                                        }}>
+                                        <div className={`${styles.perkGroupTitle} ${gIdx === 0 ? styles.perkGroupTitlePrimary : styles.perkGroupTitleSecondary}`}>
                                             {group.title}
                                         </div>
                                         {group.perks.map((perk, pIdx) => (
-                                            <div key={pIdx} style={{
-                                                fontSize: '9px', color: gIdx === 0 ? '#94a3b8' : '#475569',
-                                                padding: '2px 0 2px 8px', lineHeight: '1.5',
-                                                borderLeft: `1px solid ${gIdx === 0 ? '#22d3ee22' : '#1e293b'}`
-                                            }}>
+                                            <div key={pIdx} className={`${styles.perkItem} ${gIdx === 0 ? styles.perkItemPrimary : styles.perkItemSecondary}`}>
                                                 {perk}
                                             </div>
                                         ))}
@@ -278,36 +236,14 @@ const FusionCard: React.FC<{
                         {canMerge && !wasConsumed && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onFuse(); }}
-                                style={{
-                                    width: '100%', padding: '12px', marginTop: '10px',
-                                    background: `linear-gradient(135deg, ${primaryColor}33, ${secondaryColor}33)`,
-                                    border: `1px solid ${primaryColor}77`,
-                                    color: '#fff', fontWeight: 900, fontSize: '12px',
-                                    borderRadius: '8px', cursor: 'pointer',
-                                    textTransform: 'uppercase', letterSpacing: '3px',
-                                    boxShadow: `0 0 20px ${primaryColor}22`,
-                                    transition: 'all 0.2s', fontFamily: 'Orbitron, sans-serif'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = `0 0 35px ${primaryColor}44`;
-                                    e.currentTarget.style.background = `linear-gradient(135deg, ${primaryColor}55, ${secondaryColor}55)`;
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = `0 0 20px ${primaryColor}22`;
-                                    e.currentTarget.style.background = `linear-gradient(135deg, ${primaryColor}33, ${secondaryColor}33)`;
-                                }}
+                                className={styles.fuseBtn}
                             >
                                 ⚡ INITIATE FUSION ⚡
                             </button>
                         )}
 
                         {wasConsumed && (
-                            <div style={{
-                                textAlign: 'center', fontSize: '9px', color: '#ef4444',
-                                fontWeight: 900, letterSpacing: '2px', padding: '8px 0', marginTop: '6px'
-                            }}>
+                            <div className={styles.consumedMsg}>
                                 FUSION BLOCKED — COMPONENT CONSUMED
                             </div>
                         )}
@@ -320,7 +256,6 @@ const FusionCard: React.FC<{
 
 export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUpdate, initialHighlightType }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [scanlineOffset, setScanlineOffset] = useState(0);
     const { language } = useLanguage();
     const translations = getUiTranslation(language);
 
@@ -329,27 +264,15 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
         if (hex) ownedLevels.set(hex.type, hex.level);
     });
 
-    useEffect(() => {
-        let frame: number;
-        const tick = () => {
-            setScanlineOffset(prev => (prev + 0.3) % 100);
-            frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(frame);
-    }, []);
-
     const fusionCards: CardData[] = FUSIONS
         .map(f => {
-            const l1 = ownedLevels.get(f.bases[0]) || 0;
-            const l2 = ownedLevels.get(f.bases[1]) || 0;
-            const hasLvl4_1 = l1 >= 4;
-            const hasLvl4_2 = l2 >= 4;
+            const l1 = ownedLevels.get(f.bases[0]) ?? 0;
+            const l2 = ownedLevels.get(f.bases[1]) ?? 0;
             return {
                 fusion: f,
                 hasBase1: l1 >= 1,
                 hasBase2: l2 >= 1,
-                canMerge: hasLvl4_1 && hasLvl4_2,
+                canMerge: l1 >= 4 && l2 >= 4,
                 wasConsumed: !!(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])),
                 isActiveTarget: initialHighlightType === f.bases[0] || initialHighlightType === f.bases[1],
                 base1Data: LEGENDARY_UPGRADES[f.bases[0]],
@@ -368,57 +291,17 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
     const readyCount = fusionCards.filter(f => f.canMerge && !f.wasConsumed).length;
     const partialCount = fusionCards.filter(f => !f.canMerge && !f.wasConsumed && (f.hasBase1 || f.hasBase2)).length;
 
-
     return (
-        <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'radial-gradient(ellipse at 50% 30%, rgba(15,20,40,0.98), rgba(3,3,12,0.99) 70%)',
-            zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            fontFamily: 'Orbitron, sans-serif', color: '#e2e8f0', overflow: 'hidden'
-        }}>
-            <div style={{
-                position: 'absolute', inset: 0, opacity: 0.03, pointerEvents: 'none',
-                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34,211,238,0.15) 2px, rgba(34,211,238,0.15) 4px)',
-                backgroundSize: '100% 4px',
-                backgroundPosition: `0 ${scanlineOffset}px`
-            }} />
+        <div className={styles.overlay}>
+            <div className={styles.scanlines} />
+            <div className={styles.dotGrid} />
+            <div className={styles.ambientGlow} />
 
-            <div style={{
-                position: 'absolute', inset: 0, opacity: 0.03, pointerEvents: 'none',
-                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(34,211,238,0.25) 1px, transparent 0)',
-                backgroundSize: '40px 40px'
-            }} />
+            <div className={styles.header}>
+                <div className={styles.headerSubtitle}>PROTOCOL // LEGENDARY</div>
+                <h1 className={styles.headerTitle}>FUSION FORGE</h1>
 
-            <div style={{
-                position: 'absolute', top: '50%', left: '50%', width: '500px', height: '500px',
-                transform: 'translate(-50%, -50%)', borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(34,211,238,0.03) 0%, transparent 70%)',
-                pointerEvents: 'none', filter: 'blur(40px)'
-            }} />
-
-            <div style={{
-                padding: '24px 40px 0', width: '100%',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2
-            }}>
-                <div style={{
-                    fontSize: '10px', color: '#475569', letterSpacing: '6px',
-                    fontWeight: 700, textAlign: 'center', marginBottom: '4px'
-                }}>
-                    PROTOCOL // LEGENDARY
-                </div>
-                <h1 style={{
-                    fontSize: '26px', fontWeight: 900, letterSpacing: '8px',
-                    color: '#22d3ee', margin: '0 0 6px 0', textAlign: 'center',
-                    textShadow: '0 0 30px rgba(34,211,238,0.4), 0 0 60px rgba(34,211,238,0.15)',
-                    background: 'linear-gradient(180deg, #67e8f9, #22d3ee, #0891b2)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                }}>
-                    FUSION FORGE
-                </h1>
-
-                <svg width="240" height="10" viewBox="0 0 240 10" style={{ marginBottom: '6px' }}>
+                <svg width="240" height="10" viewBox="0 0 240 10" className={styles.decorativeSvg}>
                     <line x1="0" y1="5" x2="95" y2="5" stroke="#22d3ee" strokeWidth="1" opacity="0.3" />
                     <polygon points="105,1 113,5 105,9" fill="#22d3ee" opacity="0.5" />
                     <circle cx="120" cy="5" r="3" fill="#22d3ee" opacity="0.8" />
@@ -426,33 +309,20 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
                     <line x1="145" y1="5" x2="240" y2="5" stroke="#22d3ee" strokeWidth="1" opacity="0.3" />
                 </svg>
 
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: '#10b981', fontWeight: 700, letterSpacing: '1px' }}>
-                        <div style={{
-                            width: '7px', height: '7px', borderRadius: '50%', background: '#10b981',
-                            boxShadow: '0 0 8px #10b981',
-                            animation: readyCount > 0 ? 'fusionDotPulse 1.5s infinite' : 'none'
-                        }} />
+                <div className={styles.statsRow}>
+                    <div className={`${styles.statItem} ${styles.statItemReady}`}>
+                        <div className={`${styles.statDot} ${styles.statDotReady} ${readyCount > 0 ? styles.statDotReadyAnim : ''}`} />
                         {readyCount} READY
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: '#f59e0b', fontWeight: 700, letterSpacing: '1px' }}>
-                        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 6px #f59e0b' }} />
+                    <div className={`${styles.statItem} ${styles.statItemPartial}`}>
+                        <div className={`${styles.statDot} ${styles.statDotPartial}`} />
                         {partialCount} PARTIAL
                     </div>
                 </div>
             </div>
 
-            <div style={{
-                flex: 1, overflowY: 'auto', width: '100%', zIndex: 2,
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '0 20px 30px', overflowX: 'hidden'
-            }}>
-                <div style={{
-                    width: '100%', maxWidth: '780px',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-                    gap: '12px', justifyItems: 'center'
-                }}>
+            <div className={styles.scrollArea}>
+                <div className={styles.cardGrid}>
                     {fusionCards.map((data, idx) => (
                         <FusionCard
                             key={data.fusion.id}
@@ -471,19 +341,14 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
                     ))}
 
                     {fusionCards.length === 0 && (
-                        <div style={{
-                            gridColumn: '1 / -1', display: 'flex', flexDirection: 'column',
-                            alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: '16px'
-                        }}>
-                            <svg width="60" height="60" viewBox="0 0 60 60" style={{ opacity: 0.15 }}>
+                        <div className={styles.emptyState}>
+                            <svg width="60" height="60" viewBox="0 0 60 60" className={styles.emptyStateIcon}>
                                 <polygon points="30,3 57,18 57,42 30,57 3,42 3,18" fill="none" stroke="#22d3ee" strokeWidth="2" />
                                 <line x1="30" y1="3" x2="30" y2="57" stroke="#22d3ee" strokeWidth="1" opacity="0.3" />
                                 <line x1="3" y1="30" x2="57" y2="30" stroke="#22d3ee" strokeWidth="1" opacity="0.3" />
                             </svg>
-                            <div style={{ color: '#475569', fontSize: '13px', fontWeight: 700, letterSpacing: '3px' }}>
-                                NO FUSIONS DETECTED
-                            </div>
-                            <div style={{ color: '#334155', fontSize: '10px', letterSpacing: '1px' }}>
+                            <div className={styles.emptyStateTitle}>NO FUSIONS DETECTED</div>
+                            <div className={styles.emptyStateSub}>
                                 Fusions represent the ultimate evolution of your abilities.
                             </div>
                         </div>
@@ -491,52 +356,9 @@ export const FusionMenu: React.FC<FusionMenuProps> = ({ gameState, onClose, onUp
                 </div>
             </div>
 
-            <button
-                onClick={onClose}
-                style={{
-                    position: 'absolute', top: '16px', right: '16px',
-                    background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.08)',
-                    color: '#64748b', padding: '8px 18px', cursor: 'pointer',
-                    fontSize: '10px', fontWeight: 700, borderRadius: '6px',
-                    transition: 'all 0.2s', textTransform: 'uppercase',
-                    letterSpacing: '2px', backdropFilter: 'blur(10px)',
-                    fontFamily: 'Orbitron, sans-serif', zIndex: 10
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#e2e8f0';
-                    e.currentTarget.style.borderColor = '#22d3ee';
-                    e.currentTarget.style.boxShadow = '0 0 15px rgba(34,211,238,0.2)';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#64748b';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                    e.currentTarget.style.boxShadow = 'none';
-                }}
-            >
+            <button onClick={onClose} className={styles.closeBtn}>
                 ✕ CLOSE
             </button>
-
-            <style>{`
-                @keyframes fusionResultPulse {
-                    0%, 100% { box-shadow: inset 0 0 10px rgba(34,211,238,0.1); opacity: 0.4; }
-                    50% { box-shadow: inset 0 0 25px rgba(34,211,238,0.3); opacity: 1; }
-                }
-                @keyframes fusionDotPulse {
-                    0%, 100% { transform: scale(1); opacity: 0.7; }
-                    50% { transform: scale(1.4); opacity: 1; }
-                }
-                @keyframes fusionDetailSlideIn {
-                    from { opacity: 0; max-height: 0; }
-                    to { opacity: 1; max-height: 600px; }
-                }
-                @keyframes fusionFlowAnim {
-                    from { stroke-dashoffset: 12; }
-                    to { stroke-dashoffset: 0; }
-                }
-                .fusion-flow-anim {
-                    animation: fusionFlowAnim 0.5s linear infinite;
-                }
-            `}</style>
         </div>
     );
 };

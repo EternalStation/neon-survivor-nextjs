@@ -44,7 +44,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
 
-    (player as any).inRefineryZone = false;
+    player.inRefineryZone = false;
     const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
     if (alchemist) {
         const playerInPuddle = state.areaEffects.some(ae =>
@@ -52,7 +52,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
             Math.hypot(ae.x - player.x, ae.y - player.y) < ae.radius
         );
         if (playerInPuddle) {
-            (player as any).inRefineryZone = true;
+            player.inRefineryZone = true;
         }
     }
 
