@@ -58,7 +58,6 @@ export function handlePlayerCombat(
             const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
-            // Pre-filter puddles outside the loop for performance
             const puddles = mireActive ? state.areaEffects.filter(ef => ef.type === 'puddle') : [];
 
             state.enemies.forEach(e => {
@@ -115,7 +114,6 @@ export function handlePlayerCombat(
                         const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
                         recordDamage(state, auraSrc as import('../core/Types').DamageSource, finalTickDmg, e);
 
-                        // Disable text for global damage to avoid heavy performance hit
                         const shouldShowText = inRange ? (Math.random() < 0.3) : false;
 
                         if (shouldShowText) {
