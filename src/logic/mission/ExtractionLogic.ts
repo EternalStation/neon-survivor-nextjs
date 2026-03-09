@@ -4,7 +4,7 @@ import { ARENA_DATA, ARENA_CENTERS, ARENA_RADIUS, getRandomPositionInArena, getL
 import { playSfx, switchBGM, fadeOutMusic } from '../audio/AudioLogic';
 import { playTypewriterClick } from '../audio/SfxLogic';
 import { getStoredLanguage } from '../../lib/LanguageContext';
-import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
+import { getExtractionMessages, ExtractionMessage } from '../../lib/OrbitTranslations';
 
 
 

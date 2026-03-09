@@ -4,7 +4,7 @@ import { LEGENDARY_UPGRADES } from '../../logic/upgrades/LegendaryData';
 import * as MergeLogic from '../../logic/upgrades/LegendaryMergeLogic';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import styles from './FusionMenu.module.css';
 
 interface FusionMenuProps {

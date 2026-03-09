@@ -5,7 +5,7 @@ import { calcStat } from '../logic/utils/MathUtils';
 import { formatLargeNumber } from '../utils/Format';
 import { getIcon } from './UpgradeIcons';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 import '../styles/UpgradeMenu.css';
 
 interface UpgradeCardProps {

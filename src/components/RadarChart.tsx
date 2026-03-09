@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Player } from '../logic/core/Types';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface RadarCounts {
     dps: number;

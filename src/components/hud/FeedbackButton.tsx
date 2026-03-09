@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 interface FeedbackButtonProps {
     onClick: () => void;

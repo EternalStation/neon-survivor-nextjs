@@ -3,7 +3,7 @@ import { type PlayerClass } from '../logic/core/Types';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { AssistantOverlay } from './hud/AssistantOverlay';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface ClassSelectionProps {
     onSelect: (selectedClass: PlayerClass, tutorialEnabled: boolean) => void;

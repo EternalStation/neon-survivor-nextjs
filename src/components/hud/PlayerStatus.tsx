@@ -9,7 +9,7 @@ import { formatLargeNumber } from '../../utils/Format';
 import { getCdMod, getRemainingCD, getCDProgress } from '../../logic/utils/CooldownUtils';
 import { GAME_CONFIG } from '../../logic/core/GameConfig';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import { getKeybinds, getKeyDisplay } from '../../logic/utils/Keybinds';
 import styles from './PlayerStatus.module.css';
 

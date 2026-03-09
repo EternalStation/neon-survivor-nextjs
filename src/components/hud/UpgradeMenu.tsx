@@ -5,7 +5,7 @@ import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
 import { getKeybinds } from '../../logic/utils/Keybinds';
 import { UpgradeCard } from '../UpgradeCard';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 interface UpgradeMenuProps {
     upgradeChoices: UpgradeChoice[];

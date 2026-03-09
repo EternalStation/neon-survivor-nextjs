@@ -7,7 +7,7 @@ import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
 import { recordDamage } from '../utils/DamageTracking';
 

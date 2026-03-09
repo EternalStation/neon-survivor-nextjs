@@ -4,7 +4,7 @@ import { MeteoriteTooltip } from '../MeteoriteTooltip';
 import { LegendaryDetail } from '../LegendaryDetail';
 import { isBuffActive, activateBlueprint, scrapBlueprint } from '../../logic/upgrades/BlueprintLogic';
 import { ARENA_DATA, SECTOR_NAMES, getLocalizedArenaDetails } from '../../logic/mission/MapLogic';
-import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
+import { getExtractionMessages, ExtractionMessage } from '../../lib/OrbitTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
 import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
@@ -14,7 +14,7 @@ import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../
 import { getMeteoriteImage, matchesPerk, PerkFilter, getBlueprintImage } from './ModuleUtils';
 import { PLAYER_CLASSES } from '../../logic/core/Classes';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import styles from './ModuleDetailPanel.module.css';
 
 interface ThemeCSSVariables extends React.CSSProperties {

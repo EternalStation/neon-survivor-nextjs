@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import { DamageRow } from './stats/DamageRow';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';

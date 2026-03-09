@@ -4,7 +4,7 @@ import type { GameState, BlueprintType, Meteorite } from '../../logic/core/Types
 import { getArenaIndex } from '../../logic/mission/MapLogic';
 import { getCurrentMinuteEnemyHp } from '../../logic/enemies/EnemySpawnLogic';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import './TopLeftPanel.css';
 
 interface TopLeftPanelProps {

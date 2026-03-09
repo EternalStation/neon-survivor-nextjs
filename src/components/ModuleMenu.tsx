@@ -20,7 +20,7 @@ import { ARENA_DATA } from '../logic/mission/MapLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import './modules/ModuleMenu.css';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 
 interface ModuleMenuProps {

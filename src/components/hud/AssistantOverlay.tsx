@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 export type AssistantEmotion = 'Normal' | 'Dissapointed' | 'Point' | 'Smile' | 'Thinks';
 

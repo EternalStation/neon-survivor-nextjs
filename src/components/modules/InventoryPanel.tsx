@@ -4,7 +4,7 @@ import { RARITY_ORDER } from '../../logic/core/Types';
 import { getMeteoriteImage, RARITY_COLORS, PerkFilter, matchesFilter, getBlueprintImage } from './ModuleUtils';
 import { MassRecycleConfirmationModal } from './MassRecycleConfirmationModal';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 interface InventoryPanelProps {
     inventory: (Meteorite | null)[];

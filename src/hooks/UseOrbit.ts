@@ -32,8 +32,8 @@ import {
     getAfkLineDeath,
     getAfkFastDeathLine,
     getAfkLineStillAlive,
-} from '../lib/orbitTranslations';
-import { getUiTranslation } from '../lib/uiTranslations';
+} from '../lib/OrbitTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 export interface AssistantMessage {
     text: string;

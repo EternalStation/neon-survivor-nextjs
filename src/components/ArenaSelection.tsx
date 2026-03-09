@@ -1,7 +1,7 @@
 import React from 'react';
 import { ARENA_DATA } from '../logic/mission/MapLogic';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 import { getKeybinds } from '../logic/utils/Keybinds';
 
 interface ArenaSelectionProps {

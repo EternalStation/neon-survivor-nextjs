@@ -3,7 +3,7 @@ import type { GameState, IncubatedMeteorite } from '../../logic/core/Types';
 import { getMeteoriteImage } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 interface IncubatorPanelProps {
     gameState: GameState;

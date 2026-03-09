@@ -4,7 +4,7 @@ import { CURRENT_PATCH_VERSION } from '../utils/Leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface MainMenuProps {
     onStart: () => void;

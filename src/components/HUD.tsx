@@ -18,7 +18,7 @@ import { AssistantOverlay } from './hud/AssistantOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import { TutorialStep } from '../logic/core/Types';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 
 interface HUDProps {

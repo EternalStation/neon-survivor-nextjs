@@ -1,7 +1,7 @@
 import type { GameState, MapPOI } from '../../core/Types';
 import { getInfernalBossHp } from '../../enemies/EnemySpawnLogic';
 import type { Language } from '../../../lib/LanguageContext';
-import { getUiTranslation } from '../../../lib/uiTranslations';
+import { getUiTranslation } from '../../../lib/UiTranslations';
 import { calcStat, getDefenseReduction } from '../../utils/MathUtils';
 import { calculateLegendaryBonus } from '../../upgrades/LegendaryLogic';
 import { getKeyDisplay } from '../../utils/Keybinds';
