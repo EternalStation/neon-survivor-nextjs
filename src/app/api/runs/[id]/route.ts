@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { authenticateRequest } from '@/lib/auth';
+import { sql } from '@/lib/Db';
+import { authenticateRequest } from '@/lib/Auth';
 
 // DELETE /api/runs/[id] - Delete a specific run
 export async function DELETE(

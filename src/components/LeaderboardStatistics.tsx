@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 import { formatLargeNumber } from '../utils/Format';
 import type { Language } from '../lib/LanguageContext';
 import './LeaderboardStatistics.css';

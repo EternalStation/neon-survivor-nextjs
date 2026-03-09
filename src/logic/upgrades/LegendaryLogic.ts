@@ -1,5 +1,5 @@
 import type { GameState, LegendaryHex, LegendaryType, Player } from '../core/Types';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import { getStoredLanguage } from '../../lib/LanguageContext';
 import { calcStat } from '../utils/MathUtils';
 import { calculateMeteoriteEfficiency } from './EfficiencyLogic';

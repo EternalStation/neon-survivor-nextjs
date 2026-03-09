@@ -53,15 +53,12 @@ function getRarityForTime(state: GameState, isRareBoost: boolean): string {
     const { gameTime } = state;
     const minutes = gameTime / 60;
 
-    
     const table = isRareBoost ? BOOSTED_RARITY_TABLE : RARITY_TABLE;
 
-    
     const bracket = table.find(b => minutes >= b.range[0] && minutes < b.range[1]) || table[table.length - 1];
 
     const rarityBoost = calculateLegendaryBonus(state, 'rarity_boost_per_kill');
-    
-    
+
     const effectiveBoost = Math.min(50, rarityBoost * 100);
     const rand = Math.max(0, Math.random() * 100 - effectiveBoost);
 
@@ -71,7 +68,7 @@ function getRarityForTime(state: GameState, isRareBoost: boolean): string {
         cumulative += weight;
         if (rand < cumulative) return id;
     }
-    return weights[weights.length - 1][0]; 
+    return weights[weights.length - 1][0];
 }
 
 export function spawnUpgrades(state: GameState, isBoss: boolean = false): UpgradeChoice[] {
@@ -79,7 +76,6 @@ export function spawnUpgrades(state: GameState, isBoss: boolean = false): Upgrad
     const choices: UpgradeChoice[] = [];
 
     if (isBoss) {
-        
         if (state.currentArena === 2 && !state.player.kineticBattery) {
             choices.push({
                 type: { id: 'force_battery', name: 'KINETIC BATTERY', desc: 'Gain +15% of Armor as Damage and Attack Speed.', icon: 'special' },
@@ -102,7 +98,6 @@ export function spawnUpgrades(state: GameState, isBoss: boolean = false): Upgrad
             });
         }
 
-        
         choices.push(
             { type: { id: 'm', name: 'Dual Pulse', desc: '+1 Projectile per Shot', icon: 'special' }, rarity: { id: 'boss', label: 'Anomaly Tech', color: '#ef4444', mult: 0 }, isSpecial: true },
             { type: { id: 'p', name: 'Vortex Point', desc: '+1 Enemy Penetration', icon: 'special' }, rarity: { id: 'boss', label: 'Anomaly Tech', color: '#ef4444', mult: 0 }, isSpecial: true },
@@ -111,30 +106,25 @@ export function spawnUpgrades(state: GameState, isBoss: boolean = false): Upgrad
     } else {
         if (!state.shownUpgradeIds) state.shownUpgradeIds = [];
 
-        
         const selectedIds = new Set<string>();
         const potentialTypes = [...UPGRADE_TYPES];
 
-        
         let availableCheck = potentialTypes.filter(t => !state.shownUpgradeIds!.includes(t.id));
         if (availableCheck.length < 3) {
-            state.shownUpgradeIds = []; 
+            state.shownUpgradeIds = [];
         }
 
         for (let i = 0; i < 3; i++) {
-            
             const available = potentialTypes.filter(t => !selectedIds.has(t.id) && !state.shownUpgradeIds!.includes(t.id));
 
-            if (available.length === 0) break; 
+            if (available.length === 0) break;
 
-            
             const idx = Math.floor(Math.random() * available.length);
             const type = available[idx];
 
             selectedIds.add(type.id);
-            state.shownUpgradeIds!.push(type.id); 
+            state.shownUpgradeIds!.push(type.id);
 
-            
             const rarityId = getRarityForTime(state, state.rareRewardActive || false);
             const rarity = RARITIES.find(r => r.id === rarityId) || RARITIES[0];
 
@@ -149,14 +139,10 @@ export function spawnSnitchUpgrades(state: GameState): UpgradeChoice[] {
     state.isPaused = true;
     const choices: UpgradeChoice[] = [];
 
-    
-    
-    
     const minutes = state.gameTime / 60;
     const rarityIndex = Math.min(8, 3 + Math.floor(minutes / 5));
     const targetRarity = RARITIES[rarityIndex];
 
-    
     const selectedIds = new Set<string>();
     const selectedNames = new Set<string>();
     const potentialTypes = [...UPGRADE_TYPES];
@@ -180,7 +166,6 @@ export function spawnSnitchUpgrades(state: GameState): UpgradeChoice[] {
 export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
     const { player } = state;
 
-    
     if (state.rareRewardActive) {
         state.rareRewardActive = false;
     }
@@ -197,7 +182,7 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
                 state.drones.push({ a: Math.random() * 6.28, last: 0, x: player.x, y: player.y });
             }
         }
-        
+
         if (choice.type.id === 'force_battery') player.kineticBattery = true;
         if (choice.type.id === 'rad_core') player.radCore = true;
         if (choice.type.id === 'chrono_plate') player.chronoPlating = true;
@@ -212,7 +197,7 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
         } else {
             if (id === 'dmg_f') player.dmg.flat += finalValue;
             if (id === 'dmg_m') player.dmg.mult += finalValue;
-            if (id === 'atk_s') player.atk.flat = Math.min(9990, player.atk.flat + finalValue); 
+            if (id === 'atk_s') player.atk.flat = Math.min(9990, player.atk.flat + finalValue);
             if (id === 'hp_f') { player.hp.flat += finalValue; player.curHp += finalValue; }
             if (id === 'hp_m') {
                 const oldMax = calcStat(player.hp);
@@ -223,13 +208,13 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
             if (id === 'reg_m') player.reg.mult += finalValue;
             if (id === 'xp_f') player.xp_per_kill.flat += finalValue;
             if (id === 'xp_m') player.xp_per_kill.mult += finalValue;
-            if (id === 'arm_f') player.arm.flat += Math.min(9999, finalValue); 
+            if (id === 'arm_f') player.arm.flat += Math.min(9999, finalValue);
             if (id === 'arm_m') player.arm.mult += finalValue;
 
             player.upgradesCollected.push(choice);
         }
     }
 
-    state.shownUpgradeIds = []; 
+    state.shownUpgradeIds = [];
     state.isPaused = false;
 }

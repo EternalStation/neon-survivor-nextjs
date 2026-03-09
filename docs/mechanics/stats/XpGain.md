@@ -25,6 +25,24 @@ In Arena 0, when arena level ≥ 1, `xpSoulBuffMult` works:
 
 Bonus formula: `souls_since_Lx × 0.1 × HexMultiplier`.
 
+## Level Requirements
+
+The XP required for the first level up is **369**. Each subsequent level increases the required amount by **10%** compounding.
+
+| Player Level | XP Needed for Next |
+|--------------|-------------------|
+| 1            | 369               |
+| 2            | 406               |
+| 3            | 447               |
+| 4            | 492               |
+
+## Starting State
+
+The game initializes with the player at **Level 1** and **0 / 369 XP**.
+
+> [!NOTE]
+> Previously, a bug existed where the player would erroneously start with a full XP bar (369/369), causing an immediate level up on the first frame or kill. This has been corrected to start at 0.
+
 ## Open questions
 
 The exact point of application of bonuses `xp_per_kill` and `xp_pct_per_kill` from `calculateLegendaryBonus` to `player.xp.current` requires verification in the XP calculation logic.

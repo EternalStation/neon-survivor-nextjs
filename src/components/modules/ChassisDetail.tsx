@@ -3,7 +3,7 @@ import type { GameState, PlayerClass } from '../../logic/core/Types';
 import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './ModuleUtils';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import './ChassisDetail.css';
 
 interface ChassisDetailProps {

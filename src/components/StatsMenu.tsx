@@ -8,7 +8,7 @@ import {isBuffActive} from '../logic/upgrades/BlueprintLogic';
 import {PLAYER_CLASSES} from '../logic/core/Classes';
 import {getKeybinds, getKeyDisplay} from '../logic/utils/Keybinds';
 import {useLanguage} from '../lib/LanguageContext';
-import {getUiTranslation} from '../lib/uiTranslations';
+import {getUiTranslation} from '../lib/UiTranslations';
 import {formatLargeNumber} from '../utils/Format';
 import {ThreatProgression} from './ThreatProgression';
 import {StatRow} from './stats/StatRow';

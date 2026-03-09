@@ -58,7 +58,6 @@ export function handlePlayerCombat(
             const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
-            // Pre-filter puddles outside the loop for performance
             const puddles = mireActive ? state.areaEffects.filter(ef => ef.type === 'puddle') : [];
 
             state.enemies.forEach(e => {
@@ -115,7 +114,6 @@ export function handlePlayerCombat(
                         const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
                         recordDamage(state, auraSrc as import('../core/Types').DamageSource, finalTickDmg, e);
 
-                        // Disable text for global damage to avoid heavy performance hit
                         const shouldShowText = inRange ? (Math.random() < 0.3) : false;
 
                         if (shouldShowText) {
@@ -226,7 +224,7 @@ export function handleEnemyContact(
                 const isLinked = e.soulLinkHostId !== undefined || (e.soulLinkTargets && e.soulLinkTargets.length > 0);
                 if (isLinked) {
                     const linkColor = getPlayerThemeColor(state);
-                    rawDmg = e.hp * 0.30;
+                    rawDmg = e.hp * 0.075;
                     let linkedTargets: Enemy[] = [];
                     if (e.soulLinkHostId) {
                         const host = state.enemies.find(h => h.id === e.soulLinkHostId && !h.dead);
@@ -247,25 +245,9 @@ export function handleEnemyContact(
                     });
                     if (!e.boss) e.hp = 0;
                 } else if (e.shape === 'minion' && e.parentId !== undefined) {
-                    const mother = state.enemies.find(m => m.id === e.parentId && !m.dead);
-
-                    rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
-                } else if (e.customCollisionDmg !== undefined) {
-                    const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
-                    rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
+                    rawDmg = e.hp * 0.075;
                 } else {
-
-                    if (e.boss && e.shape === 'triangle' && e.isLevel4) {
-                        const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
-                        rawDmg = playerMaxHp * 0.15;
-                        e.wormTrueDamage = 15;
-                    } else {
-                        rawDmg = e.hp * 0.075;
-                    }
-                }
-
-                if (e.boss && !e.isLevel4) {
-                    if (!e.isAnomaly) rawDmg *= 1.5;
+                    rawDmg = e.hp * 0.075;
                 }
             }
 
@@ -277,7 +259,9 @@ export function handleEnemyContact(
                     : e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                 onEvent,
                 triggerDeath: () => handlePlayerLethalHit(state, e, onEvent, triggerDeath),
-                deathCause: ''
+                deathCause: '',
+                killerHp: e.hp,
+                killerMaxHp: e.maxHp
             });
 
             if (kinLvl >= 1) triggerKineticBatteryZap(state, player);

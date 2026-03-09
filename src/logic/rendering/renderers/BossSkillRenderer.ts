@@ -399,6 +399,101 @@ export function renderDiamondSatelliteStrike(ctx: CanvasRenderingContext2D, e: E
     ctx.restore();
 }
 
+export function renderDiamondCrystalFence(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
+    if (e.shape !== 'diamond' || !e.boss || !e.crystalPositions) return;
+
+    const t = state.gameTime;
+    const spawnedMinutes = (e.spawnedAt || state.gameTime) / 60;
+    const eraIndex = Math.floor(spawnedMinutes / 15) % PALETTES.length;
+    const crystalColor = PALETTES[eraIndex].colors[0];
+
+    ctx.save();
+
+    if (e.crystalState === 1) {
+        const progress = Math.min(1, (e.timer || 0) / 60);
+        e.crystalPositions.forEach((p, i) => {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(t * 2 + i);
+            ctx.strokeStyle = crystalColor;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.3 + progress * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(0, -20); ctx.lineTo(15, 0); ctx.lineTo(0, 20); ctx.lineTo(-15, 0);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+
+            const nextP = e.crystalPositions![(i + 1) % e.crystalPositions!.length];
+            ctx.save();
+            ctx.strokeStyle = crystalColor;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([10, 5]);
+            ctx.lineDashOffset = -t * 50;
+            ctx.globalAlpha = progress * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(nextP.x, nextP.y);
+            ctx.stroke();
+            ctx.restore();
+        });
+    } else if (e.crystalState === 2) {
+        e.crystalPositions.forEach((p, i) => {
+            const nextP = e.crystalPositions![(i + 1) % e.crystalPositions!.length];
+            const dx = nextP.x - p.x;
+            const dy = nextP.y - p.y;
+            const dist = Math.hypot(dx, dy);
+            const angle = Math.atan2(dy, dx);
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(angle);
+
+            const beamWidth = 8 + Math.sin(t * 30) * 4;
+            const grad = ctx.createLinearGradient(0, -beamWidth, 0, beamWidth);
+            grad.addColorStop(0, 'transparent');
+            grad.addColorStop(0.5, crystalColor);
+            grad.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = grad;
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(0, -beamWidth, dist, beamWidth * 2);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            const segments = 10;
+            for (let j = 1; j <= segments; j++) {
+                const frac = j / segments;
+                const sx = dist * frac;
+                const sy = (Math.sin(t * 50 + j * 10) * 8);
+                ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(t * 4 + i);
+            ctx.fillStyle = crystalColor;
+            ctx.shadowColor = crystalColor;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(0, -25); ctx.lineTo(18, 0); ctx.lineTo(0, 25); ctx.lineTo(-18, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
+
+    ctx.restore();
+}
+
+
 export function renderPentagonSoulLinks(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     if (e.shape !== 'pentagon' || !e.boss || !e.soulLinkTargets || e.soulLinkTargets.length === 0) return;
 

@@ -26,6 +26,9 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | [mechanics/StatFormula.md](mechanics/StatFormula.md) | The universal `PlayerStats` formula: HexMultipliers, Souls, and global modifiers. |
 | [mechanics/LootSystem.md](mechanics/LootSystem.md) | **Loot & Resources**: Enemy drop rates, Flux/Dust acquisition, and item rewards. |
 | [mechanics/DamageReduction.md](mechanics/DamageReduction.md) | Collision and Projectile reduction scaling, linear summation, and 80% caps. |
+| [mechanics/EnemyCollisionDamage.md](mechanics/EnemyCollisionDamage.md) | **Collision Damage**: Standardized 7.5% current HP calculation for all enemies. |
+| [mechanics/RegularUpgrades.md](mechanics/RegularUpgrades.md) | **Regular Upgrades**: Pool generation, rarity scaling, and base stat values. |
+| [mechanics/RegularUpgradeMatrix.md](mechanics/RegularUpgradeMatrix.md) | **Calculated Stats**: Matrix of all regular upgrade values across all rarity tiers. |
 | [mechanics/DashAbility.md](mechanics/DashAbility.md) | Dash mechanics: Distance (240px), Cooldown (4s), and cyan particle effects. |
 
 ### Stat Modules
@@ -77,6 +80,7 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | [enemies/EliteTriangle.md](enemies/EliteTriangle.md) | **Elite Triangle**: Tactical dash with 0.5s telegraph and high-speed wobbling. |
 | [enemies/Snitch.md](enemies/Snitch.md) | **Quantum Snitch**: Rare evasive target with 1HP and tactical teleportation. |
 | [enemies/Overlord.md](enemies/Overlord.md) | **The Anomaly**: Multi-phase evolution, HP regeneration, and heat auras. |
+| [enemies/DiamondBoss.md](enemies/DiamondBoss.md) | **Diamond Boss**: Focused beam attacks, orbital satellite strikes, and pentagonal electric fences. |
 | [mechanics/PentagonBoss.md](mechanics/PentagonBoss.md) | **Pentagon Boss**: Rocket transformations and area-denial fire trails. |
 | [mechanics/BossSizeAndVisuals.md](mechanics/BossSizeAndVisuals.md) | Scaling multipliers and visual padding to prevent overlap with the Overlord. |
 | [mechanics/EnemyVisuals.md](mechanics/EnemyVisuals.md) | **4-Layer Rendering**: Core, Ring, Body, Outline. Neon era color palettes. |

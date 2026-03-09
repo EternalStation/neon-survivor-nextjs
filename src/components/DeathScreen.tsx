@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import { DamageRow } from './stats/DamageRow';
 import { VitalsAnalysis } from './stats/VitalsAnalysis';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
@@ -305,8 +305,11 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                             {gameState.player.lastHitDamage !== undefined && (
                                 <StatItem label="Killing Blow" value={formatLargeNumber(gameState.player.lastHitDamage)} color="pink" />
                             )}
+                            {gameState.player.killerHp !== undefined && (
+                                <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerHp)} color="amber" />
+                            )}
                             {gameState.player.killerMaxHp !== undefined && (
-                                <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="amber" />
+                                <StatItem label="Killer Max HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="amber" />
                             )}
                         </div>
 

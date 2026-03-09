@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GameState, TutorialStep } from '../../logic/core/Types';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
-import { getTutorialHints } from '../../lib/orbitTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
+import { getTutorialHints } from '../../lib/OrbitTranslations';
 
 interface TutorialOverlayProps {
     gameState: GameState;

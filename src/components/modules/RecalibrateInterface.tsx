@@ -5,7 +5,7 @@ import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import { calculateMeteoriteEfficiency } from '../../logic/upgrades/EfficiencyLogic';
 import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 

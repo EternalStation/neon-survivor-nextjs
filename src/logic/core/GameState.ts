@@ -83,7 +83,6 @@ export const createInitialPlayer = (id: string, selectedClass?: PlayerClass, sta
 
     const initialMaxHp = calcStat(p.hp);
     p.curHp = initialMaxHp;
-    p.xp.current = p.xp.needed;
 
     return p;
 };

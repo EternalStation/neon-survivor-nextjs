@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+import { sql } from '@/lib/Db';
+import { verifyToken } from '@/lib/Auth';
 
 // Initialize table if it doesn't exist
 const initializeTable = async () => {

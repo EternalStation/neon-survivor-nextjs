@@ -4,7 +4,7 @@ import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { formatLargeNumber } from '../utils/Format';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation, UI_TRANSLATIONS } from '../lib/uiTranslations';
+import { getUiTranslation, UI_TRANSLATIONS } from '../lib/UiTranslations';
 import { LeaderboardStatistics } from './LeaderboardStatistics';
 import { DamageRow } from './stats/DamageRow';
 import { getDamageMapping } from '../utils/DamageMapping';

@@ -5,7 +5,7 @@ import { TICK_INTERVAL } from '../logic/upgrades/IncubatorLogic';
 import { getMeteoriteImage, RARITY_COLORS } from './modules/ModuleUtils';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface BlueprintBayProps {
     gameState: GameState;

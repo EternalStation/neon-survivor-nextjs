@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql } from '@/lib/Db';
 
 // GET /api/leaderboard/weekly
 export async function GET(request: NextRequest) {

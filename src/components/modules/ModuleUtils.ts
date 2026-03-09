@@ -1,6 +1,6 @@
 
 import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/core/Types';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import { RARITY_ORDER } from '../../logic/core/Types';
 
 export type PerkFilter = {

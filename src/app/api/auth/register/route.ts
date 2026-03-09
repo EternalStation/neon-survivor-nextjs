@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { sql } from '@/lib/db';
-import { signToken } from '@/lib/auth';
+import { sql } from '@/lib/Db';
+import { signToken } from '@/lib/Auth';
 
 export async function POST(request: NextRequest) {
     try {
