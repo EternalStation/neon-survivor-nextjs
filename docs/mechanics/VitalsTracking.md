@@ -75,7 +75,10 @@ Tracked via `recordHealing(player, source, amount)` (`DamageTracking.ts`). Only 
 
 ## UI Display
 
-Data is shown in the **Threat tab** of the Stats Menu (`StatsMenu.tsx`), below the existing Threat Progression charts, in a section called **VITALS ANALYSIS** rendered by the `VitalsAnalysis` component (`src/components/stats/VitalsAnalysis.tsx`).
+Data is shown in two places:
+
+1. **Stats Menu** (`StatsMenu.tsx`) — the **INCOMING** tab renders `VitalsAnalysis` during an active run. The adjacent **OUTGOING** tab shows outgoing damage.
+2. **Post-Game Screen** (`DeathScreen.tsx`) — a dedicated **Vitals** tab renders `VitalsAnalysis` after the run ends. The adjacent **Outgoing DMG** tab (formerly "Damage") shows outgoing damage attribution.
 
 The AVG HP % value is color-coded:
 - Green: ≥ 70%
@@ -83,3 +86,39 @@ The AVG HP % value is color-coded:
 - Red: < 40%
 
 Each incoming/healing source is shown as a labeled bar with percentage share of total.
+
+## Leaderboard Integration
+
+Vitals data is submitted with every run and stored in the `game_runs` database table.
+
+### Submission (`src/utils/Leaderboard.ts`)
+
+Three fields are added to `RunSubmissionData` and populated in `prepareRunData()`:
+
+| Field | Type | Value |
+|---|---|---|
+| `avgHpPercent` | `number` | `avgHpAccumulator / avgHpSampleCount`, rounded to 1 decimal. Defaults to 100 if no samples. |
+| `incomingDamageBreakdown` | `Record<string, number>` | Copied directly from `player.incomingDamageBreakdown`. |
+| `healingBreakdown` | `Record<string, number>` | Copied directly from `player.healingBreakdown`. |
+
+### Database Schema (`/api/runs/route.ts`)
+
+Three columns are added via `IF NOT EXISTS` migrations on every POST:
+
+| Column | Type | Default |
+|---|---|---|
+| `avg_hp_percent` | `NUMERIC` | `100` |
+| `incoming_damage_breakdown` | `JSONB` | `{}` |
+| `healing_breakdown` | `JSONB` | `{}` |
+
+### Leaderboard Retrieval
+
+All four leaderboard GET endpoints (global, daily, weekly, patch) apply the same `IF NOT EXISTS` migrations and include all three columns in their SELECT query.
+
+### Leaderboard Display (`src/components/Leaderboard.tsx`)
+
+A third tab **VITALS** is added to the per-run expanded detail view (alongside MISSION STATS and DAMAGE ANALYSIS). It renders:
+
+1. **AVG HP %** — large colored number (green ≥ 70%, yellow 40–69%, red < 40%) with a mini bar.
+2. **INCOMING DAMAGE** — labeled source bars with percentage share of total incoming.
+3. **HEALING SOURCES** — labeled source bars with percentage share of total healing.

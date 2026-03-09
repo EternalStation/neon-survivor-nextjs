@@ -678,12 +678,14 @@ export const UI_TRANSLATIONS = {
             tabs: {
                 system: 'SYSTEM',
                 threat: 'THREAT',
-                damage: 'DAMAGE'
+                damage: 'OUTGOING',
+                incoming: 'INCOMING'
             },
             headers: {
                 system: 'SYSTEM DIAGNOSTICS',
                 threat: 'THREAT PROGRESSION',
-                damage: 'DAMAGE ATTRIBUTION'
+                damage: 'OUTGOING DAMAGE',
+                incoming: 'VITALS ANALYSIS'
             },
             labels: {
                 health: 'Health',
@@ -1625,12 +1627,14 @@ export const UI_TRANSLATIONS = {
             tabs: {
                 system: 'СИСТЕМА',
                 threat: 'УГРОЗА',
-                damage: 'DAMAGE'
+                damage: 'DAMAGE',
+                incoming: 'INCOMING'
             },
             headers: {
                 system: 'ДИАГНОСТИКА СИСТЕМЫ',
                 threat: 'ПРОГРЕССИЯ УГРОЗЫ',
-                damage: 'DAMAGE ATTRIBUTION'
+                damage: 'DAMAGE ATTRIBUTION',
+                incoming: 'VITALS ANALYSIS'
             },
             labels: {
                 health: 'Здоровье',
