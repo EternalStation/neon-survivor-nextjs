@@ -13,6 +13,7 @@ import {formatLargeNumber} from '../utils/Format';
 import {ThreatProgression} from './ThreatProgression';
 import {StatRow} from './stats/StatRow';
 import {DamageRow} from './stats/DamageRow';
+import {VitalsAnalysis} from './stats/VitalsAnalysis';
 import {getDamageMapping} from '../utils/DamageMapping';
 import styles from './StatsMenu.module.css';
 
@@ -36,7 +37,7 @@ interface StatsMenuProps {
     gameState: GameState;
 }
 
-type ActiveTab = 'system' | 'threat' | 'damage';
+type ActiveTab = 'system' | 'threat' | 'damage' | 'incoming';
 
 type ExtendedLabels = ReturnType<typeof getUiTranslation>['statsMenu']['labels'] & {
     baseStats?: string;
@@ -104,12 +105,18 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                 >
                     {t.statsMenu.tabs.damage}
                 </button>
+                <button
+                    onClick={() => setActiveTab('incoming')}
+                    className={`${styles.tab} ${activeTab === 'incoming' ? styles.tabIncomingActive : ''}`}
+                >
+                    {t.statsMenu.tabs.incoming}
+                </button>
             </div>
 
             <div
-                className={`${styles.sectionHeader} ${activeTab === 'system' ? styles.headerSystem : activeTab === 'threat' ? styles.headerThreat : activeTab === 'damage' ? styles.headerDamage : ''}`}
+                className={`${styles.sectionHeader} ${activeTab === 'system' ? styles.headerSystem : activeTab === 'threat' ? styles.headerThreat : activeTab === 'damage' ? styles.headerDamage : styles.headerIncoming}`}
             >
-                {activeTab === 'system' ? t.statsMenu.headers.system : (activeTab === 'threat' ? t.statsMenu.headers.threat : t.statsMenu.headers.damage)}
+                {activeTab === 'system' ? t.statsMenu.headers.system : activeTab === 'threat' ? t.statsMenu.headers.threat : activeTab === 'damage' ? t.statsMenu.headers.damage : t.statsMenu.headers.incoming}
             </div>
 
             <div className={`${styles.tabPanel} ${activeTab === 'system' ? styles.tabPanelSystem : styles.tabPanelHidden}`}>
@@ -492,6 +499,10 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             .map(r => r.element);
                     })()}
                 </div>
+            </div>
+
+            <div className={`${styles.tabPanel} ${activeTab === 'incoming' ? styles.tabPanelIncoming : styles.tabPanelHidden}`}>
+                <VitalsAnalysis player={player} t={t} />
             </div>
 
             <div className={styles.footer}>

@@ -219,6 +219,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 
                 applyDamageToPlayer(state, p, rawDmg, {
                     sourceType: 'projectile',
+                    incomingDamageSource: e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                     onEvent,
                     deathCause: 'Incinerated by Elite Diamond Laser',
                     killerHp: e.hp,

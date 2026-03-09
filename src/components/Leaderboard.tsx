@@ -69,6 +69,9 @@ interface LeaderboardEntry {
     blueprints?: Blueprint[];
     damage_breakdown?: Record<string, number>;
     class_skill_dmg_history?: number[] | string;
+    avg_hp_percent?: number;
+    incoming_damage_breakdown?: Record<string, number>;
+    healing_breakdown?: Record<string, number>;
 }
 
 interface LeaderboardProps {
@@ -105,7 +108,7 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
     const [patches, setPatches] = useState<string[]>([]);
     const [selectedPatch, setSelectedPatch] = useState<string>('');
     const [expandedRunId, setExpandedRunId] = useState<number | null>(null);
-    const [activeExpandedTab, setActiveExpandedTab] = useState<'stats' | 'damage'>('stats');
+    const [activeExpandedTab, setActiveExpandedTab] = useState<'stats' | 'damage' | 'vitals'>('stats');
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
     const [classFilter, setClassFilter] = useState<string>('All');
@@ -469,6 +472,12 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                     >
                                                                         DAMAGE ANALYSIS
                                                                     </button>
+                                                                    <button
+                                                                        className={`exp-tab vitals ${activeExpandedTab === 'vitals' ? 'active' : ''}`}
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveExpandedTab('vitals'); }}
+                                                                    >
+                                                                        VITALS
+                                                                    </button>
                                                                 </div>
 
                                                                 {activeExpandedTab === 'stats' ? (
@@ -593,6 +602,79 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                                     <div className="empty-msg empty-blueprints">{t.noBlueprints}</div>
                                                                                 )}
                                                                             </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : activeExpandedTab === 'vitals' ? (
+                                                                    <div className="damage-analysis-view">
+                                                                        <div className="damage-analysis-inner">
+                                                                            {(() => {
+                                                                                const INCOMING_COLORS: Record<string, string> = {
+                                                                                    'Collision': '#f97316', 'Projectile': '#ef4444',
+                                                                                    'Wall Impact': '#a78bfa', 'Special Attack': '#fb923c',
+                                                                                };
+                                                                                const HEALING_COLORS: Record<string, string> = {
+                                                                                    'Regeneration': '#4ade80', 'Lifesteal': '#f43f5e',
+                                                                                    'Radiation Aura': '#bef264', 'Vital Spark': '#fbbf24',
+                                                                                    'Heal Turret': '#22d3ee', 'Heal Drone': '#34d399',
+                                                                                    'Upgrade Heal': '#a855f7',
+                                                                                };
+                                                                                const avgHp = entry.avg_hp_percent ?? 100;
+                                                                                const avgHpColor = avgHp >= 70 ? '#4ade80' : avgHp >= 40 ? '#fbbf24' : '#ef4444';
+                                                                                const incoming = entry.incoming_damage_breakdown || {};
+                                                                                const totalIncoming = Object.values(incoming).reduce((s, v) => s + v, 0);
+                                                                                const incomingSorted = Object.entries(incoming).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                                                                                const healing = entry.healing_breakdown || {};
+                                                                                const totalHealing = Object.values(healing).reduce((s, v) => s + v, 0);
+                                                                                const healingSorted = Object.entries(healing).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                                                                                const renderBar = (label: string, amount: number, total: number, color: string) => {
+                                                                                    const pct = total > 0 ? (amount / total) * 100 : 0;
+                                                                                    return (
+                                                                                        <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingBottom: 4, borderBottom: '1px solid #1e293b' }}>
+                                                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                                                <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>{label}</span>
+                                                                                                <span style={{ color, fontSize: 12, fontWeight: 700 }}>{formatLargeNumber(Math.round(amount))} ({pct.toFixed(1)}%)</span>
+                                                                                            </div>
+                                                                                            <div style={{ height: 3, background: '#1e293b', borderRadius: 2, overflow: 'hidden' }}>
+                                                                                                <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2 }} />
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                };
+                                                                                return (
+                                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 4px' }}>
+                                                                                        <div style={{ padding: '10px 14px', background: 'rgba(15,23,42,0.6)', border: '1px solid #334155', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                            <div>
+                                                                                                <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 900, letterSpacing: '2px', marginBottom: 4 }}>AVG HP %</div>
+                                                                                                <div style={{ color: '#64748b', fontSize: 10 }}>Running average over session</div>
+                                                                                            </div>
+                                                                                            <div style={{ textAlign: 'right' }}>
+                                                                                                <div style={{ color: avgHpColor, fontSize: 28, fontWeight: 900, lineHeight: 1, filter: `drop-shadow(0 0 8px ${avgHpColor})` }}>{avgHp.toFixed(1)}%</div>
+                                                                                                <div style={{ height: 4, width: 80, background: '#1e293b', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
+                                                                                                    <div style={{ height: '100%', width: `${Math.min(100, avgHp)}%`, background: avgHpColor, borderRadius: 2 }} />
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '0 0 6px 0', borderBottom: '1px solid #334155', marginBottom: 8 }}>
+                                                                                                INCOMING DAMAGE{totalIncoming > 0 && <span style={{ color: '#ef4444', marginLeft: 8 }}>{formatLargeNumber(Math.round(totalIncoming))}</span>}
+                                                                                            </div>
+                                                                                            {incomingSorted.length === 0
+                                                                                                ? <div style={{ color: '#334155', fontSize: 11, textAlign: 'center', padding: '8px 0' }}>NO DATA</div>
+                                                                                                : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{incomingSorted.map(([src, amt]) => renderBar(src, amt, totalIncoming, INCOMING_COLORS[src] || '#94a3b8'))}</div>
+                                                                                            }
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '0 0 6px 0', borderBottom: '1px solid #334155', marginBottom: 8 }}>
+                                                                                                HEALING SOURCES{totalHealing > 0 && <span style={{ color: '#4ade80', marginLeft: 8 }}>{formatLargeNumber(Math.round(totalHealing))}</span>}
+                                                                                            </div>
+                                                                                            {healingSorted.length === 0
+                                                                                                ? <div style={{ color: '#334155', fontSize: 11, textAlign: 'center', padding: '8px 0' }}>NO DATA</div>
+                                                                                                : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{healingSorted.map(([src, amt]) => renderBar(src, amt, totalHealing, HEALING_COLORS[src] || '#4ade80'))}</div>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
                                                                         </div>
                                                                     </div>
                                                                 ) : (

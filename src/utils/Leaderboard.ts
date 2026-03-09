@@ -43,6 +43,9 @@ export interface RunSubmissionData {
     damageBreakdown: Record<string, number>;
     class_skill_dmg_history?: number[];
     timezoneOffset: number;
+    avgHpPercent: number;
+    incomingDamageBreakdown: Record<string, number>;
+    healingBreakdown: Record<string, number>;
 }
 
 
@@ -134,6 +137,11 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         snitchesCaught: Math.ceil(gameState.snitchCaught || 0),
         deathCause: normalizeDeathCause(gameState.player.deathCause || 'Unknown'),
         timezoneOffset: new Date().getTimezoneOffset(),
+        avgHpPercent: (gameState.player.avgHpSampleCount || 0) > 0
+            ? Number(((gameState.player.avgHpAccumulator || 0) / (gameState.player.avgHpSampleCount || 1)).toFixed(1))
+            : 100,
+        incomingDamageBreakdown: gameState.player.incomingDamageBreakdown || {},
+        healingBreakdown: gameState.player.healingBreakdown || {},
         blueprints: (() => {
             const grouped: Record<string, { name: string; type: string; count: number }> = {};
             const allBps = [

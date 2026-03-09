@@ -11,7 +11,7 @@ import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
-import { recordDamage } from '../utils/DamageTracking';
+import { recordDamage, recordHealing } from '../utils/DamageTracking';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
 
 export function handlePlayerCombat(
@@ -136,6 +136,8 @@ export function handlePlayerCombat(
             if (radLvl >= 2 && enemiesInAura.length > 0 && !player.healingDisabled) {
                 const healPerEnemy = playerMaxHp * (0.002 * m) / 6;
                 const totalHeal = healPerEnemy * enemiesInAura.length;
+                const radHealActual = Math.min(maxHp, player.curHp + totalHeal) - player.curHp;
+                if (radHealActual > 0) recordHealing(player, 'Radiation Aura', radHealActual);
                 player.curHp = Math.min(maxHp, player.curHp + totalHeal);
             }
         }
@@ -254,6 +256,9 @@ export function handleEnemyContact(
 
             const finalDmg = applyDamageToPlayer(state, player, rawDmg, {
                 sourceType: 'collision',
+                incomingDamageSource: e.boss
+                    ? e.shape.charAt(0).toUpperCase() + e.shape.slice(1) + ' Boss'
+                    : e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                 onEvent,
                 triggerDeath: () => handlePlayerLethalHit(state, e, onEvent, triggerDeath),
                 deathCause: '',
@@ -668,6 +673,8 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 if (bloodLevel >= 5 && !player.healingDisabled) {
                     const heal = zap.dmg * 0.01;
                     const maxHp = calcStat(player.hp);
+                    const bfHealActual = Math.min(maxHp, player.curHp + heal) - player.curHp;
+                    if (bfHealActual > 0) recordHealing(player, 'Lifesteal', bfHealActual);
                     player.curHp = Math.min(maxHp, player.curHp + heal);
                 }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import { DamageRow } from './stats/DamageRow';
+import { VitalsAnalysis } from './stats/VitalsAnalysis';
 import { getUiTranslation } from '../lib/UiTranslations';
 import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
@@ -96,7 +97,7 @@ interface DeathScreenProps {
 export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRestart, onQuit, onShowLeaderboard }) => {
     const { language } = useLanguage();
     const t = getUiTranslation(language);
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'damage'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'damage' | 'vitals'>('overview');
     const [rank, setRank] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(true);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -281,7 +282,8 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 <div className={styles.tabsBar}>
                     <button className={`${styles.tab}${activeTab === 'overview' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
                     <button className={`${styles.tab}${activeTab === 'modules' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('modules')}>Hardware Profile</button>
-                    <button className={`${styles.tab}${activeTab === 'damage' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('damage')}>Damage</button>
+                    <button className={`${styles.tab}${activeTab === 'damage' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('damage')}>Outgoing DMG</button>
+                    <button className={`${styles.tab}${activeTab === 'vitals' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('vitals')}>Vitals</button>
                 </div>
             </div>
 
@@ -387,10 +389,19 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                     </div>
                 )}
 
+                {activeTab === 'vitals' && (
+                    <div className={styles.panel}>
+                        <div className={styles.damageHeader}>
+                            VITALS ANALYSIS
+                        </div>
+                        <VitalsAnalysis player={gameState.player} t={t} />
+                    </div>
+                )}
+
                 {activeTab === 'damage' && (
                     <div className={styles.panel}>
                         <div className={styles.damageHeader}>
-                            DAMAGE ATTRIBUTION
+                            OUTGOING DAMAGE ATTRIBUTION
                         </div>
                         <div className={styles.damageList}>
                             {(() => {

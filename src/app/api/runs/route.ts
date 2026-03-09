@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
             finalStats,
             blueprints,
             damageBreakdown,
-            class_skill_dmg_history
+            class_skill_dmg_history,
+            avgHpPercent,
+            incomingDamageBreakdown,
+            healingBreakdown
         } = body;
 
 
@@ -75,7 +78,10 @@ export async function POST(request: NextRequest) {
                 ALTER COLUMN damage_blocked_projectile TYPE NUMERIC,
                 ALTER COLUMN damage_blocked_shield TYPE NUMERIC,
                 ADD COLUMN IF NOT EXISTS damage_breakdown JSONB DEFAULT '{}'::jsonb,
-                ADD COLUMN IF NOT EXISTS class_skill_dmg_history JSONB DEFAULT '[]'::jsonb
+                ADD COLUMN IF NOT EXISTS class_skill_dmg_history JSONB DEFAULT '[]'::jsonb,
+                ADD COLUMN IF NOT EXISTS avg_hp_percent NUMERIC DEFAULT 100,
+                ADD COLUMN IF NOT EXISTS incoming_damage_breakdown JSONB DEFAULT '{}'::jsonb,
+                ADD COLUMN IF NOT EXISTS healing_breakdown JSONB DEFAULT '{}'::jsonb
             `;
         } catch (schemaErr) {
             // Likely already upgraded or insufficient perms, log and continue
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
         damage_blocked_armor, damage_blocked_collision, damage_blocked_projectile,
         damage_blocked_shield, radar_counts, meteorites_collected, portals_used,
         arena_times, legendary_hexes, hex_levelup_order, snitches_caught, death_cause, final_stats, blueprints, damage_breakdown,
-        class_skill_dmg_history
+        class_skill_dmg_history, avg_hp_percent, incoming_damage_breakdown, healing_breakdown
       ) VALUES (
         ${user.id}, ${score.toString()}, ${survivalTime}, ${kills}, ${bossKills || 0},
         ${classUsed}, ${patchVersion}, ${damageDealt?.toString() || '0'}, ${damageTaken?.toString() || '0'},
@@ -102,7 +108,9 @@ export async function POST(request: NextRequest) {
         ${JSON.stringify(legendaryHexes || [])}, ${JSON.stringify(hexLevelupOrder || [])},
         ${snitchesCaught || 0}, ${deathCause || 'Unknown'}, ${JSON.stringify(finalStats || {})},
         ${JSON.stringify(blueprints || [])}, ${JSON.stringify(damageBreakdown || {})},
-        ${JSON.stringify(class_skill_dmg_history || [])}
+        ${JSON.stringify(class_skill_dmg_history || [])},
+        ${avgHpPercent ?? 100}, ${JSON.stringify(incomingDamageBreakdown || {})},
+        ${JSON.stringify(healingBreakdown || {})}
       )
 
       RETURNING id, score, completed_at, survival_time

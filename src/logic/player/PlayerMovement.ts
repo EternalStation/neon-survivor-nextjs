@@ -245,6 +245,7 @@ export function handlePlayerMovement(
 
             applyDamageToPlayer(state, player, rawWallDmg, {
                 sourceType: 'collision',
+                incomingDamageSource: 'Wall Impact',
                 onEvent,
                 triggerDeath,
                 deathCause: 'Wall Impact'

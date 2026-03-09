@@ -752,6 +752,23 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 cheatBuffer = '';
             }
 
+            // GOD - Max armor/col/proj reduction + 1B HP + 1B regen
+            if (cheatBuffer.endsWith('god')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
+                const p = gameState.current.player;
+                p.arm.base = 200000;
+                p.godColRedBonus = 60000;
+                p.godProjRedBonus = 60000;
+                p.hp.base = 1_000_000_000;
+                p.reg.base = 1_000_000_000;
+                p.curHp = 1_000_000_000;
+                spawnFloatingNumber(gameState.current, p.x, p.y, 'GOD MODE', '#ff0000', true);
+                playSfx('power-up');
+                refreshUI();
+                cheatBuffer = '';
+            }
+
             // CS2 - Boost Chassis Resonance (x2 from current per press)
             if (cheatBuffer.endsWith('cs2')) {
                 gameState.current.cheatsUsed = true;

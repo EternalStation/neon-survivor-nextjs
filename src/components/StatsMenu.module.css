@@ -399,7 +399,15 @@
     color: var(--class-color);
 }
 
+.tabIncomingActive {
+    background: rgba(239, 68, 68, 0.08);
+    border-bottom: 2px solid #f87171;
+    color: #f87171;
+}
+
 .headerDamage { color: var(--class-color); }
+.headerIncoming { color: #f87171; }
+.tabPanelIncoming { display: flex; flex-direction: column; gap: 16px; padding: 0 0 10px 0; }
 
 .classDiamond { color: var(--class-color); }
 

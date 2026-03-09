@@ -91,7 +91,7 @@ export function updateNormalDiamond(e: Enemy, state: GameState, dist: number, dx
     if (state.gameTime - (e.lastAttack || 0) > e.nextAttackCD) {
         const dmg = Math.floor(e.maxHp * 0.20);
         const bulletColor = e.baseColor || (e.originalPalette ? e.originalPalette[0] : e.palette[0]);
-        spawnEnemyBullet(state, e.x, e.y, angleToPlayerD, dmg, bulletColor);
+        spawnEnemyBullet(state, e.x, e.y, angleToPlayerD, dmg, bulletColor, e.shape);
         e.lastAttack = state.gameTime;
         e.nextAttackCD = 7 + Math.random() * 3;
     }

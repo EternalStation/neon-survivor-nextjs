@@ -1,6 +1,8 @@
 // API Client for Void Nexus Backend
 
-const API_URL = '/api';
+const API_URL = process.env.NODE_ENV === 'development'
+    ? 'https://neon-survivor-nextjs.vercel.app/api'
+    : '/api';
 
 class ApiClient {
     private token: string | null;
