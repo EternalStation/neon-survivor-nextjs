@@ -772,6 +772,14 @@ export const UI_TRANSLATIONS = {
                 nextBossHp: 'Next Boss Health',
                 collisionDmg: 'Collision Damage (including your damage reduction)'
             },
+            vitals: {
+                sectionTitle: 'VITALS ANALYSIS',
+                avgHp: 'AVG HP %',
+                avgHpDesc: 'Running average over session',
+                incomingDmg: 'INCOMING DAMAGE',
+                healingSources: 'HEALING SOURCES',
+                noData: 'NO DATA YET'
+            },
             radar: {
                 dps: 'DPS',
                 arm: 'ARM',
@@ -1694,6 +1702,14 @@ export const UI_TRANSLATIONS = {
                 analysis: 'Анализ угроз в реальном времени',
                 nextBossHp: 'Здоровье следующего Босса',
                 collisionDmg: 'Урон от столкновения'
+            },
+            vitals: {
+                sectionTitle: 'VITALS ANALYSIS',
+                avgHp: 'AVG HP %',
+                avgHpDesc: 'Running average over session',
+                incomingDmg: 'INCOMING DAMAGE',
+                healingSources: 'HEALING SOURCES',
+                noData: 'NO DATA YET'
             },
             radar: {
                 dps: 'УРОН',

@@ -1,4 +1,5 @@
 import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
+import { recordHealing } from '../utils/DamageTracking';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
@@ -125,6 +126,8 @@ export function updateTurrets(state: GameState, step: number) {
                             expiry: state.gameTime + 60
                         });
                     } else {
+                        const htHealActual = Math.min(maxHp, state.player.curHp + healAmount) - state.player.curHp;
+                        if (htHealActual > 0) recordHealing(state.player, 'Heal Turret', htHealActual);
                         state.player.curHp = Math.min(maxHp, state.player.curHp + healAmount);
                     }
 
@@ -386,6 +389,8 @@ export function updateAllies(state: GameState, step: number) {
                 if (dToPlayer < 200 && !p.healingDisabled) {
                     const maxHp = calcStat(p.hp);
                     const heal = maxHp * (ally.healPower || 0.05);
+                    const droneHealActual = Math.min(maxHp, p.curHp + heal) - p.curHp;
+                    if (droneHealActual > 0) recordHealing(p, 'Heal Drone', droneHealActual);
                     p.curHp = Math.min(maxHp, p.curHp + heal);
                     spawnFloatingNumber(state, p.x, p.y, `+${Math.ceil(heal)}`, '#4ade80', false);
                     spawnParticles(state, ally.x, ally.y, '#4ade80', 5);

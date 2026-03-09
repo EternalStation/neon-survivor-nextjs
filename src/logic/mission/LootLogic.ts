@@ -1,4 +1,5 @@
 import type { GameState, Meteorite, MeteoriteRarity } from '../core/types';
+import { recordHealing } from '../utils/DamageTracking';
 import { playSfx } from '../audio/AudioLogic';
 import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
@@ -442,6 +443,8 @@ export function updateLoot(state: GameState) {
 
                 if (item.type === 'vital_spark') {
                     const heal = state.player.hp.base * 0.015;
+                    const vsHealActual = Math.min(state.player.hp.base + (state.player.hp.flat || 0), state.player.curHp + heal) - state.player.curHp;
+                    if (vsHealActual > 0) recordHealing(state.player, 'Vital Spark', vsHealActual);
                     state.player.curHp = Math.min(state.player.hp.base + (state.player.hp.flat || 0), state.player.curHp + heal);
 
                     if (!state.player.buffs) state.player.buffs = {};

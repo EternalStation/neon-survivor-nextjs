@@ -3,9 +3,11 @@ import type { GameState, Player } from '../core/types';
 import { calcStat, getDefenseReduction } from './MathUtils';
 import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
+import { recordIncomingDamage } from './DamageTracking';
 
 export interface DamageOptions {
     sourceType?: 'collision' | 'projectile' | 'other';
+    incomingDamageSource?: string;
     bypassArmor?: boolean;
     bypassShield?: boolean;
     onEvent?: (event: string, data?: any) => void;
@@ -43,13 +45,13 @@ export function applyDamageToPlayer(
 
 
     if (options.sourceType === 'collision') {
-        const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill', false, player);
+        const colRedRaw = calculateLegendaryBonus(state, 'col_red_per_kill', false, player) + (player.godColRedBonus || 0);
         const colRedReduction = getDefenseReduction(colRedRaw, 0.80);
         const dmgAfterCol = dmg * (1 - colRedReduction);
         blockedByReduc = dmg - dmgAfterCol;
         dmg = dmgAfterCol;
     } else if (options.sourceType === 'projectile') {
-        const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, player);
+        const projRedRaw = calculateLegendaryBonus(state, 'proj_red_per_kill', false, player) + (player.godProjRedBonus || 0);
         const projRedReduction = getDefenseReduction(projRedRaw, 0.80);
         const dmgAfterProj = dmg * (1 - projRedReduction);
         blockedByReduc = dmg - dmgAfterProj;
@@ -98,6 +100,11 @@ export function applyDamageToPlayer(
         player.curHp -= finalDmg;
         player.damageTaken = (player.damageTaken || 0) + finalDmg;
         player.lastHitDamage = finalDmg;
+
+        const dmgSource = options.incomingDamageSource ||
+            (options.sourceType === 'collision' ? 'Collision' :
+                options.sourceType === 'projectile' ? 'Projectile' : 'Special Attack');
+        recordIncomingDamage(player, dmgSource, finalDmg);
         if (options.killerHp !== undefined) player.killerHp = options.killerHp;
         if (options.killerMaxHp !== undefined) player.killerMaxHp = options.killerMaxHp;
 

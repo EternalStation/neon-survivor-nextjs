@@ -1,6 +1,7 @@
 
 import type { GameState } from '../core/types';
 import { calcStat } from '../utils/MathUtils';
+import { recordHealing } from '../utils/DamageTracking';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
@@ -149,7 +150,14 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     if (player.healingDisabled) {
         regenAmount = 0;
     }
+    const regenActual = Math.min(maxHp, player.curHp + regenAmount) - player.curHp;
+    if (regenActual > 0) recordHealing(player, 'Regeneration', regenActual);
     player.curHp = Math.min(maxHp, player.curHp + regenAmount);
+
+    if (maxHp > 0) {
+        player.avgHpAccumulator = (player.avgHpAccumulator || 0) + (player.curHp / maxHp) * 100;
+        player.avgHpSampleCount = (player.avgHpSampleCount || 0) + 1;
+    }
 
 
     const critLevel = getHexLevel(state, 'ComCrit');

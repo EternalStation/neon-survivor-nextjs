@@ -176,6 +176,10 @@ export interface Player {
     activeSkillDamageByMinute?: Record<number, number>;
     wallsHit: number;
     upgradesCollected: import('./types').UpgradeChoice[];
+    avgHpAccumulator?: number;
+    avgHpSampleCount?: number;
+    incomingDamageBreakdown?: Record<string, number>;
+    healingBreakdown?: Record<string, number>;
     reg: PlayerStats;
     invertedControlsUntil?: number;
     arm: PlayerStats;
@@ -250,6 +254,8 @@ export interface Player {
 
     temporalGuardActive?: boolean;
     phaseShiftUntil?: number;
+    godColRedBonus?: number;
+    godProjRedBonus?: number;
     spawnTimer?: number;
 
 
@@ -401,6 +407,7 @@ export interface Bullet {
     maxLife?: number;
     startAngle?: number;
     endAngle?: number;
+    sourceShape?: string;
 }
 
 export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';

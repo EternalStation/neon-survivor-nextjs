@@ -287,10 +287,10 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     }
 }
 
-export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
+export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000', sourceShape?: string) {
     const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
-    
+
     const minutes = state.gameTime / 60;
     const eraIndex = Math.floor(minutes / 15);
     const eraPalette = PALETTES[eraIndex % PALETTES.length];
@@ -306,8 +306,9 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         life: 300 / (state.gameSpeedMult ?? 1),
         isEnemy: true,
         hits: new Set(),
-        color: brightColor, 
-        size: 4
+        color: brightColor,
+        size: 4,
+        sourceShape
     });
 
     

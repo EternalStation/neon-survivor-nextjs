@@ -77,6 +77,9 @@ export function updateSingleEnemy(
                     const dmg = calcStat(p.hp) * currentBurnPct;
                     applyDamageToPlayer(state, p, dmg, {
                         sourceType: 'other',
+                        incomingDamageSource: e.boss
+                            ? e.shape.charAt(0).toUpperCase() + e.shape.slice(1) + ' Boss'
+                            : e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                         deathCause: "Overlord Burn"
                     });
                 }
@@ -141,6 +144,7 @@ export function updateSingleEnemy(
                 const oneShotDmg = calcStat(state.player.hp) * 1.5;
                 applyDamageToPlayer(state, state.player, oneShotDmg, {
                     sourceType: 'collision',
+                    incomingDamageSource: 'Pentagon Boss',
                     deathCause: `Pentagon Boss Level ${(host && host.bossTier) || 1} Phalanx Drone Charge`,
                     floatingNumberColor: '#ef4444'
                 });
@@ -162,6 +166,7 @@ export function updateSingleEnemy(
                 const dmg = calcStat(state.player.hp) * 0.4;
                 applyDamageToPlayer(state, state.player, dmg, {
                     sourceType: 'collision',
+                    incomingDamageSource: 'Pentagon Boss',
                     deathCause: `Pentagon Boss Rocket Projectile`,
                     floatingNumberColor: '#ef4444'
                 });

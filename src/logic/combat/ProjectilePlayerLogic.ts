@@ -9,7 +9,7 @@ import { getPlayerThemeColor } from '../utils/helpers';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { triggerKineticBolt } from '../player/PlayerCombat';
-import { recordDamage } from '../utils/DamageTracking';
+import { recordDamage, recordHealing } from '../utils/DamageTracking';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 
 export function updateSinglePlayerBullet(
@@ -593,6 +593,8 @@ export function updateSinglePlayerBullet(
             if (bloodLevel >= 5 && b.isShockwaveCircle) lifestealPercent = 0.01;
             if (lifestealPercent > 0 && !owner.healingDisabled) {
                 const heal = damageAmount * lifestealPercent;
+                const lsHealActual = Math.min(calcStat(owner.hp), owner.curHp + heal) - owner.curHp;
+                if (lsHealActual > 0) recordHealing(owner, 'Lifesteal', lsHealActual);
                 owner.curHp = Math.min(calcStat(owner.hp), owner.curHp + heal);
             }
 

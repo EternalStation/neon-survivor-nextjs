@@ -20,6 +20,7 @@ import { getUiTranslation } from '../lib/uiTranslations';
 
 import { formatLargeNumber } from '../utils/format';
 import { ThreatProgression } from './ThreatProgression';
+import { VitalsAnalysis } from './stats/VitalsAnalysis';
 import { StatRow } from './stats/StatRow';
 import { DamageRow } from './stats/DamageRow';
 import { getDamageMapping } from '../utils/damageMapping';
@@ -410,6 +411,12 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
             {/* THREAT CONTENT */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: activeTab === 'threat' ? 'flex' : 'none', flexDirection: 'column', gap: 20 }}>
                 <ThreatProgression gameState={gameState} t={t} />
+                <div style={{ borderTop: '1px solid #334155', paddingTop: 16 }}>
+                    <div style={{ color: '#475569', fontSize: 10, fontWeight: 900, letterSpacing: '3px', padding: '0 10px 10px 10px', textTransform: 'uppercase' }}>
+                        {(t.statsMenu.vitals?.sectionTitle) || 'VITALS ANALYSIS'}
+                    </div>
+                    <VitalsAnalysis player={player} t={t} />
+                </div>
             </div>
 
             {/* DAMAGE CONTENT */}
