@@ -9,7 +9,8 @@
       "Read(//c/Users/riot1/AppData/Local/Programs/Python//**)",
       "Read(//c/Users/riot1/AppData/Roaming/Python//**)",
       "Read(//c/Users/riot1/.local/bin//**)",
-      "Read(//c/Users/riot1/AppData/Local/**)"
+      "Read(//c/Users/riot1/AppData/Local/**)",
+      "Bash(rm:*)"
     ]
   },
   "outputStyle": "default"

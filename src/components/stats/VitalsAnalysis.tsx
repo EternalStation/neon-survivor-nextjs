@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Player } from '../../logic/core/types';
-import { formatLargeNumber } from '../../utils/format';
+import type { Player } from '../../logic/core/Types';
+import { formatLargeNumber } from '../../utils/Format';
 
 interface VitalsAnalysisProps {
     player: Player;
