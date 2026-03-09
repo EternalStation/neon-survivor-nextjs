@@ -14,6 +14,7 @@ interface RadarCounts {
     exp: number;
     hp: number;
     reg: number;
+    [key: string]: number;
 }
 
 type RadarCountKey = 'dps' | 'DPS' | 'arm' | 'ARM' | 'exp' | 'EXP' | 'hp' | 'HP' | 'reg' | 'REG';
@@ -198,7 +199,8 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
         return <div className="meta-no-data">{t.metaNoData || 'NOT ENOUGH DATA (REQUIRES RUNS > 2 MIN)'}</div>;
     }
 
-    const legendaryNames = getUiTranslation(language).legendaries as Record<string, LegendaryNameEntry>;
+    const { perks: _perks, ...legendaryNamesRaw } = getUiTranslation(language).legendaries;
+    const legendaryNames = legendaryNamesRaw as Record<string, LegendaryNameEntry>;
 
     const getHexImage = (type: string): string => {
         const lower = type.toLowerCase();
