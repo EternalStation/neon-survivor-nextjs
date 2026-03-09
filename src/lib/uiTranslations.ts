@@ -84,9 +84,9 @@ export const UI_TRANSLATIONS = {
             metaTopUpgrades: 'POPULAR LEGENDARY UPGRADES',
             metaRadar: 'AVERAGE HARDWARE PROFILE',
             metaDeathCauses: 'FREQUENT CAUSES OF DEATH',
+            metaDamageCharts: 'AVERAGE ACTIVE SKILL DAMAGE PER MINUTE (LOG SCALE)',
             metaNoData: 'INSUFFICIENT DATA (NEED RUNS > 2 MIN)'
         },
-        // Settings Menu
         settings: {
             systemPaused: 'SYSTEM PAUSED',
             systemSettings: 'SYSTEM SETTINGS',
@@ -1029,9 +1029,9 @@ export const UI_TRANSLATIONS = {
             metaTopUpgrades: 'ПОПУЛЯРНЫЕ ЛЕГЕНДАРНЫЕ УЛУЧШЕНИЯ',
             metaRadar: 'СРЕДНИЙ ПРОФИЛЬ ОБОРУДОВАНИЯ',
             metaDeathCauses: 'ЧАСТЫЕ ПРИЧИНЫ СМЕРТИ',
+            metaDamageCharts: 'СРЕДНЕЕ DAMAGE ОТ АКТИВНЫХ УМЕНИЙ В МИНУТУ (ЛОГ. ШКАЛА)',
             metaNoData: 'НЕДОСТАТОЧНО ДАННЫХ (НУЖНЫ ЗАБЕГИ > 2 МИН)'
         },
-        // Settings Menu
         settings: {
             systemPaused: 'СИСТЕМА ПРИОСТАНОВЛЕНА',
             systemSettings: 'СИСТЕМНЫЕ НАСТРОЙКИ',

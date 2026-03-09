@@ -224,6 +224,7 @@ export interface Player {
     lastWallHitTime?: number;
     killerHp?: number;
     killerMaxHp?: number;
+    inRefineryZone?: boolean;
 
 
     dashCooldown?: number;

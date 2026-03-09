@@ -40,6 +40,7 @@
     margin: 0;
     font-size: 32px;
     font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
     background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -126,6 +127,7 @@
     font-weight: 900;
     color: rgba(0, 255, 255, 0.6);
     letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .filter-group select,
@@ -136,7 +138,7 @@
     color: #fff;
     padding: 6px 12px;
     font-size: 12px;
-    font-family: inherit;
+    font-family: 'Orbitron', sans-serif;
     outline: none;
     transition: all 0.2s ease;
 }
@@ -179,6 +181,7 @@
     padding: 60px 20px;
     color: rgba(255, 255, 255, 0.6);
     font-size: 18px;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .leaderboard-table {
@@ -191,6 +194,7 @@
     top: 0;
     background: rgba(10, 15, 30, 0.95);
     z-index: 10;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .leaderboard-table th {
@@ -277,12 +281,14 @@
     border-bottom: 1px solid rgba(0, 255, 255, 0.1);
     padding-bottom: 6px;
     text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .stats-list {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .stat-row {
@@ -392,6 +398,7 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-top: 10px;
+    margin-bottom: 24px;
     background: rgba(10, 15, 30, 0.4);
     padding: 16px;
     border-radius: 8px;
@@ -416,6 +423,7 @@
     font-size: 18px;
     font-weight: 700;
     font-family: 'monospace';
+    color: var(--stat-color, #fff);
 }
 
 .val-green {
@@ -475,6 +483,7 @@
     color: rgba(255, 255, 255, 0.3);
     font-size: 13px;
     padding: 20px;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .player-name {
@@ -496,6 +505,7 @@
 .date {
     color: rgba(255, 255, 255, 0.5) !important;
     font-size: 12px;
+    opacity: 0.7;
 }
 
 /* Scrollbar styling */
@@ -569,7 +579,6 @@
 .hex-icon-placeholder {
     width: 31px;
     height: 36px;
-    /* Slightly smaller to match visual weight of hex images */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -579,6 +588,7 @@
     background: rgba(255, 255, 255, 0.05);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     transition: all 0.2s ease;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .class-filter-btn.active .hex-icon-placeholder {
@@ -597,6 +607,7 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 255, 255, 0.3) transparent;
 }
+
 
 .meta-card {
     background: rgba(0, 0, 0, 0.6);
@@ -829,6 +840,7 @@
     font-weight: 900;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .delete-run-btn:hover:not(:disabled) {
@@ -855,6 +867,7 @@
     font-size: 18px;
     font-weight: 700;
     font-family: 'Orbitron', sans-serif;
+    color: var(--stat-color, #fff);
 }
 
 .loading-glitch {
@@ -863,4 +876,268 @@
     color: #00ffff;
     position: relative;
     animation: glitch-pulse 1s infinite;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.lb-nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+    margin-top: 15px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.lb-mode-tabs-inline {
+    padding: 0;
+    margin: 0;
+    border-bottom: none;
+}
+
+.lb-period-tabs-inline {
+    font-family: 'Orbitron', sans-serif;
+    padding: 0 0 10px 0;
+}
+
+.lb-row-clickable {
+    cursor: pointer;
+}
+
+.rank-cell {
+    font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.rank-cell-1 {
+    color: #FFD700;
+}
+
+.rank-cell-2 {
+    color: #C0C0C0;
+}
+
+.rank-cell-3 {
+    color: #CD7F32;
+}
+
+.rank-cell-default {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.time-cell {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.class-cell {
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    color: var(--class-color, #00ffff);
+}
+
+.cause-cell {
+    font-size: 0.9em;
+    font-weight: 500;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.cause-evacuated {
+    color: #10b981;
+}
+
+.cause-killed {
+    color: #ef4444;
+}
+
+.patch-cell {
+    opacity: 0.5;
+}
+
+.expanded-tabs-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 0 20px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.exp-tab {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.exp-tab.stats.active {
+    color: #00ffff;
+    border-bottom-color: #00ffff;
+}
+
+.exp-tab.damage.active {
+    color: #f59e0b;
+    border-bottom-color: #f59e0b;
+}
+
+.card-footer {
+    margin-top: 20px;
+}
+
+.card-header-mt {
+    margin-top: 15px;
+}
+
+.stats-list-flex {
+    flex: 1;
+}
+
+.stat-row-mt {
+    margin-top: 10px;
+}
+
+.legendary-card {
+    grid-column: span 2;
+}
+
+.blueprints-card {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+.section-header {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid;
+    padding-bottom: 6px;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.section-header-cyan {
+    color: #00ffff;
+    border-bottom-color: rgba(0, 255, 255, 0.1);
+}
+
+.section-header-blue {
+    color: #3b82f6;
+    border-bottom-color: rgba(59, 130, 246, 0.1);
+}
+
+.section-header-amber {
+    color: #f59e0b;
+    border-bottom-color: rgba(245, 158, 11, 0.1);
+}
+
+.radar-chart-wrapper {
+    padding: 10px 0;
+}
+
+.blueprints-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+.blueprint-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.blueprint-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    flex-shrink: 0;
+}
+
+.blueprint-name {
+    color: #10b981;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.empty-blueprints {
+    font-style: italic;
+    opacity: 0.5;
+    font-size: 11px;
+}
+
+.meta-content {
+    padding: 0;
+}
+
+.damage-analysis-view {
+    padding: 0 20px 20px;
+}
+
+.damage-analysis-inner {
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.damage-attribution-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #f59e0b;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    font-weight: 800;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.damage-total {
+    opacity: 0.6;
+}
+
+.damage-sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.damage-child-group {
+    padding-left: 24px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.damage-child-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+}
+
+.damage-child-label {
+    color: #94a3b8;
+}
+
+.damage-child-val {
+    color: #fff;
+    font-weight: 800;
+}
+
+.no-damage-msg {
+    text-align: center;
+    opacity: 0.5;
+    font-size: 12px;
+    padding: 40px;
 }

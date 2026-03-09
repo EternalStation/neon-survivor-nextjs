@@ -4,19 +4,38 @@ import type { GameState } from '../../logic/core/Types';
 import { CANVAS_WIDTH } from '../../logic/core/Constants';
 import { getHexMultiplier, getHexLevel } from '../../logic/upgrades/LegendaryLogic';
 import { PLAYER_CLASSES } from '../../logic/core/Classes';
-import { isBuffActive } from '../../logic/upgrades/BlueprintLogic';
 import { calcStat } from '../../logic/utils/MathUtils';
 import { formatLargeNumber } from '../../utils/Format';
-import { getCdMod, getRemainingCD, getCDProgress, isOnCooldown } from '../../logic/utils/CooldownUtils';
+import { getCdMod, getRemainingCD, getCDProgress } from '../../logic/utils/CooldownUtils';
 import { GAME_CONFIG } from '../../logic/core/GameConfig';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 import { getKeybinds, getKeyDisplay } from '../../logic/utils/Keybinds';
-
+import styles from './PlayerStatus.module.css';
 
 interface PlayerStatusProps {
     gameState: GameState;
     maxHp: number;
+}
+
+interface ContainerCSSVars extends React.CSSProperties {
+    '--container-width': string;
+}
+
+interface CdCSSVars extends React.CSSProperties {
+    '--cd-height': string;
+}
+
+interface ChargeCSSVars extends React.CSSProperties {
+    '--charge-height': string;
+}
+
+interface HpBarCSSVars extends React.CSSProperties {
+    '--hp-width': string;
+}
+
+interface ShieldBarCSSVars extends React.CSSProperties {
+    '--shield-width': string;
 }
 
 export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) => {
@@ -32,7 +51,6 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
     }, []);
 
     const [prevHp, setPrevHp] = useState(player.curHp);
-
     const currentHpPercent = (player.curHp / maxHp) * 100;
     const prevHpPercent = (prevHp / maxHp) * 100;
     const isHealing = currentHpPercent > prevHpPercent;
@@ -41,74 +59,42 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
         setPrevHp(player.curHp);
     }, [player.curHp]);
 
-    return (
-        <div style={{
-            position: 'absolute', bottom: 50, left: '50%', transform: 'translateX(-50%)',
-            width: Math.min(CANVAS_WIDTH * 0.8, 300), display: 'flex', flexDirection: 'column', gap: 6, zIndex: 100,
-            alignItems: 'center'
-        }}>
+    const containerWidth = Math.min(CANVAS_WIDTH * 0.8, 300);
 
-            <div style={{ display: 'flex', gap: 12, marginBottom: 8, justifyContent: 'center', alignItems: 'center' }}>
+    return (
+        <div
+            className={styles.container}
+            style={{ '--container-width': `${containerWidth}px` } as ContainerCSSVars}
+        >
+            <div className={styles.skillsRow}>
                 {(() => {
                     const dashCd = player.dashCooldown ?? 0;
                     const dashCdMax = player.dashCooldownMax || 4.0;
-                    const isDashing = player.dashUntil && player.dashUntil > gameState.gameTime;
                     const isReady = dashCd <= 0;
                     const cdPct = isReady ? 0 : dashCd / dashCdMax;
 
                     return (
-                        <div style={{ position: 'relative', width: 42, height: 48 }}>
-                            <div style={{
-                                width: '100%', height: '100%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                backgroundColor: isReady ? 'rgba(34, 211, 238, 0.2)' : 'rgba(15, 23, 42, 0.8)',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                position: 'relative'
-                            }}>
-                                <div className="dash-icon-container" style={{
-                                    display: 'flex',
-                                    color: isReady ? '#22d3ee' : '#475569',
-                                    fontSize: 14,
-                                    fontWeight: 900,
-                                    filter: isReady ? 'drop-shadow(0 0 5px #22d3ee)' : 'none'
-                                }}>
-                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear' : 'none' }}>»</span>
-                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear 0.1s' : 'none' }}>»</span>
-                                    <span style={{ animation: isReady ? 'dash-pulse 0.6s infinite linear 0.2s' : 'none' }}>»</span>
+                        <div className={styles.hexSlot}>
+                            <div className={`${styles.hexBody} ${isReady ? styles.hexBodyReady : ''}`}>
+                                <div className={`${styles.dashIcons} ${isReady ? styles.dashIconsReady : ''}`}>
+                                    <span className={isReady ? styles.dashIconReady : ''}>»</span>
+                                    <span className={isReady ? styles.dashIconReady : ''}>»</span>
+                                    <span className={isReady ? styles.dashIconReady : ''}>»</span>
                                 </div>
 
                                 {cdPct > 0 && (
-                                    <div style={{
-                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                        height: `${cdPct * 100}%`,
-                                        background: 'rgba(0, 0, 0, 0.7)',
-                                        transition: 'height 0.1s linear'
-                                    }} />
+                                    <div
+                                        className={styles.cdOverlayBottom}
+                                        style={{ '--cd-height': `${cdPct * 100}%` } as CdCSSVars}
+                                    />
                                 )}
                                 {cdPct > 0 && (
-                                    <div style={{
-                                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                        color: '#fff', fontSize: 11, fontWeight: 900, textShadow: '0 0 2px #000', zIndex: 1
-                                    }}>
+                                    <div className={styles.cdTimer}>
                                         {Math.ceil(dashCd)}
                                     </div>
                                 )}
                             </div>
-                            <style>{`
-                                @keyframes dash-pulse {
-                                    0% { opacity: 0.3; transform: translateX(-2px); }
-                                    50% { opacity: 1; transform: translateX(0px); }
-                                    100% { opacity: 0.3; transform: translateX(2px); }
-                                }
-                            `}</style>
-                            <div style={{
-                                position: 'absolute', top: -4, right: -4,
-                                background: '#0f172a', border: '1px solid #475569',
-                                color: '#94a3b8', fontSize: 8, fontWeight: 900,
-                                padding: '1px 3px', borderRadius: 3,
-                                boxShadow: '0 0 4px #000', zIndex: 10,
-                                whiteSpace: 'nowrap'
-                            }}>
+                            <div className={styles.keyBadge}>
                                 {getKeyDisplay(keybinds.dash)}
                             </div>
                         </div>
@@ -192,78 +178,58 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                     if (!show) return null;
 
-                    const themeColor = pClass.themeColor || '#fff';
                     const iconUrl = pClass.iconUrl || '';
-                    const markerFlying = player.playerClass === 'eventhorizon' && !!player.voidMarkerActive;
 
                     return (
-                        <div style={{ position: 'relative', width: 42, height: 48 }}>
-                            <div style={{
-                                width: '100%', height: '100%',
-                                backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}>
-                                {iconUrl && <img src={iconUrl} alt="Class Skill" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isReady ? 1 : 0.4 }} />}
+                        <div className={styles.hexSlot}>
+                            <div className={styles.hexBody}>
+                                {iconUrl && (
+                                    <img
+                                        src={iconUrl}
+                                        alt="Class Skill"
+                                        className={`${styles.skillImg} ${isReady ? styles.skillImgReady : styles.skillImgDimmed}`}
+                                    />
+                                )}
 
                                 {(player.playerClass === 'stormstrike' || player.playerClass === 'aigis') ? (
                                     <>
                                         {isStormCooldown && cdPct > 0 && (
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                height: `${cdPct * 100}%`,
-                                                backgroundColor: 'rgba(120, 120, 120, 0.85)',
-                                                transition: 'height 0.1s linear'
-                                            }} />
+                                            <div
+                                                className={styles.cdOverlayBottomGray}
+                                                style={{ '--cd-height': `${cdPct * 100}%` } as CdCSSVars}
+                                            />
                                         )}
                                         {!isStormCooldown && cdPct > 0 && (
-                                            <div style={{
-                                                position: 'absolute', top: 0, left: 0, width: '100%',
-                                                height: `${cdPct * 100}%`,
-                                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                                transition: 'height 0.1s linear'
-                                            }} />
+                                            <div
+                                                className={styles.cdOverlayTop}
+                                                style={{ '--cd-height': `${cdPct * 100}%` } as CdCSSVars}
+                                            />
                                         )}
                                         {!isStormCooldown && stormChargePct > 0 && (
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                height: `${stormChargePct * 100}%`,
-                                                backgroundColor: 'rgba(234, 179, 8, 0.4)',
-                                                transition: 'height 0.1s linear'
-                                            }} />
+                                            <div
+                                                className={styles.cdOverlayCharge}
+                                                style={{ '--charge-height': `${stormChargePct * 100}%` } as ChargeCSSVars}
+                                            />
                                         )}
                                     </>
                                 ) : (
                                     cdPct > 0 && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${cdPct * 100}%`,
-                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                            transition: 'height 0.1s linear'
-                                        }} />
+                                        <div
+                                            className={styles.cdOverlayBottom}
+                                            style={{ '--cd-height': `${cdPct * 100}%` } as CdCSSVars}
+                                        />
                                     )
                                 )}
 
                                 {cdPct > 0 && remainingDisplay && (
-                                    <div style={{
-                                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                        color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
-                                    }}>
+                                    <div className={styles.cdTimerSkill}>
                                         {remainingDisplay}
                                     </div>
                                 )}
                             </div>
 
                             {(player.playerClass === 'eventhorizon' || player.playerClass === 'stormstrike' || player.playerClass === 'hivemother' || player.playerClass === 'aigis' || player.playerClass === 'malware') && (
-                                <div style={{
-                                    position: 'absolute', top: -4, right: -4,
-                                    background: '#0f172a', border: '1px solid #475569',
-                                    color: '#94a3b8', fontSize: 8, fontWeight: 900,
-                                    padding: '1px 3px', borderRadius: 3,
-                                    boxShadow: '0 0 4px #000', zIndex: 10,
-                                    whiteSpace: 'nowrap'
-                                }}>
+                                <div className={styles.keyBadge}>
                                     {getKeyDisplay(keybinds.classAbility)}
                                 </div>
                             )}
@@ -272,56 +238,43 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                 })()}
 
                 {player.activeSkills && player.activeSkills.map((skill, idx) => (
-                    <div key={idx} style={{ position: 'relative', width: 42, height: 48 }}>
-                        <div style={{
-                            width: '100%', height: '100%',
-                            backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}>
+                    <div key={idx} className={styles.hexSlot}>
+                        <div className={styles.hexBody}>
                             {(() => {
                                 const skillCdMod = getCdMod(gameState, player);
                                 const skillNow = gameState.gameTime;
                                 const skillProgress = getCDProgress(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
                                 const skillRemaining = getRemainingCD(skill.lastUsed, skill.baseCD, skillCdMod, skillNow);
                                 const onCd = skillProgress > 0;
-                                return (<>
-                                    {skill.icon ? (
-                                        <img src={skill.icon} alt={skill.type} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: onCd ? 0.3 : 1 }} />
-                                    ) : (
-                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 10 }}>
-                                            {t.skill}
-                                        </div>
-                                    )}
-                                    {onCd && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${skillProgress * 100}%`,
-                                            background: 'rgba(0, 0, 0, 0.7)',
-                                            transition: 'height 0.1s linear'
-                                        }} />
-                                    )}
-                                    {onCd && (
-                                        <div style={{
-                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                            color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 0 2px #000'
-                                        }}>
-                                            {Math.ceil(skillRemaining)}
-                                        </div>
-                                    )}
-                                </>);
+                                return (
+                                    <>
+                                        {skill.icon ? (
+                                            <img
+                                                src={skill.icon}
+                                                alt={skill.type}
+                                                className={`${styles.skillImg} ${onCd ? styles.skillImgDimmed : styles.skillImgReady}`}
+                                            />
+                                        ) : (
+                                            <div className={styles.skillEmpty}>
+                                                {t.skill}
+                                            </div>
+                                        )}
+                                        {onCd && (
+                                            <div
+                                                className={styles.cdOverlayBottom}
+                                                style={{ '--cd-height': `${skillProgress * 100}%` } as CdCSSVars}
+                                            />
+                                        )}
+                                        {onCd && (
+                                            <div className={styles.cdTimerSkill}>
+                                                {Math.ceil(skillRemaining)}
+                                            </div>
+                                        )}
+                                    </>
+                                );
                             })()}
                         </div>
-
-                        <div style={{
-                            position: 'absolute', top: -4, right: -4,
-                            background: '#0f172a', border: '1px solid #475569',
-                            color: '#fff', fontSize: 10, fontWeight: 900,
-                            width: 16, height: 16, borderRadius: '50%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 0 4px #000', zIndex: 10
-                        }}>
+                        <div className={styles.skillBadge}>
                             {skill.keyBind}
                         </div>
                     </div>
@@ -335,38 +288,29 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const kinNow = gameState.gameTime;
                     const boltProgress = getCDProgress(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, kinNow);
                     const boltCD = getRemainingCD(player.lastKineticShockwave ?? -999999, GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN, cdMod, kinNow);
-                    const boltPct = boltProgress;
-
                     const shieldTimeLeft = Math.max(0, (player.kineticShieldTimer || 0) - gameState.gameTime);
                     const shieldPct = shieldTimeLeft / 60;
 
                     return (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <div style={{ position: 'relative', width: 42, height: 48 }}>
-                                <div style={{
-                                    width: '100%', height: '100%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                    position: 'relative',
-                                    overflow: 'hidden'
-                                }}>
-                                    <img src="/assets/hexes/DefBattery.png" alt="Kinetic Bolt" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
-
+                        <div className={styles.kineticRow}>
+                            <div className={styles.hexSlot}>
+                                <div className={styles.hexBody}>
+                                    <img
+                                        src="/assets/hexes/DefBattery.png"
+                                        alt="Kinetic Bolt"
+                                        className={`${styles.skillImg} ${styles.skillImgDimmed}`}
+                                    />
                                     {boltCD > 0 && (
-                                        <div style={{
-                                            position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                            height: `${boltPct * 100}%`,
-                                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                                        }} />
+                                        <div
+                                            className={styles.cdOverlayBottom}
+                                            style={{ '--cd-height': `${boltProgress * 100}%` } as CdCSSVars}
+                                        />
                                     )}
-
-                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #3b82f6)' }}>
+                                    <div className={`${styles.iconCentered} ${styles.iconBlue}`}>
                                         ⚡
                                     </div>
-
                                     {boltCD > 0 && (
-                                        <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                        <div className={styles.cdTimerSmall}>
                                             {boltCD.toFixed(1)}s
                                         </div>
                                     )}
@@ -374,31 +318,24 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                             </div>
 
                             {kinLvl >= 2 && (
-                                <div style={{ position: 'relative', width: 42, height: 48 }}>
-                                    <div style={{
-                                        width: '100%', height: '100%',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                        position: 'relative',
-                                        overflow: 'hidden'
-                                    }}>
-                                        <img src="/assets/hexes/DefBattery.png" alt="Kinetic Shield" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.2 }} />
-
+                                <div className={styles.hexSlot}>
+                                    <div className={styles.hexBody}>
+                                        <img
+                                            src="/assets/hexes/DefBattery.png"
+                                            alt="Kinetic Shield"
+                                            className={`${styles.skillImg} ${styles.skillImgFaint}`}
+                                        />
                                         {shieldTimeLeft > 0 && (
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                                height: `${shieldPct * 100}%`,
-                                                backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                                            }} />
+                                            <div
+                                                className={styles.cdOverlayBottom}
+                                                style={{ '--cd-height': `${shieldPct * 100}%` } as CdCSSVars}
+                                            />
                                         )}
-
-                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #60a5fa)' }}>
+                                        <div className={`${styles.iconCentered} ${styles.iconLightBlue}`}>
                                             🛡️
                                         </div>
-
                                         {shieldTimeLeft > 0 && (
-                                            <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                            <div className={styles.cdTimerSmall}>
                                                 {Math.ceil(shieldTimeLeft)}s
                                             </div>
                                         )}
@@ -421,31 +358,24 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                     const markProgress = getCDProgress(player.lastDeathMark ?? -999999, GAME_CONFIG.SKILLS.DEATH_MARK_COOLDOWN, cdMod, markNow);
 
                     return (
-                        <div style={{ position: 'relative', width: 42, height: 48 }}>
-                            <div style={{
-                                width: '100%', height: '100%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                                backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}>
-                                <img src="/assets/hexes/ComCrit.png" alt="Death Mark" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
-
+                        <div className={styles.hexSlot}>
+                            <div className={styles.hexBody}>
+                                <img
+                                    src="/assets/hexes/ComCrit.png"
+                                    alt="Death Mark"
+                                    className={`${styles.skillImg} ${styles.skillImgDimmedMore}`}
+                                />
                                 {markCD > 0 && (
-                                    <div style={{
-                                        position: 'absolute', bottom: 0, left: 0, width: '100%',
-                                        height: `${markProgress * 100}%`,
-                                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                                    }} />
+                                    <div
+                                        className={styles.cdOverlayBottom}
+                                        style={{ '--cd-height': `${markProgress * 100}%` } as CdCSSVars}
+                                    />
                                 )}
-
-                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, filter: 'drop-shadow(0 0 5px #8800FF)' }}>
+                                <div className={`${styles.iconCentered} ${styles.iconPurple}`}>
                                     💀
                                 </div>
-
                                 {markCD > 0 && (
-                                    <div style={{ position: 'absolute', bottom: 2, width: '100%', textAlign: 'center', fontSize: 8, fontWeight: 900, color: '#fff' }}>
+                                    <div className={styles.cdTimerSmall}>
                                         {markCD.toFixed(1)}s
                                     </div>
                                 )}
@@ -455,20 +385,12 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                 })()}
             </div>
 
-            <div style={{
-                width: '100%', height: 16, background: 'rgba(15, 23, 42, 0.8)',
-                border: '1px solid #334155', borderRadius: 4, overflow: 'hidden', position: 'relative'
-            }}>
-                <div style={{
-                    width: `${(player.curHp / maxHp) * 100}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #ef4444, #f87171)',
-                    transition: isHealing ? 'width 0.3s' : 'width 0s'
-                }} />
-                <div style={{
-                    position: 'absolute', width: '100%', textAlign: 'center', top: 0,
-                    fontSize: 9, fontWeight: 900, lineHeight: '16px', color: '#fff'
-                }}>
+            <div className={styles.hpBar}>
+                <div
+                    className={`${styles.hpFill} ${isHealing ? styles.hpFillHealing : ''}`}
+                    style={{ '--hp-width': `${(player.curHp / maxHp) * 100}%` } as HpBarCSSVars}
+                />
+                <div className={styles.hpText}>
                     {formatLargeNumber(Math.ceil(player.curHp))} / {formatLargeNumber(Math.ceil(maxHp))}
                 </div>
             </div>
@@ -492,24 +414,14 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
 
                 const dynamicMaxShield = Math.max(lifeCapacity + kinCapacity, totalShield);
                 const shieldPct = (totalShield / dynamicMaxShield) * 100;
+
                 return (
-                    <div style={{
-                        width: '100%', height: 10, background: 'rgba(15, 23, 42, 0.8)',
-                        border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: 2, overflow: 'hidden',
-                        position: 'relative', marginTop: -4
-                    }}>
-                        <div style={{
-                            width: `${Math.min(100, shieldPct)}%`,
-                            height: '100%',
-                            background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
-                            boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)',
-                            transition: 'width 0.3s ease-out'
-                        }} />
-                        <div style={{
-                            position: 'absolute', width: '100%', textAlign: 'center', top: 0,
-                            fontSize: 7, fontWeight: 900, lineHeight: '10px', color: '#fff',
-                            textShadow: '0 0 2px #000'
-                        }}>
+                    <div className={styles.shieldBar}>
+                        <div
+                            className={styles.shieldFill}
+                            style={{ '--shield-width': `${Math.min(100, shieldPct)}%` } as ShieldBarCSSVars}
+                        />
+                        <div className={styles.shieldText}>
                             {formatLargeNumber(Math.ceil(totalShield))} / {formatLargeNumber(Math.ceil(dynamicMaxShield))}
                         </div>
                     </div>
@@ -518,4 +430,3 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
         </div>
     );
 };
-
