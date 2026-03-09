@@ -12,7 +12,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     const player = overridePlayer || state.player;
     const curseMult = state.assistant.history.curseIntensity || 1.0;
 
-
     player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill', false, player);
     player.hp.hexMult = calculateLegendaryBonus(state, 'hp_pct_per_kill', false, player);
     player.hp.hexMult2 = 0;
@@ -139,10 +138,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
         player.cooldownReduction += minutes * 0.0025 * mult;
     }
-
-
-
-
     if (player.healingDisabled) {
         regenAmount = 0;
     }

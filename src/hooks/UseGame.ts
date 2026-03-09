@@ -28,7 +28,6 @@ export function useGameLoop(gameStarted: boolean) {
     const workerRef = useRef<Worker | null>(null);
     const isTabHidden = useRef<boolean>(false);
 
-    // Pause state refs
     const showStatsRef = useRef(false);
     const showSettingsRef = useRef(false);
     const showModuleMenuRef = useRef(false);
@@ -36,12 +35,11 @@ export function useGameLoop(gameStarted: boolean) {
     const showFeedbackModalRef = useRef(false);
     const showAdminConsoleRef = useRef(false);
     const upgradeChoicesRef = useRef<UpgradeChoice[] | null>(null);
-    const wasModuleMenuOpenRef = useRef(false); // Track if module menu was just open
-    const wasPausedRef = useRef(false); // Track internal pause state for transition detection
+    const wasModuleMenuOpenRef = useRef(false);
+    const wasPausedRef = useRef(false);
 
     const meteoriteImagesRef = useRef<Record<string, HTMLImageElement>>({});
 
-    // UI State
     const [uiState, setUiState] = useState<number>(0);
     const [upgradeChoices, setUpgradeChoices] = useState<UpgradeChoice[] | null>(null);
     const [gameOver, setGameOver] = useState(false);
@@ -130,7 +128,6 @@ export function useGameLoop(gameStarted: boolean) {
         triggerZeroPercentSnark
     });
 
-    // Input Hook
     const windowScaleFactor = useRef(1);
     const { inputVector, mousePos, handleJoystickInput } = useGameInput({
         gameState,
@@ -215,7 +212,7 @@ export function useGameLoop(gameStarted: boolean) {
         dustImg.src = '/assets/Icons/MeteoriteDust.png';
         (meteoriteImagesRef.current as any).dust_pile = dustImg;
 
-        workerRef.current = new Worker(new URL('../logic/core/gameWorker.ts', import.meta.url), { type: 'module' });
+        workerRef.current = new Worker(new URL('../logic/core/GameWorker.ts', import.meta.url), { type: 'module' });
         workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
 
         const handleVisibility = () => {
@@ -440,7 +437,6 @@ export function useGameLoop(gameStarted: boolean) {
                 framesRef.current = 0;
                 lastFpsUpdateRef.current = now;
             }
-
             if (steps > 0) {
                 state.interactPressed = false;
             }
