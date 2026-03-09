@@ -1,0 +1,222 @@
+.feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.feedback-modal {
+    width: 600px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 24px;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    position: relative;
+}
+
+.feedback-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.feedback-title {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    color: #00f3ff;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.feedback-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.feedback-tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #888;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.feedback-tab-btn.active {
+    background: #222;
+    border-color: #00f3ff;
+    color: #00f3ff;
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.feedback-radio-label {
+    margin-right: 15px;
+}
+
+.feedback-radio-input {
+    margin-right: 5px;
+}
+
+.feedback-textarea {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #eee;
+    border-radius: 4px;
+    resize: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.feedback-char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+}
+
+.feedback-char-count.limit-reached {
+    color: #ff4444;
+}
+
+.feedback-submit-btn {
+    padding: 12px;
+    background: #00f3ff;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.feedback-submit-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.feedback-success {
+    color: #00ff00;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.feedback-error {
+    color: #ff4444;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.feedback-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.feedback-loading {
+    text-align: center;
+    color: #888;
+}
+
+.feedback-empty {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+}
+
+.feedback-item {
+    padding: 15px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.feedback-item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.feedback-type-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.feedback-type {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.feedback-type.bug {
+    color: #ff4444;
+}
+
+.feedback-type.suggestion {
+    color: #00ff00;
+}
+
+.feedback-status {
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.feedback-status.fixed,
+.feedback-status.implemented {
+    color: #4ade80;
+}
+
+.feedback-status.rejected {
+    color: #ef4444;
+}
+
+.feedback-status.considered {
+    color: #38bdf8;
+}
+
+.feedback-status.reviewed {
+    color: #fbbf24;
+}
+
+.feedback-status.default {
+    color: #94a3b8;
+}
+
+.feedback-message {
+    color: #ccc;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.feedback-date {
+    font-size: 11px;
+    color: #666;
+    margin-top: 10px;
+    text-align: right;
+}
