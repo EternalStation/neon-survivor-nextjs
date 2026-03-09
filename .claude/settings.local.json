@@ -11,5 +11,6 @@
       "Read(//c/Users/riot1/.local/bin//**)",
       "Read(//c/Users/riot1/AppData/Local/**)"
     ]
-  }
+  },
+  "outputStyle": "default"
 }

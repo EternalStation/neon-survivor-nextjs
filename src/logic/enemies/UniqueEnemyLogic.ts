@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { ARENA_CENTERS, isInMap, getHexDistToWall } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
@@ -19,13 +19,13 @@ export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, c
 
         const minion: Enemy = {
             id: Math.random(),
-            type: 'minion',
-            shape: 'minion',
+            type: isElite ? 'elite_minion' : 'minion',
+            shape: isElite ? 'elite_minion' : 'minion',
             x: mx, y: my,
-            size: 15,
-            hp: Math.ceil(isElite ? parent.maxHp * 0.15 : parent.maxHp * 0.15),
-            maxHp: Math.ceil(isElite ? parent.maxHp * 0.15 : parent.maxHp * 0.15),
-            spd: parent.spd * 1.4,
+            size: isElite ? 18 : 15,
+            hp: Math.ceil(isElite ? parent.maxHp * 0.25 : parent.maxHp * 0.15),
+            maxHp: Math.ceil(isElite ? parent.maxHp * 0.25 : parent.maxHp * 0.15),
+            spd: parent.spd * (isElite ? 1.6 : 1.4),
             boss: false,
             bossType: 0,
             bossAttackPattern: 0,
@@ -43,7 +43,7 @@ export function spawnMinion(state: GameState, parent: Enemy, isElite: boolean, c
             vx: 0, vy: 0,
             knockback: { x: 0, y: 0 },
             isRare: false,
-            isElite: false
+            isElite: isElite
         } as any;
 
         state.enemies.push(minion);

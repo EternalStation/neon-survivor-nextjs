@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Player } from '../logic/core/types';
+import type { Player } from '../logic/core/Types';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
 

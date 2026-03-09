@@ -1,132 +1,113 @@
-# Neon Survivor - Knowledge Base (docs_v3)
+# Neon Survivor - Project Library & Navigation (INDEX.md)
 
-A single table of contents of documentation on the actual behavior of the system.
-Source of truth: source code. Comments are not used in the code.
+This is the authoritative map of all documentation for Neon Survivor. Follow the structural logic below to find relevant mechanics, classes, and system behaviors.
 
----
-
-## Character classes
-
-> Description of each class: characteristics, main ability, what improves, what is fixed.
-
-| File | Description |
-|-----------|---------|
-| [classes/malware.md](classesalware.md) | Malware - manual aiming, endless ricochets, increasing damage. |
-| [classes/void-eventhorizon.md](classesoid-eventhorizon.md) | Void - a singularity with attraction and damage as a % of the enemy's maximum HP. |
-| [classes/ray-stormstrike.md](classesay-stormstrike.md) | Ray - periodic orbital strike over an area, high base damage. |
-| [classes/vortex-aigis.md](classesortex-aigis.md) | Vortex - orbital rings of projectiles, multi-layered passive damage. |
-| [classes/hive-mother.md](classesive-mother.md) | Hive-Mother - chain infection with nanites, DoT and jump when the host dies. |
+> **Rule**: If a file is added or changed, this index MUST be updated immediately.
 
 ---
 
-## Views
-
-> Screens and modals that display class data.
+## 1. Character Classes
 
 | File | Description |
-|-----------|---------|
-| [VitalMireImplementation.md](VitalMireImplementation.md) | Vital Mire Implementation |
-| [leaderboard_damage_tab.md](leaderboard_damage_tab.md) | Leaderboard Damage Analysis Tab |
-| [fusion-skill-damage-tracking.md](fusion-skill-damage-tracking.md) | Fused Skill Damage Tracking Logic |
-| [view/class-selection.md](viewlass-selection.md) | Class selection screen before the start of the session: cards, badges, navigation. |
-| [view/stats-menu.md](view/stats-menu.md) | Modal window of stats in the game: characteristics, radar, threat forecast. |
-| [DamageBreakdownUI.md](DamageBreakdownUI.md) | Damage Attribution tab: source breakdown, visual progress bars, real-time counters. |
-| [DamageAttributionRefinement.md](DamageAttributionRefinement.md) | Damage Attribution Refinement: Projectile grouping, Malware bonuses, and filtered Collision damage. |
+| :--- | :--- |
+| [classes/Malware.md](classes/Malware.md) | **Malware**: Manual aiming, infinite ricochets, and stacking damage bonuses. |
+| [classes/VoidEventhorizon.md](classes/VoidEventhorizon.md) | **Void**: Singularity-based crowd control with % maximum HP damage. |
+| [classes/RayStormstrike.md](classes/RayStormstrike.md) | **Ray**: Periodic orbital strikes with high base area-of-effect damage. |
+| [classes/VortexAigis.md](classes/VortexAigis.md) | **Vortex**: Orbital projectile rings providing multi-layered passive defense and damage. |
+| [classes/HiveMother.md](classes/HiveMother.md) | **Hive-Mother**: Nanite infection logic, DoT, and jumping host mechanics. |
 
 ---
 
-## Mechanics
+## 2. Core Mechanics & Stats
 
-### Characteristics (Stats)
-
-> Calculation formulas, sources of bonuses and legendary improvements that affect each characteristic.
-
+### Base Stats & Formulas
 | File | Description |
-|-----------|---------|
-| [mechanics/stat-formula.md](mechanicstat-formula.md) | Universal formula PlayerStats: fields, multipliers, HexMultiplier, Souls. |
-| [mechanics/stats/hp.md](mechanicstats/hp.md) | Max HP: Formula, EcoHP, DefPuddle L3. |
-| [mechanics/stats/armor.md](mechanicstats/armor.md) | Armor: DR formula, cap 95%, CombShield, KineticBattery L3, ChronoPlating L3. |
-| [mechanics/stats/damage.md](mechanicstats/damage.md) | Projectile Damage: Formula, EcoDMG, ChronoPlating L1 and L2. |
-| [mechanics/stats/attack-speed.md](mechanicstats/attack-speed.md) | Attack speed: logarithmic conversion to shots/sec, EcoDMG, ChronoPlating L1. |
-| [mechanics/stats/regen.md](mechanicstats/regen.md) | HP regeneration: formula, EcoHP, DefPuddle L3, ChronoPlating L4 (outside formula). |
-| [mechanics/stats/xp-gain.md](mechanicstats/xp-gain.md) | Experience per kill: structure, Arena 0 buff, EcoXP. |
-| [mechanics/stats/collision-reduction.md](mechanicstats/collision-reduction.md) | Collision damage reduction: cap 80%, CombShield L2. |
-| [mechanics/stats/cooldown-reduction.md](mechanicstats/cooldown-reduction.md) | Skill cooldown reduction: KineticBattery L4, time-scaling. |
+| :--- | :--- |
+| [mechanics/StatFormula.md](mechanics/StatFormula.md) | The universal `PlayerStats` formula: HexMultipliers, Souls, and global modifiers. |
+| [mechanics/LootSystem.md](mechanics/LootSystem.md) | **Loot & Resources**: Enemy drop rates, Flux/Dust acquisition, and item rewards. |
+| [mechanics/DamageReduction.md](mechanics/DamageReduction.md) | Collision and Projectile reduction scaling, linear summation, and 80% caps. |
+| [mechanics/DashAbility.md](mechanics/DashAbility.md) | Dash mechanics: Distance (240px), Cooldown (4s), and cyan particle effects. |
 
-### Cooldowns
-
+### Stat Modules
 | File | Description |
-|-----------|---------|
-| [mechanics/cooldown.md](mechanics/cooldown.md) | Three cooldown systems: countdown, gameTime-timestamp, Date.now(). cdMod formula, skill life cycle, HUD, architectural issues and centralization plan. |
-
-### Cheat codes
-
-| File | Description |
-|-----------|---------|
-| [mechanics/cheat-codes.md](mechanics/cheat-codes.md) | All debug codes: resources, bosses, improvements, time, turrets, events. |
-| [mechanics/LeaderboardRounding.md](mechanics/LeaderboardRounding.md) | Leaderboard Rounding: Consistent integer and 2-decimal rounding for submission data. |
-| [KeybindRefinement.md](KeybindRefinement.md) | Keybind Refinement: Separated Class Ability (Q) and numerical Skill bar (1-6). |
-
-### Assistant (ORBIT)
-
-| File | Description |
-|-----------|---------|
-| [mechanics/orbit_afk_refactor.md](mechanics/orbit_afk_refactor.md) | AFK Logic refactor: Coordinate-based detection and real-time tracking behavior. |
-
+| :--- | :--- |
+| [mechanics/stats/Hp.md](mechanics/stats/Hp.md) | **Max HP**: Calculation formula including base stats and economic perks. |
+| [mechanics/stats/Armor.md](mechanics/stats/Armor.md) | **Armor**: Logarithmic DR formula with a 95% cap and source-specific stacking. |
+| [mechanics/stats/Damage.md](mechanics/stats/Damage.md) | **Projectile Damage**: Base multipliers and level-based scaling. |
+| [mechanics/stats/AttackSpeed.md](mechanics/stats/AttackSpeed.md) | **Attack Speed**: Logarithmic conversion to shots/sec (ATS). |
+| [mechanics/stats/Regen.md](mechanics/stats/Regen.md) | **HP Regeneration**: Flat and percentage-based recovery formulas. |
+| [mechanics/stats/XpGain.md](mechanics/stats/XpGain.md) | **XP Gain**: Experience distribution logic and Arena 0 multipliers. |
+| [mechanics/stats/CollisionReduction.md](mechanics/stats/CollisionReduction.md) | Specific reduction against physical enemy contact (Aegis Protocol). |
+| [mechanics/stats/CooldownReduction.md](mechanics/stats/CooldownReduction.md) | **CDR**: Skill cooldown reduction scaling and time-based modifiers. |
 
 ---
 
-### Legendary upgrades
+## 3. Upgrades & Fusions
 
-> Each improvement: category, arena, perks by level, mechanics of work, links to affected characteristics.
+### Legendary Upgrades (By Arena)
+| Category | File | Description |
+| :--- | :--- | :--- |
+| **Arena 0 (Eco)** | [mechanics/legendary-upgrades/EcoDmg.md](mechanics/legendary-upgrades/EcoDmg.md) | **Storm of Steel**: Kill-scaling Damage and Attack Speed. |
+| **Arena 0 (Eco)** | [mechanics/legendary-upgrades/EcoXp.md](mechanics/legendary-upgrades/EcoXp.md) | **Neural Harvest**: Soul-based XP and resource thresholds. |
+| **Arena 0 (Eco)** | [mechanics/legendary-upgrades/EcoHp.md](mechanics/legendary-upgrades/EcoHp.md) | **Essence Syphon**: Kill-scaling Max HP and Regeneration. |
+| **Arena 0 (Eco)** | [mechanics/legendary-upgrades/CombShield.md](mechanics/legendary-upgrades/CombShield.md) | **Aegis Protocol**: Armor and specialized damage reduction. |
+| **Arena 1 (Combat)** | [mechanics/legendary-upgrades/ComLife.md](mechanics/legendary-upgrades/ComLife.md) | **Crimson Feast**: Lifesteal, Overheal shields, and Zombie mechanics. |
+| **Arena 1 (Combat)** | [mechanics/legendary-upgrades/ComCrit.md](mechanics/legendary-upgrades/ComCrit.md) | **Shattered Fate**: Execution thresholds and Death Marks. |
+| **Arena 1 (Combat)** | [mechanics/legendary-upgrades/ComWave.md](mechanics/legendary-upgrades/ComWave.md) | **Terror Pulse**: Active AoE shockwave and Fear status. |
+| **Arena 1 (Combat)** | [mechanics/legendary-upgrades/RadiationCore.md](mechanics/legendary-upgrades/RadiationCore.md) | **Radiation Core**: Constant MaxHP/sec aura with global decay (L4). |
+| **Arena 2 (Defense)** | [mechanics/legendary-upgrades/DefPuddle.md](mechanics/legendary-upgrades/DefPuddle.md) | **Toxic Swamp**: Acid DoT, slow, and area-based HP/Regen buffs. |
+| **Arena 2 (Defense)** | [mechanics/legendary-upgrades/DefEpi.md](mechanics/legendary-upgrades/DefEpi.md) | **Epicenter**: Invulnerability channel and damage reduction. |
+| **Arena 2 (Defense)** | [mechanics/legendary-upgrades/KineticBattery.md](mechanics/legendary-upgrades/KineticBattery.md) | **Kinetic Battery**: Armor-based shockwaves and temporary shielding. |
+| **Arena 2 (Defense)** | [mechanics/legendary-upgrades/ChronoPlating.md](mechanics/legendary-upgrades/ChronoPlating.md) | **Chrono Plating**: Armor conversion to offensive stats. |
 
-**Arena 0 (Economic):**
-
+### Fusions & UI
 | File | Description |
-|-----------|---------|
-| [mechanics/legendary-upgrades/ecodmg.md](mechanicsegendary-upgrades/ecodmg.md) | STORM OF STEEL - kill-scaling Damage and Attack Speed ​​(flat L1/L2, % L3/L4). |
-| [mechanics/legendary-upgrades/ecoxp.md](mechanicsegendary-upgrades/ecoxp.md) | NEURAL HARVEST - kill-scaling XP, threshold Dust (L2) and Flux (L3). |
-| [mechanics/legendary-upgrades/ecohp.md](mechanicsegendary-upgrades/ecohp.md) | ESSENCE SYPHON - kill-scaling MaxHP and Regen (flat L1/L2, % L3/L4). |
-| [mechanics/legendary-upgrades/combshield.md](mechanicsegendary-upgrades/combshield.md) | AEGIS PROTOCOL - kill-scaling Armor + Collision/Projectile Reduction. |**Arena 1 (Combat):**
-
-| File | Description |
-|-----------|---------|
-| [mechanics/legendary-upgrades/comlife.md](mechanicsegendary-upgrades/comlife.md) | CRIMSON FEAST - Lifesteal 3% (L1), Overheal shield (L2), HP% damage (L3), Zombie (L4). |
-| [mechanics/legendary-upgrades/comcrit.md](mechanicsegendary-upgrades/comcrit.md) | SHATTERED FATE - crit 15%/×2 (L1), Execute (L2), Death Mark (L3), Mega-Crit 25%/×3.5 (L4). |
-| [ShatteredFateRework.md](ShatteredFateRework.md) | Detailed documentation on the hit-based execution and Death Mark rework for Shattered Fate. |
-| [mechanics/legendary-upgrades/comwave.md](mechanicsegendary-upgrades/comwave.md) | TERROR PULSE - active AoE shockwave 200/350% damage, Fear (L2), cooldown 30→20s. |
-| [mechanics/legendary-upgrades/radiationcore.md](mechanicsegendary-upgrades/radiationcore.md) | RADIATION CORE - constant aura 500px (5–10% MaxHP/sec), healing (L2), missing HP scaling (L3), global decay (L4). |
-
-**Arena 2 (Defense):**
-
-| File | Description |
-|-----------|---------|
-| [mechanics/legendary-upgrades/defpuddle.md](mechanicsegendary-upgrades/defpuddle.md) | TOXIC SWAMP - acid puddle DoT 5% HP/sec, slow (L2), +25% HP and Regen in the puddle (L3). |
-| [mechanics/legendary-upgrades/defepi.md](mechanicsegendary-upgrades/defepi.md) | EPICENTER - 10s spike channel with immobilization, -50% damage (L2), 3s invulnerability (L3). |
-| [mechanics/legendary-upgrades/kineticbattery.md](mechanicsegendary-upgrades/kineticbattery.md) | KINETIC BATTERY - shockwave 100% Armor (L1), shield = Armor (L2), +100% Armor at HP<50% (L3), CDR (L4). |
-| [mechanics/legendary-upgrades/chronoplating.md](mechanicsegendary-upgrades/chronoplating.md) | CHRONO PLATING - Armor→DMG+ATS (L1), HP→DMG (L2), double Armor every 5 min (L3), Armor→Regen (L4). |
+| :--- | :--- |
+| [mechanics/legendary-upgrades/Fusions.md](mechanics/legendary-upgrades/Fusions.md) | Detailed rules for combining L4 perks into Legendary Master Skills. |
+| [mechanics/legendary-upgrades/FusionMenu.md](mechanics/legendary-upgrades/FusionMenu.md) | **Fusion Forge**: Visual features, sorting logic, and card interactions. |
+| [mechanics/legendary-upgrades/FusionAssets.md](mechanics/legendary-upgrades/FusionAssets.md) | High-fidelity icon paths and naming conventions for fusion skills. |
+| [mechanics/legendary-upgrades/GravitationalHarvest.md](mechanics/legendary-upgrades/GravitationalHarvest.md) | Specialized fusion involving singularity and resource collection. |
 
 ---
 
-##Enemies
-
-> Unique enemies: behavior, phases, triggers, interaction with mechanics.
+## 4. Enemies & Bosses
 
 | File | Description |
-|-----------|---------|
-| [enemies/snitch.md](enemies/snitch.md) | Quantum Snitch - evasive rare target, 1 HP, orbital behavior, tactical teleports, spawn cycle every 2 minutes. |
-| [enemies/overlord.md](enemies/overlord.md) | Overlord (Anomaly Boss) - Infernal Heat Aura with HP-based phased evolution and regeneration. |
-| [mechanics/PentagonBossUpdate.md](mechanics/PentagonBossUpdate.md) | Pentagon Boss: Rocket transformation, fire trails, and Level 2/3 Rocket Barrage mechanics. |
-| [mechanics/BossHitboxOptimization.md](mechanics/BossHitboxOptimization.md) | Boss Hitbox Optimization: Increased base size (110px) and collision padding to align with visual models. |
+| :--- | :--- |
+| [enemies/EliteTriangle.md](enemies/EliteTriangle.md) | **Elite Triangle**: Tactical dash with 0.5s telegraph and high-speed wobbling. |
+| [enemies/Snitch.md](enemies/Snitch.md) | **Quantum Snitch**: Rare evasive target with 1HP and tactical teleportation. |
+| [enemies/Overlord.md](enemies/Overlord.md) | **The Anomaly**: Multi-phase evolution, HP regeneration, and heat auras. |
+| [mechanics/PentagonBoss.md](mechanics/PentagonBoss.md) | **Pentagon Boss**: Rocket transformations and area-denial fire trails. |
+| [mechanics/BossSizeAndVisuals.md](mechanics/BossSizeAndVisuals.md) | Scaling multipliers and visual padding to prevent overlap with the Overlord. |
+| [mechanics/EnemyVisuals.md](mechanics/EnemyVisuals.md) | **4-Layer Rendering**: Core, Ring, Body, Outline. Neon era color palettes. |
+| [mechanics/EnemyHpBars.md](mechanics/EnemyHpBars.md) | HP bar rendering logic for Elites and Boss stage separators (33%/66%). |
 
 ---
 
-## Knowledge base status
+## 5. Environment & Systems
+
+| File | Description |
+| :--- | :--- |
+| [mechanics/TurretSystem.md](mechanics/TurretSystem.md) | Interaction radius (350px), cost scaling, and turret variants (Fire/Ice/Heal). |
+| [mechanics/MenuAnimation.md](mechanics/MenuAnimation.md) | Scanning effect, "DECRYPTING" animations, and 0.5s-1.0s initial delay. |
+| [mechanics/MatrixSectorColors.md](mechanics/MatrixSectorColors.md) | Unified purple palette for Sector 01-03 identifiers. |
+| [mechanics/Cooldown.md](mechanics/Cooldown.md) | Description of the three disparate cooldown systems used in the game. |
+| [mechanics/CheatCodes.md](mechanics/CheatCodes.md) | Debug protocols for resources, bosses, and time manipulation. |
+| [mechanics/LeaderboardRounding.md](mechanics/LeaderboardRounding.md) | Consistent integer and decimal rounding for score submissions. |
+
+---
+
+## 6. Knowledge Base Status
 
 | Status | Meaning |
-|--------|---------|
-| ✅ Documented | Behavior confirmed by reading source code |
-| ⚠️ Assumption | The behavior is assumed; requires verification |
-| 🔲 Scheduled | File planned, no content yet |
+| :--- | :--- |
+| ✅ Documented | Confirmed by reading source code. |
+| ⚠️ Assumption | Requires functional verification in-game. |
+| 🔲 Scheduled | Planned for future documentation. |
 
-Current coverage: classes (5/5), class representations (2/2), stats (9 files), legendary upgrades (12/12), cooldowns (1 file), cheat codes (1 file), enemies (1 file).
+**Current Coverage**:
+- Classes: 5/5
+- Core Stats: 8/8
+- Legendary Upgrades: 12/12
+- Bosses: 3 Major variants
+- Systems: 6 Modules

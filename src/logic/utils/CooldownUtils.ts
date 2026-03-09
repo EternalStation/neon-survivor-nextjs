@@ -1,5 +1,5 @@
 
-import type { GameState, Player } from '../core/types';
+import type { GameState, Player } from '../core/Types';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 
 export function getCdMod(state: GameState, player: Player): number {

@@ -1,5 +1,5 @@
-import type { GameState } from '../core/types';
-import { formatLargeNumber } from '../../utils/format';
+import type { GameState } from '../core/Types';
+import { formatLargeNumber } from '../../utils/Format';
 
 export interface Particle {
     x: number;

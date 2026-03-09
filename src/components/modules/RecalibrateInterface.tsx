@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { GameState, Meteorite } from '../../logic/core/types';
+import type { GameState, Meteorite } from '../../logic/core/Types';
 import { getMeteoriteImage, RARITY_COLORS, getPerkName, PerkFilter, getPerkParts, SPIN_POOLS, matchesPerk, getSpinPools, getMeteoriteColor } from './ModuleUtils';
 import { playSfx } from '../../logic/audio/AudioLogic';
 import { getUpgradeQualityCost, getRerollTypeCost, getRerollValueCost } from '../../logic/upgrades/RecalibrateLogic';

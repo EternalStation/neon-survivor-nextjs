@@ -2,15 +2,83 @@ import React, { useEffect, useState } from 'react';
 import { RadarChart } from './RadarChart';
 import { DamageRow } from './stats/DamageRow';
 import { getUiTranslation } from '../lib/uiTranslations';
-import type { GameState, UpgradeChoice } from '../logic/core/types';
+import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
-import { GAME_CONFIG } from '../logic/core/GameConfig';
-import { submitRunToLeaderboard } from '../utils/leaderboard';
-import { formatLargeNumber } from '../utils/format';
+import { submitRunToLeaderboard } from '../utils/Leaderboard';
+import { formatLargeNumber } from '../utils/Format';
 import { useLanguage } from '../lib/LanguageContext';
-import { getDamageMapping } from '../utils/damageMapping';
+import { getDamageMapping } from '../utils/DamageMapping';
 import { getKeybinds } from '../logic/utils/Keybinds';
+import styles from './DeathScreen.module.css';
+
+interface ExtendedWindow extends Window {
+    __cheatsUsed?: boolean;
+}
+
+type StatColor = 'white' | 'cyan' | 'red' | 'amber' | 'purple' | 'green' | 'pink' | 'lightGreen' | 'blue';
+type RankVariant = 'gold' | 'silver' | 'bronze' | 'default' | 'extraction';
+
+interface RarityVars extends React.CSSProperties {
+    '--rarity-color': string;
+}
+
+const STAT_COLOR_CLASSES: Record<StatColor, string> = {
+    white: styles.colorWhite,
+    cyan: styles.colorCyan,
+    red: styles.colorRed,
+    amber: styles.colorAmber,
+    purple: styles.colorPurple,
+    green: styles.colorGreen,
+    pink: styles.colorPink,
+    lightGreen: styles.colorLightGreen,
+    blue: styles.colorBlue,
+};
+
+const RANK_CLASSES: Record<RankVariant, string> = {
+    gold: styles.rankGold,
+    silver: styles.rankSilver,
+    bronze: styles.rankBronze,
+    extraction: styles.rankExtraction,
+    default: styles.rankDefault,
+};
+
+function getRankVariant(rank: number, extractionScreen: boolean): RankVariant {
+    if (rank === 1) return 'gold';
+    if (rank === 2) return 'silver';
+    if (rank === 3) return 'bronze';
+    return extractionScreen ? 'extraction' : 'default';
+}
+
+interface FinalStatItemProps {
+    label: string;
+    value: string | number;
+    color?: StatColor;
+}
+
+const FinalStatItem: React.FC<FinalStatItemProps> = ({ label, value, color = 'white' }) => (
+    <div className={styles.finalStatItem}>
+        <span className={styles.finalStatLabel}>{label}</span>
+        <span className={`${styles.finalStatValue} ${STAT_COLOR_CLASSES[color]}`}>{value}</span>
+    </div>
+);
+
+interface StatItemProps {
+    label: string;
+    value: string | number;
+    color?: StatColor;
+    subValue?: string;
+}
+
+const StatItem: React.FC<StatItemProps> = ({ label, value, color = 'white', subValue = '' }) => (
+    <div className={styles.statItem}>
+        <span className={styles.statLabel}>{label}</span>
+        <div className={styles.statValueContainer}>
+            <span className={`${styles.statValue} ${STAT_COLOR_CLASSES[color]}`}>{value}</span>
+            {subValue && <div className={styles.statSubValue}>{subValue}</div>}
+        </div>
+    </div>
+);
 
 interface DeathScreenProps {
     stats: {
@@ -42,13 +110,12 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
     });
 
     useEffect(() => {
-        // Auto-submit run when player dies
         if (gameState.runSubmitted) {
-            setIsSubmitting(false); // Already submitted, stop loading
+            setIsSubmitting(false);
             return;
         }
 
-        gameState.runSubmitted = true; // Mark as submitted immediately
+        gameState.runSubmitted = true;
 
         submitRunToLeaderboard(gameState).then(result => {
             if (result.success && result.rank) {
@@ -81,7 +148,6 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
         const duration = 1200;
         const startTime = Date.now();
 
-        // Capture initial values to avoid glitches if props change during animation
         const initialKills = stats.kills;
         const initialLevel = stats.level;
         const initialBosses = stats.bosses;
@@ -105,14 +171,13 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
             if (progress < 1) requestAnimationFrame(animate);
         };
         animate();
-    }, []); // Only run once on mount to prevent "glitching" if parents re-render/pass new object refs
+    }, []);
 
     const formatTime = (sec: number) => {
         const m = Math.floor(sec / 60);
         const s = Math.floor(sec % 60);
         return `${m}:${s.toString().padStart(2, '0')} `;
     };
-
 
     const armor = calcStat(gameState.player.arm);
     const armRed = (getDefenseReduction(armor) * 100).toFixed(1);
@@ -152,261 +217,147 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
 
     if (gameState.extractionStatus === 'complete') {
         return (
-            <div style={{
-                height: '100%', width: '100%', background: '#050505',
-                position: 'absolute', top: 0, left: 0, zIndex: 10000,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                textAlign: 'center', pointerEvents: 'auto'
-            }}>
-                <div style={{
-                    fontSize: 72, fontWeight: 900, letterSpacing: 8,
-                    background: 'linear-gradient(to bottom, #fff 0%, #10b981 100%)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                    marginBottom: 20, animation: 'pulse-glow 2s infinite ease-in-out'
-                }}>
+            <div className={styles.extractionContainer}>
+                <div className={styles.extractionTitle}>
                     MISSION COMPLETED
                 </div>
 
                 {!isSubmitting && rank && (
-                    <div style={{ marginBottom: 40 }}>
-                        <div style={{ color: '#94a3b8', fontSize: 14, letterSpacing: 2, fontWeight: 800, marginBottom: 5 }}>GLOBAL RANK</div>
-                        <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#10b981', fontSize: 48, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
+                    <div className={styles.rankContainer}>
+                        <div className={styles.rankLabel}>GLOBAL RANK</div>
+                        <div className={`${styles.rankNumber} ${RANK_CLASSES[getRankVariant(rank, true)]}`}>#{rank}</div>
                     </div>
                 )}
 
-                <button
-                    onClick={onQuit}
-                    style={{
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        border: '2px solid #10b981',
-                        color: '#10b981',
-                        padding: '15px 40px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontFamily: 'Orbitron, sans-serif',
-                        fontSize: '20px',
-                        fontWeight: 900,
-                        letterSpacing: '4px',
-                        textShadow: '0 0 10px #10b981',
-                        boxShadow: '0 0 30px rgba(16, 185, 129, 0.2)',
-                        transition: 'all 0.3s ease'
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
-                        e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                >
+                <button className={styles.extractionButton} onClick={onQuit}>
                     MAIN MENU
                 </button>
-
-                <style>{`
-@keyframes pulse - glow {
-    0 %, 100 % { opacity: 0.8; filter: drop - shadow(0 0 10px rgba(16, 185, 129, 0.3)); }
-    50 % { opacity: 1; filter: drop - shadow(0 0 30px rgba(16, 185, 129, 0.6)); }
-}
-`}</style>
             </div>
         );
     }
 
-    const FinalStatItem = ({ label, value, color = '#fff' }: { label: string, value: string | number, color?: string }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: 'Orbitron, sans-serif' }}>{label}</span>
-            <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Orbitron, sans-serif', color }}>{value}</span>
-        </div>
-    );
-
-    const StatItem = ({ label, value, color = '#fff', subValue = '' }: { label: string, value: string | number, color?: string, subValue?: string }) => (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Orbitron, sans-serif' }}>{label}</span>
-            <div style={{ textAlign: 'right' }}>
-                <span style={{ color, fontSize: 15, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>{value}</span>
-                {subValue && <div style={{ fontSize: 8, color: '#64748b' }}>{subValue}</div>}
-            </div>
-        </div>
-    );
+    const cheatsActive = gameState.cheatsUsed || (typeof window !== 'undefined' && (window as ExtendedWindow).__cheatsUsed);
 
     return (
-        <div className="death-screen" style={{
-            height: '100%',
-            width: '100%',
-            background: '#050505',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            overflowY: 'auto',
-            zIndex: 10000,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '10px 0 100px',
-            pointerEvents: 'auto'
-        }}>
-            {/* Action Buttons */}
-            <div style={{ position: 'fixed', top: 20, right: 30, display: 'flex', alignItems: 'flex-start', gap: 15, zIndex: 12000 }}>
+        <div className={styles.deathScreen}>
+            <div className={styles.actionButtons}>
 
-                {/* Rankings Group */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <button className="btn-restart" onClick={onShowLeaderboard} style={{
-                        minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
-                        fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
-                        background: 'rgba(34, 211, 238, 0.1)', border: '1px solid #22d3ee', color: '#22d3ee',
-                        marginBottom: 8
-                    }}>RANKINGS</button>
+                <div className={styles.rankingsGroup}>
+                    <button className={styles.rankingsBtn} onClick={onShowLeaderboard}>RANKINGS</button>
 
                     {isSubmitting ? (
-                        <div style={{ color: '#22d3ee', fontSize: 9, letterSpacing: 1, fontWeight: 800 }}>UPLOADING...</div>
+                        <div className={styles.uploadingText}>UPLOADING...</div>
                     ) : submissionError === 'CHEATS DETECTED' ? (
-                        <div style={{ color: '#ef4444', fontSize: 10, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}>
+                        <div className={styles.cheatsText}>
                             YOU USED CHEATS.<br />RECORD NOT SAVED.
                         </div>
                     ) : submissionError === 'NOT LOGGED IN' ? (
-                        <div style={{ color: '#f59e0b', fontSize: 9, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2 }}>
+                        <div className={styles.notLoggedInText}>
                             PLEASE LOGIN TO<br />SAVE RECORDS
                         </div>
                     ) : submissionError ? (
-                        <div style={{ color: '#ef4444', fontSize: 8, letterSpacing: 1, fontWeight: 700, maxWidth: 100, textAlign: 'center' }}>
+                        <div className={styles.submissionErrorText}>
                             {submissionError.toUpperCase()}
                         </div>
-                    ) : (gameState.cheatsUsed || (typeof window !== 'undefined' && (window as any).__cheatsUsed)) ? (
-                        <div style={{ color: '#ef4444', fontSize: 10, letterSpacing: 1, fontWeight: 900, maxWidth: 140, textAlign: 'center', lineHeight: 1.2, textShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}>
+                    ) : cheatsActive ? (
+                        <div className={styles.cheatsText}>
                             YOU USED CHEATS.<br />RECORD NOT SAVED.
                         </div>
                     ) : rank ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ color: '#94a3b8', fontSize: 8, letterSpacing: 1, fontWeight: 800 }}>GLOBAL RANK</div>
-                            <div style={{ color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#22d3ee', fontSize: 18, fontWeight: 900, lineHeight: 1 }}>#{rank}</div>
+                        <div className={styles.rankDisplay}>
+                            <div className={styles.rankDisplayLabel}>GLOBAL RANK</div>
+                            <div className={`${styles.rankDisplayNumber} ${RANK_CLASSES[getRankVariant(rank, false)]}`}>#{rank}</div>
                         </div>
                     ) : null}
                 </div>
 
-                <button
-                    className="btn-restart"
-                    onClick={onRestart}
-                    style={{
-                        minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
-                        fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        border: '1px solid #10b981',
-                        color: '#10b981',
-                        transition: 'all 0.2s',
-                        cursor: 'pointer'
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
-                        e.currentTarget.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >RETRIAL</button>
-
-                <button className="btn-restart" onClick={onQuit} style={{
-                    minWidth: 100, height: 32, fontSize: 12, letterSpacing: 1,
-                    fontWeight: 800, textTransform: 'uppercase', padding: '0 10px',
-                    background: 'transparent', border: '1px solid #334155', color: '#94a3b8', boxShadow: 'none'
-                }}>MAIN MENU</button>
+                <button className={styles.retrialBtn} onClick={onRestart}>RETRIAL</button>
+                <button className={styles.mainMenuBtn} onClick={onQuit}>MAIN MENU</button>
             </div>
 
-            {/* Header Section - Shrinked title */}
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
-                <div className="death-title" style={{
-                    fontSize: 54,
-                    marginBottom: 10,
-                    background: 'linear-gradient(to bottom, #fff 0%, #334155 100%)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                    fontWeight: 900, letterSpacing: 4, textAlign: 'center'
-                }}>SESSION TERMINATED</div>
+            <div className={styles.header}>
+                <div className={styles.deathTitle}>SESSION TERMINATED</div>
 
-                <div className="death-tabs" style={{ marginBottom: 5, display: 'flex', justifyContent: 'center' }}>
-                    <button className={`death - tab ${activeTab === 'overview' ? 'active' : ''} `} onClick={() => setActiveTab('overview')} style={{ padding: '6px 20px', fontSize: 14 }}>Overview</button>
-                    <button className={`death - tab ${activeTab === 'modules' ? 'active' : ''} `} onClick={() => setActiveTab('modules')} style={{ padding: '6px 20px', fontSize: 14 }}>Hardware Profile</button>
-                    <button className={`death - tab ${activeTab === 'damage' ? 'active' : ''} `} onClick={() => setActiveTab('damage')} style={{ padding: '6px 20px', fontSize: 14 }}>Damage</button>
+                <div className={styles.tabsBar}>
+                    <button className={`${styles.tab}${activeTab === 'overview' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
+                    <button className={`${styles.tab}${activeTab === 'modules' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('modules')}>Hardware Profile</button>
+                    <button className={`${styles.tab}${activeTab === 'damage' ? ` ${styles.active}` : ''}`} onClick={() => setActiveTab('damage')}>Damage</button>
                 </div>
             </div>
 
-            {/* Content Logic - Compacted height */}
-            <div style={{ width: '1000px', display: 'flex', flexDirection: 'column' }}>
+            <div className={styles.content}>
                 {activeTab === 'overview' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className={styles.overviewGrid}>
 
-                        {/* MISSION LOG */}
-                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 12, color: '#22d3ee', letterSpacing: 3, marginBottom: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Orbitron, sans-serif' }}>
-                                <div style={{ width: 4, height: 16, background: '#22d3ee' }} /> MISSION LOG
+                        <div className={styles.panel}>
+                            <div className={styles.panelHeader}>
+                                <div className={styles.panelHeaderAccent} /> MISSION LOG
                             </div>
-                            <StatItem label="Time Active" value={formatTime(stats.time)} color="#fff" />
-                            <StatItem label="LEVEL" value={displayStats.level} color="#22d3ee" />
-                            <StatItem label="Kill Count" value={displayStats.kills} color="#ef4444" subValue={`${displayStats.bosses} Bosses`} />
-                            <StatItem label="Snitches" value={displayStats.snitch} color="#f59e0b" />
-                            <StatItem label="Portals" value={displayStats.portals} color="#a855f7" />
-                            <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="#10b981" />
-                            <StatItem label="Cause of Death" value={gameState.player.deathCause || 'Unknown'} color="#ef4444" />
+                            <StatItem label="Time Active" value={formatTime(stats.time)} color="white" />
+                            <StatItem label="LEVEL" value={displayStats.level} color="cyan" />
+                            <StatItem label="Kill Count" value={displayStats.kills} color="red" subValue={`${displayStats.bosses} Bosses`} />
+                            <StatItem label="Snitches" value={displayStats.snitch} color="amber" />
+                            <StatItem label="Portals" value={displayStats.portals} color="purple" />
+                            <StatItem label="Meteorites" value={gameState.meteoritesPickedUp || 0} color="green" />
+                            <StatItem label="Cause of Death" value={gameState.player.deathCause || 'Unknown'} color="red" />
                             {gameState.player.lastHitDamage !== undefined && (
-                                <StatItem label="Killing Blow" value={formatLargeNumber(gameState.player.lastHitDamage)} color="#f87171" />
+                                <StatItem label="Killing Blow" value={formatLargeNumber(gameState.player.lastHitDamage)} color="pink" />
                             )}
                             {gameState.player.killerMaxHp !== undefined && (
-                                <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="#f59e0b" />
+                                <StatItem label="Killer HP" value={formatLargeNumber(gameState.player.killerMaxHp)} color="amber" />
                             )}
                         </div>
 
-                        {/* FINAL SYSTEM PERFORMANCE */}
-                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '15px 20px', borderRadius: 12, border: '1px solid #1e293b' }}>
-                            <div style={{ fontSize: 12, color: '#00ffff', letterSpacing: 1.5, marginBottom: 12, fontWeight: 900, borderBottom: '1px solid rgba(0, 255, 255, 0.1)', paddingBottom: 6, textTransform: 'uppercase', fontFamily: 'Orbitron, sans-serif' }}>
+                        <div className={styles.panel}>
+                            <div className={styles.performanceHeader}>
                                 FINAL SYSTEM PERFORMANCE
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', background: 'rgba(10, 15, 30, 0.4)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0, 255, 255, 0.1)' }}>
-                                <FinalStatItem label="DMG/HIT" value={formatLargeNumber(calcStat(gameState.player.dmg))} color="#f59e0b" />
-                                <FinalStatItem label="MAX HP" value={formatLargeNumber(maxHp)} color="#4ade80" />
-                                <FinalStatItem label="XP/KILL" value={formatLargeNumber(finalXpPerKill)} color="#22d3ee" />
-                                <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="#a855f7" />
-                                <FinalStatItem label="REGEN" value={formatLargeNumber(regen) + '/s'} color="#4ade80" />
-                                <FinalStatItem label="ARMOR" value={formatLargeNumber(Math.round(calcStat(gameState.player.arm)))} color="#3b82f6" />
-                                <FinalStatItem label="ARM REDUC" value={armRed + '%'} color="#3b82f6" />
-                                <FinalStatItem label="SPEED" value={gameState.player.speed.toFixed(1)} color="#22d3ee" />
-                                <FinalStatItem label="COL REDUC" value={colRed + '%'} color="#3b82f6" />
-                                <FinalStatItem label="PROJ REDUC" value={projRed + '%'} color="#3b82f6" />
+                            <div className={styles.statsGrid}>
+                                <FinalStatItem label="DMG/HIT" value={formatLargeNumber(calcStat(gameState.player.dmg))} color="amber" />
+                                <FinalStatItem label="MAX HP" value={formatLargeNumber(maxHp)} color="lightGreen" />
+                                <FinalStatItem label="XP/KILL" value={formatLargeNumber(finalXpPerKill)} color="cyan" />
+                                <FinalStatItem label="ATK SPEED" value={(2.64 * Math.log(calcStat(gameState.player.atk) / 100) - 1.25).toFixed(2) + '/s'} color="purple" />
+                                <FinalStatItem label="REGEN" value={formatLargeNumber(regen) + '/s'} color="lightGreen" />
+                                <FinalStatItem label="ARMOR" value={formatLargeNumber(Math.round(calcStat(gameState.player.arm)))} color="blue" />
+                                <FinalStatItem label="ARM REDUC" value={armRed + '%'} color="blue" />
+                                <FinalStatItem label="SPEED" value={gameState.player.speed.toFixed(1)} color="cyan" />
+                                <FinalStatItem label="COL REDUC" value={colRed + '%'} color="blue" />
+                                <FinalStatItem label="PROJ REDUC" value={projRed + '%'} color="blue" />
                             </div>
 
-                            <div style={{ marginTop: 20, fontSize: 11, color: '#475569', letterSpacing: 1, borderTop: '1px solid #1e293b', paddingTop: 10, fontFamily: 'Orbitron, sans-serif' }}>
+                            <div className={styles.sectorAllocation}>
                                 SECTOR ALLOCATION
-                                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ECONOMIC ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>COMBAT ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>DEFENCE ARENA</span><span style={{ color: '#94a3b8', fontFamily: 'Orbitron, sans-serif' }}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
+                                <div className={styles.sectorList}>
+                                    <div className={styles.sectorItem}><span>ECONOMIC ARENA</span><span className={styles.sectorTime}>{formatTime(gameState.timeInArena?.[0] || 0)}</span></div>
+                                    <div className={styles.sectorItem}><span>COMBAT ARENA</span><span className={styles.sectorTime}>{formatTime(gameState.timeInArena?.[1] || 0)}</span></div>
+                                    <div className={styles.sectorItem}><span>DEFENCE ARENA</span><span className={styles.sectorTime}>{formatTime(gameState.timeInArena?.[2] || 0)}</span></div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* COMBAT ANALYTICS */}
-                        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '20px 25px', borderRadius: 12, border: '1px solid #1e293b', gridColumn: 'span 2' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: 13, color: '#3b82f6', letterSpacing: 3, marginBottom: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Orbitron, sans-serif' }}>
-                                        <div style={{ width: 4, height: 16, background: '#3b82f6' }} /> COMBAT ANALYTICS
+                        <div className={styles.panelWide}>
+                            <div className={styles.analyticsContent}>
+                                <div className={styles.analyticsLeft}>
+                                    <div className={styles.analyticsHeader}>
+                                        <div className={styles.analyticsAccent} /> COMBAT ANALYTICS
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
-                                        <StatItem label="DMG Dealt" value={formatLargeNumber(gameState.player.damageDealt)} color="#f59e0b" />
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <span style={{ color: '#94a3b8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Orbitron, sans-serif' }}>DMG Blocked</span>
-                                            <span style={{ color: '#3b82f6', fontSize: 15, fontWeight: 800, fontFamily: 'Orbitron, sans-serif', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlocked)}</span>
+                                    <div className={styles.analyticsGrid}>
+                                        <StatItem label="DMG Dealt" value={formatLargeNumber(gameState.player.damageDealt)} color="amber" />
+                                        <div className={styles.dmgBlockedRow}>
+                                            <span className={styles.dmgBlockedLabel}>DMG Blocked</span>
+                                            <span className={styles.dmgBlockedValue}>{formatLargeNumber(gameState.player.damageBlocked)}</span>
                                         </div>
-                                        <StatItem label="DMG Received" value={formatLargeNumber(gameState.player.damageTaken)} color="#ef4444" />
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>ARMOR</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByArmor || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>SHIELD</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByShield || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>COLLISION</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
-                                            <div style={{ fontSize: 9, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>PROJECTILE</span><span style={{ color: '#94a3b8', transform: 'translateX(20px)' }}>{formatLargeNumber(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
+                                        <StatItem label="DMG Received" value={formatLargeNumber(gameState.player.damageTaken)} color="red" />
+                                        <div className={styles.blockBreakdown}>
+                                            <div className={styles.blockBreakdownRow}><span className={styles.blockBreakdownLabel}>ARMOR</span><span className={styles.blockBreakdownValue}>{formatLargeNumber(gameState.player.damageBlockedByArmor || 0)}</span></div>
+                                            <div className={styles.blockBreakdownRow}><span className={styles.blockBreakdownLabel}>SHIELD</span><span className={styles.blockBreakdownValue}>{formatLargeNumber(gameState.player.damageBlockedByShield || 0)}</span></div>
+                                            <div className={styles.blockBreakdownRow}><span className={styles.blockBreakdownLabel}>COLLISION</span><span className={styles.blockBreakdownValue}>{formatLargeNumber(gameState.player.damageBlockedByCollisionReduc || 0)}</span></div>
+                                            <div className={styles.blockBreakdownRow}><span className={styles.blockBreakdownLabel}>PROJECTILE</span><span className={styles.blockBreakdownValue}>{formatLargeNumber(gameState.player.damageBlockedByProjectileReduc || 0)}</span></div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginLeft: 30, marginTop: 15, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+                                <div className={styles.radarContainer}>
                                     <RadarChart player={gameState.player} size={150} />
                                 </div>
                             </div>
@@ -415,22 +366,18 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 )}
 
                 {activeTab === 'modules' && (
-                    <div style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', borderRadius: 12, border: '1px solid #1e293b', padding: 20 }}>
-                        <div style={{ fontSize: 14, color: '#22d3ee', letterSpacing: 4, marginBottom: 15, borderBottom: '1px solid #1e293b', paddingBottom: 10, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>
+                    <div className={styles.panel}>
+                        <div className={styles.modulesHeader}>
                             HARDWARE MODIFICATIONS ({gameState.player.upgradesCollected.length})
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                        <div className={styles.modulesGrid}>
                             {grouped.map((g, i) => (
-                                <div key={i} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    background: 'rgba(30, 41, 59, 0.3)', padding: '10px', borderRadius: 8,
-                                    borderLeft: `4px solid ${g.choice.rarity.color} `
-                                }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                        <span style={{ color: g.choice.rarity.color, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{g.choice.rarity.label}</span>
-                                        <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>{g.choice.type.name}</span>
+                                <div key={i} className={styles.moduleCard} style={{ '--rarity-color': g.choice.rarity.color } as RarityVars}>
+                                    <div className={styles.moduleCardInfo}>
+                                        <span className={styles.moduleRarity}>{g.choice.rarity.label}</span>
+                                        <span className={styles.moduleName}>{g.choice.type.name}</span>
                                     </div>
-                                    <span style={{ color: '#475569', fontSize: 11, fontWeight: 900 }}>x{g.count}</span>
+                                    <span className={styles.moduleCount}>x{g.count}</span>
                                 </div>
                             ))}
                         </div>
@@ -438,11 +385,11 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                 )}
 
                 {activeTab === 'damage' && (
-                    <div style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', borderRadius: 12, border: '1px solid #1e293b', padding: 20 }}>
-                        <div style={{ fontSize: 14, color: '#f59e0b', letterSpacing: 4, marginBottom: 15, borderBottom: '1px solid #1e293b', paddingBottom: 10, fontWeight: 800, fontFamily: 'Orbitron, sans-serif' }}>
+                    <div className={styles.panel}>
+                        <div className={styles.damageHeader}>
                             DAMAGE ATTRIBUTION
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div className={styles.damageList}>
                             {(() => {
                                 const { groupMap, sourceColors, sourceGradients } = getDamageMapping(gameState.player.playerClass);
                                 const breakdown = gameState.player.damageBreakdown || {};
@@ -450,7 +397,6 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                 const processedSources = new Set<string>();
                                 const rows: React.ReactNode[] = [];
 
-                                // Grouped rows
                                 Object.entries(groupMap).forEach(([parent, cfg]) => {
                                     let groupTotal = 0;
                                     cfg.children.forEach(c => groupTotal += (breakdown[c] || 0));
@@ -470,11 +416,11 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                                     icon={parent === 'Projectile' ? undefined : cfg.icon}
                                                 />
                                                 {showChildren && (
-                                                    <div style={{ paddingLeft: 24, borderLeft: '1px solid rgba(255,255,255,0.1)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    <div className={styles.damageChildList}>
                                                         {activeChildren.map(c => (
-                                                            <div key={c} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9 }}>
-                                                                <span style={{ color: '#94a3b8' }}>- {cfg.childLabels[c] || c}</span>
-                                                                <span style={{ color: '#fff', fontWeight: 800 }}>{formatLargeNumber(breakdown[c])}</span>
+                                                            <div key={c} className={styles.damageChildRow}>
+                                                                <span className={styles.damageChildLabel}>- {cfg.childLabels[c] || c}</span>
+                                                                <span className={styles.damageChildValue}>{formatLargeNumber(breakdown[c])}</span>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -485,7 +431,6 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                     }
                                 });
 
-                                // Remaining sources
                                 Object.entries(breakdown).forEach(([source, amount]) => {
                                     if (processedSources.has(source) || amount <= 0) return;
 
@@ -501,7 +446,7 @@ export const DeathScreen: React.FC<DeathScreenProps> = ({ stats, gameState, onRe
                                     );
                                 });
 
-                                return rows.length > 0 ? rows : <div style={{ textAlign: 'center', opacity: 0.5, fontSize: 12 }}>NO COMBAT DATA</div>;
+                                return rows.length > 0 ? rows : <div className={styles.noCombatData}>NO COMBAT DATA</div>;
                             })()}
                         </div>
                     </div>

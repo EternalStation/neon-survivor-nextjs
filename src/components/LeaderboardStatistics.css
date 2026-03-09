@@ -1,0 +1,241 @@
+.meta-container {
+    padding: 0 20px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.meta-no-data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    font-size: 18px;
+    opacity: 0.5;
+}
+
+.meta-header-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+}
+
+.meta-card-title-mb {
+    margin-bottom: 15px;
+}
+
+.meta-card-title-centered {
+    text-align: center;
+}
+
+.upgrades-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upgrade-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.upgrade-rank {
+    font-weight: 900;
+    color: #fff;
+    width: 25px;
+    text-align: center;
+}
+
+.upgrade-rank-top {
+    color: #f59e0b;
+}
+
+.upgrade-icon {
+    width: 24px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.upgrade-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upgrade-count {
+    color: #22d3ee;
+    font-weight: 900;
+}
+
+.meta-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.radar-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    align-items: center;
+    height: 180px;
+}
+
+.radar-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.radar-chart-offset {
+    margin-left: -30px;
+}
+
+.radar-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 11px;
+    color: #fff;
+    font-weight: 800;
+}
+
+.radar-stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.radar-stat-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.radar-stat-value {
+    color: #22d3ee;
+}
+
+.deaths-list {
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.death-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    padding-bottom: 4px;
+}
+
+.death-cause {
+    font-size: 11px;
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.death-count {
+    color: #22d3ee;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.pedestal-count {
+    color: #22d3ee;
+    font-weight: 900;
+}
+
+.pedestal-time {
+    color: #f59e0b;
+    font-weight: 900;
+}
+
+.pedestal-win {
+    color: #10b981;
+    font-weight: 900;
+}
+
+.meta-class-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.meta-class-card {
+    padding: 10px;
+    text-align: center;
+    border-left: 3px solid var(--card-color);
+}
+
+.meta-class-title {
+    font-size: 9px;
+    color: var(--card-color);
+}
+
+.meta-class-value {
+    font-size: 14px;
+    color: #fff;
+}
+
+.meta-damage-chart {
+    padding: 20px;
+    height: 300px;
+}
+
+.damage-chart-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-grid-line {
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 1;
+}
+
+.chart-axis-label {
+    fill: #94a3b8;
+    font-size: 10px;
+}
+
+.chart-axis-label-center {
+    text-anchor: middle;
+}
+
+.chart-axis-label-end {
+    text-anchor: end;
+}
+
+.chart-line {
+    fill: none;
+    stroke: var(--line-color);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 2px var(--line-color));
+}
+
+.chart-dot {
+    fill: var(--line-color);
+    opacity: 0.8;
+}
+
+.pedestal-name {
+    color: var(--class-color);
+}

@@ -1,5 +1,5 @@
 
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';

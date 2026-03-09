@@ -1,19 +1,62 @@
 import React, { useMemo } from 'react';
 import { RadarChart } from './RadarChart';
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { getUiTranslation } from '../lib/uiTranslations';
-import { formatLargeNumber } from '../utils/format';
+import { formatLargeNumber } from '../utils/Format';
+import type { Language } from '../lib/LanguageContext';
+import './LeaderboardStatistics.css';
+
+type HexItem = { type: string; id?: string } | { type?: string; id: string };
+
+interface RadarCounts {
+    dps: number;
+    arm: number;
+    exp: number;
+    hp: number;
+    reg: number;
+    [key: string]: number;
+}
+
+type RadarCountKey = 'dps' | 'DPS' | 'arm' | 'ARM' | 'exp' | 'EXP' | 'hp' | 'HP' | 'reg' | 'REG';
+type RadarCountsRaw = Partial<Record<RadarCountKey, number>>;
+
+interface PedestalCSSProperties extends React.CSSProperties {
+    '--class-color': string;
+}
+
+interface CardCSSProperties extends React.CSSProperties {
+    '--card-color': string;
+}
+
+interface LineCSSProperties extends React.CSSProperties {
+    '--line-color': string;
+}
+
+interface LegendaryNameEntry {
+    name: string;
+}
+
+interface LeaderboardEntry {
+    survival_time: number;
+    class_used: string;
+    death_cause?: string;
+    legendary_hexes?: HexItem[];
+    radar_counts?: string | RadarCountsRaw | null;
+    class_skill_dmg_history?: number[] | string | null;
+}
+
+type LeaderboardT = ReturnType<typeof getUiTranslation>['leaderboard'];
 
 interface LeaderboardStatisticsProps {
-    entries: any[];
-    language: any;
-    t: any;
+    entries: LeaderboardEntry[];
+    language: Language;
+    t: LeaderboardT;
     getClassColor: (id: string) => string;
     getClassName: (id: string) => string;
     translateDeathCause: (cause: string) => string;
 }
 
-const formatTimeLong = (seconds: number) => {
+const formatTimeLong = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
@@ -41,11 +84,10 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
         const totalTime = validEntries.reduce((sum, e) => sum + e.survival_time, 0);
         const avgTime = totalTime / totalRuns;
 
-        // Class stats
-        const classCounts: Record<string, { count: number, totalTime: number, wins: number }> = {};
+        const classCounts: Record<string, { count: number; totalTime: number; wins: number }> = {};
         const upgradeCounts: Record<string, number> = {};
         const deathCauses: Record<string, number> = {};
-        let totalRadar = { dps: 0, arm: 0, exp: 0, hp: 0, reg: 0 };
+        let totalRadar: RadarCounts = { dps: 0, arm: 0, exp: 0, hp: 0, reg: 0 };
         let radarSamples = 0;
 
         validEntries.forEach(e => {
@@ -56,9 +98,9 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             if (e.death_cause === 'EVACUATED') classCounts[cls].wins++;
 
             if (e.legendary_hexes && Array.isArray(e.legendary_hexes)) {
-                e.legendary_hexes.forEach((h: any) => {
-                    const id = h.type || h.id;
-                    if (id) upgradeCounts[id] = (upgradeCounts[id] || 0) + 1;
+                e.legendary_hexes.forEach((h: HexItem) => {
+                    const hexKey = ('type' in h && h.type) ? h.type : ('id' in h && h.id) ? h.id : undefined;
+                    if (hexKey) upgradeCounts[hexKey] = (upgradeCounts[hexKey] || 0) + 1;
                 });
             }
 
@@ -67,14 +109,18 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                 deathCauses[cause] = (deathCauses[cause] || 0) + 1;
             }
 
-            let rc = e.radar_counts;
-            if (typeof rc === 'string') {
+            let rc: RadarCountsRaw | null = null;
+            if (typeof e.radar_counts === 'string') {
                 try {
-                    rc = JSON.parse(rc);
-                } catch (err) {
+                    const parsed: unknown = JSON.parse(e.radar_counts);
+                    rc = (parsed !== null && typeof parsed === 'object') ? parsed as RadarCountsRaw : null;
+                } catch {
                     rc = null;
                 }
+            } else if (e.radar_counts) {
+                rc = e.radar_counts;
             }
+
             if (rc) {
                 totalRadar.dps += Number(rc.dps || rc.DPS || 0);
                 totalRadar.arm += Number(rc.arm || rc.ARM || 0);
@@ -102,26 +148,22 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
 
-        const totalRadarData = radarSamples > 0 ? {
-            dps: totalRadar.dps,
-            arm: totalRadar.arm,
-            exp: totalRadar.exp,
-            hp: totalRadar.hp,
-            reg: totalRadar.reg,
-        } : null;
+        const totalRadarData: RadarCounts | null = radarSamples > 0 ? totalRadar : null;
 
         const classSkillDpm: Record<string, number[]> = {};
         const classHistoryCounts: Record<string, number[]> = {};
 
         validEntries.forEach(e => {
             const cls = e.class_used;
-            let history = e.class_skill_dmg_history;
-            if (typeof history === 'string') {
+            let history: number[] | null = null;
+            if (typeof e.class_skill_dmg_history === 'string') {
                 try {
-                    history = JSON.parse(history);
-                } catch (err) {
+                    history = JSON.parse(e.class_skill_dmg_history) as number[];
+                } catch {
                     history = null;
                 }
+            } else if (Array.isArray(e.class_skill_dmg_history)) {
+                history = e.class_skill_dmg_history;
             }
 
             if (Array.isArray(history)) {
@@ -154,43 +196,46 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
     }, [validEntries, translateDeathCause]);
 
     if (!stats) {
-        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontFamily: 'Orbitron, sans-serif', color: '#fff', fontSize: '18px', opacity: 0.5 }}>{t.metaNoData || 'NOT ENOUGH DATA (REQUIRES RUNS > 2 MIN)'}</div>;
+        return <div className="meta-no-data">{t.metaNoData || 'NOT ENOUGH DATA (REQUIRES RUNS > 2 MIN)'}</div>;
     }
 
-    const getHexImage = (type: string) => {
-        const t = type.toLowerCase();
-        if (t === 'ecodmg') return 'EcoDMG.png';
-        if (t === 'ecoxp') return 'EcoXP.png';
-        if (t === 'ecohp') return 'EcoHP.png';
-        if (t === 'comlife') return 'ComLife.png';
-        if (t === 'comcrit') return 'ComCrit.png';
-        if (t === 'comwave') return 'ComWave.png';
-        if (t === 'defpuddle') return 'DefPuddle.png';
-        if (t === 'defepi') return 'DefEpi.png';
-        if (t === 'combshield') return 'EcoArmor.png';
-        if (t === 'orbital_strike') return 'CosmicBeam.png';
-        if (t === 'shield_passive') return 'AigisVortex.PNG';
-        if (t === 'kineticbattery') return 'DefBattery.png';
-        if (t === 'radiationcore') return 'ComRad.png';
-        if (t === 'chronoplating') return 'DefChromo.png';
+    const { perks: _perks, ...legendaryNamesRaw } = getUiTranslation(language).legendaries;
+    const legendaryNames = legendaryNamesRaw as Record<string, LegendaryNameEntry>;
+
+    const getHexImage = (type: string): string => {
+        const lower = type.toLowerCase();
+        if (lower === 'ecodmg') return 'EcoDMG.png';
+        if (lower === 'ecoxp') return 'EcoXP.png';
+        if (lower === 'ecohp') return 'EcoHP.png';
+        if (lower === 'comlife') return 'ComLife.png';
+        if (lower === 'comcrit') return 'ComCrit.png';
+        if (lower === 'comwave') return 'ComWave.png';
+        if (lower === 'defpuddle') return 'DefPuddle.png';
+        if (lower === 'defepi') return 'DefEpi.png';
+        if (lower === 'combshield') return 'EcoArmor.png';
+        if (lower === 'orbital_strike') return 'CosmicBeam.png';
+        if (lower === 'shield_passive') return 'AigisVortex.PNG';
+        if (lower === 'kineticbattery') return 'DefBattery.png';
+        if (lower === 'radiationcore') return 'ComRad.png';
+        if (lower === 'chronoplating') return 'DefChromo.png';
         return 'MalwarePrime.png';
     };
 
     return (
-        <div className="meta-container" style={{ padding: '0 20px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '30px', fontFamily: 'Orbitron, sans-serif' }}>
+        <div className="meta-container">
 
-            <div className="meta-header-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+            <div className="meta-header-stats">
                 <div className="meta-card">
                     <div className="meta-card-title">{(t.metaTotalRuns || 'TOTAL RUNS') + ' (+2M MIN)'}</div>
-                    <div className="meta-card-value val-cyan" style={{ color: '#22d3ee' }}>{stats.totalRuns}</div>
+                    <div className="meta-card-value val-cyan">{stats.totalRuns}</div>
                 </div>
                 <div className="meta-card">
                     <div className="meta-card-title">{(t.metaTotalTime || 'TOTAL TIME PLAYED') + ' (+2M MIN)'}</div>
-                    <div className="meta-card-value val-amber" style={{ color: '#f59e0b' }}>{formatTimeLong(stats.totalTime)}</div>
+                    <div className="meta-card-value val-amber">{formatTimeLong(stats.totalTime)}</div>
                 </div>
                 <div className="meta-card">
                     <div className="meta-card-title">{(t.metaAvgTime || 'AVG SURVIVAL TIME') + ' (+2M MIN)'}</div>
-                    <div className="meta-card-value val-green" style={{ color: '#10b981' }}>{formatTimeLong(stats.avgTime)}</div>
+                    <div className="meta-card-value val-green">{formatTimeLong(stats.avgTime)}</div>
                 </div>
             </div>
 
@@ -201,23 +246,23 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                         const classInfo = PLAYER_CLASSES.find(c => c.id === cls.id.toLowerCase() || c.name.toLowerCase() === cls.id.toLowerCase());
                         const icon = classInfo?.iconUrl;
                         return (
-                            <div key={cls.id} className={`pedestal-item rank-${idx + 1}`} style={{ '--class-color': getClassColor(cls.id) } as any}>
+                            <div key={cls.id} className={`pedestal-item rank-${idx + 1}`} style={{ '--class-color': getClassColor(cls.id) } as PedestalCSSProperties}>
                                 <div className="pedestal-rank">#{idx + 1}</div>
                                 <div className="pedestal-icon">
                                     {icon ? <img src={icon} alt={cls.id} /> : <div className="placeholder" />}
                                 </div>
-                                <div className="pedestal-name" style={{ color: getClassColor(cls.id) }}>{getClassName(cls.id).toUpperCase()}</div>
+                                <div className="pedestal-name">{getClassName(cls.id).toUpperCase()}</div>
                                 <div className="pedestal-detail">
                                     <span>{t.metaPick || 'Missions'}:</span>
-                                    <span style={{ color: '#22d3ee', fontWeight: '900' }}>{cls.count}</span>
+                                    <span className="pedestal-count">{cls.count}</span>
                                 </div>
                                 <div className="pedestal-detail">
                                     <span>{t.metaTime || 'Avg. Time'}:</span>
-                                    <span style={{ color: '#f59e0b', fontWeight: '900' }}>{formatTimeLong(cls.avgTime)}</span>
+                                    <span className="pedestal-time">{formatTimeLong(cls.avgTime)}</span>
                                 </div>
                                 <div className="pedestal-detail">
                                     <span>{t.metaWin || 'Evac %'}:</span>
-                                    <span style={{ color: '#10b981', fontWeight: '900' }}>{cls.winRate.toFixed(1)}%</span>
+                                    <span className="pedestal-win">{cls.winRate.toFixed(1)}%</span>
                                 </div>
                             </div>
                         );
@@ -225,55 +270,53 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                 </div>
             </div>
 
-            <div className="meta-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '20px' }}>
+            <div className="meta-grid">
 
                 <div className="meta-card meta-upgrades">
-                    <div className="meta-card-title" style={{ marginBottom: '15px' }}>{t.metaTopUpgrades || 'MOST POPULAR LEGENDARY UPGRADES'}</div>
-                    <div className="upgrades-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {stats.topUpgrades.map(([id, count], idx) => {
-                            return (
-                                <div key={id} className="upgrade-meta-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.05)', padding: '5px 10px', borderRadius: '4px' }}>
-                                    <div style={{ fontWeight: '900', color: idx < 3 ? '#f59e0b' : '#fff', width: '25px', textAlign: 'center' }}>#{idx + 1}</div>
-                                    <img src={`/assets/hexes/${getHexImage(id)}`} alt={id} style={{ width: '24px', height: '28px', objectFit: 'contain' }} />
-                                    <div style={{ flex: 1, fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {((getUiTranslation(language).legendaries as any)?.[id]?.name) || id}
-                                    </div>
-                                    <div style={{ color: '#22d3ee', fontWeight: '900' }}>{count}</div>
+                    <div className="meta-card-title meta-card-title-mb">{t.metaTopUpgrades || 'MOST POPULAR LEGENDARY UPGRADES'}</div>
+                    <div className="upgrades-list">
+                        {stats.topUpgrades.map(([id, count], idx) => (
+                            <div key={id} className="upgrade-meta-row">
+                                <div className={`upgrade-rank${idx < 3 ? ' upgrade-rank-top' : ''}`}>#{idx + 1}</div>
+                                <img src={`/assets/hexes/${getHexImage(id)}`} alt={id} className="upgrade-icon" />
+                                <div className="upgrade-name">
+                                    {legendaryNames[id]?.name || id}
                                 </div>
-                            );
-                        })}
+                                <div className="upgrade-count">{count}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="meta-right-column">
                     <div className="meta-card">
-                        <div className="meta-card-title" style={{ textAlign: 'center' }}>{t.metaRadar || 'AVERAGE HARDWARE PROFILE'}</div>
-                        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0', alignItems: 'center', height: '180px' }}>
+                        <div className="meta-card-title meta-card-title-centered">{t.metaRadar || 'AVERAGE HARDWARE PROFILE'}</div>
+                        <div className="radar-wrapper">
                             {stats.totalRadar && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{ marginLeft: '-30px' }}>
-                                        <RadarChart counts={stats.totalRadar as any} size={150} />
+                                <div className="radar-inner">
+                                    <div className="radar-chart-offset">
+                                        <RadarChart counts={stats.totalRadar} size={150} />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: '#fff', fontWeight: '800' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>DPS:</span>
-                                            <span style={{ color: '#22d3ee' }}>{stats.totalRadar.dps}</span>
+                                    <div className="radar-stats">
+                                        <div className="radar-stat-row">
+                                            <span className="radar-stat-label">DPS:</span>
+                                            <span className="radar-stat-value">{stats.totalRadar.dps}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>ARM:</span>
-                                            <span style={{ color: '#22d3ee' }}>{stats.totalRadar.arm}</span>
+                                        <div className="radar-stat-row">
+                                            <span className="radar-stat-label">ARM:</span>
+                                            <span className="radar-stat-value">{stats.totalRadar.arm}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>XP:</span>
-                                            <span style={{ color: '#22d3ee' }}>{stats.totalRadar.exp}</span>
+                                        <div className="radar-stat-row">
+                                            <span className="radar-stat-label">XP:</span>
+                                            <span className="radar-stat-value">{stats.totalRadar.exp}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>HP:</span>
-                                            <span style={{ color: '#22d3ee' }}>{stats.totalRadar.hp}</span>
+                                        <div className="radar-stat-row">
+                                            <span className="radar-stat-label">HP:</span>
+                                            <span className="radar-stat-value">{stats.totalRadar.hp}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>REG:</span>
-                                            <span style={{ color: '#22d3ee' }}>{stats.totalRadar.reg}</span>
+                                        <div className="radar-stat-row">
+                                            <span className="radar-stat-label">REG:</span>
+                                            <span className="radar-stat-value">{stats.totalRadar.reg}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -283,11 +326,11 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
 
                     <div className="meta-card">
                         <div className="meta-card-title">{t.metaDeathCauses || 'MOST COMMON FATALITIES'}</div>
-                        <div className="deaths-list" style={{ padding: '10px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div className="deaths-list">
                             {stats.topDeaths.map(([cause, count]) => (
-                                <div key={cause} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(239, 68, 68, 0.2)', paddingBottom: '4px' }}>
-                                    <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: '700' }}>{cause}</span>
-                                    <span style={{ color: '#22d3ee', fontSize: '13px', fontWeight: '900' }}>{count}</span>
+                                <div key={cause} className="death-row">
+                                    <span className="death-cause">{cause}</span>
+                                    <span className="death-count">{count}</span>
                                 </div>
                             ))}
                         </div>
@@ -298,7 +341,7 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
 
             <div className="meta-section">
                 <div className="meta-section-title">{t.metaDamageCharts || 'AVERAGE ACTIVE SKILL DAMAGE PER MINUTE (LOG SCALE)'}</div>
-                <div className="meta-card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                <div className="meta-class-cards">
                     {[
                         { name: 'Malware', id: 'malware' },
                         { name: 'Oblivion', id: 'eventhorizon' },
@@ -309,14 +352,14 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                         const avg = stats.averagedTotal[cls.id] || 0;
                         const classColor = getClassColor(cls.id);
                         return (
-                            <div key={cls.id} className="meta-card" style={{ padding: '10px', textAlign: 'center', borderLeft: `3px solid ${classColor}` }}>
-                                <div className="meta-card-title" style={{ fontSize: '9px', color: classColor }}>{cls.name.toUpperCase()} AVG / RUN</div>
-                                <div className="meta-card-value" style={{ fontSize: '14px', color: '#fff' }}>{formatLargeNumber(Math.round(avg))}</div>
+                            <div key={cls.id} className="meta-card meta-class-card" style={{ '--card-color': classColor } as CardCSSProperties}>
+                                <div className="meta-card-title meta-class-title">{cls.name.toUpperCase()} AVG / RUN</div>
+                                <div className="meta-card-value meta-class-value">{formatLargeNumber(Math.round(avg))}</div>
                             </div>
                         );
                     })}
                 </div>
-                <div className="meta-card" style={{ padding: '20px', height: '300px' }}>
+                <div className="meta-card meta-damage-chart">
                     <DamageLineChart data={stats.averagedDpm} getClassColor={getClassColor} />
                 </div>
             </div>
@@ -324,66 +367,61 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
     );
 }
 
-const DamageLineChart: React.FC<{ data: Record<string, number[]>, getClassColor: (id: string) => string }> = ({ data, getClassColor }) => {
+interface DamageLineChartProps {
+    data: Record<string, number[]>;
+    getClassColor: (id: string) => string;
+}
+
+const DamageLineChart: React.FC<DamageLineChartProps> = ({ data, getClassColor }) => {
     const width = 800;
     const height = 250;
     const padding = 30;
 
-    // Find global max for scaling
     let maxDmg = 1;
     Object.values(data).forEach(history => {
         history.forEach(d => { if (d > maxDmg) maxDmg = d; });
     });
 
-    // Use log scale: log10(val + 1)
     const logMax = Math.log10(maxDmg + 1);
 
-    const getY = (val: number) => {
+    const getY = (val: number): number => {
         if (val <= 0) return height - padding;
         const logVal = Math.log10(val + 1);
         const ratio = logVal / logMax;
         return height - padding - (ratio * (height - 2 * padding));
     };
 
-    const getX = (min: number) => {
+    const getX = (min: number): number => {
         return padding + (min / 60) * (width - 2 * padding);
     };
 
     return (
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%' }}>
-            {/* Grid */}
+        <svg viewBox={`0 0 ${width} ${height}`} className="damage-chart-svg">
             {[0, 10, 20, 30, 40, 50, 60].map(min => (
-                <line key={min} x1={getX(min)} y1={padding} x2={getX(min)} y2={height - padding} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                <line key={min} x1={getX(min)} y1={padding} x2={getX(min)} y2={height - padding} className="chart-grid-line" />
             ))}
             {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
                 const y = height - padding - (ratio * (height - 2 * padding));
-                return <line key={ratio} x1={padding} y1={y} x2={width - padding} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />;
+                return <line key={ratio} x1={padding} y1={y} x2={width - padding} y2={y} className="chart-grid-line" />;
             })}
 
-            {/* Labels */}
-            <text x={padding} y={height - 5} fill="#94a3b8" fontSize="10">0m</text>
-            <text x={width / 2} y={height - 5} fill="#94a3b8" fontSize="10" textAnchor="middle">30m</text>
-            <text x={width - padding} y={height - 5} fill="#94a3b8" fontSize="10" textAnchor="end">60m</text>
+            <text x={padding} y={height - 5} className="chart-axis-label">0m</text>
+            <text x={width / 2} y={height - 5} className="chart-axis-label chart-axis-label-center">30m</text>
+            <text x={width - padding} y={height - 5} className="chart-axis-label chart-axis-label-end">60m</text>
 
-            <text x={5} y={height / 2} fill="#94a3b8" fontSize="10" transform={`rotate(-90, 5, ${height / 2})`} textAnchor="middle">AVG. DAMAGE (LOG)</text>
+            <text x={5} y={height / 2} className="chart-axis-label chart-axis-label-center" transform={`rotate(-90, 5, ${height / 2})`}>AVG. DAMAGE (LOG)</text>
 
-            {/* Lines */}
             {Object.entries(data).map(([cls, history]) => {
                 const points = history.map((d, min) => `${getX(min)},${getY(d)}`).join(' ');
                 const color = getClassColor(cls);
                 return (
-                    <g key={cls}>
+                    <g key={cls} style={{ '--line-color': color } as LineCSSProperties}>
                         <polyline
                             points={points}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth="2"
-                            strokeLinejoin="round"
-                            style={{ filter: `drop-shadow(0 0 2px ${color})` }}
+                            className="chart-line"
                         />
-                        {/* Hover circles - Show every minute for granularity */}
                         {history.map((d, i) => (
-                            <circle key={i} cx={getX(i)} cy={getY(d)} r="2" fill={color} style={{ opacity: 0.8 }} />
+                            <circle key={i} cx={getX(i)} cy={getY(d)} r="2" className="chart-dot" />
                         ))}
                     </g>
                 );

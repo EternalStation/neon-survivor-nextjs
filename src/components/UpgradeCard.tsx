@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/types';
-import { BASE_UPGRADE_VALUES } from '../logic/core/constants';
+import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/Types';
+import { BASE_UPGRADE_VALUES } from '../logic/core/Constants';
 import { calcStat } from '../logic/utils/MathUtils';
-import { formatLargeNumber } from '../utils/format';
+import { formatLargeNumber } from '../utils/Format';
 import { getIcon } from './UpgradeIcons';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
@@ -14,11 +14,11 @@ interface UpgradeCardProps {
     isSelected: boolean;
     onSelect: (choice: UpgradeChoice) => void;
     onHover: (index: number) => void;
-    isSelecting: boolean; // Kept for prop compatibility but unused for delay
+    isSelecting: boolean;
     gameState: GameState;
 }
 
-// Updated Rarity Map per User Request
+
 const RARITY_COLORS: Record<string, string> = {
     scrap: '#7FFF00',
     anomalous: '#00C0C0',
@@ -36,10 +36,8 @@ const RARITY_ORDER = ['scrap', 'anomalous', 'quantum', 'astral', 'radiant', 'aby
 export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSelected, onSelect, onHover, gameState }) => {
     const { language } = useLanguage();
     const t = getUiTranslation(language);
-    // Fallback to 'quantum' (common equivalent) if ID is missing or unknown
     let rId = c.rarity?.id || 'quantum';
-    // Remove legacy mapping or map old IDs if necessary for safety?
-    // Let's assume strict new IDs.
+
     if (!RARITY_COLORS[rId]) rId = 'quantum';
 
     let baseColor = RARITY_COLORS[rId] || '#00FFFF';
@@ -47,14 +45,14 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
     const id = c.type?.id || 'unknown';
     const rawName = t.upgradeTypes[id as keyof typeof t.upgradeTypes] || c.type?.name || 'UNKNOWN';
     const displayName = rawName.replace('Multiplier', 'MULTP');
-    const label = t.upgradeRarities[rId as keyof typeof t.upgradeRarities] || c.rarity?.label || 'QUANTUM'; // Default to uppercase in case
+    const label = t.upgradeRarities[rId as keyof typeof t.upgradeRarities] || c.rarity?.label || 'QUANTUM';
 
-    // Calculate filled sockets
+
     const rarityIndex = RARITY_ORDER.indexOf(rId);
     const filledSockets = rarityIndex === -1 ? 1 : Math.min(rarityIndex + 1, 9);
-    const UNIFORM_SOCKET_COLOR = '#DC143C'; // "Ruby Red" (Crimson)
+    const UNIFORM_SOCKET_COLOR = '#DC143C';
 
-    // Value Formatter
+
     let valStr = '';
     let finalIncreaseStr = '';
 
@@ -65,7 +63,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
         const val = Math.round(baseVal * mult);
         valStr = id.endsWith('_m') ? `+${val}%` : `+${val}`;
 
-        // Final Increase Calculation
+
         const p = gameState.player;
         let stat: PlayerStats | null = null;
         let arenaMult = 1;
@@ -80,7 +78,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
 
         if (stat) {
             const currentVal = calcStat(stat, arenaMult);
-            // Simulate upgrade
+
             const tempStat = { ...stat };
             if (id.endsWith('_m')) tempStat.mult = (tempStat.mult || 0) + val;
             else tempStat.flat = (tempStat.flat || 0) + val;
@@ -95,7 +93,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                     const spsDiff = newSPS - currentSPS;
                     finalIncreaseStr = `(+${spsDiff.toFixed(2)} ${t.units.sps})`;
                 } else {
-                    // Formatting for readability using standard project formatter
+
                     const formattedDiff = formatLargeNumber(diff);
                     finalIncreaseStr = `(+${formattedDiff} ${unit})`;
                 }
@@ -107,7 +105,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
         onSelect(c);
     };
 
-    // Sparks Effect (Only on selection, no delay but visual burst)
+
     const [sparks, setSparks] = useState<{ id: number, tx: string, ty: string }[]>([]);
 
     useEffect(() => {
@@ -134,10 +132,10 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                 borderColor: baseColor
             }}
         >
-            {/* Background Effect Layer */}
+
             <div className="card-bg-effect" />
 
-            {/* Sparks */}
+
             {sparks.map(s => (
                 <div key={s.id} className="spark" style={{
                     top: '50%', left: '50%', position: 'absolute',
@@ -148,7 +146,6 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
             ))}
 
             <div className="card-content-stack">
-                {/* 1. Icon (Center Top) */}
                 <div className="icon-badge-center" style={{
                     borderColor: 'transparent',
                     boxShadow: 'none',
@@ -161,12 +158,10 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                     </div>
                 </div>
 
-                {/* 2. Title (Center) */}
                 <div className="card-title-center">
                     {displayName}
                 </div>
 
-                {/* 3. Value (Center Below Title) */}
                 <div className="card-value-center" style={{ color: baseColor, textShadow: `0 0 10px ${baseColor}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <span>{valStr}</span>
                     {finalIncreaseStr && (
@@ -183,10 +178,8 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                     )}
                 </div>
 
-                {/* Spacer - removed in favor of absolute positioning */}
-                {/* <div style={{ flex: 1 }} /> */}
 
-                {/* Footer Group (Rarity + Sockets) - Pushed to bottom */}
+
                 <div className="card-footer-group rarity-sockets" style={{
                     position: 'absolute',
                     bottom: '8px',
@@ -197,12 +190,10 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                     alignItems: 'center',
                     zIndex: 10
                 }}>
-                    {/* 4. Rarity Name */}
                     <div className="rarity-label-bottom" style={{ color: baseColor }}>
                         {label}
                     </div>
 
-                    {/* 5. Crystal Bar */}
                     <div className="card-crystal-bar">
                         {Array.from({ length: 9 }).map((_, i) => (
                             <div key={i} className="gem-socket-diamond" style={{

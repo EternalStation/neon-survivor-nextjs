@@ -1,4 +1,4 @@
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import type { Language } from '../../lib/LanguageContext';
 import { getPulseIntensity } from '../effects/PulseSystem';
 import { renderBackground, renderMapBoundaries, renderPortals, renderArenaVignette } from './renderers/MapRenderer';

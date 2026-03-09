@@ -1,5 +1,5 @@
 import React from 'react';
-import type { LegendaryHex } from '../logic/core/types';
+import type { LegendaryHex } from '../logic/core/Types';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';
 

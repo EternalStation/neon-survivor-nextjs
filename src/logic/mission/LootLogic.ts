@@ -1,5 +1,4 @@
-import type { GameState, Meteorite, MeteoriteRarity } from '../core/types';
-import { recordHealing } from '../utils/DamageTracking';
+import type { GameState, Meteorite, MeteoriteRarity } from '../core/Types';
 import { playSfx } from '../audio/AudioLogic';
 import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
@@ -183,7 +182,7 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
 
     const rand = Math.random();
     let isCorrupted = false;
-    let quality: import('../core/types').MeteoriteQuality = 'Broken';
+    let quality: import('../core/Types').MeteoriteQuality = 'Broken';
 
 
     if (rand < 0.05) {
@@ -347,23 +346,6 @@ export function spawnDustPile(state: GameState, x: number, y: number, amount: nu
     state.meteorites.push(item);
 }
 
-export function spawnVitalSpark(state: GameState, x: number, y: number) {
-    const item: any = {
-        id: Math.random(),
-        x,
-        y,
-        type: 'vital_spark',
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        magnetized: true,
-        spawnedAt: state.gameTime,
-        rarity: 'radiant',
-        quality: 'New',
-        perks: [],
-        stats: {}
-    };
-    state.meteorites.push(item);
-}
 
 export function updateLoot(state: GameState) {
     const { meteorites, player, inventory } = state;
@@ -441,20 +423,6 @@ export function updateLoot(state: GameState) {
                     continue;
                 }
 
-                if (item.type === 'vital_spark') {
-                    const heal = state.player.hp.base * 0.015;
-                    const vsHealActual = Math.min(state.player.hp.base + (state.player.hp.flat || 0), state.player.curHp + heal) - state.player.curHp;
-                    if (vsHealActual > 0) recordHealing(state.player, 'Vital Spark', vsHealActual);
-                    state.player.curHp = Math.min(state.player.hp.base + (state.player.hp.flat || 0), state.player.curHp + heal);
-
-                    if (!state.player.buffs) state.player.buffs = {};
-                    state.player.buffs.vitalRecovery = state.gameTime + 5;
-
-                    spawnFloatingNumber(state, target.x, target.y - 40, "+VITALITY", "#facc15", true);
-                    playSfx('shoot');
-                    meteorites.splice(i, 1);
-                    continue;
-                }
 
 
                 let emptySlotIndex = -1;

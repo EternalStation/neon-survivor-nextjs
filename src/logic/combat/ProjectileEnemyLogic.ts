@@ -1,4 +1,4 @@
-import { GameState, Bullet, Player } from '../core/types';
+import { GameState, Bullet, Player } from '../core/Types';
 import { isInMap } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';

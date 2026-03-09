@@ -87,7 +87,7 @@ Rare unique enemy target of high value. Does not cause damage to the player, but
 
 ## Interaction with Blackhole (Void class)
 
-**Problem (fixed):** Previously, Snitch had `isRare: true` and in the [Void Singularity](../classes/void-eventhorizon.md) code it fell into the Elite/Rare branch (25% maxHp/sec). With HP=1 it took **4 seconds** to die, while blackhole only exists for **3 seconds** - Snitch always survived.
+**Problem (fixed):** Previously, Snitch had `isRare: true` and in the [Void Singularity](../classes/VoidEventhorizon.md) code it fell into the Elite/Rare branch (25% maxHp/sec). With HP=1 it took **4 seconds** to die, while blackhole only exists for **3 seconds** - Snitch always survived.
 
 **Bugfix:** Snitch has been removed from both damage paths (Elite/Rare and drag). Dies **only** when actually pulled into the core:
 - In the blackhole core (≤ 80 px): **instant death**.
@@ -108,7 +108,7 @@ Rare unique enemy target of high value. Does not cause damage to the player, but
 
 ## Related functions and entities
 
-- [Void Singularity (blackhole)](../classes/void-eventhorizon.md#active-ability-void-singularity-black-hole) - active ability, interaction fixed
+- [Void Singularity (blackhole)](../classes/VoidEventhorizon.md#active-ability-void-singularity-black-hole) - active ability, interaction fixed
 - `spawnRareEnemy` - Snitch spawn function
 - `manageRareSpawnCycles` - management of spawn cycles
 - `updateSnitch` - the logic of the behavior of each frame

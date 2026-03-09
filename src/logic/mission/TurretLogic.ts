@@ -1,5 +1,4 @@
-import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
-import { recordHealing } from '../utils/DamageTracking';
+import type { GameState, Enemy, MapPOI, Bullet } from '../core/Types';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
@@ -56,8 +55,7 @@ export function updateTurrets(state: GameState, step: number) {
             const dToPlayer = Math.hypot(state.player.x - turret.x, state.player.y - turret.y);
 
 
-            if (dToPlayer < turret.radius + 100) {
-                // turret.activationProgress = 100;
+            if (dToPlayer < turret.radius + 200) {
                 const uses = turret.turretUses || 0;
                 const cost = TURRET_BASE_COST * Math.pow(2, uses);
                 turret.turretCost = cost;
@@ -126,8 +124,6 @@ export function updateTurrets(state: GameState, step: number) {
                             expiry: state.gameTime + 60
                         });
                     } else {
-                        const htHealActual = Math.min(maxHp, state.player.curHp + healAmount) - state.player.curHp;
-                        if (htHealActual > 0) recordHealing(state.player, 'Heal Turret', htHealActual);
                         state.player.curHp = Math.min(maxHp, state.player.curHp + healAmount);
                     }
 
@@ -176,7 +172,7 @@ export function updateTurrets(state: GameState, step: number) {
             const estBaseHP = 60 * Math.pow(1.2, minutes);
 
             if (variant === 'fire') {
-                const shotsPerSec = 7 + (level - 1);
+                const shotsPerSec = 10 + (level - 1);
                 const fireDelay = 1 / shotsPerSec;
 
                 if (now - lastShot >= fireDelay) {
@@ -198,7 +194,7 @@ export function updateTurrets(state: GameState, step: number) {
                         turret.lastShot = now;
 
 
-                        const damagePct = 0.15 + (level - 1) * 0.15;
+                        const damagePct = 0.30 + (level - 1) * 0.20;
                         const damage = Math.ceil(estBaseHP * damagePct);
 
 
@@ -207,6 +203,10 @@ export function updateTurrets(state: GameState, step: number) {
                         spawnTurretBullet(state, turret.x, turret.y, angle, damage, 'fire', false, applyBurn, level);
                         playSfx('turret-fire');
 
+                        const color = variant === 'fire' ? '#F59E0B' : (variant === 'ice' ? '#22d3ee' : '#4ade80');
+                        const muzzleX = turret.x + Math.cos(angle) * 30;
+                        const muzzleY = turret.y + Math.sin(angle) * 30;
+                        spawnParticles(state, muzzleX, muzzleY, color, level >= 3 ? 8 : 4, 3, 20);
 
                         if (level >= 6 && (now - (turret.lastShotRear || 0) >= 0.1)) {
                             turret.lastShotRear = now;
@@ -215,7 +215,7 @@ export function updateTurrets(state: GameState, step: number) {
 
                             const cone = 45 * Math.PI / 180;
                             const flameRange = 400;
-                            const flameDmg = Math.ceil(estBaseHP * 0.10 * step);
+                            const flameDmg = Math.ceil(estBaseHP * 0.25 * step);
 
 
                             for (let i = 0; i < 3; i++) {
@@ -312,8 +312,13 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
 
     if (level >= 3 && !isVisualOnly) {
         size *= 1.5;
-
         if (!isIce) color = '#fb923c';
+    }
+
+    if (level >= 6 && !isVisualOnly) {
+        size *= 1.3;
+        if (variant === 'fire') color = '#fef3c7';
+        if (variant === 'ice') color = '#f0f9ff';
     }
 
     const bullet: Bullet = {
@@ -337,7 +342,7 @@ function spawnTurretBullet(state: GameState, x: number, y: number, angle: number
         spawnTime: Date.now(),
         isVisualOnly,
 
-        burnDamage: applyBurn ? (dmg * 0.05) : 0,
+        burnDamage: applyBurn ? (dmg * 0.10) : 0,
 
 
         isTurretFire: true,
@@ -389,8 +394,6 @@ export function updateAllies(state: GameState, step: number) {
                 if (dToPlayer < 200 && !p.healingDisabled) {
                     const maxHp = calcStat(p.hp);
                     const heal = maxHp * (ally.healPower || 0.05);
-                    const droneHealActual = Math.min(maxHp, p.curHp + heal) - p.curHp;
-                    if (droneHealActual > 0) recordHealing(p, 'Heal Drone', droneHealActual);
                     p.curHp = Math.min(maxHp, p.curHp + heal);
                     spawnFloatingNumber(state, p.x, p.y, `+${Math.ceil(heal)}`, '#4ade80', false);
                     spawnParticles(state, ally.x, ally.y, '#4ade80', 5);

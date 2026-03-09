@@ -1,6 +1,6 @@
 import React from 'react';
-import { type PlayerClass } from '../logic/core/types';
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { type PlayerClass } from '../logic/core/Types';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { AssistantOverlay } from './hud/AssistantOverlay';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';

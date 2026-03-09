@@ -1,5 +1,5 @@
 import React from 'react';
-import type { GameState, LegendaryHex, Meteorite, LegendaryCategory } from '../logic/core/types';
+import type { GameState, LegendaryHex, Meteorite, LegendaryCategory } from '../logic/core/Types';
 import './HexTooltip.css';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
 import { getMeteoriteImage } from './modules/ModuleUtils';
@@ -14,9 +14,9 @@ interface HexTooltipProps {
 }
 
 const CATEGORY_COLORS: Record<LegendaryCategory | 'Merger', string> = {
-    Economic: '#fbbf24', // Yellow (Arena)
-    Combat: '#ef4444',   // Red (Arena)
-    Defensive: '#3b82f6', // Blue (Arena)
+    Economic: '#fbbf24',
+    Combat: '#ef4444',
+    Defensive: '#3b82f6',
     Fusion: '#f59e0b',
     Merger: '#10b981'
 };
@@ -25,17 +25,13 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
     const color = CATEGORY_COLORS[hex.category];
 
     const CARD_WIDTH = 280;
-    // Calculate content height based on stats
     const CARD_HEIGHT = 420;
     const OFFSET = 20;
 
-    // ... Positioning Logic (unchanged)
     let finalX = x + OFFSET;
     const finalY = (window.innerHeight - CARD_HEIGHT) / 2;
     if (finalX + CARD_WIDTH > window.innerWidth) finalX = x - CARD_WIDTH - OFFSET;
 
-    // Empowerment calculation
-    // Hex i connects to Diamonds: i, (i+5)%6, i+6, ((i+5)%6)+6
     const connectedDiamondIdxs = [
         hexIdx,
         (hexIdx + 5) % 6,
@@ -62,7 +58,6 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
             background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
             boxShadow: `0 0 30px ${color}44`,
         } as any}>
-            {/* Header: Name + Level + Kills */}
             <div style={{
                 padding: '12px 10px',
                 borderBottom: `2px solid ${color}66`,
@@ -88,7 +83,6 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
 
             <div className="hex-tooltip-body" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                {/* Statutory Breakdown Section */}
                 <div style={{
                     padding: '8px 10px',
                     fontSize: '8px',
@@ -110,7 +104,7 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                         const startKills = hex.killsAtLevel ? (hex.killsAtLevel[level] ?? hex.killsAtAcquisition) : hex.killsAtAcquisition;
                         const levelKills = Math.max(0, gameState.killCount - startKills);
 
-                        // Logic to extract numeric value: +15%, 0.2, etc.
+
                         const baseMatch = p.match(/(\d+\.?\d*)/);
                         let baseValue = baseMatch ? parseFloat(baseMatch[1]) : 0;
                         const hasPercent = p.includes('%');
@@ -120,22 +114,19 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                         let isNumeric = false;
 
                         if (isEconomic) {
-                            // Economic logic: Base * Resonance * Souls
-                            const finalValuePerKill = baseValue * multiplier;
+
+                            const soulMult = gameState.player.soulDrainMult ?? 1.0;
+                            const finalValuePerKill = baseValue * multiplier * soulMult;
                             const totalValue = finalValuePerKill * levelKills;
                             displayValue = `+${totalValue.toFixed(2)}${hasPercent ? '%' : ''}`;
                             isNumeric = p.includes('per kill');
-
-                            // Extract Label: "+0.2 DMG per kill" -> "DMG"
                             cleanLabel = p.replace(/[+]\d+\.?\d*%?\s*/, '').replace('per kill', '').trim();
                         } else {
-                            // Combat/Defense logic: Base * Resonance (if it has a number)
                             if (baseValue > 0 && (hasPercent || p.includes('DMG') || p.includes('HP') || p.includes('Lifesteal') || p.includes('Crit'))) {
                                 const amplified = baseValue * multiplier;
                                 displayValue = `${hasPercent ? '+' : ''}${amplified.toFixed(1)}${hasPercent ? '%' : ''}`;
                                 isNumeric = true;
 
-                                // Extract Label: "+15% Lifesteal" -> "Lifesteal"
                                 cleanLabel = p.replace(/[+]\d+\.?\d*%?\s*/, '').trim();
                             }
                         }
@@ -206,7 +197,6 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                     })}
                 </div>
 
-                {/* Synergy Matrix (The 4 connected meteorites) */}
                 <div className="hex-synergy-section" style={{ marginTop: '2px' }}>
                     <div className="synergy-label" style={{ fontSize: '8px', color: color, fontWeight: 900, letterSpacing: '2px', marginBottom: '10px', opacity: 0.8, textAlign: 'center' }}>
                         RESONANCE SYNERGY

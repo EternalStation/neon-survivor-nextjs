@@ -24,7 +24,7 @@ export const GAME_CONFIG = {
         SNITCH_SPEED_MULT: 0.7,
 
 
-        MERGE_TIMER: 3,
+        MERGE_TIMER: 3.0,
         MERGE_THRESHOLD_PENTAGON: 5,
         MERGE_THRESHOLD_DEFAULT: 10,
         MERGE_HP_MULT_PENTAGON: 6,

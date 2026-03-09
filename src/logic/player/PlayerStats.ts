@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { calcStat } from '../utils/MathUtils';
 import { recordHealing } from '../utils/DamageTracking';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
@@ -45,7 +45,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
 
-    (player as any).inRefineryZone = false;
+    player.inRefineryZone = false;
     const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
     if (alchemist) {
         const playerInPuddle = state.areaEffects.some(ae =>
@@ -53,7 +53,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
             Math.hypot(ae.x - player.x, ae.y - player.y) < ae.radius
         );
         if (playerInPuddle) {
-            (player as any).inRefineryZone = true;
+            player.inRefineryZone = true;
         }
     }
 
@@ -104,9 +104,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
     }
 
-    if (player.buffs?.vitalRecovery && state.gameTime < player.buffs.vitalRecovery) {
-        state.hpRegenBuffMult *= 1.2;
-    }
 
 
     const kinLvl = getHexLevel(state, 'KineticBattery');

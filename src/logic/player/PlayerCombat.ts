@@ -1,6 +1,6 @@
 
-import type { GameState, Enemy, Player } from '../core/types';
-import { getPlayerThemeColor } from '../utils/helpers';
+import type { GameState, Enemy, Player } from '../core/Types';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx, fadeOutMusic } from '../audio/AudioLogic';
@@ -113,7 +113,7 @@ export function handlePlayerCombat(
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
                         const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
-                        recordDamage(state, auraSrc as import('../core/types').DamageSource, finalTickDmg, e);
+                        recordDamage(state, auraSrc as import('../core/Types').DamageSource, finalTickDmg, e);
 
                         // Disable text for global damage to avoid heavy performance hit
                         const shouldShowText = inRange ? (Math.random() < 0.3) : false;
@@ -372,7 +372,7 @@ export function triggerHiveMotherCone(state: GameState, player: Player, cursorX:
     playSfx('shoot');
 }
 
-export function spawnNanitesFromCloud(state: GameState, effect: import('../core/types').AreaEffect) {
+export function spawnNanitesFromCloud(state: GameState, effect: import('../core/Types').AreaEffect) {
     const owner = state.players?.[effect.ownerId!] || state.player;
     const count = effect.naniteCount || 20;
     const dmg = effect.naniteDmg || 1;
@@ -660,7 +660,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 target.hp -= zap.dmg;
                 state.player.damageDealt += zap.dmg;
 
-                let source: import('../core/types').DamageSource = 'Kinetic Bolt (LVL 1)';
+                let source: import('../core/Types').DamageSource = 'Kinetic Bolt (LVL 1)';
                 if (zap.color === '#4ade80') {
                     const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
                     source = bloodLvl > 0 ? 'Necro-Kinetic Engine' : 'Crimson Feast (LVL 4)';

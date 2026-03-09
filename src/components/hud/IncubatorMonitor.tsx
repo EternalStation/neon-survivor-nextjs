@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { GameState } from '../../logic/core/types';
+import type { GameState } from '../../logic/core/Types';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getUiTranslation } from '../../lib/uiTranslations';
 

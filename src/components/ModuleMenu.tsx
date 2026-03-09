@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/core/types';
-import { RARITY_ORDER } from '../logic/core/types';
+import type { GameState, Meteorite, LegendaryHex, PlayerClass } from '../logic/core/Types';
+import { RARITY_ORDER } from '../logic/core/Types';
 
 import { HexGrid } from './modules/HexGrid';
 
@@ -12,7 +12,7 @@ import { getMeteoriteImage, getDustValue, PerkFilter, matchesFilter, getBlueprin
 import { isBuffActive, researchBlueprint, activateBlueprint } from '../logic/upgrades/BlueprintLogic';
 import type { BestiaryEntry } from '../data/BestiaryData';
 import { BlueprintBay } from './BlueprintBay';
-import { Blueprint } from '../logic/core/types';
+import { Blueprint } from '../logic/core/Types';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { RemovalConfirmationModal } from './modules/RemovalConfirmationModal';
 import { CorruptionWarningModal } from './modules/CorruptionWarningModal';
@@ -171,13 +171,6 @@ export const ModuleMenu: React.FC<ModuleMenuProps> = ({ gameState, isOpen, onClo
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.code === 'Tab' || e.key === 'Tab') && isOpen) {
                 e.preventDefault();
-            }
-            if (e.code === 'Escape' && isOpen) {
-                // Prevent closing if pending placement or if extraction dialogue is active
-                const isExtractionActive = ['requested', 'waiting'].includes(gameState.extractionStatus);
-                if (!gameState.pendingLegendaryHex && !isExtractionActive) {
-                    onClose();
-                }
             }
         };
 

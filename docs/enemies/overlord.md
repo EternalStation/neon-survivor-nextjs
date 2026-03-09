@@ -24,18 +24,18 @@ As the Overlord's HP decreases, it enters more dangerous stages of existence.
 - Standard Heat Aura behavior.
 - Passive movement towards the player.
 
-### Phase 2: Active Decay (<= 60% HP)
-- **Entropy Spread**: The aura radius begins to grow continuously from its current base by **5 pixels every second**.
+### Phase 2: Active Decay (<= 66% HP)
+- **Entropy Spread**: The aura radius begins to grow continuously from its current base by **10 pixels every second**.
 
-### Phase 3: Total Meltdown (<= 30% HP)
-- **Entropy Overload**: Aura damage grows dynamically from its current base by **0.5% of Player Max HP every second** the boss remains alive.
-- **Rapid Reconstruction**: The Overlord harnesses local energy to heal for **1% of its Max HP every second**.
+### Phase 3: Total Meltdown (<= 33% HP)
+- **Fixed Intensity**: Phase 3 no longer increases burn damage over time. It remains at its base (5% + 1% per Boss Level).
+- **Rapid Reconstruction**: The Overlord harnesses local energy to heal for **1% + (0.1% * Boss Level)** of its Max HP every second.
 
 ## 4. Summary Table
 
-| Mechanic | Phase 1 | Phase 2 (<= 60%) | Phase 3 (<= 30%) |
+| Mechanic | Phase 1 | Phase 2 (<= 66%) | Phase 3 (<= 33%) |
 | :--- | :--- | :--- | :--- |
-| **Aura Radius** | Base | Base + (5px/s growth) | Base + (5px/s growth) |
-| **Aura Damage** | Base | Base | Base + (0.5%/s growth) |
-| **Regeneration** | 0% | 0% | 1% Max HP / second |
-| **Visual Effects** | Standard | Phase Marker @ 60% | Phase Marker @ 30% |
+| **Aura Radius** | Base | Base + (10px/s growth) | Base + (10px/s growth) |
+| **Aura Damage** | Base | Base | Base (Fixed) |
+| **Regeneration** | 0% | 0% | 1% + 0.1%/lvl Max HP / second |
+| **Visual Effects** | Standard | Phase Marker @ 66% | Phase Marker @ 33% |

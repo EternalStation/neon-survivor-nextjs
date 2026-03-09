@@ -1,11 +1,11 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { isInMap, getHexDistToWall, ARENA_CENTERS } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { recordDamage } from '../utils/DamageTracking';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -40,27 +40,29 @@ export function updateSingleEnemy(
 
     if (e.isAnomaly && !e.dead) {
         const hpPct = e.hp / e.maxHp;
-        if (hpPct <= 0.60 && (e.stage || 0) < 2) {
+        if (hpPct <= 0.66 && (e.stage || 0) < 2) {
             e.stage = 2;
             e.stage2StartTime = state.gameTime;
+            spawnFloatingNumber(state, e.x, e.y, "STAGE 2: EXPANDING INFERNO", '#ef4444', true);
+            playSfx('rare-spawn');
         }
-        if (hpPct <= 0.30 && (e.stage || 0) < 3) {
+        if (hpPct <= 0.33 && (e.stage || 0) < 3) {
             e.stage = 3;
             e.stage3StartTime = state.gameTime;
+            spawnFloatingNumber(state, e.x, e.y, "STAGE 3: ETERNAL FLAME", '#b91c1c', true);
+            playSfx('rare-spawn');
         }
 
         const stage = e.stage || 1;
         const gen = e.anomalyGeneration || 0;
 
-        // Phase 2 Upgrade: Radius grows by 5px per second
         if (stage >= 2) {
-            e.bonusBurnRadius = (e.bonusBurnRadius || 0) + (5 * step);
+            e.bonusBurnRadius = (e.bonusBurnRadius || 0) + (10 * step);
         }
 
-        // Phase 3 Upgrade: Damage grows by 0.5% per second, and Boss heals 1% per second
         if (stage >= 3) {
-            e.bonusBurnPct = (e.bonusBurnPct || 0) + (0.005 * step);
-            e.hp = Math.min(e.maxHp, e.hp + (e.maxHp * 0.01 * step));
+            const regenPct = 0.01 + (gen * 0.001);
+            e.hp = Math.min(e.maxHp, e.hp + (e.maxHp * regenPct * step));
         }
 
         let burnRadius = 390 + (gen * 10) + (e.bonusBurnRadius || 0);
@@ -108,7 +110,6 @@ export function updateSingleEnemy(
         if (!host) host = state.enemies.find(h => h.boss && h.shape === 'pentagon');
         const age = state.gameTime - (e.spawnedAt || 0);
 
-        // Allow 'Free Rockets' to live without a phalanxState host
         const isFreeRocket = !host || (host.phalanxState === undefined && e.spd > 0);
 
         if (!isFreeRocket && (!host || host.dead || (host.phalanxState === 0 && age > 0.5))) {
@@ -175,7 +176,6 @@ export function updateSingleEnemy(
                 playSfx('impact');
             }
 
-            // Die if far away
             if (Math.hypot(e.x - state.player.x, e.y - state.player.y) > 2000) e.dead = true;
         }
         return;
@@ -493,7 +493,7 @@ export function updateSingleEnemy(
         } else e.dead = true;
     } else if (e.boss) {
         v = updateBossEnemy(e, currentSpd, dx, dy, pushX, pushY, state, onEvent);
-    } else if (e.shape === 'minion') {
+    } else if (e.shape === 'minion' || e.shape === 'elite_minion') {
         v = updateMinion(e, state, state.player, dx, dy, 0, 0);
     } else if (e.shape === 'snitch') {
         v = updateSnitch(e, state, state.player, state.gameTime);
@@ -504,7 +504,7 @@ export function updateSingleEnemy(
     } else if (e.isElite) {
         switch (e.shape) {
             case 'circle': v = updateEliteCircle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
-            case 'triangle': v = updateEliteTriangle(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
+            case 'triangle': v = updateEliteTriangle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
             case 'square': v = updateEliteSquare(e, state, currentSpd, dx, dy, pushX, pushY); break;
             case 'diamond': v = updateEliteDiamond(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;
             case 'pentagon': v = updateElitePentagon(e, state, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;
@@ -530,6 +530,21 @@ export function updateSingleEnemy(
 
     let vx = v.vx;
     let vy = v.vy;
+
+    // Merge Pull Animation Logic
+    if (e.mergeState === 'warming_up' && e.mergeId && !e.mergeHost) {
+        const host = state.enemies.find(m => m.mergeId === e.mergeId && m.mergeHost && !m.dead);
+        if (host) {
+            const mdx = host.x - e.x;
+            const mdy = host.y - e.y;
+            const mdist = Math.hypot(mdx, mdy);
+            if (mdist > host.size) {
+                const pullPower = 0.4; // 40% bias toward host
+                vx = vx * (1 - pullPower) + (mdx / mdist) * currentSpd * pullPower;
+                vy = vy * (1 - pullPower) + (mdy / mdist) * currentSpd * pullPower;
+            }
+        }
+    }
 
     if (bhPullSpeed > 0) {
         const blackholes = state.areaEffects.filter(ae => ae.type === 'blackhole');

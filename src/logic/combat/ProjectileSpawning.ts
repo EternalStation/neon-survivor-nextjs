@@ -1,14 +1,14 @@
-import type { GameState, Player } from '../core/types';
+import type { GameState, Player } from '../core/Types';
 import { GAME_CONFIG } from '../core/GameConfig';
-import { PLAYER_CLASSES } from '../core/classes';
+import { PLAYER_CLASSES } from '../core/Classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
-import { PALETTES } from '../core/constants';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { PALETTES } from '../core/Constants';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { networkManager } from '../networking/NetworkManager';
 
 

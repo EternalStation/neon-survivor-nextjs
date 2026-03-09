@@ -1,4 +1,4 @@
-import type { GameState } from '../../core/types';
+import type { GameState } from '../../core/Types';
 
 export function renderProjectiles(ctx: CanvasRenderingContext2D, state: GameState) {
     const { bullets, enemyBullets, player } = state;

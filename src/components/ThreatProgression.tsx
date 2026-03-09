@@ -1,9 +1,9 @@
 import React from 'react';
-import type { GameState } from '../logic/core/types';
+import type { GameState } from '../logic/core/Types';
 import { getCycleHpMult } from '../logic/enemies/EnemySpawnLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
-import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/constants';
-import { formatLargeNumber } from '../utils/format';
+import { SHAPE_DEFS, SHAPE_CYCLE_ORDER } from '../logic/core/Constants';
+import { formatLargeNumber } from '../utils/Format';
 import { calcStat, getDefenseReduction } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 
@@ -67,7 +67,7 @@ export const SimpleLineChart: React.FC<{
     }).join(' ');
 
     const gridMinutes = [0, 10, 20, 30, 40, 50, 60];
-    const ticks = customTicks || (scaleType === 'power' ? [minVal, Math.pow(maxVal, 0.5), maxVal] : [minVal, maxVal / 2, maxVal]);
+    const ticks = customTicks || (scaleType === 'power' ? [minVal, Math.pow(maxVal, 0.5), maxVal] : [minVal, Math.pow(maxVal, 0.5), maxVal]);
 
     return (
         <div style={{ position: 'relative', width, height, background: 'rgba(15, 23, 42, 0.5)', borderRadius: 12, border: '1px solid #334155', marginInline: 'auto', overflow: 'hidden' }}>
@@ -364,7 +364,7 @@ export const ThreatProgression: React.FC<ThreatProgressionProps> = ({ gameState,
                                             const armorValue = calcStat(gameState.player.arm);
                                             const armorReduction = getDefenseReduction(armorValue);
                                             const colRedRaw = calculateLegendaryBonus(gameState, 'col_red_per_kill', false, gameState.player);
-                                            const colRedReduction = getDefenseReduction(colRedRaw, 0.80);
+                                            const colRedReduction = Math.min(0.80, colRedRaw / 100);
                                             const finalDmg = collisionDmg * (1 - armorReduction) * (1 - colRedReduction);
                                             return formatLargeNumber(Math.round(finalDmg));
                                         })()}

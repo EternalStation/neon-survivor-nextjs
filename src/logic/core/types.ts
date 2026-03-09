@@ -75,7 +75,6 @@ export type DamageSource =
     | 'Toxic Puddle (LVL 4)'
     | 'Xeno Alchemist (Puddle)'
     | 'Irradiated Mire (Puddle)'
-    | 'Vital Mire (Puddle)'
     | 'Epicenter (LVL 1)'
     | 'Epicenter (LVL 4)'
     | 'Gravitational Harvest'
@@ -131,7 +130,6 @@ export interface AreaEffect {
     originY?: number;
     isGravityAnchor?: boolean;
     isGravitationalHarvest?: boolean;
-    isVitalMire?: boolean;
     hitEnemies?: Set<number>;
 }
 
@@ -175,11 +173,7 @@ export interface Player {
     damageBreakdown: Record<string, number>;
     activeSkillDamageByMinute?: Record<number, number>;
     wallsHit: number;
-    upgradesCollected: import('./types').UpgradeChoice[];
-    avgHpAccumulator?: number;
-    avgHpSampleCount?: number;
-    incomingDamageBreakdown?: Record<string, number>;
-    healingBreakdown?: Record<string, number>;
+    upgradesCollected: import('./Types').UpgradeChoice[];
     reg: PlayerStats;
     invertedControlsUntil?: number;
     arm: PlayerStats;
@@ -213,9 +207,8 @@ export interface Player {
         epicenterShield?: number;
         systemSurge?: { end: number, atk: number, spd: number };
         waveSpeed?: number;
-        vitalRecovery?: number;
     };
-    playerClass?: import('./classes').PlayerClassId;
+    playerClass?: import('./Classes').PlayerClassId;
     classShotCount?: number;
     lastCosmicStrikeTime?: number;
     lastBlackholeUse?: number;
@@ -231,6 +224,7 @@ export interface Player {
     lastWallHitTime?: number;
     killerHp?: number;
     killerMaxHp?: number;
+    inRefineryZone?: boolean;
 
 
     dashCooldown?: number;
@@ -254,8 +248,6 @@ export interface Player {
 
     temporalGuardActive?: boolean;
     phaseShiftUntil?: number;
-    godColRedBonus?: number;
-    godProjRedBonus?: number;
     spawnTimer?: number;
 
 
@@ -296,7 +288,7 @@ export interface Player {
     chronoDevourerBuffTime?: number;
     lastStormStrike?: number;
 
-    inventory: (import('./types').Meteorite | null)[];
+    inventory: (import('./Types').Meteorite | null)[];
     autoUnsocket?: boolean;
     rerolls: number;
     consumedLegendaries?: string[];
@@ -313,7 +305,7 @@ export interface ClassMetric {
 }
 
 export interface PlayerClass {
-    id: import('./classes').PlayerClassId;
+    id: import('./Classes').PlayerClassId;
     name: string;
     title: string;
     lore: string;
@@ -407,10 +399,9 @@ export interface Bullet {
     maxLife?: number;
     startAngle?: number;
     endAngle?: number;
-    sourceShape?: string;
 }
 
-export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
+export type ShapeType = 'circle' | 'triangle' | 'square' | 'diamond' | 'pentagon' | 'glitcher' | 'minion' | 'elite_minion' | 'snitch' | 'hexagon' | 'worm' | 'abomination' | 'orbital_shield' | 'long_drone';
 
 export interface ShapeDef {
     type: ShapeType;
@@ -745,7 +736,7 @@ export type LegendaryType =
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
     | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
-    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer' | 'VitalMire';
+    | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer';
 
 export interface LegendaryHex {
     id: string;
@@ -1046,7 +1037,7 @@ export interface MeteoritePerk {
 
 export interface Meteorite {
     id: number;
-    type?: 'void_flux' | 'dust_pile' | 'vital_spark';
+    type?: 'void_flux' | 'dust_pile';
     amount?: number;
     x: number;
     y: number;

@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { isInMap, ARENA_CENTERS, PORTALS, getHexWallLine, ARENA_RADIUS } from '../mission/MapLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';

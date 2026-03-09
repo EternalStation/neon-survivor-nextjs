@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { GameState, Meteorite } from '../logic/core/types';
+import type { GameState, Meteorite } from '../logic/core/Types';
 import { getMeteoriteImage, RARITY_COLORS, getPerkName, getPerkParts, getMeteoriteColor } from './modules/ModuleUtils';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation } from '../lib/uiTranslations';

@@ -1,6 +1,6 @@
-import { PLAYER_CLASSES } from '../../core/classes';
-import { PALETTES } from '../../core/constants';
-import type { GameState } from '../../core/types';
+import { PLAYER_CLASSES } from '../../core/Classes';
+import { PALETTES } from '../../core/Constants';
+import type { GameState } from '../../core/Types';
 import { spawnParticles } from '../../effects/ParticleLogic';
 import { GAME_CONFIG } from '../../core/GameConfig';
 import { getHexLevel } from '../../upgrades/LegendaryLogic';

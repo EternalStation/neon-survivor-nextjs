@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 import { spawnParticles } from '../../effects/ParticleLogic';
 
 export function renderUniqueEnemy(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState, meteoriteImages: Record<string, HTMLImageElement>, innerColor: string, outerColor: string, coreColor: string) {

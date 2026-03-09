@@ -1,9 +1,9 @@
-import type { Enemy, GameState } from '../../core/types';
+import type { Enemy, GameState } from '../../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 import { calcStat, getDefenseReduction, distToSegment } from '../../utils/MathUtils';
 import { applyDamageToPlayer } from '../../utils/CombatUtils';
-import { PALETTES } from '../../core/constants';
+import { PALETTES } from '../../core/Constants';
 
 export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let isBerserk = false;
@@ -607,7 +607,11 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
 
     const pMod = isLevel2 ? 0.8 : 1.0;
     const angle = Math.atan2(dy, dx);
-    const vx = Math.cos(angle) * (currentSpd * pMod) + pushX;
-    const vy = Math.sin(angle) * (currentSpd * pMod) + pushY;
+    const targetVx = Math.cos(angle) * (currentSpd * pMod) + pushX;
+    const targetVy = Math.sin(angle) * (currentSpd * pMod) + pushY;
+
+    const smoothing = 0.12;
+    const vx = (e.vx || 0) * (1 - smoothing) + targetVx * smoothing;
+    const vy = (e.vy || 0) * (1 - smoothing) + targetVy * smoothing;
     return { vx, vy };
 }
