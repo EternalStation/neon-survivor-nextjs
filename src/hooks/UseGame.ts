@@ -28,7 +28,6 @@ export function useGameLoop(gameStarted: boolean) {
     const workerRef = useRef<Worker | null>(null);
     const isTabHidden = useRef<boolean>(false);
 
-    // Pause state refs
     const showStatsRef = useRef(false);
     const showSettingsRef = useRef(false);
     const showModuleMenuRef = useRef(false);
@@ -36,12 +35,11 @@ export function useGameLoop(gameStarted: boolean) {
     const showFeedbackModalRef = useRef(false);
     const showAdminConsoleRef = useRef(false);
     const upgradeChoicesRef = useRef<UpgradeChoice[] | null>(null);
-    const wasModuleMenuOpenRef = useRef(false); // Track if module menu was just open
-    const wasPausedRef = useRef(false); // Track internal pause state for transition detection
+    const wasModuleMenuOpenRef = useRef(false);
+    const wasPausedRef = useRef(false);
 
     const meteoriteImagesRef = useRef<Record<string, HTMLImageElement>>({});
 
-    // UI State
     const [uiState, setUiState] = useState<number>(0);
     const [upgradeChoices, setUpgradeChoices] = useState<UpgradeChoice[] | null>(null);
     const [gameOver, setGameOver] = useState(false);
@@ -60,7 +58,6 @@ export function useGameLoop(gameStarted: boolean) {
         return saved ? parseFloat(saved) : 1.2;
     });
 
-    // Orbit Assistant Hook
     const {
         updateOrbit,
         triggerOneTrickPony,
@@ -72,7 +69,6 @@ export function useGameLoop(gameStarted: boolean) {
         triggerIncubatorDestroyed
     } = useOrbit(gameState, () => setUiState(p => p + 1), keys);
 
-    // Sync refs with state
     showStatsRef.current = showStats;
     showSettingsRef.current = showSettings;
     showModuleMenuRef.current = showModuleMenu;
@@ -81,12 +77,10 @@ export function useGameLoop(gameStarted: boolean) {
     showAdminConsoleRef.current = showAdminConsole;
     upgradeChoicesRef.current = upgradeChoices;
 
-    // Update washer ref while menu is open
     if (showModuleMenu) {
         wasModuleMenuOpenRef.current = true;
     }
 
-    // Sync GameState flags
     gameState.current.showModuleMenu = showModuleMenu;
     gameState.current.showStats = showStats;
     gameState.current.showSettings = showSettings;
@@ -97,7 +91,6 @@ export function useGameLoop(gameStarted: boolean) {
     gameState.current.isUpgradeMenuOpen = !!upgradeChoices;
     gameState.current.isPaused = showStats || showSettings || showModuleMenu || !!upgradeChoices || showLegendarySelection || showBossSkillDetail || showFeedbackModal || showAdminConsole || showCheatPanel;
 
-    // Connect UI Handlers
     const {
         restartGame,
         handleUpgradeSelect,
@@ -130,7 +123,6 @@ export function useGameLoop(gameStarted: boolean) {
         triggerZeroPercentSnark
     });
 
-    // Input Hook
     const windowScaleFactor = useRef(1);
     const { inputVector, mousePos, handleJoystickInput } = useGameInput({
         gameState,
@@ -147,7 +139,6 @@ export function useGameLoop(gameStarted: boolean) {
         windowScaleFactor
     });
 
-    // Logic Hook
     const { updateLogic } = useGameLogic({
         gameState,
         keys,
@@ -171,10 +162,7 @@ export function useGameLoop(gameStarted: boolean) {
         }
     });
 
-    // Multiplayer Hook
     const { sendInputToHost } = useMultiplayerGame(gameState, gameStarted);
-
-
 
     useEffect(() => {
         if (!gameStarted) return;
@@ -220,7 +208,7 @@ export function useGameLoop(gameStarted: boolean) {
         });
 
         if (!workerRef.current) {
-            workerRef.current = new Worker(new URL('../logic/core/GameWorker.ts', import.meta.url), { type: 'module' });
+            workerRef.current = new Worker(new URL('../logic/core/GameWorkerLogic.ts', import.meta.url), { type: 'module' });
             workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
         }
 
@@ -280,27 +268,21 @@ export function useGameLoop(gameStarted: boolean) {
             const isMenuOpen = showStatsRef.current || showSettingsRef.current || showModuleMenuRef.current || upgradeChoicesRef.current !== null || state.showLegendarySelection || showBossSkillDetailRef.current || showFeedbackModalRef.current || showAdminConsoleRef.current || state.showCheatPanel;
 
             if (!isMenuOpen && wasPausedRef.current) {
-                // Determine unpause mode based on what was open
                 if (wasModuleMenuOpenRef.current) {
-                    console.log("Unpausing from Module Menu - STARTING SLOW MO (0.8s)");
-                    // Slow Motion Unpause for Module Matrix
-                    state.unpauseDelay = 0.8; // 0.8s duration
+                    state.unpauseDelay = 0.8;
                     state.unpauseMode = 'slow_motion';
-                    wasModuleMenuOpenRef.current = false; // Reset
+                    wasModuleMenuOpenRef.current = false;
                 } else {
-                    // Standard Unpause
-                    console.log("Unpausing from Standard Menu");
-                    state.unpauseDelay = 0; // Instant unpause
+                    state.unpauseDelay = 0;
                     state.unpauseMode = 'normal';
                 }
                 resetEnemyAggro(state);
             }
             if (isMenuOpen && !wasPausedRef.current) {
-                // Pause Just Started
                 Object.keys(keys.current).forEach(k => keys.current[k] = false);
             }
 
-            wasPausedRef.current = !!isMenuOpen; // Update tracker
+            wasPausedRef.current = !!isMenuOpen;
             state.isPaused = !!isMenuOpen;
 
             if (showSettingsRef.current || showStatsRef.current || showModuleMenuRef.current) {
@@ -318,64 +300,31 @@ export function useGameLoop(gameStarted: boolean) {
 
             let steps = 0;
             if (!state.isPaused && !state.gameOver) {
-                // Update Flash Decay
                 if (state.flashIntensity && state.flashIntensity > 0) {
-                    state.flashIntensity -= safeDt * 2; // Fade out over 0.5s approx
+                    state.flashIntensity -= safeDt * 2;
                     if (state.flashIntensity < 0) state.flashIntensity = 0;
                 }
 
                 if (state.unpauseDelay && state.unpauseDelay > 0) {
-                    // Logic for Unpause Transition
                     if (state.unpauseMode === 'slow_motion') {
-                        // Slow Motion Ramp
                         const totalDuration = 0.8;
-                        const progress = 1 - (state.unpauseDelay / totalDuration); // 0 -> 1
+                        const progress = 1 - (state.unpauseDelay / totalDuration);
 
-                        // Check for completion to trigger flash
                         state.unpauseDelay -= safeDt;
                         if (state.unpauseDelay <= 0) {
                             state.unpauseDelay = 0;
                             state.flashIntensity = 0.8;
                             accRef.current = 0;
-                            console.log("Slow Mo Complete - FLASH TRIGGERED");
                         }
 
-                        // Apply Time Dilation
-                        // We want real-time to pass normally, but game logic updates fewer times.
-                        // Lerp speed: 0.05 -> 1.0
                         const currentSpeedObj = 0.05 + (0.95 * progress);
-
-                        // Accumulate time scaled by speed
-                        // But wait, accRef accumulates REAL time (safeDt). 
-                        // To simulate slow motion, we consume accRef slower? 
-                        // Or we multiply the dt passed to updateLogic?
-                        // If physics relies on fixed step 1/60, we must call updateLogic fewer times per second.
-
-                        // Implementation: We effectively scale the accumulation.
-                        // But accRef is already added above (accRef += safeDt).
-                        // Let's subtract the 'ignored' time from accRef so it doesn't build up a huge buffer to catch up later.
-
-                        // Actually, simpler: 
-                        // If we are in slow motion, we just limit the number of steps or reduce accRef directly?
-                        // Better: Scale the `safeDt` added to `accRef`. But that was lines above.
-                        // Let's retrospectively adjust accRef here.
-
-                        // Undo full addition
                         accRef.current -= safeDt;
-
-                        // Add scaled addition
                         accRef.current += safeDt * currentSpeedObj;
 
                     } else {
-                        // Normal Static Delay (Frozen)
                         state.unpauseDelay -= safeDt;
-                        accRef.current = 0; // Prevent accumulation during hard freeze
+                        accRef.current = 0;
                     }
-
-                    // If we still have enough for a step after scaling (or if in slow mo), run it
-                    // The standard loop below handles the actual updateLogic calls.
-                    // For 'normal' mode, accRef is 0 so no updates happen.
-                    // For 'slow_motion', accRef grows slowly, so fewer updates happen.
                 }
 
                 while (accRef.current >= FIXED_STEP && steps < 20 && !state.isPaused && !state.gameOver) {
@@ -393,8 +342,6 @@ export function useGameLoop(gameStarted: boolean) {
                 updateTutorial(state, safeDt);
                 updateExtraction(state, safeDt);
 
-                // IMPORTANT: Trigger UI updates for extraction dialogue even while paused
-                // This ensures the typewriter animation in ModuleDetailPanel works correctly
                 if (state.extractionStatus !== 'none') {
                     setUiState(p => p + 1);
                 }
