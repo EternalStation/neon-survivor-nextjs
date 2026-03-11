@@ -162,6 +162,7 @@ export async function preloadMusic() {
             await new Promise(resolve => setTimeout(resolve, 100));
         } catch (e) { }
     }
+    await loadSfxAssets();
 }
 
 export async function startBGM() {

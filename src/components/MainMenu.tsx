@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { startMenuMusic, preloadMusic } from '../logic/audio/AudioLogic';
+import { startMenuMusic, preloadMusic, playSfx } from '../logic/audio/AudioLogic';
 import { CURRENT_PATCH_VERSION } from '../utils/leaderboard';
 
 import { SettingsMenu } from './SettingsMenu';
@@ -142,6 +142,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
     };
 
     const handleStart = () => {
+        playSfx('transition');
         // Pre-calculate target to avoid layout thrashing at frame 1
         const canvas = document.getElementById('menu-particles');
         if (canvas) {
