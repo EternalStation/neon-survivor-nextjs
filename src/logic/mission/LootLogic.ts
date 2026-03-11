@@ -128,19 +128,16 @@ export const DROP_TABLE: { min: number, max: number, weights: number[] }[] = [
 
 
 
-    { min: 0, max: 5, weights: [90, 10, 1, 0, 0, 0] },
-
-    { min: 5, max: 10, weights: [70, 20, 9, 1, 0, 0] },
-
-    { min: 10, max: 15, weights: [50, 30, 15, 5, 1, 0] },
-
-    { min: 15, max: 20, weights: [10, 30, 40, 14, 5, 1] },
-
-    { min: 20, max: 25, weights: [0, 0, 20, 40, 30, 10] },
-
-    { min: 25, max: 30, weights: [0, 0, 0, 0, 60, 40] },
-
-    { min: 30, max: 9999, weights: [0, 0, 0, 0, 20, 80] }
+    // 0-10 Minutes: [80, 15, 4.5, 0.5, 0, 0]
+    { min: 0, max: 10, weights: [80, 15, 4.5, 0.5, 0, 0] },
+    // 10-20 Minutes: [10, 35, 40, 14.5, 0.5, 0]
+    { min: 10, max: 20, weights: [10, 35, 40, 14.5, 0.5, 0] },
+    // 20-30 Minutes: [0, 0, 40, 50, 9.5, 0.5]
+    { min: 20, max: 30, weights: [0, 0, 40, 50, 9.5, 0.5] },
+    // 30-40 Minutes: [0, 0, 0, 20, 70, 10]
+    { min: 30, max: 40, weights: [0, 0, 0, 20, 70, 10] },
+    // 40+ Minutes: [0, 0, 0, 0, 60, 40]
+    { min: 40, max: 9999, weights: [0, 0, 0, 0, 60, 40] }
 ];
 
 const RARITY_LIST: MeteoriteRarity[] = ['anomalous', 'radiant', 'abyss', 'eternal', 'divine', 'singularity'];
@@ -186,13 +183,13 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
 
 
     if (rand < 0.05) {
-
+        // Corrupted
         isCorrupted = true;
         const qRand = Math.random();
         quality = qRand < 0.2 ? 'New' : (qRand < 0.5 ? 'Damaged' : 'Broken');
     } else {
         const qRand = Math.random();
-        if (qRand < 0.15) quality = 'New';
+        if (qRand < 0.20) quality = 'New';
         else if (qRand < 0.50) quality = 'Damaged';
         else quality = 'Broken';
     }
@@ -271,7 +268,7 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     const entry = DROP_TABLE.find(e => minutes >= e.min && minutes < e.max) || DROP_TABLE[DROP_TABLE.length - 1];
 
 
-    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.05;
+    let chance = (entry.weights.reduce((a, b) => a + b, 0) / 100) * 0.01;
 
 
     chance *= state.meteoriteRateBuffMult;
@@ -285,20 +282,7 @@ export function trySpawnMeteorite(state: GameState, x: number, y: number) {
     }
 
 
-    if (minutes < 1.0) return;
-
-    let forceSpawn = false;
-
-
-    if (!state.firstMeteoriteSpawned) {
-        state.firstMeteoriteSpawned = true;
-        forceSpawn = true;
-    } else {
-
-        if (minutes < 1.5) return;
-    }
-
-    if (!forceSpawn && Math.random() > chance) return;
+    if (Math.random() > chance) return;
 
     const rarity = getRandomRarity(state);
     const dropX = x + (Math.random() - 0.5) * 20;
@@ -346,23 +330,6 @@ export function spawnDustPile(state: GameState, x: number, y: number, amount: nu
     state.meteorites.push(item);
 }
 
-export function spawnVitalSpark(state: GameState, x: number, y: number) {
-    const item: any = {
-        id: Math.random(),
-        x,
-        y,
-        type: 'vital_spark',
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        magnetized: true,
-        spawnedAt: state.gameTime,
-        rarity: 'radiant',
-        quality: 'New',
-        perks: [],
-        stats: {}
-    };
-    state.meteorites.push(item);
-}
 
 export function updateLoot(state: GameState) {
     const { meteorites, player, inventory } = state;
@@ -440,18 +407,6 @@ export function updateLoot(state: GameState) {
                     continue;
                 }
 
-                if (item.type === 'vital_spark') {
-                    const heal = state.player.hp.base * 0.015;
-                    state.player.curHp = Math.min(state.player.hp.base + (state.player.hp.flat || 0), state.player.curHp + heal);
-
-                    if (!state.player.buffs) state.player.buffs = {};
-                    state.player.buffs.vitalRecovery = state.gameTime + 5;
-
-                    spawnFloatingNumber(state, target.x, target.y - 40, "+VITALITY", "#facc15", true);
-                    playSfx('shoot');
-                    meteorites.splice(i, 1);
-                    continue;
-                }
 
 
                 let emptySlotIndex = -1;

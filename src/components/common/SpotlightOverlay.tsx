@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWindowScale } from '../../hooks/useWindowScale';
+import { useWindowScale } from '../../hooks/UseWindowScale';
 
 interface SpotlightOverlayProps {
     selector: string;

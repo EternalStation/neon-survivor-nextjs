@@ -16,11 +16,20 @@ export function updateSingleEnemyBullet(
     onEvent?: (event: string, data?: any) => void,
     triggerDeath?: () => void
 ): boolean {
-    eb.x += eb.vx;
-    eb.y += eb.vy;
-    eb.life--;
-
     const player = state.player;
+    const now = state.gameTime;
+    let slowMult = 1.0;
+    if (player.stasisFieldActive && player.stasisFieldX !== undefined && player.stasisFieldY !== undefined) {
+        const distToZone = Math.hypot(eb.x - player.stasisFieldX, eb.y - player.stasisFieldY);
+        if (distToZone < 400) {
+            slowMult = 0.5;
+        }
+    }
+
+    eb.x += eb.vx * slowMult;
+    eb.y += eb.vy * slowMult;
+    eb.life -= slowMult;
+
     if (player.playerClass === 'aigis') {
         const vdx = eb.x - player.x;
         const vdy = eb.y - player.y;
@@ -88,7 +97,7 @@ export function updateSingleEnemyBullet(
             });
 
             if (finalDmg > 0 || eb.dmg > 0) {
-                if (getHexLevel(state, 'KineticBattery') >= 1) triggerKineticBatteryZap(state, p);
+                if (getHexLevel(state, 'DefBattery') >= 1) triggerKineticBatteryZap(state, p);
             }
 
             enemyBullets.splice(index, 1);

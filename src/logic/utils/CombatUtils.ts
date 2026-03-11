@@ -1,7 +1,7 @@
 
 import type { GameState, Player } from '../core/types';
 import { calcStat, getDefenseReduction } from './MathUtils';
-import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
+import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 
 export interface DamageOptions {
@@ -95,7 +95,20 @@ export function applyDamageToPlayer(
     const finalDmg = Math.max(0, dmg);
 
     if (finalDmg > 0) {
-        player.curHp -= finalDmg;
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'DefPlatting' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
+        if (chronoHex) {
+            const mult = getHexMultiplier(state, chronoHex.type);
+            const delayed = finalDmg * 0.10 * mult;
+            player.timeLoopPool = (player.timeLoopPool || 0) + delayed;
+            player.curHp -= (finalDmg - delayed);
+        } else {
+            player.curHp -= finalDmg;
+        }
+
+        const monolithHex = state.moduleSockets.hexagons.find(h => h?.type === 'TemporalMonolith');
+        if (monolithHex) {
+            (player as any).temporalMonolithBuff = state.gameTime + 1.0;
+        }
         player.damageTaken = (player.damageTaken || 0) + finalDmg;
         player.lastHitDamage = finalDmg;
         if (options.killerHp !== undefined) player.killerHp = options.killerHp;
@@ -121,4 +134,51 @@ export function applyDamageToPlayer(
     }
 
     return finalDmg;
+}
+
+export function applyHealToPlayer(
+    state: GameState,
+    player: Player,
+    healAmount: number,
+    source: string = 'heal',
+    optionalShieldDuration?: number
+) {
+    if (healAmount <= 0 || player.healingDisabled || player.curHp <= 0) return;
+
+    const maxHp = calcStat(player.hp);
+    const lifeLevel = getHexLevel(state, 'ComLife');
+
+    const hasCrimsonOverheal = (lifeLevel >= 2);
+    const forceOverheal = optionalShieldDuration !== undefined;
+
+    if (player.curHp >= maxHp) {
+        if (hasCrimsonOverheal || forceOverheal) {
+            const duration = forceOverheal ? optionalShieldDuration! : 3;
+            if (!player.shieldChunks) player.shieldChunks = [];
+            player.shieldChunks.push({
+                amount: healAmount,
+                expiry: state.gameTime + duration,
+                source: hasCrimsonOverheal ? 'lifesteal' : (source === 'turret' ? 'skill' : 'skill') // Default to skill if not lifesteal
+            });
+        }
+        return;
+    }
+
+    const potentialHp = player.curHp + healAmount;
+    if (potentialHp > maxHp) {
+        const excess = potentialHp - maxHp;
+        player.curHp = maxHp;
+
+        if (hasCrimsonOverheal || forceOverheal) {
+            const duration = forceOverheal ? optionalShieldDuration! : 3;
+            if (!player.shieldChunks) player.shieldChunks = [];
+            player.shieldChunks.push({
+                amount: excess,
+                expiry: state.gameTime + duration,
+                source: hasCrimsonOverheal ? 'lifesteal' : 'skill'
+            });
+        }
+    } else {
+        player.curHp = potentialHp;
+    }
 }

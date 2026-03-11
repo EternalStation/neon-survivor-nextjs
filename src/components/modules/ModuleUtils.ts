@@ -29,8 +29,8 @@ export const RARITY_COLORS: Record<string, string> = {
 // Rarity Order for Dust Value (1 to 6)
 
 export const getDustValue = (rarity: MeteoriteRarity) => {
-    // 1-Based Dust Value based on Rarity Index
-    return RARITY_ORDER.indexOf(rarity) + 1;
+    // 1-Based Dust Value based on Rarity Index, now increased by x5
+    return (RARITY_ORDER.indexOf(rarity) + 1) * 5;
 };
 
 export const getMeteoriteImage = (m: Meteorite) => {
@@ -39,7 +39,6 @@ export const getMeteoriteImage = (m: Meteorite) => {
 };
 
 export const getBlueprintImage = (status?: string) => {
-    if (status === 'broken') return `/assets/Icons/BlueprintBroken.png`;
     return `/assets/Icons/Blueprint.png`;
 };
 

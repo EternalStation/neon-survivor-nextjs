@@ -2,7 +2,8 @@ import type { GameState, Enemy, ShapeType } from '../core/types';
 import { TutorialStep } from '../core/types';
 import { playSfx } from '../audio/AudioLogic';
 import { getLegendaryOptions, getHexLevel, calculateLegendaryBonus, getHexMultiplier, recordLegendarySouls } from '../upgrades/LegendaryLogic';
-import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile, spawnVitalSpark } from './LootLogic';
+import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from './LootLogic';
+import { getSpawnPosition } from '../enemies/EnemySpawnLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
@@ -13,7 +14,7 @@ import { recordDamage } from '../utils/DamageTracking';
 
 export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: string, data?: any) => void) {
     if (e.dead) return;
-    if (e.isFriendly || e.isZombie) {
+    if (e.isFriendly || e.isZombie || e.isGhost || e.isNecroticZombie) {
         e.dead = true;
         e.hp = 0;
         return;
@@ -208,18 +209,6 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
     }
 
 
-    const vitalMireLvl = getHexLevel(state, 'VitalMire');
-    if (vitalMireLvl > 0) {
-        const isInVitalMire = state.areaEffects.some(ae =>
-            ae.type === 'puddle' &&
-            ae.isVitalMire &&
-            Math.hypot(ae.x - e.x, ae.y - e.y) < ae.radius
-        );
-
-        if (isInVitalMire && Math.random() < 0.5) {
-            spawnVitalSpark(state, e.x, e.y);
-        }
-    }
 
 
     const ecoXp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoXP' || h?.type === 'XenoAlchemist' || h?.type === 'NeuralSingularity');
@@ -436,11 +425,12 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
                 const crimsonRiseDelay = 5000;
                 const now = state.gameTime * 1000;
                 const zombieSpd = 6.5;
+                const spawnPos = getSpawnPosition(state, false);
                 const zombie: Enemy = {
                     id: Math.random(),
                     type: e.type,
                     shape: e.shape,
-                    x: e.x, y: e.y,
+                    x: spawnPos.x, y: spawnPos.y,
                     size: e.size,
                     hp: Math.floor(e.maxHp * 0.5),
                     maxHp: Math.floor(e.maxHp * 0.5),
@@ -476,16 +466,17 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
 
 
         if (state.activeEvent?.type === 'necrotic_surge') {
-
             if (!state.activeEvent.pendingZombieSpawns) {
                 state.activeEvent.pendingZombieSpawns = [];
             }
             const riseDelay = 3000;
             const speedBoost = 1.1;
 
+            const spawnPos = getSpawnPosition(state, false);
+
             state.activeEvent.pendingZombieSpawns.push({
-                x: e.x,
-                y: e.y,
+                x: spawnPos.x,
+                y: spawnPos.y,
                 shape: e.shape as ShapeType,
                 spd: e.spd * speedBoost,
                 maxHp: e.maxHp,

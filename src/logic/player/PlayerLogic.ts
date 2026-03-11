@@ -76,30 +76,28 @@ export function updatePlayer(
     }
 
     if (isMonolithActive) {
-
-        const bonus = (1 / 60) * 0.2;
-
+        const { getHexMultiplier } = require('../upgrades/LegendaryLogic');
+        const mult = getHexMultiplier(state, 'TemporalMonolith');
+        const recoveryBonusRate = 0.2 * mult;
+        const tickBonus = (1 / 60) * recoveryBonusRate;
 
         if (player.activeSkills) {
             player.activeSkills.forEach((s: import('../core/types').ActiveSkill) => {
-                s.lastUsed -= bonus;
+                s.lastUsed -= tickBonus;
             });
         }
 
-
-        if (player.lastBlackholeUse) player.lastBlackholeUse -= bonus;
-        if (player.lastHiveMotherSkill) player.lastHiveMotherSkill -= bonus;
-        if (player.lastVortexActivation) player.lastVortexActivation -= bonus;
-        if (player.orbitalVortexCooldownEnd) player.orbitalVortexCooldownEnd -= bonus;
-        if (player.sandboxCooldownStart) player.sandboxCooldownStart -= bonus;
-        if (player.lastStormStrike) player.lastStormStrike -= bonus;
-        if (player.stormCircleCooldownEnd) player.stormCircleCooldownEnd -= bonus;
-        if (player.stormCircleChargeTime !== undefined) player.stormCircleChargeTime += bonus;
-
-
-        if (player.lastKineticShockwave) player.lastKineticShockwave -= bonus;
-        if (player.lastDash) player.lastDash -= bonus;
-        if (player.lastDeathMark) player.lastDeathMark -= bonus;
+        if (player.lastBlackholeUse) player.lastBlackholeUse -= tickBonus;
+        if (player.lastHiveMotherSkill) player.lastHiveMotherSkill -= tickBonus;
+        if (player.lastVortexActivation) player.lastVortexActivation -= tickBonus;
+        if (player.orbitalVortexCooldownEnd) player.orbitalVortexCooldownEnd -= tickBonus;
+        if (player.sandboxCooldownStart) player.sandboxCooldownStart -= tickBonus;
+        if (player.lastStormStrike) player.lastStormStrike -= tickBonus;
+        if (player.stormCircleCooldownEnd) player.stormCircleCooldownEnd -= tickBonus;
+        if (player.stormCircleChargeTime !== undefined) player.stormCircleChargeTime += tickBonus;
+        if (player.lastDash) player.lastDash -= tickBonus;
+        if (player.lastDeathMark) player.lastDeathMark -= tickBonus;
+        if (player.lastKineticShockwave) player.lastKineticShockwave -= tickBonus;
     }
 
 

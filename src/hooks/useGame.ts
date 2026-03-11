@@ -2,16 +2,16 @@ import { useRef, useEffect, useState } from 'react';
 import { createInitialGameState } from '../logic/core/GameState';
 import { resetEnemyAggro } from '../logic/enemies/EnemyLogic';
 import { updateExtraction } from '../logic/mission/ExtractionLogic';
-import { playSfx, updateBGMPhase, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, fadeOutMusic } from '../logic/audio/AudioLogic';
+import { playSfx, duckMusic, restoreMusic, pauseMusic, resumeMusic, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience } from '../logic/audio/AudioLogic';
 import { syncAllLegendaries } from '../logic/upgrades/LegendaryLogic';
 import { renderGame } from '../logic/rendering/GameRenderer';
-import { useGameInput } from './useGameInput';
-import { useGameLogic } from './useGameLogic';
-import { useOrbit } from './useOrbit';
-import { useGameUIHandlers } from './useGameUIHandlers';
+import { useGameInput } from './UseGameInput';
+import { useGameLogic } from './UseGameLogic';
+import { useOrbit } from './UseOrbit';
+import { useGameUIHandlers } from './UseGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
 import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
-import { useMultiplayerGame } from './useMultiplayerGame';
+import { useMultiplayerGame } from './UseMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
 import { getKeybinds } from '../logic/utils/Keybinds';
 
@@ -177,45 +177,52 @@ export function useGameLoop(gameStarted: boolean) {
 
 
     useEffect(() => {
+        if (!gameStarted) return;
+
         const qualities = ['Broken', 'Damaged', 'New'];
         for (let i = 0; i <= 5; i++) {
             qualities.forEach(q => {
                 const key = `M${i}${q}`;
-                const img = new Image();
-                img.src = `/assets/meteorites/${key}.png`;
-                meteoriteImagesRef.current[key] = img;
+                if (!(meteoriteImagesRef.current as any)[key]) {
+                    const img = new Image();
+                    img.src = `/assets/meteorites/${key}.png`;
+                    meteoriteImagesRef.current[key] = img;
+                }
             });
         }
-        const zombieImg = new Image();
-        zombieImg.src = `/assets/Enemies/Zombie.png`;
-        (meteoriteImagesRef.current as any).zombie = zombieImg;
-        const fearImg = new Image();
-        fearImg.src = '/assets/Icons/FearSkill.png';
-        (meteoriteImagesRef.current as any).fear = fearImg;
-        const dmImg = new Image();
-        dmImg.src = '/assets/Icons/DeathMark.png';
-        (meteoriteImagesRef.current as any).deathMark = dmImg;
-        ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'].forEach(hex => {
-            const img = new Image();
-            const ext = (hex === 'AigisVortex') ? 'PNG' : 'png';
-            img.src = `/assets/hexes/${hex}.${ext}`;
-            (meteoriteImagesRef.current as any)[hex] = img;
-        });
-        const bpImg = new Image();
-        bpImg.src = '/assets/Icons/Blueprint.png';
-        (meteoriteImagesRef.current as any).blueprint = bpImg;
-        const shipImg = new Image();
-        shipImg.src = '/assets/Enteties/Ship.png';
-        (meteoriteImagesRef.current as any).ship = shipImg;
-        const fluxImg = new Image();
-        fluxImg.src = '/assets/Icons/Void Flux.png';
-        (meteoriteImagesRef.current as any).void_flux = fluxImg;
-        const dustImg = new Image();
-        dustImg.src = '/assets/Icons/MeteoriteDust.png';
-        (meteoriteImagesRef.current as any).dust_pile = dustImg;
+        const assets = [
+            { key: 'zombie', src: '/assets/Enemies/Zombie.png' },
+            { key: 'fear', src: '/assets/Icons/FearSkill.png' },
+            { key: 'deathMark', src: '/assets/Icons/DeathMark.png' },
+            { key: 'blueprint', src: '/assets/Icons/Blueprint.png' },
+            { key: 'ship', src: '/assets/Enteties/Ship.png' },
+            { key: 'void_flux', src: '/assets/Icons/Void Flux.png' },
+            { key: 'dust_pile', src: '/assets/Icons/MeteoriteDust.png' }
+        ];
 
-        workerRef.current = new Worker(new URL('../logic/core/gameWorker.ts', import.meta.url), { type: 'module' });
-        workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
+        const hexes = ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'];
+
+        assets.forEach(a => {
+            if (!(meteoriteImagesRef.current as any)[a.key]) {
+                const img = new Image();
+                img.src = a.src;
+                (meteoriteImagesRef.current as any)[a.key] = img;
+            }
+        });
+
+        hexes.forEach(hex => {
+            if (!(meteoriteImagesRef.current as any)[hex]) {
+                const img = new Image();
+                const ext = (hex === 'AigisVortex') ? 'PNG' : 'png';
+                img.src = `/assets/hexes/${hex}.${ext}`;
+                (meteoriteImagesRef.current as any)[hex] = img;
+            }
+        });
+
+        if (!workerRef.current) {
+            workerRef.current = new Worker(new URL('../logic/core/GameWorker.ts', import.meta.url), { type: 'module' });
+            workerRef.current.postMessage({ type: 'start', interval: 1000 / 60 });
+        }
 
         const handleVisibility = () => {
             isTabHidden.current = document.visibilityState === 'hidden';
@@ -223,8 +230,13 @@ export function useGameLoop(gameStarted: boolean) {
         document.addEventListener('visibilitychange', handleVisibility);
 
         return () => {
-            workerRef.current?.terminate();
             document.removeEventListener('visibilitychange', handleVisibility);
+        };
+    }, [gameStarted]);
+
+    useEffect(() => {
+        return () => {
+            workerRef.current?.terminate();
         };
     }, []);
 
@@ -291,8 +303,7 @@ export function useGameLoop(gameStarted: boolean) {
             wasPausedRef.current = !!isMenuOpen; // Update tracker
             state.isPaused = !!isMenuOpen;
 
-            if (showSettingsRef.current) pauseMusic();
-            else if (showStatsRef.current || showModuleMenuRef.current) {
+            if (showSettingsRef.current || showStatsRef.current || showModuleMenuRef.current) {
                 resumeMusic();
                 duckMusic();
             } else {
@@ -400,7 +411,6 @@ export function useGameLoop(gameStarted: boolean) {
                 sendInputToHost(keys.current, inputVector.current, mousePos.current);
             }
 
-            updateBGMPhase(state.gameTime);
             updateOrbit(safeDt);
 
             if (!state.isPaused) {

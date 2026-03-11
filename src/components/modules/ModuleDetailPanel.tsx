@@ -7,7 +7,7 @@ import { ARENA_DATA, SECTOR_NAMES, getLocalizedArenaDetails } from '../../logic/
 import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
-import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
+import { playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
@@ -137,7 +137,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
         const status = bp.status as string;
         const cost = bp.cost ?? 0;
         const canDeploy = gs.player.dust >= cost;
-        const alreadyActive = isBuffActive(gs, bp.type);
+        const alreadyActive = isBuffActive(gs, bp.type) || (bp.type !== 'QUANTUM_SCRAPPER' && Object.keys(gs.activeBlueprintBuffs).length > 0);
 
         const findBpIdx = () => gs.inventory.findIndex((i: any) => i && i.isBlueprint && i.id === bp.id);
 
@@ -285,12 +285,6 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                         </div>
                     )}
 
-                    {/* BROKEN — recycle only */}
-                    {status === 'broken' && (
-                        <div style={{ background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.3)', borderLeft: '3px solid #64748b', borderRadius: '6px', padding: '10px 16px', fontSize: '10px', color: '#64748b', fontWeight: 900, letterSpacing: '2px' }}>
-                            PROTOCOL EXHAUSTED
-                        </div>
-                    )}
 
 
                 </div>
@@ -435,8 +429,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                             {(() => {
                                                 const charges = gameState.activeBlueprintCharges[hoveredBlueprint.type];
                                                 const endTime = gameState.activeBlueprintBuffs[hoveredBlueprint.type];
-                                                const isActive = hoveredBlueprint.status === 'active';
-                                                const isBroken = hoveredBlueprint.status === 'broken';
+                                                const isActive = isBuffActive(gameState, hoveredBlueprint.type);
 
                                                 if (isActive && charges !== undefined) {
                                                     return (
@@ -486,21 +479,6 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                     );
                                                 }
 
-                                                if (isBroken) {
-                                                    return (
-                                                        <div style={{
-                                                            background: 'rgba(100, 116, 139, 0.1)',
-                                                            border: '1px solid rgba(100, 116, 139, 0.3)',
-                                                            borderLeft: '3px solid #64748b',
-                                                            borderRadius: '6px',
-                                                            padding: '8px 16px',
-                                                            marginBottom: '14px',
-                                                            fontSize: '10px', color: '#64748b', fontWeight: 900, letterSpacing: '2px'
-                                                        }}>
-                                                            PROTOCOL EXHAUSTED — RECYCLE FOR DUST
-                                                        </div>
-                                                    );
-                                                }
 
                                                 return null;
                                             })()}
@@ -518,8 +496,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 <div>
                                                     <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: 900, marginBottom: '6px', letterSpacing: '2px' }}>{t.activation.title}</div>
                                                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                                                        <span style={{ fontSize: '28px', fontWeight: 900, color: '#fff', textShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}>{hoveredBlueprint.cost.toLocaleString()}</span>
-                                                        <span style={{ fontSize: '12px', fontWeight: 900, color: '#94a3b8' }}>{t.activation.dustRequired}</span>
+                                                        <span style={{ fontSize: '28px', fontWeight: 900, color: (isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? '#60a5fa' : (gameState.player.dust >= hoveredBlueprint.cost ? '#fff' : '#ef4444'), textShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'ACTIVE' : hoveredBlueprint.cost.toLocaleString()}</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 900, color: '#94a3b8' }}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'PROTO-RUNNING' : t.activation.dustRequired}</span>
                                                     </div>
                                                 </div>
                                                 <div style={{

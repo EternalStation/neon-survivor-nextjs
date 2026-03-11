@@ -328,7 +328,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                 ))}
 
                 {(() => {
-                    const kinLvl = getHexLevel(gameState, 'KineticBattery');
+                    const kinLvl = getHexLevel(gameState, 'DefBattery');
                     if (kinLvl <= 0) return null;
 
                     const cdMod = getCdMod(gameState, player);
@@ -478,7 +478,7 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({ gameState, maxHp }) 
                 if (totalShield <= 0) return null;
 
                 const lifeLvl = getHexLevel(gameState, 'ComLife');
-                const kinLvl = getHexLevel(gameState, 'KineticBattery');
+                const kinLvl = getHexLevel(gameState, 'DefBattery');
 
                 let lifeCapacity = 0;
                 if (lifeLvl >= 2) {

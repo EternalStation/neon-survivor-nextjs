@@ -105,56 +105,56 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         customIcon: '/assets/hexes/DefEpi.png',
         forgedAt: ['Bastion']
     },
-    CombShield: {
-        id: 'comb_shield',
+    EcoShield: {
+        id: 'eco_shield',
         name: 'AEGIS PROTOCOL',
         desc: 'Adaptive Resistance Scaling',
         description: 'Adaptive plating algorithms that strengthen structural integrity based on combat data.',
         lore: 'The Aegis is a living shield. It learns from every hit taken and every enemy destroyed, reinforcing your chassis until it becomes an impenetrable fortress.',
         category: 'Economic',
-        type: 'CombShield',
+        type: 'EcoShield',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/EcoArmor.png',
+        customIcon: '/assets/hexes/EcoShield.png',
         forgedAt: ['Exis']
     },
-    KineticBattery: {
+    DefBattery: {
         id: 'kin_bat',
         name: 'KINETIC BATTERY',
         desc: 'Converts Armor to Shockwaves',
         description: 'Experimental capacitor bank that stores kinetic impact energy and releases it as devastating shockwaves.',
         lore: 'Why simply deflect a blow when you can catch it, amplify it, and send it back tenfold? The Kinetic Battery turns your defense into the ultimate offense.',
         category: 'Defensive',
-        type: 'KineticBattery',
+        type: 'DefBattery',
         level: 1,
         killsAtAcquisition: 0,
         customIcon: '/assets/hexes/DefBattery.png',
         forgedAt: ['Bastion']
     },
-    RadiationCore: {
+    ComRadiation: {
         id: 'rad_core',
         name: 'RADIATION CORE',
         desc: 'Global Decay Aura',
         description: 'Unstable isotope reactor that emits a lethal 500px radiation aura. Damage intensity scales with proximity; the closer an enemy is to your core, the faster they decay.',
         lore: 'Harvested from a dying star, this core pulses with entropy. To stand near you is to age a thousand years in a second.',
         category: 'Combat',
-        type: 'RadiationCore',
+        type: 'ComRadiation',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/ComRad.png',
+        customIcon: '/assets/hexes/ComRadiation.png',
         forgedAt: ['Apex']
     },
-    ChronoPlating: {
+    DefPlatting: {
         id: 'chrono_plate',
         name: 'CHRONO PLATING',
         desc: 'Time-Scaling Defense',
         description: 'Temporal alloy plating that hardening over time, becoming virtually indestructible the longer you survive.',
         lore: 'Forged outside of time, this armor doesn\'t just resist damage; it denies the very event of impact, rewriting history to keep you intact.',
         category: 'Defensive',
-        type: 'ChronoPlating',
+        type: 'DefPlatting',
         level: 1,
         killsAtAcquisition: 0,
-        customIcon: '/assets/hexes/DefChromo.png',
+        customIcon: '/assets/hexes/DefPlatting.png',
         forgedAt: ['Bastion']
     },
     XenoAlchemist: {
@@ -313,17 +313,4 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         killsAtAcquisition: 0,
         customIcon: '/assets/Fusions/THE CHRONO-DEVOURER.png'
     },
-    VitalMire: {
-        id: 'vital_mire',
-        name: 'THE VITAL MIRE',
-        desc: 'Economic / Defensive Fusion',
-        description: 'A mutagenic fusion of Essence Syphon and Toxic Swamp. The puddle absorbs the essence of fallen enemies, converting their life force into regenerative compounds.',
-        lore: 'Where the Syphon meets the Swamp, death becomes sustenance. The mire pulses with stolen vitality, its yellow-green depths teeming with bio-luminescent organisms that convert organic matter into raw healing energy.',
-        category: 'Fusion',
-        categories: ['Economic', 'Defensive'],
-        type: 'VitalMire',
-        level: 5,
-        killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE VITAL MIRE.png'
-    }
 };

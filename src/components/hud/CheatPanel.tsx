@@ -37,15 +37,15 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
             { code: 'y1', description: 'EcoDMG — STORM OF STEEL (Lv4)' },
             { code: 'y2', description: 'EcoXP — NEURAL HARVEST (Lv4)' },
             { code: 'y3', description: 'EcoHP — ESSENCE SYPHON (Lv4)' },
-            { code: 'y4', description: 'CombShield — AEGIS PROTOCOL (Lv4)' },
+            { code: 'y4', description: 'EcoShield — AEGIS PROTOCOL (Lv4)' },
             { code: 'y5', description: 'ComLife — CRIMSON FEAST (Lv4)' },
             { code: 'y6', description: 'ComCrit — SHATTERED FATE (Lv4)' },
             { code: 'y7', description: 'ComWave — TERROR PULSE (Lv4)' },
-            { code: 'y8', description: 'RadiationCore — RADIATION CORE (Lv4)' },
+            { code: 'y8', description: 'ComRadiation — RADIATION CORE (Lv4)' },
             { code: 'y9', description: 'DefPuddle — TOXIC SWAMP (Lv4)' },
             { code: 'y0', description: 'DefEpi — EPICENTER (Lv4)' },
-            { code: 'y-', description: 'KineticBattery — KINETIC BATTERY (Lv4)' },
-            { code: 'y=', description: 'ChronoPlating — CHRONO PLATING (Lv4)' },
+            { code: 'y-', description: 'DefBattery — KINETIC BATTERY (Lv4)' },
+            { code: 'y=', description: 'DefPlatting — CHRONO PLATING (Lv4)' },
         ]
     },
     {
@@ -151,9 +151,11 @@ const CHEAT_CATEGORIES: CheatCategory[] = [
 
 interface CheatPanelProps {
     onClose: () => void;
+    gameSpeedMult?: number;
+    onGameSpeedChange?: (mult: number) => void;
 }
 
-export function CheatPanel({ onClose }: CheatPanelProps) {
+export function CheatPanel({ onClose, gameSpeedMult, onGameSpeedChange }: CheatPanelProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [stayOpen, setStayOpen] = useState(false);
     const [recentCheats, setRecentCheats] = useState<CheatEntry[]>([]);
@@ -231,6 +233,23 @@ export function CheatPanel({ onClose }: CheatPanelProps) {
                 <h2 style={{ margin: '0 0 16px 0', fontSize: '22px', textTransform: 'uppercase', borderBottom: '1px solid #00ff00', paddingBottom: '10px' }}>
                     {'>'} CHEAT_PANEL :: DEBUG_CODES
                 </h2>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px', border: '1px solid #00ff00', padding: '10px' }}>
+                    <div style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>GAME_SPEED: {Math.round((gameSpeedMult || 1.2) * 100)}%</div>
+                    <input 
+                        type="range" 
+                        min="10" 
+                        max="500" 
+                        step="5" 
+                        value={Math.round((gameSpeedMult || 1.2) * 100)} 
+                        onChange={(e) => onGameSpeedChange?.(parseInt(e.target.value) / 100)}
+                        style={{ 
+                            flex: 1, 
+                            cursor: 'pointer',
+                            accentColor: '#00ff00'
+                        }}
+                    />
+                </div>
 
                 <input
                     type="text"

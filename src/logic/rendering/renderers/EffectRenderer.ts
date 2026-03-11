@@ -9,8 +9,6 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             const segments = 30;
             const baseR = effect.radius;
             const t = state.gameTime;
-            const isVital = effect.isVitalMire;
-
             ctx.beginPath();
             for (let i = 0; i <= segments; i++) {
                 const angle = (i / segments) * Math.PI * 2;
@@ -21,54 +19,15 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             }
             ctx.closePath();
             const grad = ctx.createRadialGradient(0, 0, baseR * 0.2, 0, 0, baseR);
-            if (isVital) {
-                grad.addColorStop(0, 'rgba(250, 204, 21, 0.65)');
-                grad.addColorStop(0.5, 'rgba(163, 190, 50, 0.6)');
-                grad.addColorStop(0.8, 'rgba(101, 163, 13, 0.55)');
-                grad.addColorStop(1, 'rgba(202, 138, 4, 0.45)');
-            } else {
-                grad.addColorStop(0, 'rgba(74, 222, 128, 0.6)');
-                grad.addColorStop(0.8, 'rgba(21, 128, 61, 0.7)');
-                grad.addColorStop(1, 'rgba(6, 182, 212, 0.5)');
-            }
+            grad.addColorStop(0, 'rgba(74, 222, 128, 0.6)');
+            grad.addColorStop(0.8, 'rgba(21, 128, 61, 0.7)');
+            grad.addColorStop(1, 'rgba(6, 182, 212, 0.5)');
             ctx.fillStyle = grad; ctx.fill();
             ctx.lineWidth = 4;
-            ctx.strokeStyle = isVital ? '#eab308' : '#06b6d4';
+            ctx.strokeStyle = '#06b6d4';
             ctx.stroke();
 
-            if (isVital) {
-                for (let i = 0; i < 18; i++) {
-                    const bAngle = (i / 18) * Math.PI * 2 + t * 0.4;
-                    const bDist = baseR * (0.15 + (Math.sin(i * 7.3 + t * 1.2) * 0.5 + 0.5) * 0.65);
-                    const bx = Math.cos(bAngle) * bDist;
-                    const by = Math.sin(bAngle) * bDist;
-                    const bPhase = (t * 2 + i * 1.7) % 3.0;
-                    const bRise = bPhase < 2.0 ? bPhase * 12 : 0;
-                    const bAlpha = bPhase < 2.0 ? (1 - bPhase / 2.0) * 0.7 : 0;
-                    const bSize = 3 + Math.sin(i * 2.5 + t * 3) * 2;
-                    if (bAlpha > 0) {
-                        ctx.globalAlpha = bAlpha;
-                        ctx.beginPath();
-                        ctx.arc(bx, by - bRise, bSize, 0, Math.PI * 2);
-                        ctx.fillStyle = i % 3 === 0 ? '#fde047' : (i % 3 === 1 ? '#facc15' : '#fbbf24');
-                        ctx.fill();
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
-                }
-                ctx.globalAlpha = 1.0;
-                ctx.globalAlpha = 0.25;
-                ctx.strokeStyle = '#fde047';
-                ctx.lineWidth = 2;
-                const rippleP2 = (t * 40) % baseR;
-                ctx.beginPath(); ctx.arc(0, 0, rippleP2, 0, Math.PI * 2); ctx.stroke();
-                const rippleP3 = (t * 40 + baseR * 0.5) % baseR;
-                ctx.beginPath(); ctx.arc(0, 0, rippleP3, 0, Math.PI * 2); ctx.stroke();
-                ctx.globalAlpha = 1.0;
-            }
-
-            ctx.globalAlpha = 0.3; ctx.strokeStyle = isVital ? '#fde047' : '#bef264'; ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.3; ctx.strokeStyle = '#bef264'; ctx.lineWidth = 2;
             const rippleP = (t * 50) % baseR;
             ctx.beginPath(); ctx.arc(0, 0, rippleP, 0, Math.PI * 2); ctx.stroke();
             ctx.restore();

@@ -1,4 +1,5 @@
-import type { GameState } from '../logic/core/types';
+import type { GameState, LegendaryHex } from '../logic/core/types';
+import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
 import api from '../api/client';
 import { calcStat } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
@@ -27,7 +28,7 @@ export interface RunSubmissionData {
     portalsUsed: number;
     arenaTimes: Record<number, number>;
     legendaryHexes: any[];
-    hexLevelupOrder: Array<{ hexId: string; level: number; killCount: number; gameTime?: number }>;
+    hexLevelupOrder: Array<{ hexId: string; type: string; level: number; killCount: number; gameTime?: number }>;
     snitchesCaught: number;
     deathCause?: string;
     finalStats?: {
@@ -47,28 +48,34 @@ export interface RunSubmissionData {
 
 
 export function prepareRunData(gameState: GameState): RunSubmissionData {
-    const legendaryHexes = gameState.moduleSockets.hexagons
-        .filter(hex => hex !== null)
-        .map(hex => ({
-            id: hex!.id,
-            name: hex!.name,
-            type: hex!.type,
-            level: hex!.level,
-            killsAtAcquisition: Math.ceil(hex!.killsAtAcquisition),
-            timeAtAcquisition: Number((hex!.timeAtAcquisition || 0).toFixed(2)),
-            killsAtLevel: Object.fromEntries(
-                Object.entries(hex!.killsAtLevel || {}).map(([lvl, kills]) => [lvl, Math.ceil(kills as number)])
-            ),
-            timeAtLevel: Object.fromEntries(
-                Object.entries(hex!.timeAtLevel || {}).map(([lvl, time]) => [lvl, Number((time as number).toFixed(2))])
-            )
-        }));
+    const legendaryHexes = [
+        ...gameState.moduleSockets.hexagons.filter(hex => hex !== null) as LegendaryHex[],
+        ...(gameState.archivedHexes || [])
+    ].map(hex => ({
+        id: hex.id,
+        name: hex.name,
+        type: hex.type,
+        level: hex.level,
+        killsAtAcquisition: Math.ceil(hex.killsAtAcquisition),
+        timeAtAcquisition: Number((hex.timeAtAcquisition || 0).toFixed(2)),
+        killsAtLevel: Object.fromEntries(
+            Object.entries(hex.killsAtLevel || {}).map(([lvl, kills]) => [lvl, Math.ceil(kills as number)])
+        ),
+        timeAtLevel: Object.fromEntries(
+            Object.entries(hex.timeAtLevel || {}).map(([lvl, time]) => [lvl, Number((time as number).toFixed(2))])
+        ),
+        typeAtLevel: hex.typeAtLevel || {}
+    }));
 
-    const hexLevelupOrder: Array<{ hexId: string; level: number; killCount: number; gameTime?: number }> = [];
+    const hexLevelupOrder: Array<{ hexId: string; type: string; level: number; killCount: number; gameTime?: number }> = [];
 
     legendaryHexes.forEach(hex => {
+        const h = hex as any;
+        const getTypeForLvl = (lvl: number) => h.typeAtLevel?.[lvl] || h.type;
+
         hexLevelupOrder.push({
             hexId: hex.id,
+            type: getTypeForLvl(1),
             level: 1,
             killCount: hex.killsAtAcquisition,
             gameTime: hex.timeAtAcquisition
@@ -82,6 +89,7 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
                 const time = hex.timeAtLevel?.[lvl];
                 hexLevelupOrder.push({
                     hexId: hex.id,
+                    type: getTypeForLvl(lvl),
                     level: lvl,
                     killCount: kills as number,
                     gameTime: time

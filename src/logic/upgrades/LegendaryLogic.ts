@@ -6,7 +6,21 @@ import { calculateMeteoriteEfficiency } from './EfficiencyLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { LEGENDARY_UPGRADES } from './LegendaryData';
 
-export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'VitalMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'GravityAnchor'];
+export const ACTIVE_LEGENDARIES: string[] = ['DefPuddle', 'DefEpi', 'ComWave', 'XenoAlchemist', 'IrradiatedMire', 'NeuralSingularity', 'KineticTsunami', 'TemporalMonolith', 'GravitationalHarvest', 'GravityAnchor'];
+
+export function getLogarithmicSum(S: number): number {
+    if (S <= 0) return 0;
+    const b = 0.19899;
+    const ln10 = Math.log(10);
+    const C = b / ln10;
+    const threshold = 100000;
+    if (S <= threshold) {
+        return S - C * (S * Math.log(Math.max(1e-9, S)) - S);
+    } else {
+        const bonusAtThreshold = threshold - C * (threshold * Math.log(threshold) - threshold);
+        return bonusAtThreshold + (S - threshold) * 0.005;
+    }
+}
 
 export function getLegendaryPerksArray(type: string, level: number, state?: GameState, hex?: LegendaryHex, returnAll?: boolean): string[] | string[][] {
     const getSouls = (lvl: number) => {
@@ -41,13 +55,12 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
 
         const souls = getSouls(soulLvl);
         const isNewFusionPerk = (type === 'NeuralSingularity' && (p.toLowerCase().includes('fear') || p.toLowerCase().includes('cooldown') || p.toLowerCase().includes('страх') || p.toLowerCase().includes('перезарядк'))) ||
-            (type === 'TemporalMonolith' && (p.toLowerCase().includes('frozen') || p.toLowerCase().includes('заморозк') || p.toLowerCase().includes('damage received') || p.toLowerCase().includes('снижения перезарядки'))) ||
+            (type === 'TemporalMonolith' && (p.toLowerCase().includes('frozen') || p.toLowerCase().includes('заморозк') || p.toLowerCase().includes('recovery speed') || p.toLowerCase().includes('снижения перезарядки'))) ||
             (type === 'NeutronStar' && (p.toLowerCase().includes('horizon') || p.toLowerCase().includes('aura') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('аура'))) ||
             (type === 'GravitationalHarvest' && (p.toLowerCase().includes('duration extension') || p.toLowerCase().includes('reflected') || p.toLowerCase().includes('продление') || p.toLowerCase().includes('отражает'))) ||
             (type === 'ShatteredCapacitor' && (p.toLowerCase().includes('arcs a kinetic') || p.toLowerCase().includes('armor dmg as bleed') || p.toLowerCase().includes('рикошетит кинетический') || p.toLowerCase().includes('кровотечение'))) ||
             (type === 'ChronoDevourer' && (p.toLowerCase().includes('explode all shields') || p.toLowerCase().includes('cooldown decrease') || p.toLowerCase().includes('chance for zombies') || p.toLowerCase().includes('взрывает все щиты') || p.toLowerCase().includes('шанс зомби') || p.toLowerCase().includes('ускорение перезарядки'))) ||
-            (type === 'GravityAnchor' && (p.toLowerCase().includes('explosive') || p.toLowerCase().includes('armor') || p.toLowerCase().includes('брони') || p.toLowerCase().includes('взрываются'))) ||
-            (type === 'VitalMire' && (p.toLowerCase().includes('puddle kills') || p.toLowerCase().includes('essence syphon') || p.toLowerCase().includes('vital recovery')));
+            (type === 'GravityAnchor' && (p.toLowerCase().includes('explosive') || p.toLowerCase().includes('armor') || p.toLowerCase().includes('брони') || p.toLowerCase().includes('взрываются')));
 
         if (type === 'SoulShatterCore') {
             if (p.includes('+5% Crit DMG') || p.includes('+5% Крит Урона')) {
@@ -79,7 +92,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         }
 
         if (p.includes('0.25% Cooldown reduction every minute') || p.includes('0.25% перезарядки каждую минуту')) {
-            const chronoHex = state?.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
+            const chronoHex = state?.moduleSockets.hexagons.find(h => h?.type === 'DefPlatting' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
             if (chronoHex?.timeAtLevel && chronoHex.timeAtLevel[3] !== undefined) {
                 const diffSeconds = (state?.gameTime || 0) - chronoHex.timeAtLevel[3];
                 const minutes = Math.floor(diffSeconds / 60);
@@ -89,7 +102,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             }
         }
 
-        if ((type === 'ChronoPlating' || type === 'TemporalMonolith' || type === 'ChronoDevourer') && (p.includes('1% of your Armor') || p.includes('1% от твоей Брони'))) {
+        if ((type === 'DefPlatting' || type === 'TemporalMonolith' || type === 'ChronoDevourer') && (p.includes('1% of your Armor') || p.includes('1% от твоей Брони'))) {
             const totalArmor = state ? calcStat(state.player.arm) : 0;
             const mult = state ? getHexMultiplier(state, type) : 1;
             const bonus = totalArmor * 0.01 * mult;
@@ -108,7 +121,11 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
             }
         }
 
+        const ecoTypes = ['EcoDMG', 'EcoXP', 'EcoHP', 'EcoShield', 'XenoAlchemist', 'NeuralSingularity', 'KineticTsunami', 'SoulShatterCore', 'NeutronStar', 'GravitationalHarvest', 'GravityAnchor', 'TemporalMonolith'];
         if (souls !== null && !isNewFusionPerk && (p.toLowerCase().includes("kill") || p.toLowerCase().includes("убий") || p.includes("Resist"))) {
+            if (ecoTypes.includes(type)) {
+                return p;
+            }
             return `${p} (${souls} Souls)`;
         }
         return p;
@@ -123,7 +140,7 @@ export function getLegendaryPerksArray(type: string, level: number, state?: Game
         return formattedList;
     }
 
-    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer' || type === 'VitalMire') {
+    if (type === 'XenoAlchemist' || type === 'IrradiatedMire' || type === 'NeuralSingularity' || type === 'KineticTsunami' || type === 'SoulShatterCore' || type === 'BloodForgedCapacitor' || type === 'GravityAnchor' || type === 'TemporalMonolith' || type === 'NeutronStar' || type === 'GravitationalHarvest' || type === 'ShatteredCapacitor' || type === 'ChronoDevourer') {
         return formattedList.flat();
     }
 
@@ -139,22 +156,32 @@ export function getLegendaryOptions(state: GameState): LegendaryHex[] {
     let pool: (keyof typeof LEGENDARY_UPGRADES)[] = ['EcoDMG', 'EcoXP', 'EcoHP'];
 
     if (state.currentArena === 0) {
-        pool = ['CombShield', 'EcoDMG', 'EcoXP', 'EcoHP'];
+        pool = ['EcoShield', 'EcoDMG', 'EcoXP', 'EcoHP'];
     }
 
     if (state.currentArena === 1) {
-        pool = ['RadiationCore', 'ComLife', 'ComCrit', 'ComWave'];
+        pool = ['ComRadiation', 'ComLife', 'ComCrit', 'ComWave'];
     }
 
     if (state.currentArena === 2) {
-        pool = ['KineticBattery', 'DefPuddle', 'DefEpi', 'ChronoPlating'];
+        pool = ['DefBattery', 'DefPuddle', 'DefEpi', 'DefPlatting'];
     }
+
+    const filledSlots = state.moduleSockets.hexagons.filter(h => h !== null).length;
 
     pool = pool.filter(typeKey => {
         if (state.player.consumedLegendaries?.includes(typeKey)) return false;
+        
         const existingInfo = state.moduleSockets.hexagons.find(h => h?.type === typeKey);
-        if (existingInfo && existingInfo.level >= 4) return false;
-        return true;
+        
+        // If the skill already exists, only allow level-ups (up to level 4)
+        if (existingInfo) {
+            if (existingInfo.level >= 4) return false;
+            return true;
+        }
+
+        // If the skill is new, only allow it if there's an available slot
+        return filledSlots < 6;
     });
 
     const lang = getStoredLanguage();
@@ -221,6 +248,12 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
         const existing = state.moduleSockets.hexagons[existingIdx]!;
         existing.level = selection.level;
 
+        if (!existing.typeAtLevel) existing.typeAtLevel = {};
+        for (let i = 1; i < existing.level; i++) {
+            if (!existing.typeAtLevel[i]) existing.typeAtLevel[i] = existing.type;
+        }
+        existing.typeAtLevel[existing.level] = existing.type;
+
         if (!existing.killsAtLevel) existing.killsAtLevel = {};
         existing.killsAtLevel[existing.level] = state.killCount;
 
@@ -232,6 +265,9 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
         state.showLegendarySelection = false;
         state.isPaused = false;
     } else {
+        if (!selection.typeAtLevel) selection.typeAtLevel = {};
+        selection.typeAtLevel[1] = selection.type;
+
         if (!selection.killsAtLevel) selection.killsAtLevel = {};
         selection.killsAtLevel[1] = state.killCount;
 
@@ -256,9 +292,9 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
 
                 if (key) {
                     let baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
-                    if (selection.type === 'DefPuddle' || selection.type === 'VitalMire') baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
+                    if (selection.type === 'DefPuddle') baseCD = GAME_CONFIG.SKILLS.PUDDLE_COOLDOWN;
                     if (selection.type === 'DefEpi') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
-                    if (selection.type === 'KineticBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
+                    if (selection.type === 'DefBattery') baseCD = GAME_CONFIG.SKILLS.KINETIC_ZAP_COOLDOWN;
                     if (selection.type === 'ComWave') baseCD = (selection.level >= 4 ? GAME_CONFIG.SKILLS.WAVE_COOLDOWN_LVL4 : GAME_CONFIG.SKILLS.WAVE_COOLDOWN);
                     if (selection.type === 'TemporalMonolith') baseCD = GAME_CONFIG.SKILLS.MONOLITH_COOLDOWN;
                     if (selection.type === 'GravitationalHarvest' || selection.type === 'GravityAnchor') baseCD = GAME_CONFIG.SKILLS.EPI_COOLDOWN;
@@ -276,7 +312,7 @@ export function applyLegendarySelection(state: GameState, selection: LegendaryHe
             }
         }
 
-        if (selection.type === 'KineticBattery' && selection.level >= 2) {
+        if (selection.type === 'DefBattery' && selection.level >= 2) {
             state.player.kineticShieldTimer = 0;
         }
     }
@@ -289,13 +325,9 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
         const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
         if (alchemist) return 5;
     }
-    if (type === 'DefPuddle' || type === 'RadiationCore') {
+    if (type === 'DefPuddle' || type === 'ComRadiation') {
         const mire = state.moduleSockets.hexagons.find(h => h?.type === 'IrradiatedMire');
         if (mire) return 5;
-    }
-    if (type === 'EcoHP' || type === 'DefPuddle') {
-        const vital = state.moduleSockets.hexagons.find(h => h?.type === 'VitalMire');
-        if (vital) return 5;
     }
     if (type === 'EcoXP' || type === 'ComWave') {
         const sing = state.moduleSockets.hexagons.find(h => h?.type === 'NeuralSingularity');
@@ -309,27 +341,27 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
         const shatter = state.moduleSockets.hexagons.find(h => h?.type === 'SoulShatterCore');
         if (shatter) return 5;
     }
-    if (type === 'ComCrit' || type === 'KineticBattery') {
+    if (type === 'ComCrit' || type === 'DefBattery') {
         const shattered = state.moduleSockets.hexagons.find(h => h?.type === 'ShatteredCapacitor');
         if (shattered) return 5;
     }
-    if (type === 'ComLife' || type === 'ChronoPlating') {
+    if (type === 'ComLife' || type === 'DefPlatting') {
         const blood = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoDevourer');
         if (blood) return 5;
     }
-    if (type === 'DefEpi' || type === 'CombShield') {
+    if (type === 'DefEpi' || type === 'EcoShield') {
         const gravity = state.moduleSockets.hexagons.find(h => h?.type === 'GravityAnchor');
         if (gravity) return 5;
     }
-    if (type === 'ChronoPlating' || type === 'CombShield') {
+    if (type === 'DefPlatting' || type === 'EcoShield') {
         const monolith = state.moduleSockets.hexagons.find(h => h?.type === 'TemporalMonolith');
         if (monolith) return 5;
     }
-    if (type === 'ComLife' || type === 'KineticBattery') {
+    if (type === 'ComLife' || type === 'DefBattery') {
         const blood = state.moduleSockets.hexagons.find(h => h?.type === 'BloodForgedCapacitor');
         if (blood) return 5;
     }
-    if (type === 'EcoHP' || type === 'RadiationCore') {
+    if (type === 'EcoHP' || type === 'ComRadiation') {
         const neutron = state.moduleSockets.hexagons.find(h => h?.type === 'NeutronStar');
         if (neutron) return 5;
     }
@@ -337,7 +369,7 @@ export function getHexLevel(state: GameState, type: LegendaryType): number {
         const harvest = state.moduleSockets.hexagons.find(h => h?.type === 'GravitationalHarvest');
         if (harvest) return 5;
     }
-    if (type === 'ComCrit' || type === 'KineticBattery') {
+    if (type === 'ComCrit' || type === 'DefBattery') {
         const shattered = state.moduleSockets.hexagons.find(h => h?.type === 'ShatteredCapacitor');
         if (shattered) return 5;
     }
@@ -381,13 +413,13 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             const startKills = kl[lvl] ?? hex.killsAtAcquisition ?? state.killCount;
             const rawSouls = Math.max(0, state.killCount - startKills);
             const soulBonus = rawSouls * (player.soulDrainMult ?? 1.0);
-            return soulBonus * multiplier;
+            return getLogarithmicSum(soulBonus) * multiplier;
         };
 
         if (hex.type === 'EcoDMG' || hex.type === 'KineticTsunami' || hex.type === 'SoulShatterCore') {
-            if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.05;
-            if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.02;
-            if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05;
+            if (statKey === 'dmg_per_kill') total += getSoulsSinceLevel(1) * 0.3;
+            if (statKey === 'ats_per_kill') total += getSoulsSinceLevel(2) * 0.3;
+            if (statKey === 'dmg_pct_per_kill') total += getSoulsSinceLevel(3) * 0.3;
             if (statKey === 'aoe_chance_per_kill') {
                 if (hex.level >= 4) {
                     total += player.level * 0.5 * multiplier;
@@ -397,53 +429,53 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
 
         if (hex.type === 'SoulShatterCore') {
             const ecoKills = (hex as any).ecoKillsAtLevel as Record<number, number> | undefined;
-            let souls = 0;
-            if (ecoKills) {
-                [1, 2, 3, 4].forEach(lvl => {
-                    const start = ecoKills[lvl];
-                    if (start !== undefined) {
-                        souls += Math.max(0, state.killCount - start) * (player.soulDrainMult ?? 1.0);
-                    }
-                });
-            } else {
-                souls = getSoulsSinceLevel(1);
-            }
             const mult = skipMultiplier ? 1.0 : getHexMultiplier(state, hex.type);
-            if (statKey === 'crit_chance_scaling') total += Math.floor(souls / 500) * 1 * mult;
-            if (statKey === 'crit_dmg_scaling') total += Math.floor(souls / 500) * 5 * mult;
+            const getShatterBonus = (lvl: number) => {
+                let s = 0;
+                if (ecoKills && ecoKills[lvl] !== undefined) {
+                    s = Math.max(0, state.killCount - ecoKills[lvl]) * (player.soulDrainMult ?? 1.0);
+                } else {
+                    const startKills = kl[lvl] ?? hex.killsAtAcquisition ?? state.killCount;
+                    s = Math.max(0, state.killCount - startKills) * (player.soulDrainMult ?? 1.0);
+                }
+                return getLogarithmicSum(s) * mult;
+            };
+
+            if (statKey === 'crit_chance_scaling') total += getShatterBonus(1);
+            if (statKey === 'crit_dmg_scaling') total += getShatterBonus(1) * 5;
         }
 
         if (hex.type === 'EcoXP' || hex.type === 'XenoAlchemist' || hex.type === 'NeuralSingularity') {
-            if (statKey === 'xp_per_kill') total += getSoulsSinceLevel(1) * 0.05;
+            if (statKey === 'xp_per_kill') total += getSoulsSinceLevel(1) * 0.3;
             if (statKey === 'dust_extraction') {
-                total += getSoulsSinceLevel(2) * 0.02;
+                total += getSoulsSinceLevel(2);
             }
-            if (statKey === 'flux_per_kill') total += getSoulsSinceLevel(3) * 0.05;
-            if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.05;
+            if (statKey === 'flux_per_kill') total += getSoulsSinceLevel(3) * 0.3;
+            if (statKey === 'xp_pct_per_kill') total += getSoulsSinceLevel(4) * 0.3;
         }
 
-        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest' || hex.type === 'VitalMire') {
-            const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest' || hex.type === 'VitalMire') ? 2.0 : 1.0;
-            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * 0.05 * multi;
-            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.02 * multi;
-            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * 0.05 * multi;
+        if (hex.type === 'EcoHP' || hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') {
+            const multi = (hex.type === 'NeutronStar' || hex.type === 'GravitationalHarvest') ? 2.0 : 1.0;
+            if (statKey === 'hp_per_kill') total += getSoulsSinceLevel(1) * multi * 0.3;
+            if (statKey === 'reg_per_kill') total += getSoulsSinceLevel(2) * 0.4 * multi;
+            if (statKey === 'hp_pct_per_kill') total += getSoulsSinceLevel(3) * multi * 0.3;
             if (statKey === 'reg_pct_per_kill') {
-                total += getSoulsSinceLevel(4) * 0.02 * multi;
+                total += getSoulsSinceLevel(4) * 0.4 * multi;
             }
         }
 
-        if (hex.type === 'CombShield') {
-            if (statKey === 'arm_per_kill') total += getSoulsSinceLevel(1) * 0.05;
-            if (statKey === 'col_red_per_kill') total += getSoulsSinceLevel(2) * 0.01;
-            if (statKey === 'proj_red_per_kill') total += getSoulsSinceLevel(3) * 0.01;
-            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.02;
+        if (hex.type === 'EcoShield') {
+            if (statKey === 'arm_per_kill') total += getSoulsSinceLevel(1) * 0.3;
+            if (statKey === 'col_red_per_kill') total += getSoulsSinceLevel(2) * 0.2;
+            if (statKey === 'proj_red_per_kill') total += getSoulsSinceLevel(3) * 0.2;
+            if (statKey === 'arm_pct_per_kill') total += getSoulsSinceLevel(4) * 0.3;
         }
 
         if (hex.type === 'ComLife') {
             if (statKey === 'lifesteal' && hex.level >= 1) total += 3 * multiplier;
         }
 
-        if (hex.type === 'KineticBattery') {
+        if (hex.type === 'DefBattery') {
             if (statKey === 'arm_pct_conditional' && hex.level >= 3) {
                 const maxHp = calcStat(player.hp, (state as any).hpRegenBuffMult);
                 if (player.curHp < maxHp * 0.5) {
@@ -452,7 +484,7 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             }
         }
 
-        if (hex.type === 'RadiationCore' || hex.type === 'IrradiatedMire' || hex.type === 'NeutronStar') {
+        if (hex.type === 'ComRadiation' || hex.type === 'IrradiatedMire' || hex.type === 'NeutronStar') {
             if (statKey === 'aura_dmg_missing_hp' && hex.level >= 3) {
                 const missing = 1 - (player.curHp / Math.max(1, (player.hp as any).flat + (player.hp as any).base));
                 const pctMissing = Math.max(0, missing * 100);
@@ -460,15 +492,8 @@ export function calculateLegendaryBonus(state: GameState, statKey: string, skipM
             }
         }
 
-        if (hex.type === 'ChronoPlating') {
+        if (hex.type === 'DefPlatting' || hex.type === 'TemporalMonolith' || hex.type === 'ChronoDevourer') {
             const totalArmor = calcStat(player.arm);
-
-            if (hex.level >= 1 && statKey === 'dmg_pct_per_kill') {
-                total += totalArmor * 0.01 * multiplier;
-            }
-            if (hex.level >= 2 && statKey === 'hp_pct_per_kill') {
-                total += totalArmor * 0.01 * multiplier;
-            }
             if (hex.level >= 4 && statKey === 'reg_pct_per_kill') {
                 total += totalArmor * 0.01 * multiplier;
             }

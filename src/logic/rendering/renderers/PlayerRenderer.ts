@@ -17,7 +17,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: any, state: 
     ctx.translate(player.x, player.y);
 
 
-    const radLevel = getHexLevel(state, 'RadiationCore');
+    const radLevel = getHexLevel(state, 'ComRadiation');
     const mireLvl = getHexLevel(state, 'IrradiatedMire');
     const neutronLvl = getHexLevel(state, 'NeutronStar');
 

@@ -683,15 +683,15 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 'y1': 'EcoDMG',
                 'y2': 'EcoXP',
                 'y3': 'EcoHP',
-                'y4': 'CombShield',
+                'y4': 'EcoShield',
                 'y5': 'ComLife',
                 'y6': 'ComCrit',
                 'y7': 'ComWave',
-                'y8': 'RadiationCore',
+                'y8': 'ComRadiation',
                 'y9': 'DefPuddle',
                 'y0': 'DefEpi',
-                'y-': 'KineticBattery',
-                'y=': 'ChronoPlating'
+                'y-': 'DefBattery',
+                'y=': 'DefPlatting'
             };
 
             for (const [buffCode, type] of Object.entries(legendaryCheats)) {
@@ -706,9 +706,9 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                             ...base,
                             level: 4,
                             killsAtAcquisition: state.killCount,
-                            timeAtAcquisition: pastTime,
+                            timeAtAcquisition: state.gameTime,
                             killsAtLevel: { 1: state.killCount, 2: state.killCount, 3: state.killCount, 4: state.killCount },
-                            timeAtLevel: { 1: pastTime, 2: pastTime, 3: pastTime, 4: pastTime },
+                            timeAtLevel: { 1: state.gameTime, 2: state.gameTime, 3: state.gameTime, 4: state.gameTime },
                             statBonuses: {}
                         };
                         applyLegendarySelection(state, selection);

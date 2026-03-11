@@ -6,6 +6,7 @@ import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
+import { applyHealToPlayer } from '../utils/CombatUtils';
 
 
 export function updatePlayerStats(state: GameState, overridePlayer?: any) {
@@ -22,8 +23,12 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     player.reg.hexMult2 = 0;
 
     player.arm.hexFlat = calculateLegendaryBonus(state, 'arm_per_kill', false, player) + (player.chronoArmorBonus || 0);
-    player.arm.hexMult = calculateLegendaryBonus(state, 'arm_pct_per_kill', false, player);
+    player.arm.hexMultStr = "+0%"; // Placeholder if needed
+    player.arm.hexMult += calculateLegendaryBonus(state, 'arm_pct_per_kill', false, player);
     player.arm.hexMult2 = calculateLegendaryBonus(state, 'arm_pct_conditional', false, player);
+    if (player.stasisFieldActive) {
+        player.arm.hexMult += 50;
+    }
 
     player.dmg.hexFlat = calculateLegendaryBonus(state, 'dmg_per_kill', false, player);
     player.dmg.hexMult = calculateLegendaryBonus(state, 'dmg_pct_per_kill', false, player) + calculateLegendaryBonus(state, 'dmg_pct_per_hp', false, player);
@@ -108,7 +113,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
 
-    const kinLvl = getHexLevel(state, 'KineticBattery');
+    const kinLvl = getHexLevel(state, 'DefBattery');
     if (kinLvl >= 1) {
         if (kinLvl >= 2) {
 
@@ -131,10 +136,10 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
 
-    const chronoLvl = getHexLevel(state, 'ChronoPlating');
+    const chronoLvl = getHexLevel(state, 'DefPlatting');
     const monolithIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
     if (chronoLvl >= 3 || monolithIdx !== -1) {
-        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
+        const chronoHex = state.moduleSockets.hexagons.find(h => h?.type === 'DefPlatting' || h?.type === 'TemporalMonolith' || h?.type === 'ChronoDevourer');
         const startTime = chronoHex?.timeAtLevel?.[3] ?? state.gameTime;
         const elapsed = state.gameTime - startTime;
         const minutes = Math.floor(elapsed / 60);
@@ -149,7 +154,19 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     if (player.healingDisabled) {
         regenAmount = 0;
     }
-    player.curHp = Math.min(maxHp, player.curHp + regenAmount);
+
+    if (player.timeLoopPool && player.timeLoopPool > 0) {
+        const tickDmg = player.timeLoopPool / (6 * 60); // 6 seconds at 60fps
+        player.curHp = Math.max(0.1, player.curHp - tickDmg); // Leave at least 0.1 to avoid instant death from dot?
+        // Actually, dots can kill. But I'll leave 0.1 for now or just let it kill.
+        // I'll use 0 to allow death.
+        player.timeLoopPool -= tickDmg;
+        if (player.timeLoopPool < 0.01) player.timeLoopPool = 0;
+    }
+
+    if (regenAmount > 0) {
+        applyHealToPlayer(state, player, regenAmount, 'regen');
+    }
 
 
     const critLevel = getHexLevel(state, 'ComCrit');

@@ -132,7 +132,7 @@ export const HexTooltip: React.FC<HexTooltipProps> = ({ hex, gameState, hexIdx, 
                         }
 
                         let isStatic = false;
-                        if (hex.type === 'ChronoPlating') {
+                        if (hex.type === 'DefPlatting') {
                             const isLvl1 = p.includes('DMG') || p.includes('Урон');
                             const isLvl2 = p.includes('HP%') || p.includes('Здоровье%');
                             const isLvl3 = p.includes('Cooldown') || p.includes('перезарядки');

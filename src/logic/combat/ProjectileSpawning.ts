@@ -1,7 +1,7 @@
 import type { GameState, Player } from '../core/types';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
-import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier, calculateLegendaryBonus, getLogarithmicSum } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
@@ -27,21 +27,21 @@ export function triggerShockwave(state: GameState, player: Player, level: number
 
     let waveDmg = playerDmg * 0.75 * (1 + (uses * 0.01 * multiplier));
 
-    
+
     if (isTsunami) {
         const stormHex = state.moduleSockets.hexagons.find(h => h?.type === 'KineticTsunami');
         if (stormHex && stormHex.killsAtLevel) {
             const startKills = stormHex.killsAtLevel[1] ?? stormHex.killsAtAcquisition ?? state.killCount;
             const stormSouls = Math.max(0, state.killCount - startKills);
-            const tsunamiBonus = Math.floor(stormSouls / 100) * 0.01;
+            const tsunamiBonus = getLogarithmicSum(stormSouls) * 0.01;
             waveDmg *= (1 + tsunamiBonus);
         }
     }
 
     player.waveUses = uses + 1;
 
-    
-    const waveLife = 60; 
+
+    const waveLife = 60;
 
     state.particles.push({
         x: player.x,
@@ -63,7 +63,7 @@ export function triggerShockwave(state: GameState, player: Player, level: number
 
     playSfx('sonic-wave');
 
-    
+
     state.bullets.push({
         id: Math.random(),
         ownerId: player.id,
@@ -72,12 +72,12 @@ export function triggerShockwave(state: GameState, player: Player, level: number
         vx: 0,
         vy: 0,
         dmg: waveDmg,
-        pierce: 999999, 
+        pierce: 999999,
         life: waveLife,
         maxLife: waveLife,
         isEnemy: false,
         hits: new Set(),
-        size: 0, 
+        size: 0,
         isShockwaveCircle: true,
         maxSize: range,
         shockwaveLevel: Math.max(2, level),
@@ -92,7 +92,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     if (player.immobilized) return;
     const spd = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
-    
+
     const critLevel = getHexLevel(state, 'ComCrit');
     const shatterLvl = getHexLevel(state, 'SoulShatterCore');
     let isCrit = false;
@@ -137,7 +137,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
         vy: Math.sin(angle + offsetAngle) * spd,
         dmg: finalDmg,
         pierce: bulletPierce,
-        
+
         life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) / (state.gameSpeedMult ?? 1),
         bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
         bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
@@ -151,45 +151,45 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
         spawnTime: Date.now()
     };
 
-    
-    if (player.playerClass === 'aigis') {
-        const RING_THRESHOLD = 200; 
 
-        
+    if (player.playerClass === 'aigis') {
+        const RING_THRESHOLD = 200;
+
+
         const handleRingSpawn = (baseBullet: any, distance: number) => {
-            
+
             if (!player.aigisRings) player.aigisRings = {};
 
-            
+
             if (!player.aigisRings[distance]) {
                 player.aigisRings[distance] = { count: 0, totalDmg: 0 };
             }
 
             const ringData = player.aigisRings[distance];
 
-            
-            
+
+
             if (ringData.count >= RING_THRESHOLD) {
-                
+
                 ringData.count++;
                 ringData.totalDmg += baseBullet.dmg;
 
-                
+
                 const existingRing = state.bullets.find(b => b.isRing && b.ringRadius === distance);
                 if (existingRing) {
                     existingRing.ringAmmo = ringData.count;
-                    
-                    
+
+
                     return;
                 } else {
-                    
-                    
+
+
                     let removedCount = 0;
                     let removedDmg = 0;
                     for (let i = state.bullets.length - 1; i >= 0; i--) {
                         const b = state.bullets[i];
-                        
-                        
+
+
                         if (b.vortexState === 'orbiting' && Math.abs((b.orbitDist || 0) - distance) < 5) {
                             removedCount++;
                             removedDmg += b.dmg;
@@ -197,26 +197,26 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
                         }
                     }
 
-                    
-                    
-                    
-                    
-                    ringData.count = removedCount + 1; 
+
+
+
+
+                    ringData.count = removedCount + 1;
                     ringData.totalDmg = removedDmg + baseBullet.dmg;
 
-                    
+
                     const ringProj: any = {
                         id: Math.random(),
                         x: player.x,
                         y: player.y,
                         vx: 0, vy: 0,
-                        dmg: 0, 
+                        dmg: 0,
                         pierce: 999999,
                         life: 999999,
                         isEnemy: false,
                         hits: new Set(),
                         color: baseBullet.color || '#22d3ee',
-                        size: distance, 
+                        size: distance,
                         isRing: true,
                         ringRadius: distance,
                         ringAmmo: ringData.count,
@@ -225,43 +225,43 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
                     };
                     state.bullets.push(ringProj);
 
-                    
+
                     spawnParticles(state, player.x, player.y, baseBullet.color || '#22d3ee', 20);
-                    playSfx('rare-spawn'); 
+                    playSfx('rare-spawn');
                     return;
                 }
             }
 
-            
+
             const bullet = { ...baseBullet, id: Math.random(), orbitDist: distance };
             state.bullets.push(bullet);
 
-            
+
             ringData.count++;
             ringData.totalDmg += bullet.dmg;
         };
 
-        
+
         b.vortexState = 'orbiting';
         b.orbitAngle = angle + offsetAngle;
         b.life = 999999;
-        
+
         handleRingSpawn(b, 125);
 
-        
-        
+
+
         const chance2 = 0.15 * (1 + resonance);
         if (Math.random() < chance2) {
             handleRingSpawn(b, 190);
         }
 
-        
+
         const chance3 = 0.10 * (1 + resonance);
         if (Math.random() < chance3) {
             handleRingSpawn(b, 255);
         }
 
-        
+
         const chance4 = 0.05 * (1 + resonance);
         if (Math.random() < chance4) {
             handleRingSpawn(b, 320);
@@ -272,7 +272,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
     state.bullets.push(b);
 
-    
+
     if (state.multiplayer.active && state.multiplayer.isHost) {
         networkManager.broadcastBulletSpawn({
             x: b.x,
@@ -290,7 +290,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
     const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
-    
+
     const minutes = state.gameTime / 60;
     const eraIndex = Math.floor(minutes / 15);
     const eraPalette = PALETTES[eraIndex % PALETTES.length];
@@ -306,11 +306,11 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         life: 300 / (state.gameSpeedMult ?? 1),
         isEnemy: true,
         hits: new Set(),
-        color: brightColor, 
+        color: brightColor,
         size: 4
     });
 
-    
+
     if (state.multiplayer.active && state.multiplayer.isHost) {
         networkManager.broadcastBulletSpawn({
             x, y,

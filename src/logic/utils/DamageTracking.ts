@@ -10,19 +10,20 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
 
     player.damageBreakdown[source] = (player.damageBreakdown[source] || 0) + amount;
 
-    // Track active skill damage for the current minute
-    const classSkillSources: DamageSource[] = [
-        'Orbital Vortex',
-        'Storm Circle',
-        'Void Singularity',
-        'Nanite Swarm',
-        'Malware Wall Bonus',
-        'Wall Shockwave',
-        'Aegis Rings'
-    ];
+    const classSpecificSources: Record<string, DamageSource[]> = {
+        'malware': ['Malware Wall Bonus'],
+        'stormstrike': ['Storm Circle'],
+        'hivemother': ['Nanite Swarm'],
+        'aigis': ['Orbital Vortex', 'Wall Shockwave', 'Aegis Rings'],
+        'eventhorizon': ['Void Singularity']
+    };
 
-    if (classSkillSources.includes(source)) {
-        // Update both the state for real-time tracking and player for persistence
+    const playerClass = player.playerClass;
+    if (!playerClass) return;
+
+    const currentMinuteSources = classSpecificSources[playerClass] || [];
+
+    if (currentMinuteSources.includes(source)) {
         state.currentMinuteClassSkillDamage = (state.currentMinuteClassSkillDamage || 0) + amount;
 
         if (!player.activeSkillDamageByMinute) {

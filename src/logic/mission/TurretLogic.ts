@@ -2,6 +2,7 @@ import type { GameState, Enemy, MapPOI, Bullet } from '../core/types';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
+import { applyHealToPlayer } from '../utils/CombatUtils';
 import { getRandomPositionInArena, findSafePoiPosition } from './MapLogic';
 
 export const TURRET_RANGE = 800;
@@ -119,13 +120,9 @@ export function updateTurrets(state: GameState, step: number) {
 
 
                     if (level >= 3 && state.player.curHp >= maxHp) {
-                        if (!state.player.shieldChunks) state.player.shieldChunks = [];
-                        state.player.shieldChunks.push({
-                            amount: healAmount,
-                            expiry: state.gameTime + 60
-                        });
+                        applyHealToPlayer(state, state.player, healAmount, 'turret', 60);
                     } else {
-                        state.player.curHp = Math.min(maxHp, state.player.curHp + healAmount);
+                        applyHealToPlayer(state, state.player, healAmount, 'turret');
                     }
 
 
@@ -386,7 +383,7 @@ export function updateAllies(state: GameState, step: number) {
                 if (dToPlayer < 200 && !p.healingDisabled) {
                     const maxHp = calcStat(p.hp);
                     const heal = maxHp * (ally.healPower || 0.05);
-                    p.curHp = Math.min(maxHp, p.curHp + heal);
+                    applyHealToPlayer(state, p, heal, 'drone');
                     spawnFloatingNumber(state, p.x, p.y, `+${Math.ceil(heal)}`, '#4ade80', false);
                     spawnParticles(state, ally.x, ally.y, '#4ade80', 5);
                 }

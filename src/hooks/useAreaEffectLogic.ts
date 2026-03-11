@@ -156,8 +156,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         state.player.damageDealt += dotDmg;
                         const isXeno = state.moduleSockets.hexagons.some(h => h?.type === 'XenoAlchemist');
                         const isMirePuddle = state.moduleSockets.hexagons.some(h => h?.type === 'IrradiatedMire');
-                        const isVital = effect.isVitalMire || state.moduleSockets.hexagons.some(h => h?.type === 'VitalMire');
-                        const puddleSource = isXeno ? 'Xeno Alchemist (Puddle)' : (isMirePuddle ? 'Irradiated Mire (Puddle)' : (isVital ? 'Vital Mire (Puddle)' : (effect.level >= 4 ? 'Toxic Puddle (LVL 4)' : 'Toxic Puddle (LVL 1)')));
+                        const puddleSource = isXeno ? 'Xeno Alchemist (Puddle)' : (isMirePuddle ? 'Irradiated Mire (Puddle)' : (effect.level >= 4 ? 'Toxic Puddle (LVL 4)' : 'Toxic Puddle (LVL 1)'));
                         recordDamage(state, puddleSource as import('../logic/core/types').DamageSource, dotDmg, e);
 
                         e.puddleDmgAcc = (e.puddleDmgAcc || 0) + dotDmg;

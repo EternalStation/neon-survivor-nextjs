@@ -22,9 +22,9 @@ import { AssistantOverlay } from '@/components/hud/AssistantOverlay';
 import { type PlayerClass } from '@/logic/core/types';
 import { PLAYER_CLASSES } from '@/logic/core/classes';
 
-import { useGameLoop } from '@/hooks/useGame';
-import { useWindowScale } from '@/hooks/useWindowScale';
-import { startBGM } from '@/logic/audio/AudioLogic';
+import { useGameLoop } from '@/hooks/UseGame';
+import { useWindowScale } from '@/hooks/UseWindowScale';
+import { startBGM, startMenuMusic } from '@/logic/audio/AudioLogic';
 import api from '@/api/client';
 import '@/styles/menu_additions.css';
 import { LanguageProvider } from '@/lib/LanguageContext';
@@ -72,6 +72,7 @@ export default function Home() {
     setGameStarted(false);
     setSelectingClass(false);
     hook.restartGame();
+    startMenuMusic();
   };
 
   const handleLogout = () => {
@@ -119,20 +120,20 @@ export default function Home() {
       }, 3000);
     }
 
-    // Direct Start to Arena 0 (Economic Hex)
-    const arenaId = 0;
-    startBGM(arenaId);
+    // Direct Start
+    startBGM();
     setGameStarted(true);
 
     // Note: We pass 'cls' directly to ensure we use the selected class immediately
     // even if state update is batched.
-    hook.restartGame(cls, arenaId, username, tutorialEnabled);
+    hook.restartGame(cls, 0, username, tutorialEnabled);
   };
 
   const handleRestart = () => {
     hook.restartGame(undefined, 0, undefined, false); // No tutorial on quick restart
     setGameStarted(false);
     setSelectingClass(true);
+    startMenuMusic();
   };
 
   if (checkingAuth) {
@@ -287,8 +288,6 @@ export default function Home() {
                       hook.setShowSettings(false);
                       hook.setShowFeedbackModal(true);
                     }}
-                    gameSpeedMult={hook.gameSpeedMult}
-                    onGameSpeedChange={hook.setGameSpeedMult}
                   />
                 </div>
               )}
@@ -335,6 +334,8 @@ export default function Home() {
               {hook.showCheatPanel && (
                 <CheatPanel
                   onClose={() => hook.setShowCheatPanel(false)}
+                  gameSpeedMult={hook.gameSpeedMult}
+                  onGameSpeedChange={hook.setGameSpeedMult}
                 />
               )}
 

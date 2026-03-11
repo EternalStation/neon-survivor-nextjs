@@ -2,6 +2,7 @@ import type { GameState, UpgradeChoice } from '../core/types';
 import { UPGRADE_TYPES, RARITIES, BASE_UPGRADE_VALUES } from '../core/constants';
 import { calcStat } from '../utils/MathUtils';
 import { calculateLegendaryBonus } from './LegendaryLogic';
+import { applyHealToPlayer } from '../utils/CombatUtils';
 
 
 
@@ -208,7 +209,7 @@ export function applyUpgrade(state: GameState, choice: UpgradeChoice) {
         const id = choice.type.id;
 
         if (choice.type.id === 'heal' && !player.healingDisabled) {
-            player.curHp = Math.min(player.curHp + 50, calcStat(player.hp));
+            applyHealToPlayer(state, player, 50, 'upgrade');
         } else {
             if (id === 'dmg_f') player.dmg.flat += finalValue;
             if (id === 'dmg_m') player.dmg.mult += finalValue;

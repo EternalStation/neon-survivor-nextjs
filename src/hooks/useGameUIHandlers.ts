@@ -154,6 +154,7 @@ export function useGameUIHandlers({
     }, [gameState, setUpgradeChoices]);
 
     const handleLegendarySelect = useCallback((selection: LegendaryHex) => {
+        if (!selection) return;
         const state = gameState.current;
         const existingIdx = state.moduleSockets.hexagons.findIndex(h => h && h.type === selection.type);
 

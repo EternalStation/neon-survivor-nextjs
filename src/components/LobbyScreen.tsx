@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMultiplayerLobby } from '../hooks/useMultiplayerLobby'; // Import the hook we just made
+import { useMultiplayerLobby } from '../hooks/UseMultiplayerLobby'; // Import the hook we just made
 import { ClassSelection } from './ClassSelection'; // Reuse class selection if possible
 import '../components/Leaderboard.css'; // Reuse some styles
 
