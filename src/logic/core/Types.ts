@@ -284,6 +284,12 @@ export interface Player {
     cooldownReductionBonus?: number;
     lastChronoDoubleIndex?: number;
     chronoArmorBonus?: number;
+    timeLoopPool?: number;
+    timeLoopTimer?: number;
+    stasisTimer?: number;
+    stasisFieldActive?: boolean;
+    stasisFieldX?: number;
+    stasisFieldY?: number;
 
     aigisRings?: Record<number, { count: number; totalDmg: number }>;
     vortexStrength: number;
@@ -739,10 +745,10 @@ export type LegendaryCategory = 'Economic' | 'Combat' | 'Defensive' | 'Fusion';
 export type LegendaryType =
     | 'EcoDMG' | 'EcoXP' | 'EcoHP'
     | 'ComLife' | 'ComCrit' | 'ComWave'
-    | 'DefPuddle' | 'DefEpi' | 'CombShield'
+    | 'DefPuddle' | 'DefEpi' | 'EcoShield'
     | 'hp_per_kill' | 'ats_per_kill' | 'xp_per_kill' | 'dmg_per_kill' | 'reg_per_kill'
     | 'shockwave' | 'shield_passive' | 'dash_boost' | 'lifesteal' | 'orbital_strike' | 'drone_overdrive'
-    | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
+    | 'DefBattery' | 'ComRadiation' | 'DefPlatting' | 'KineticBattery' | 'RadiationCore' | 'ChronoPlating' | 'XenoAlchemist' | 'IrradiatedMire' | 'NeuralSingularity' | 'KineticTsunami'
     | 'SoulShatterCore' | 'BloodForgedCapacitor' | 'GravityAnchor' | 'TemporalMonolith' | 'NeutronStar' | 'GravitationalHarvest' | 'ShatteredCapacitor' | 'ChronoDevourer';
 
 export interface LegendaryHex {
@@ -764,6 +770,9 @@ export interface LegendaryHex {
     allPerks?: string[][];
     statBonuses?: Record<string, number>;
     forgedAt?: string[];
+    baseType?: string;
+    secondaryType?: string;
+    typeAtLevel?: Record<number, string>;
 }
 
 export interface UpgradeChoice {
@@ -951,6 +960,7 @@ export interface GameState {
     legionLeads?: Record<string, Enemy>;
     playerName?: string;
     language: import('../../lib/LanguageContext').Language;
+    archivedHexes?: LegendaryHex[];
 
 
     blueprints: (Blueprint | null)[];

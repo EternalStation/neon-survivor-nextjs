@@ -31,11 +31,21 @@ export function performXenoAlchemistMerge(state: GameState) {
             ...(state.moduleSockets.hexagons[ecoIdx]?.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(state.moduleSockets.hexagons[ecoIdx]?.typeAtLevel || { 1: 'EcoXP', 2: 'EcoXP', 3: 'EcoXP', 4: 'EcoXP' }),
+            5: 'XenoAlchemist'
+        },
         statBonuses: {},
+        baseType: state.moduleSockets.hexagons[ecoIdx]!.type,
+        secondaryType: state.moduleSockets.hexagons[pudIdx]!.type,
         forgedAt: combineForgedAt(state.moduleSockets.hexagons[ecoIdx]!, state.moduleSockets.hexagons[pudIdx]!)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[pudIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+    if (state.moduleSockets.hexagons[pudIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[pudIdx]! });
+
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.moduleSockets.hexagons[pudIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, pudIdx] };
@@ -49,13 +59,13 @@ export function performXenoAlchemistMerge(state: GameState) {
 
 export function canMergeIrradiatedMire(state: GameState): boolean {
     const puddle = state.moduleSockets.hexagons.find(h => h?.type === 'DefPuddle');
-    const radCore = state.moduleSockets.hexagons.find(h => h?.type === 'RadiationCore');
+    const radCore = state.moduleSockets.hexagons.find(h => h?.type === 'ComRadiation');
     return (puddle?.level === 4 && radCore?.level === 4);
 }
 
 export function performIrradiatedMireMerge(state: GameState) {
     const pudIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefPuddle');
-    const radIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'RadiationCore');
+    const radIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ComRadiation');
     if (pudIdx === -1 || radIdx === -1) return;
     const mergedHex: LegendaryHex = {
         ...LEGENDARY_UPGRADES.IrradiatedMire,
@@ -70,12 +80,21 @@ export function performIrradiatedMireMerge(state: GameState) {
             ...(state.moduleSockets.hexagons[radIdx]?.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(state.moduleSockets.hexagons[radIdx]?.typeAtLevel || { 1: 'ComRadiation', 2: 'ComRadiation', 3: 'ComRadiation', 4: 'ComRadiation' }),
+            5: 'IrradiatedMire'
+        },
         statBonuses: {},
         categories: ['Combat', 'Defensive'],
+        baseType: state.moduleSockets.hexagons[radIdx]!.type,
+        secondaryType: state.moduleSockets.hexagons[pudIdx]!.type,
         forgedAt: combineForgedAt(state.moduleSockets.hexagons[pudIdx]!, state.moduleSockets.hexagons[radIdx]!)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[pudIdx]!.type, state.moduleSockets.hexagons[radIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[pudIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[pudIdx]! });
+    if (state.moduleSockets.hexagons[radIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[radIdx]! });
     state.moduleSockets.hexagons[pudIdx] = null;
     state.moduleSockets.hexagons[radIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [pudIdx, radIdx] };
@@ -110,12 +129,21 @@ export function performNeuralSingularityMerge(state: GameState) {
             ...(state.moduleSockets.hexagons[ecoIdx]?.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(state.moduleSockets.hexagons[ecoIdx]?.typeAtLevel || { 1: 'EcoXP', 2: 'EcoXP', 3: 'EcoXP', 4: 'EcoXP' }),
+            5: 'NeuralSingularity'
+        },
         statBonuses: {},
         categories: ['Economic', 'Combat'],
+        baseType: state.moduleSockets.hexagons[ecoIdx]!.type,
+        secondaryType: state.moduleSockets.hexagons[waveIdx]!.type,
         forgedAt: combineForgedAt(state.moduleSockets.hexagons[ecoIdx]!, state.moduleSockets.hexagons[waveIdx]!)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[waveIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+    if (state.moduleSockets.hexagons[waveIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[waveIdx]! });
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.moduleSockets.hexagons[waveIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, waveIdx] };
@@ -150,12 +178,21 @@ export function performKineticTsunamiMerge(state: GameState) {
             ...(state.moduleSockets.hexagons[ecoIdx]?.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(state.moduleSockets.hexagons[ecoIdx]?.typeAtLevel || { 1: 'EcoDMG', 2: 'EcoDMG', 3: 'EcoDMG', 4: 'EcoDMG' }),
+            5: 'KineticTsunami'
+        },
         statBonuses: {},
         categories: ['Economic', 'Combat'],
+        baseType: state.moduleSockets.hexagons[ecoIdx]!.type,
+        secondaryType: state.moduleSockets.hexagons[waveIdx]!.type,
         forgedAt: combineForgedAt(state.moduleSockets.hexagons[ecoIdx]!, state.moduleSockets.hexagons[waveIdx]!)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[waveIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+    if (state.moduleSockets.hexagons[waveIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[waveIdx]! });
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.moduleSockets.hexagons[waveIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, waveIdx] };
@@ -196,13 +233,24 @@ export function performSoulShatterCoreMerge(state: GameState) {
             ...(ecoHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(comHex.typeAtLevel || { 1: 'ComCrit', 2: 'ComCrit', 3: 'ComCrit', 4: 'ComCrit' }),
+            ...(ecoHex.typeAtLevel || { 1: 'EcoDMG', 2: 'EcoDMG', 3: 'EcoDMG', 4: 'EcoDMG' }),
+            5: 'SoulShatterCore'
+        },
         statBonuses: {},
         categories: ['Combat', 'Economic'],
+        baseType: comHex.type,
+        secondaryType: ecoHex.type,
         forgedAt: combineForgedAt(comHex, ecoHex)
     };
     (mergedHex as any).ecoKillsAtLevel = { ...ecoKills };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[comIdx]!.type, state.moduleSockets.hexagons[ecoIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[comIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[comIdx]! });
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+
     state.moduleSockets.hexagons[comIdx] = null;
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [comIdx, ecoIdx] };
@@ -217,13 +265,13 @@ export function performSoulShatterCoreMerge(state: GameState) {
 
 export function canMergeBloodForgedCapacitor(state: GameState): boolean {
     const comLife = state.moduleSockets.hexagons.find(h => h?.type === 'ComLife');
-    const kinBat = state.moduleSockets.hexagons.find(h => h?.type === 'KineticBattery');
+    const kinBat = state.moduleSockets.hexagons.find(h => h?.type === 'DefBattery');
     return (comLife?.level === 4 && kinBat?.level === 4);
 }
 
 export function performBloodForgedCapacitorMerge(state: GameState) {
     const lifeIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ComLife');
-    const kinIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'KineticBattery');
+    const kinIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefBattery');
     if (lifeIdx === -1 || kinIdx === -1) return;
     const lifeHex = state.moduleSockets.hexagons[lifeIdx]!;
     const kinHex = state.moduleSockets.hexagons[kinIdx]!;
@@ -242,17 +290,27 @@ export function performBloodForgedCapacitorMerge(state: GameState) {
             ...(kinHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(kinHex.typeAtLevel || { 1: 'DefBattery', 2: 'DefBattery', 3: 'DefBattery', 4: 'DefBattery' }),
+            ...(lifeHex.typeAtLevel || { 1: 'ComLife', 2: 'ComLife', 3: 'ComLife', 4: 'ComLife' }),
+            5: 'BloodForgedCapacitor'
+        },
         statBonuses: {},
         categories: ['Combat', 'Defensive'],
+        baseType: kinHex.type,
+        secondaryType: lifeHex.type,
         forgedAt: combineForgedAt(lifeHex, kinHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[lifeIdx]!.type, state.moduleSockets.hexagons[kinIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[lifeIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[lifeIdx]! });
+    if (state.moduleSockets.hexagons[kinIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[kinIdx]! });
     state.moduleSockets.hexagons[lifeIdx] = null;
     state.moduleSockets.hexagons[kinIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [lifeIdx, kinIdx] };
     syncLegendaryHex(state, mergedHex);
-    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'KineticBattery');
+    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'DefBattery');
     if (skillIdx !== -1) {
         state.player.activeSkills[skillIdx].type = 'BloodForgedCapacitor';
         state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
@@ -260,13 +318,13 @@ export function performBloodForgedCapacitorMerge(state: GameState) {
 }
 
 export function canMergeGravityAnchor(state: GameState): boolean {
-    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'CombShield');
+    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'EcoShield');
     const defEpi = state.moduleSockets.hexagons.find(h => h?.type === 'DefEpi');
     return (combShield?.level === 4 && defEpi?.level === 4);
 }
 
 export function performGravityAnchorMerge(state: GameState) {
-    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'CombShield');
+    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'EcoShield');
     const epiIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefEpi');
     if (shieldIdx === -1 || epiIdx === -1) return;
     const shieldHex = state.moduleSockets.hexagons[shieldIdx]!;
@@ -286,12 +344,23 @@ export function performGravityAnchorMerge(state: GameState) {
             ...(epiHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(epiHex.typeAtLevel || { 1: 'DefEpi', 2: 'DefEpi', 3: 'DefEpi', 4: 'DefEpi' }),
+            ...(shieldHex.typeAtLevel || { 1: 'EcoShield', 2: 'EcoShield', 3: 'EcoShield', 4: 'EcoShield' }),
+            5: 'GravityAnchor'
+        },
         statBonuses: {},
         categories: ['Defensive', 'Defensive'],
+        baseType: epiHex.type,
+        secondaryType: shieldHex.type,
         forgedAt: combineForgedAt(shieldHex, epiHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[shieldIdx]!.type, state.moduleSockets.hexagons[epiIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[shieldIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[shieldIdx]! });
+    if (state.moduleSockets.hexagons[epiIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[epiIdx]! });
+
     state.moduleSockets.hexagons[shieldIdx] = null;
     state.moduleSockets.hexagons[epiIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [shieldIdx, epiIdx] };
@@ -304,14 +373,14 @@ export function performGravityAnchorMerge(state: GameState) {
 }
 
 export function canMergeTemporalMonolith(state: GameState): boolean {
-    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'CombShield');
-    const chronoPlating = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
+    const combShield = state.moduleSockets.hexagons.find(h => h?.type === 'EcoShield');
+    const chronoPlating = state.moduleSockets.hexagons.find(h => h?.type === 'DefPlatting');
     return (combShield?.level === 4 && chronoPlating?.level === 4);
 }
 
 export function performTemporalMonolithMerge(state: GameState) {
-    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'CombShield');
-    const chronoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ChronoPlating');
+    const shieldIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'EcoShield');
+    const chronoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefPlatting');
     if (shieldIdx === -1 || chronoIdx === -1) return;
     const shieldHex = state.moduleSockets.hexagons[shieldIdx]!;
     const chronoHex = state.moduleSockets.hexagons[chronoIdx]!;
@@ -330,12 +399,23 @@ export function performTemporalMonolithMerge(state: GameState) {
             ...(chronoHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(chronoHex.typeAtLevel || { 1: 'DefPlatting', 2: 'DefPlatting', 3: 'DefPlatting', 4: 'DefPlatting' }),
+            ...(shieldHex.typeAtLevel || { 1: 'EcoShield', 2: 'EcoShield', 3: 'EcoShield', 4: 'EcoShield' }),
+            5: 'TemporalMonolith'
+        },
         statBonuses: {},
         categories: ['Defensive', 'Defensive'],
+        baseType: chronoHex.type,
+        secondaryType: shieldHex.type,
         forgedAt: combineForgedAt(shieldHex, chronoHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[shieldIdx]!.type, state.moduleSockets.hexagons[chronoIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[shieldIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[shieldIdx]! });
+    if (state.moduleSockets.hexagons[chronoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[chronoIdx]! });
+
     state.moduleSockets.hexagons[shieldIdx] = null;
     state.moduleSockets.hexagons[chronoIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [shieldIdx, chronoIdx] };
@@ -366,13 +446,13 @@ export function performTemporalMonolithMerge(state: GameState) {
 
 export function canMergeNeutronStar(state: GameState): boolean {
     const ecoHp = state.moduleSockets.hexagons.find(h => h?.type === 'EcoHP');
-    const radCore = state.moduleSockets.hexagons.find(h => h?.type === 'RadiationCore');
+    const radCore = state.moduleSockets.hexagons.find(h => h?.type === 'ComRadiation');
     return (ecoHp?.level === 4 && radCore?.level === 4);
 }
 
 export function performNeutronStarMerge(state: GameState) {
     const ecoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'EcoHP');
-    const radIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'RadiationCore');
+    const radIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ComRadiation');
     if (ecoIdx === -1 || radIdx === -1) return;
     const ecoHex = state.moduleSockets.hexagons[ecoIdx]!;
     const radHex = state.moduleSockets.hexagons[radIdx]!;
@@ -391,12 +471,22 @@ export function performNeutronStarMerge(state: GameState) {
             ...(radHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(radHex.typeAtLevel || { 1: 'ComRadiation', 2: 'ComRadiation', 3: 'ComRadiation', 4: 'ComRadiation' }),
+            ...(ecoHex.typeAtLevel || { 1: 'EcoHP', 2: 'EcoHP', 3: 'EcoHP', 4: 'EcoHP' }),
+            5: 'NeutronStar'
+        },
         statBonuses: {},
         categories: ['Economic', 'Combat'],
+        baseType: radHex.type,
+        secondaryType: ecoHex.type,
         forgedAt: combineForgedAt(ecoHex, radHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[radIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+    if (state.moduleSockets.hexagons[radIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[radIdx]! });
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.moduleSockets.hexagons[radIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, radIdx] };
@@ -431,12 +521,23 @@ export function performGravitationalHarvestMerge(state: GameState) {
             ...(epiHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(epiHex.typeAtLevel || { 1: 'DefEpi', 2: 'DefEpi', 3: 'DefEpi', 4: 'DefEpi' }),
+            ...(ecoHex.typeAtLevel || { 1: 'EcoHP', 2: 'EcoHP', 3: 'EcoHP', 4: 'EcoHP' }),
+            5: 'GravitationalHarvest'
+        },
         statBonuses: {},
         categories: ['Economic', 'Defensive'],
+        baseType: epiHex.type,
+        secondaryType: ecoHex.type,
         forgedAt: combineForgedAt(ecoHex, epiHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[ecoIdx]!.type, state.moduleSockets.hexagons[epiIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[ecoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[ecoIdx]! });
+    if (state.moduleSockets.hexagons[epiIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[epiIdx]! });
+
     state.moduleSockets.hexagons[ecoIdx] = null;
     state.moduleSockets.hexagons[epiIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [ecoIdx, epiIdx] };
@@ -450,13 +551,13 @@ export function performGravitationalHarvestMerge(state: GameState) {
 
 export function canMergeShatteredCapacitor(state: GameState): boolean {
     const comCrit = state.moduleSockets.hexagons.find(h => h?.type === 'ComCrit');
-    const kinBat = state.moduleSockets.hexagons.find(h => h?.type === 'KineticBattery');
+    const kinBat = state.moduleSockets.hexagons.find(h => h?.type === 'DefBattery');
     return (comCrit?.level === 4 && kinBat?.level === 4);
 }
 
 export function performShatteredCapacitorMerge(state: GameState) {
     const comIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ComCrit');
-    const kinIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'KineticBattery');
+    const kinIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefBattery');
     if (comIdx === -1 || kinIdx === -1) return;
     const comHex = state.moduleSockets.hexagons[comIdx]!;
     const kinHex = state.moduleSockets.hexagons[kinIdx]!;
@@ -475,17 +576,27 @@ export function performShatteredCapacitorMerge(state: GameState) {
             ...(kinHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(kinHex.typeAtLevel || { 1: 'DefBattery', 2: 'DefBattery', 3: 'DefBattery', 4: 'DefBattery' }),
+            ...(comHex.typeAtLevel || { 1: 'ComCrit', 2: 'ComCrit', 3: 'ComCrit', 4: 'ComCrit' }),
+            5: 'ShatteredCapacitor'
+        },
         statBonuses: {},
         categories: ['Combat', 'Defensive'],
+        baseType: kinHex.type,
+        secondaryType: comHex.type,
         forgedAt: combineForgedAt(comHex, kinHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[comIdx]!.type, state.moduleSockets.hexagons[kinIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[comIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[comIdx]! });
+    if (state.moduleSockets.hexagons[kinIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[kinIdx]! });
     state.moduleSockets.hexagons[comIdx] = null;
     state.moduleSockets.hexagons[kinIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [comIdx, kinIdx] };
     syncLegendaryHex(state, mergedHex);
-    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'KineticBattery');
+    const skillIdx = state.player.activeSkills.findIndex(s => s.type === 'DefBattery');
     if (skillIdx !== -1) {
         state.player.activeSkills[skillIdx].type = 'ShatteredCapacitor';
         state.player.activeSkills[skillIdx].icon = mergedHex.customIcon;
@@ -495,13 +606,13 @@ export function performShatteredCapacitorMerge(state: GameState) {
 
 export function canMergeChronoDevourer(state: GameState): boolean {
     const comLife = state.moduleSockets.hexagons.find(h => h?.type === 'ComLife');
-    const chronoPlating = state.moduleSockets.hexagons.find(h => h?.type === 'ChronoPlating');
+    const chronoPlating = state.moduleSockets.hexagons.find(h => h?.type === 'DefPlatting');
     return (comLife?.level === 4 && chronoPlating?.level === 4);
 }
 
 export function performChronoDevourerMerge(state: GameState) {
     const lifeIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ComLife');
-    const chronoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'ChronoPlating');
+    const chronoIdx = state.moduleSockets.hexagons.findIndex(h => h?.type === 'DefPlatting');
     if (lifeIdx === -1 || chronoIdx === -1) return;
     const lifeHex = state.moduleSockets.hexagons[lifeIdx]!;
     const chronoHex = state.moduleSockets.hexagons[chronoIdx]!;
@@ -520,16 +631,29 @@ export function performChronoDevourerMerge(state: GameState) {
             ...(chronoHex.timeAtLevel || {}),
             5: state.gameTime
         },
+        typeAtLevel: {
+            ...(chronoHex.typeAtLevel || { 1: 'DefPlatting', 2: 'DefPlatting', 3: 'DefPlatting', 4: 'DefPlatting' }),
+            ...(lifeHex.typeAtLevel || { 1: 'ComLife', 2: 'ComLife', 3: 'ComLife', 4: 'ComLife' }),
+            5: 'ChronoDevourer'
+        },
         statBonuses: {},
         categories: ['Combat', 'Defensive'],
+        baseType: chronoHex.type,
+        secondaryType: lifeHex.type,
         forgedAt: combineForgedAt(lifeHex, chronoHex)
     };
     if (!state.player.consumedLegendaries) state.player.consumedLegendaries = [];
     state.player.consumedLegendaries.push(state.moduleSockets.hexagons[lifeIdx]!.type, state.moduleSockets.hexagons[chronoIdx]!.type);
+    if (!state.archivedHexes) state.archivedHexes = [];
+    if (state.moduleSockets.hexagons[lifeIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[lifeIdx]! });
+    if (state.moduleSockets.hexagons[chronoIdx]) state.archivedHexes.push({ ...state.moduleSockets.hexagons[chronoIdx]! });
+
     state.moduleSockets.hexagons[lifeIdx] = null;
     state.moduleSockets.hexagons[chronoIdx] = null;
     state.pendingFusionHex = { hex: mergedHex, validHexIndices: [lifeIdx, chronoIdx] };
     syncLegendaryHex(state, mergedHex);
 
 }
+
+
 

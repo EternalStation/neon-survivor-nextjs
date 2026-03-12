@@ -3,7 +3,7 @@ import type { GameState, Enemy, Player } from '../core/Types';
 import { getPlayerThemeColor } from '../utils/Helpers';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
-import { playSfx, fadeOutMusic } from '../audio/AudioLogic';
+import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
@@ -12,7 +12,7 @@ import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
 import { recordDamage, recordHealing } from '../utils/DamageTracking';
-import { applyDamageToPlayer } from '../utils/CombatUtils';
+import { applyDamageToPlayer, applyHealToPlayer } from '../utils/CombatUtils';
 
 export function handlePlayerCombat(
     state: GameState,
@@ -30,10 +30,10 @@ export function handlePlayerCombat(
 
     const mireLvl = getHexLevel(state, 'IrradiatedMire');
     const neutronLvl = getHexLevel(state, 'NeutronStar');
-    const radLvl = (mireLvl > 0 || neutronLvl > 0) ? 5 : getHexLevel(state, 'RadiationCore');
+    const radLvl = (mireLvl > 0 || neutronLvl > 0) ? 5 : getHexLevel(state, 'ComRadiation');
     if (radLvl >= 1) {
         if (state.frameCount % 10 === 0) {
-            const m = getHexMultiplier(state, neutronLvl > 0 ? 'NeutronStar' : (mireLvl > 0 ? 'IrradiatedMire' : 'RadiationCore'));
+            const m = getHexMultiplier(state, neutronLvl > 0 ? 'NeutronStar' : (mireLvl > 0 ? 'IrradiatedMire' : 'ComRadiation'));
             const mireActive = mireLvl > 0;
             const neutronActive = neutronLvl > 0;
             const range = (mireActive || neutronActive) ? 666 : 500;
@@ -134,9 +134,7 @@ export function handlePlayerCombat(
             if (radLvl >= 2 && enemiesInAura.length > 0 && !player.healingDisabled) {
                 const healPerEnemy = playerMaxHp * (0.002 * m) / 6;
                 const totalHeal = healPerEnemy * enemiesInAura.length;
-                const radHealActual = Math.min(maxHp, player.curHp + totalHeal) - player.curHp;
-                if (radHealActual > 0) recordHealing(player, 'Radiation Aura', radHealActual);
-                player.curHp = Math.min(maxHp, player.curHp + totalHeal);
+                applyHealToPlayer(state, player, totalHeal, 'radiation_aura');
             }
         }
 
@@ -208,7 +206,7 @@ export function handleEnemyContact(
 ) {
     const player = overridePlayer || state.player;
     const now = state.gameTime;
-    const kinLvl = getHexLevel(state, 'KineticBattery');
+    const kinLvl = getHexLevel(state, 'DefBattery');
     const curseMult = state.assistant.history.curseIntensity || 1.0;
 
     state.enemies.forEach(e => {
@@ -433,12 +431,11 @@ function handlePlayerLethalHit(state: GameState, e: Enemy, onEvent?: (type: stri
 
         if (onEvent) onEvent('game_over');
         triggerDeath?.();
-        fadeOutMusic(7.0);
     }
 }
 
 export function triggerKineticBatteryZap(state: GameState, player: Player, source?: { x: number, y: number }) {
-    const kinLvl = getHexLevel(state, 'KineticBattery');
+    const kinLvl = getHexLevel(state, 'DefBattery');
     if (kinLvl < 1) return;
     const now = state.gameTime;
     const cdMod = getCdMod(state, player);
@@ -654,7 +651,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                     source = shatteredLvl > 0 ? 'Shattered Capacitor (Arc)' : 'Kinetic Bolt (LVL 1)';
                 }
                 else if (zap.color === '#60a5fa') {
-                    const kinLvl = getHexLevel(state, 'KineticBattery');
+                    const kinLvl = getHexLevel(state, 'DefBattery');
                     source = kinLvl > 0 ? 'Kinetic Bolt (LVL 1)' : 'Static Bolt';
                 }
 
@@ -670,10 +667,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 const player = state.player;
                 if (bloodLevel >= 5 && !player.healingDisabled) {
                     const heal = zap.dmg * 0.01;
-                    const maxHp = calcStat(player.hp);
-                    const bfHealActual = Math.min(maxHp, player.curHp + heal) - player.curHp;
-                    if (bfHealActual > 0) recordHealing(player, 'Lifesteal', bfHealActual);
-                    player.curHp = Math.min(maxHp, player.curHp + heal);
+                    applyHealToPlayer(state, player, heal, 'blood_capacitor');
                 }
 
                 if (zap.applyBleed) {

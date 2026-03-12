@@ -284,7 +284,7 @@
             #38bdf8,
             transparent);
     box-shadow: 0 0 20px #38bdf8;
-    animation: scanline 0.5s linear infinite;
+    animation: scanline 0.75s linear infinite;
     z-index: 110;
 }
 

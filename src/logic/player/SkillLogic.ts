@@ -1,6 +1,6 @@
 
 import type { GameState } from '../core/Types';
-import { getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier, getLogarithmicSum } from '../upgrades/LegendaryLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
@@ -82,7 +82,7 @@ export function castSkill(state: GameState, skillIndex: number) {
         if (tsunamiLvl > 0) {
             const mult = getHexMultiplier(state, 'KineticTsunami');
             const harvestedSouls = state.player.kineticTsunamiWaveSouls || 0;
-            baseCD -= (harvestedSouls * 0.01 * mult);
+            baseCD -= (getLogarithmicSum(harvestedSouls) * 0.01 * mult);
         }
 
         if (baseCD < 5) baseCD = 5;

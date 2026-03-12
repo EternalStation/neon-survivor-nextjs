@@ -2,10 +2,9 @@
 export let audioCtx: AudioContext;
 
 if (typeof window !== 'undefined') {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     audioCtx = new AudioContextClass();
 }
-
 
 let musicVolume = 0.425;
 let sfxVolume = 0.5;
@@ -24,18 +23,14 @@ function loadAudioSettings() {
         if (typeof parsed?.sfx === 'number') {
             sfxVolume = Math.max(0, Math.min(1, parsed.sfx));
         }
-    } catch (e) {
-        console.warn('Failed to load audio settings', e);
-    }
+    } catch (e) { }
 }
 
 function saveAudioSettings() {
     if (typeof window === 'undefined') return;
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ music: musicVolume, sfx: sfxVolume }));
-    } catch (e) {
-        console.warn('Failed to save audio settings', e);
-    }
+    } catch (e) { }
 }
 
 loadAudioSettings();

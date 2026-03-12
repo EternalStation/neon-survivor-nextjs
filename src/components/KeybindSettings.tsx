@@ -147,7 +147,7 @@ export const KeybindSettings: React.FC<KeybindSettingsProps> = ({ onBack }) => {
 
     return (
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <h3 style={{ color: '#fff', fontSize: 13, borderBottom: '1px solid #334155', paddingBottom: 4, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 4 }}>{t.title}</h3>
+            <h3 style={{ color: '#fff', fontSize: 13, borderBottom: '1px solid #334155', paddingBottom: 4, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 4, width: '100%' }}>{t.title}</h3>
 
             <div style={{ display: 'flex', gap: 20, paddingRight: 5 }}>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>

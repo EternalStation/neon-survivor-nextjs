@@ -25,12 +25,16 @@ export const LegendarySelectionMenu: React.FC<LegendarySelectionMenuProps> = ({ 
             const leftBind = (binds.moveLeft || 'keya').toLowerCase();
             const rightBind = (binds.moveRight || 'keyd').toLowerCase();
 
+            if (options.length === 0) return;
+
             if (code === leftBind || code === 'arrowleft' || (binds.useDefaultMovement && code === 'keya')) {
                 setSelectedIndex(prev => (prev - 1 + options.length) % options.length);
             } else if (code === rightBind || code === 'arrowright' || (binds.useDefaultMovement && code === 'keyd')) {
                 setSelectedIndex(prev => (prev + 1) % options.length);
             } else if (code === 'enter' || code === 'space') {
-                onSelect(options[selectedIndex]);
+                if (options[selectedIndex]) {
+                    onSelect(options[selectedIndex]);
+                }
             }
         };
 

@@ -114,6 +114,12 @@ export const HexGrid: React.FC<HexGridProps> = ({
         sectors: new Set<string>()
     };
 
+    const isRecentlyPlacedHex = (i: number) => {
+        const lp = gameState.lastPlacement;
+        if (!lp || lp.type !== 'hex' || lp.index !== i) return false;
+        return (Date.now() - lp.timestamp) < 1000;
+    };
+
     const isRecentlyBoosted = (i: number) => {
         const lp = gameState.lastPlacement;
         if (!lp || (Date.now() - lp.timestamp) > 1000) return false;
@@ -718,7 +724,13 @@ export const HexGrid: React.FC<HexGridProps> = ({
                 {hexPositions.map((pos, i) => {
                     const hex = gameState.moduleSockets.hexagons[i];
                     const info = hex ? getLegendaryInfo(hex.category, hex.type) : null;
-                    const isHexFusable = hex && hex.level >= 1 && FUSIONS.some(f => f.bases.includes(hex.type) && !(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])));
+                    const isHexPartOfFusion = hex && hex.level >= 1 && FUSIONS.some(f => f.bases.includes(hex.type) && !(gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1])));
+                    const isHexReadyToFuse = hex && hex.level >= 4 && FUSIONS.some(f => {
+                        if (!f.bases.includes(hex.type)) return false;
+                        const otherBase = f.bases[0] === hex.type ? f.bases[1] : f.bases[0];
+                        const isConsumed = gameState.player.consumedLegendaries?.includes(f.bases[0]) || gameState.player.consumedLegendaries?.includes(f.bases[1]);
+                        return !isConsumed && level4Hexes.has(otherBase);
+                    });
                     return (
                         <g key={`hex-socket-${i}`}
                             onClick={() => {
@@ -743,93 +755,99 @@ export const HexGrid: React.FC<HexGridProps> = ({
                             onMouseLeave={() => setHoveredHex(null)}
                             onDragOver={(e) => e.preventDefault()}
                             style={{
-                                cursor: (gameState.pendingLegendaryHex && !hex) || (gameState.pendingFusionHex && gameState.pendingFusionHex.validHexIndices.includes(i)) ? 'copy' : (!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexFusable ? 'pointer' : 'default'),
+                                cursor: (gameState.pendingLegendaryHex && !hex) || (gameState.pendingFusionHex && gameState.pendingFusionHex.validHexIndices.includes(i)) ? 'copy' : (!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexPartOfFusion ? 'pointer' : 'default'),
                                 opacity: gameState.pendingFusionHex && !gameState.pendingFusionHex.validHexIndices.includes(i) ? 0.3 : 1
                             }}
                         >
-                            {(() => {
-                                let stroke: string = hex ? info?.color || "rgba(250, 204, 21, 0.5)" : "rgba(250, 204, 21, 0.5)";
-                                let glowColor: string = info?.color || '#fbbf24';
-                                if (hex && hex.level >= 5) {
-                                    const fusion = FUSIONS.find(f => f.result === hex.type);
-                                    if (fusion) {
-                                        const cat1 = LEGENDARY_UPGRADES[fusion.bases[0]]?.category;
-                                        const cat2 = LEGENDARY_UPGRADES[fusion.bases[1]]?.category;
-                                        if (cat1 && cat2) {
-                                            const c1 = cat1.substring(0, 3).toLowerCase();
-                                            const c2 = cat2.substring(0, 3).toLowerCase();
-                                            stroke = `url(#grad-${c1}-${c2})`;
+                            <g className={isRecentlyPlacedHex(i) ? "animate-hex-drop" : ""}>
+                                {(() => {
+                                    let stroke: string = hex ? info?.color || "rgba(250, 204, 21, 0.5)" : "rgba(250, 204, 21, 0.5)";
+                                    let glowColor: string = info?.color || '#fbbf24';
+                                    if (hex && hex.level >= 5) {
+                                        const fusion = FUSIONS.find(f => f.result === hex.type);
+                                        if (fusion) {
+                                            const cat1 = LEGENDARY_UPGRADES[fusion.bases[0]]?.category;
+                                            const cat2 = LEGENDARY_UPGRADES[fusion.bases[1]]?.category;
+                                            if (cat1 && cat2) {
+                                                const c1 = cat1.substring(0, 3).toLowerCase();
+                                                const c2 = cat2.substring(0, 3).toLowerCase();
+                                                stroke = `url(#grad-${c1}-${c2})`;
 
-                                            // Make glow match the first base component for fusions instead of default purple
-                                            const catColors: Record<string, string> = {
-                                                Economic: '#fbbf24',
-                                                Combat: '#ef4444',
-                                                Defensive: '#3b82f6'
-                                            };
-                                            glowColor = catColors[cat1] || glowColor;
+                                                // Make glow match the first base component for fusions instead of default purple
+                                                const catColors: Record<string, string> = {
+                                                    Economic: '#fbbf24',
+                                                    Combat: '#ef4444',
+                                                    Defensive: '#3b82f6'
+                                                };
+                                                glowColor = catColors[cat1] || glowColor;
+                                            }
                                         }
                                     }
-                                }
-                                return (
-                                    <>
-                                        <polygon
-                                            points={getHexPoints(pos.x, pos.y, 60)}
-                                            fill="url(#core-grad)"
-                                            stroke={stroke}
-                                            strokeWidth={hex ? "4" : "2"}
-                                            className={hex ? "glow-hex" : "glow-yellow"}
-                                            style={{ '--hex-color': glowColor, '--glow-color': glowColor } as any}
-                                        />
-                                        {hex && (
-                                            <g>
-                                                {hex.customIcon ? (
-                                                    <image
-                                                        href={hex.customIcon}
-                                                        x={pos.x - 60}
-                                                        y={pos.y - 60}
-                                                        width="120"
-                                                        height="120"
-                                                        style={{ imageRendering: 'pixelated', filter: `drop-shadow(0 0 15px ${glowColor}88)` }}
-                                                        pointerEvents="none"
-                                                    />
-                                                ) : (
-                                                    <text x={pos.x} y={pos.y - 5} textAnchor="middle" fill={info?.color} fontSize="28" style={{ filter: `drop-shadow(0 0 8px ${info?.color})`, fontWeight: 900 }} pointerEvents="none">
-                                                        {info?.icon}
-                                                    </text>
-                                                )}
-                                                <rect x={pos.x - 28} y={pos.y + 40} width="56" height="18" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke={hex.level >= 5 ? stroke : info?.color} strokeWidth="2" pointerEvents="none" />
-                                                <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level >= 4 ? "#FCD34D" : info?.color} fontSize={hex.level >= 4 ? "10" : "12"} fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
-                                                    {hex.level >= 5 ? "MAX" : `LVL ${hex.level}`}
-                                                </text>
-                                                {gameState.upgradingHexIndex === i && gameState.upgradingHexTimer > 0 && (
-                                                    <g>
-                                                        <polygon
-                                                            points={getHexPoints(pos.x, pos.y, 52.5)}
-                                                            fill="none"
-                                                            stroke="#fbbf24"
-                                                            strokeWidth="3"
-                                                            className="pulse-upgrade-ring"
-                                                            style={{ pointerEvents: 'none' }}
+                                    return (
+                                        <>
+                                            <polygon
+                                                points={getHexPoints(pos.x, pos.y, 60)}
+                                                fill="url(#core-grad)"
+                                                stroke={stroke}
+                                                strokeWidth={hex ? "4" : "2"}
+                                                className={hex ? "glow-hex" : "glow-yellow"}
+                                                style={{ '--hex-color': glowColor, '--glow-color': glowColor } as any}
+                                            />
+                                            {hex && (
+                                                <g>
+                                                    {hex.customIcon ? (
+                                                        <image
+                                                            href={hex.customIcon}
+                                                            x={pos.x - 60}
+                                                            y={pos.y - 60}
+                                                            width="120"
+                                                            height="120"
+                                                            style={{ imageRendering: 'pixelated', filter: `drop-shadow(0 0 15px ${glowColor}88)` }}
+                                                            pointerEvents="none"
                                                         />
-                                                        <text
-                                                            x={pos.x}
-                                                            y={pos.y - 80}
-                                                            textAnchor="middle"
-                                                            fill="#fbbf24"
-                                                            fontSize="24"
-                                                            fontWeight="900"
-                                                            className="float-up-fade"
-                                                            style={{ textShadow: '0 0 10px #fbbf24' }}
-                                                        >
-                                                            UPGRADED!
+                                                    ) : (
+                                                        <text x={pos.x} y={pos.y - 5} textAnchor="middle" fill={info?.color} fontSize="28" style={{ filter: `drop-shadow(0 0 8px ${info?.color})`, fontWeight: 900 }} pointerEvents="none">
+                                                            {info?.icon}
                                                         </text>
-                                                    </g>
-                                                )}
-                                            </g>
-                                        )}
-                                    </>
-                                );
-                            })()}
+                                                    )}
+                                                    <rect x={pos.x - 28} y={pos.y + 40} width="56" height="18" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke={hex.level >= 5 ? stroke : info?.color} strokeWidth="2" pointerEvents="none" />
+                                                    <text x={pos.x} y={pos.y + 53} textAnchor="middle" fill={hex.level >= 4 ? "#FCD34D" : info?.color} fontSize={hex.level >= 4 ? "10" : "12"} fontWeight="900" pointerEvents="none" style={{ letterSpacing: '1px' }}>
+                                                        {hex.level >= 5 ? "MAX" : `LVL ${hex.level}`}
+                                                    </text>
+                                                </g>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </g>
+                            {hex && (
+                                <g>
+                                    {gameState.upgradingHexIndex === i && gameState.upgradingHexTimer > 0 && (
+                                        <g>
+                                            <polygon
+                                                points={getHexPoints(pos.x, pos.y, 52.5)}
+                                                fill="none"
+                                                stroke="#fbbf24"
+                                                strokeWidth="3"
+                                                className="pulse-upgrade-ring"
+                                                style={{ pointerEvents: 'none' }}
+                                            />
+                                            <text
+                                                x={pos.x}
+                                                y={pos.y - 80}
+                                                textAnchor="middle"
+                                                fill="#fbbf24"
+                                                fontSize="24"
+                                                fontWeight="900"
+                                                className="float-up-fade"
+                                                style={{ textShadow: '0 0 10px #fbbf24' }}
+                                            >
+                                                UPGRADED!
+                                            </text>
+                                        </g>
+                                    )}
+                                </g>
+                            )}
                             {gameState.pendingLegendaryHex && !hex && (
                                 <polygon
                                     points={getHexPoints(pos.x, pos.y, 68)}
@@ -840,15 +858,17 @@ export const HexGrid: React.FC<HexGridProps> = ({
                                     className="pulse-legendary-glow"
                                 />
                             )}
-                            {!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexFusable && (
-                                <polygon
-                                    points={getHexPoints(pos.x, pos.y, 68)}
-                                    fill="rgba(56, 189, 248, 0.05)"
-                                    stroke="#38bdf8"
-                                    strokeWidth="2"
-                                    style={{ pointerEvents: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
-                                    className="pulse-cyan-glow"
-                                />
+                            {!gameState.pendingFusionHex && !gameState.pendingLegendaryHex && isHexReadyToFuse && (
+                                <g>
+                                    <polygon
+                                        points={getHexPoints(pos.x, pos.y, 70)}
+                                        fill="none"
+                                        stroke={info?.color || "#38bdf8"}
+                                        strokeWidth="3"
+                                        style={{ pointerEvents: 'none', '--pulse-color': info?.color || "#38bdf8" } as any}
+                                        className="fusion-ready-outline"
+                                    />
+                                </g>
                             )}
                             {gameState.pendingFusionHex && gameState.pendingFusionHex.validHexIndices.includes(i) && (
                                 <g>

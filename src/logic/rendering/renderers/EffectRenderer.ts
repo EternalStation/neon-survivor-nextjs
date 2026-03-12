@@ -9,7 +9,6 @@ export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameStat
             const segments = 30;
             const baseR = effect.radius;
             const t = state.gameTime;
-
             ctx.beginPath();
             for (let i = 0; i <= segments; i++) {
                 const angle = (i / segments) * Math.PI * 2;

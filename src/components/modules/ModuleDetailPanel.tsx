@@ -7,7 +7,7 @@ import { ARENA_DATA, SECTOR_NAMES, getLocalizedArenaDetails } from '../../logic/
 import { getExtractionMessages, ExtractionMessage } from '../../lib/OrbitTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { BestiaryDetailView } from './BestiaryDetailView';
-import { fadeOutMusic, playSfx } from '../../logic/audio/AudioLogic';
+import { playSfx } from '../../logic/audio/AudioLogic';
 import { playTypewriterClick } from '../../logic/audio/SfxLogic';
 import { RecalibrateInterface } from './RecalibrateInterface';
 import { upgradeMeteoriteQuality, rerollPerkType, rerollPerkValue } from '../../logic/upgrades/RecalibrateLogic';
@@ -148,7 +148,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
         const status: BlueprintStatus | undefined = bp.status;
         const cost = bp.cost ?? 0;
         const canDeploy = gs.player.dust >= cost;
-        const alreadyActive = isBuffActive(gs, bp.type);
+        const alreadyActive = isBuffActive(gs, bp.type) || (bp.type !== 'QUANTUM_SCRAPPER' && Object.keys(gs.activeBlueprintBuffs).length > 0);
 
         const findBpIdx = () => (gs.inventory as (Meteorite | Blueprint | null)[]).findIndex(
             (i) => i !== null && (i as Blueprint).isBlueprint && (i as Blueprint).id === bp.id
@@ -340,7 +340,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                             {(() => {
                                                 const charges = gameState.activeBlueprintCharges[hoveredBlueprint.type];
                                                 const endTime = gameState.activeBlueprintBuffs[hoveredBlueprint.type];
-                                                const isActive = hoveredBlueprint.status === 'active';
+                                                const isActive = isBuffActive(gameState, hoveredBlueprint.type);
                                                 const isBroken = hoveredBlueprint.status === 'broken';
 
                                                 if (isActive && charges !== undefined) {
@@ -382,8 +382,8 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 <div>
                                                     <div className={styles.bpCostLabel}>{t.activation.title}</div>
                                                     <div className={styles.bpCostAmountRow}>
-                                                        <span className={styles.bpCostAmountValue}>{hoveredBlueprint.cost.toLocaleString()}</span>
-                                                        <span className={styles.bpCostAmountLabel}>{t.activation.dustRequired}</span>
+                                                        <span className={styles.bpCostAmountValue}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'ACTIVE' : hoveredBlueprint.cost.toLocaleString()}</span>
+                                                        <span className={styles.bpCostAmountLabel}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'PROTO-RUNNING' : t.activation.dustRequired}</span>
                                                     </div>
                                                 </div>
                                                 <div className={styles.bpCostIcon}>

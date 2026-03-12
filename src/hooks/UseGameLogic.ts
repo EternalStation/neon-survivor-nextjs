@@ -15,7 +15,7 @@ import { updateParticles, spawnParticles, spawnFloatingNumber } from '../logic/e
 import { spawnUpgrades, spawnSnitchUpgrades } from '../logic/upgrades/UpgradeLogic';
 import { updateIncubator } from '../logic/upgrades/IncubatorLogic';
 import { getLegendaryOptions, getHexLevel, getHexMultiplier } from '../logic/upgrades/LegendaryLogic';
-import { playSfx, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience, switchBGM, fadeOutMusic } from '../logic/audio/AudioLogic';
+import { playSfx, startBossAmbience, stopBossAmbience, startPortalAmbience, stopPortalAmbience } from '../logic/audio/AudioLogic';
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../logic/mission/MapLogic';
 import { calcStat } from '../logic/utils/MathUtils';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
@@ -257,8 +257,19 @@ export function useGameLogic({
             state.player.voidMarkerX = (state.player.voidMarkerX ?? state.player.x) + (state.player.voidMarkerVx ?? 0) * step;
             state.player.voidMarkerY = (state.player.voidMarkerY ?? state.player.y) + (state.player.voidMarkerVy ?? 0) * step;
             const markerAge = state.gameTime - (state.player.voidMarkerSpawnTime ?? 0);
-            if (markerAge > 6) {
+
+            const pClass = PLAYER_CLASSES.find(c => c.id === state.player.playerClass);
+            const resonance = getChassisResonance(state);
+            const projLifeMult = pClass?.stats.projLifeMult || 1;
+            const bulletRange = GAME_CONFIG.PROJECTILE.PLAYER_BULLET_SPEED * GAME_CONFIG.PROJECTILE.PLAYER_BULLET_LIFE * projLifeMult * (1 + resonance);
+            const MARKER_SPEED = 800;
+            const maxMarkerAge = bulletRange / MARKER_SPEED;
+
+            if (markerAge > maxMarkerAge) {
+                state.player.lastBlackholeUse = state.gameTime;
                 state.player.voidMarkerActive = false;
+                spawnParticles(state, state.player.voidMarkerX!, state.player.voidMarkerY!, '#8b5cf6', 15);
+                playSfx('rare-despawn');
             }
         }
 
@@ -335,7 +346,6 @@ export function useGameLogic({
                                 state.spatialGrid.clear();
                                 playSfx('rare-despawn');
                                 stopPortalAmbience();
-                                fadeOutMusic(0.1);
                                 break;
                             }
                         }
@@ -370,12 +380,6 @@ export function useGameLogic({
 
 
                     relocateTurretsToArena(state, newArena);
-
-                    if (['active', 'arriving', 'arrived', 'departing'].includes(state.extractionStatus)) {
-                        switchBGM('evacuation', 1.0);
-                    } else if (!['requested', 'waiting'].includes(state.extractionStatus)) {
-                        switchBGM(newArena, 7.0);
-                    }
                     playSfx('spawn');
                 }
             }
@@ -427,19 +431,33 @@ export function useGameLogic({
                 state.bossKillTimer -= step;
                 if (state.bossKillTimer <= 0 && state.pendingBossKills > 0) {
                     state.legendaryOptions = getLegendaryOptions(state);
-                    setShowLegendarySelection(true);
-                    state.showLegendarySelection = true;
-                    state.isPaused = true;
+                    if (state.legendaryOptions.length > 0) {
+                        setShowLegendarySelection(true);
+                        state.showLegendarySelection = true;
+                        state.isPaused = true;
+                        playSfx('rare-spawn');
+                    } else {
+                        // REWARD INSTEAD OF BUG: Grant Dust if all legendaries are maxed
+                        state.player.dust += 500;
+                        spawnFloatingNumber(state, state.player.x, state.player.y - 40, "+500 DUST", "#fbbf24");
+                        playSfx('level');
+                    }
                     state.pendingBossKills--;
-                    playSfx('rare-spawn');
                 }
             } else if (state.pendingBossKills > 0 && !state.isPaused) {
                 state.legendaryOptions = getLegendaryOptions(state);
-                setShowLegendarySelection(true);
-                state.showLegendarySelection = true;
-                state.isPaused = true;
+                if (state.legendaryOptions.length > 0) {
+                    setShowLegendarySelection(true);
+                    state.showLegendarySelection = true;
+                    state.isPaused = true;
+                    playSfx('rare-spawn');
+                } else {
+                    // REWARD INSTEAD OF BUG: Grant Dust if all legendaries are maxed
+                    state.player.dust += 500;
+                    spawnFloatingNumber(state, state.player.x, state.player.y - 40, "+500 DUST", "#fbbf24");
+                    playSfx('level');
+                }
                 state.pendingBossKills--;
-                playSfx('rare-spawn');
             }
         }
 

@@ -113,7 +113,7 @@ export function handlePlayerMovement(
 
     let vx = 0, vy = 0;
 
-    const chronoLvl = getHexLevel(state, 'ChronoPlating');
+    const chronoLvl = getHexLevel(state, 'DefPlatting');
     const isStunned = (player.stunnedUntil && state.gameTime < player.stunnedUntil);
 
     const isInverted = player.invertedControlsUntil && state.gameTime < player.invertedControlsUntil;
@@ -142,6 +142,25 @@ export function handlePlayerMovement(
         if (isInverted) {
             vx = -vx;
             vy = -vy;
+        }
+    }
+
+    const chronoPlatLvl = getHexLevel(state, 'DefPlatting');
+    if (!isDashing && chronoPlatLvl >= 2) {
+        if (vx === 0 && vy === 0 && !isStunned) {
+            player.stasisTimer = (player.stasisTimer || 0) + (1 / 60);
+            if (player.stasisTimer >= 2.0) {
+                if (!player.stasisFieldActive) {
+                    player.stasisFieldActive = true;
+                    player.stasisFieldX = player.x;
+                    player.stasisFieldY = player.y;
+                    playSfx('rare-spawn');
+                    spawnParticles(state, player.x, player.y, '#22d3ee', 1, 400, 20, 'shockwave_circle');
+                }
+            }
+        } else {
+            player.stasisTimer = 0;
+            player.stasisFieldActive = false;
         }
     }
 
@@ -251,7 +270,7 @@ export function handlePlayerMovement(
                 deathCause: 'Wall Impact'
             });
 
-            const kinLvl = getHexLevel(state, 'KineticBattery');
+            const kinLvl = getHexLevel(state, 'DefBattery');
             if (kinLvl >= 1) {
                 const trigger = (state as any).triggerKineticBatteryZap;
                 if (trigger) trigger(state, player, kinLvl);

@@ -10,6 +10,14 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
 
     player.damageBreakdown[source] = (player.damageBreakdown[source] || 0) + amount;
 
+    const classSpecificSources: Record<string, DamageSource[]> = {
+        'malware': ['Malware Wall Bonus'],
+        'stormstrike': ['Storm Circle'],
+        'hivemother': ['Nanite Swarm'],
+        'aigis': ['Orbital Vortex', 'Wall Shockwave', 'Aegis Rings'],
+        'eventhorizon': ['Void Singularity']
+    };
+
     const classSkillSources: DamageSource[] = [
         'Orbital Vortex',
         'Storm Circle',
@@ -20,7 +28,11 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
         'Aegis Rings'
     ];
 
-    if (classSkillSources.includes(source)) {
+    const playerClass = player.playerClass;
+
+    const currentMinuteSources = playerClass ? (classSpecificSources[playerClass] || []) : [];
+
+    if (currentMinuteSources.includes(source) || classSkillSources.includes(source)) {
         state.currentMinuteClassSkillDamage = (state.currentMinuteClassSkillDamage || 0) + amount;
 
         if (!player.activeSkillDamageByMinute) {

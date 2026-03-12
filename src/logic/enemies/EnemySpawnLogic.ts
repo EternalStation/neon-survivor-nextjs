@@ -56,37 +56,35 @@ export function getCurrentMinuteEnemyHp(gameTime: number, extractionPowerMult: n
     return Math.floor(baseHp * hpMult);
 }
 
+export function getSpawnPosition(state: GameState, isBoss: boolean = false): { x: number, y: number } {
+    const { player } = state;
+    const playerArena = getArenaIndex(player.x, player.y);
+    
+    for (let i = 0; i < 15; i++) {
+        const a = Math.random() * 6.28;
+        const d = (isBoss ? 1500 : 1200) + Math.random() * 300;
+        const tx = player.x + Math.cos(a) * d;
+        const ty = player.y + Math.sin(a) * d;
+
+        if (isInMap(tx, ty) && getArenaIndex(tx, ty) === playerArena) {
+            return { x: tx, y: ty };
+        }
+    }
+
+    return getRandomPositionInArena(playerArena);
+}
+
 export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: ShapeType, isBoss: boolean = false, bossTier?: number, isAnomaly: boolean = false) {
     const { player, gameTime } = state;
     const { shapeDef, eraPalette, fluxState } = getProgressionParams(gameTime);
 
     let chosenShape: ShapeType = shape || shapeDef.type as ShapeType;
 
-    let spawnPos = (x !== undefined && y !== undefined) ? { x, y } : { x: player.x, y: player.y };
-    const playerArena = getArenaIndex(player.x, player.y);
-    let found = false;
-
-    if (x === undefined || y === undefined) {
-        for (let i = 0; i < 8; i++) {
-            const a = Math.random() * 6.28;
-            const d = (isBoss ? 1500 : 1200) + Math.random() * 300;
-            const tx = player.x + Math.cos(a) * d;
-            const ty = player.y + Math.sin(a) * d;
-
-            if (isInMap(tx, ty) && getArenaIndex(tx, ty) === playerArena) {
-                spawnPos = { x: tx, y: ty };
-                found = true;
-                break;
-            }
-
-        }
-
-
-
-        if (!found) {
-            spawnPos = getRandomPositionInArena(playerArena);
-        }
-
+    let spawnPos: { x: number, y: number };
+    if (x !== undefined && y !== undefined) {
+        spawnPos = { x, y };
+    } else {
+        spawnPos = getSpawnPosition(state, isBoss);
     }
 
 

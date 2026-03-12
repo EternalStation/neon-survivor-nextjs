@@ -10,6 +10,7 @@ import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { triggerKineticBolt } from '../player/PlayerCombat';
 import { recordDamage, recordHealing } from '../utils/DamageTracking';
+import { applyHealToPlayer } from '../utils/CombatUtils';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 
 export function updateSinglePlayerBullet(

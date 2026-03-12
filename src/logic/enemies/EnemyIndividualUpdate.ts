@@ -375,6 +375,8 @@ export function updateSingleEnemy(
             e.dead = true;
             e.hp = 0;
             if (isVortex) {
+                recordDamage(state, 'Orbital Vortex', e.hp > 0 ? e.hp : e.maxHp);
+                state.player.damageDealt += e.hp > 0 ? e.hp : e.maxHp;
                 spawnParticles(state, e.x, e.y, '#eab308', 8, 4, 30, 'shard');
             } else {
                 spawnParticles(state, e.x, e.y, e.eraPalette?.[0] || e.palette[0], 5, 2, 20);
@@ -466,11 +468,24 @@ export function updateSingleEnemy(
         e.jitterX = 0;
         e.jitterY = 0;
         if (isBuffActive(state, 'STASIS_FIELD')) currentSpd *= 0.8;
+        
+        const mainPlayers = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
+        mainPlayers.forEach(p => {
+            if (p.stasisFieldActive && p.stasisFieldX !== undefined && p.stasisFieldY !== undefined) {
+                const distToZone = Math.hypot(e.x - p.stasisFieldX, e.y - p.stasisFieldY);
+                if (distToZone < 400) {
+                    currentSpd *= 0.5;
+                }
+            }
+        });
+
         if (e.slowFactor) {
             currentSpd *= (1 - e.slowFactor);
             e.slowFactor = 0;
         }
-        if (e.slowUntil && e.slowUntil > state.gameTime) currentSpd *= (1 - (e.slowPercentVal || 0));
+        if (e.slowUntil && e.slowUntil > state.gameTime) {
+            currentSpd *= (1 - (e.slowPercentVal || 0) / 100);
+        }
     }
 
     let v = { vx: 0, vy: 0 };

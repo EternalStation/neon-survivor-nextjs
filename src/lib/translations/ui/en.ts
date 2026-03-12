@@ -358,10 +358,10 @@ export const en = {
         ComWave: { name: 'TERROR PULSE', desc: 'High-frequency sonic resonators that discharge a circular wave of psychological interference and physical force.', skillDesc: 'Discharges a high-frequency sonic wave (Radius: 1500px). Recharges in 30s.' },
         DefPuddle: { name: 'TOXIC SWAMP', desc: 'Chemical dispersal system that saturates the region with corrosive, neuro-inhibiting compounds.', skillDesc: 'Provides an acidic puddle (Radius: 500-600px) for 10s. Recharges in 25s.' },
         DefEpi: { name: 'EPICENTER', desc: 'Gravimetric stabilization unit that drops tectonic energy into localized crystalline spikes.', skillDesc: 'Drops crystalline spikes (Radius: 500px) for 10s. Recharges in 30s.' },
-        CombShield: { name: 'AEGIS PROTOCOL', desc: 'Adaptive plating algorithms that strengthen structural integrity based on combat data.' },
-        KineticBattery: { name: 'KINETIC BATTERY', desc: 'Experimental capacitor bank that stores kinetic impact energy and releases it as devastating shockwaves.' },
-        RadiationCore: { name: 'RADIATION CORE', desc: 'Unstable isotope reactor that emits a lethal 500px radiation aura. Damage intensity scales with proximity.' },
-        ChronoPlating: { name: 'CHRONO PLATING', desc: 'Temporal alloy plating that hardening over time, becoming virtually indestructible the longer you survive.' },
+        EcoShield: { name: 'AEGIS PROTOCOL', desc: 'Adaptive plating algorithms that strengthen structural integrity based on combat data.' },
+        DefBattery: { name: 'KINETIC BATTERY', desc: 'Experimental capacitor bank that stores kinetic impact energy and releases it as devastating shockwaves.' },
+        ComRadiation: { name: 'RADIATION CORE', desc: 'Unstable isotope reactor that emits a lethal 500px radiation aura. Damage intensity scales with proximity.' },
+        DefPlatting: { name: 'CHRONO PLATING', desc: 'Temporal alloy plating that hardening over time, becoming virtually indestructible the longer you survive.' },
         XenoAlchemist: { name: 'THE XENO-ALCHEMIST', desc: 'A volatile fusion of Neural Harvest and Toxic Swamp. Converts your defensive acid puddles into high-yield resource refineries.', skillDesc: 'Generates a massive high-yield refinery puddle (Radius: 600px) that slows and dissolves enemies for 10s. Base Cooldown: 25s.' },
         IrradiatedMire: { name: 'THE IRRADIATED MIRE', desc: 'A volatile fusion of Toxic Swamp and Radiation Core. Saturates the region with lethal isotopes and corrosive acids.', skillDesc: 'Generates a massive acidic puddle (Radius: 666px) for 10s. Your radiation aura and toxic puddle deal +100% increased damage if their damage overlaps. Base Cooldown: 25s.' },
         NeuralSingularity: { name: 'THE NEURAL SINGULARITY', desc: 'A mind-bending fusion of Neural Harvest and Terror Pulse. Extends fear based on your enlightenment.', skillDesc: 'Releases a massive wave of fear. Fear duration increased by 0.1s per 500 XP per kill. Cooldown reduced by 0.1s per level.' },
@@ -375,9 +375,9 @@ export const en = {
         ShatteredCapacitor: { name: 'THE SHATTERED CAPACITOR', desc: '20% of damage dealt arcs as Kinetic Bolt damage to 2 nearby enemies on hit. Applies 15% of Armor as bleed for 3 seconds.', skillDesc: '100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD). Kinetic bolts arc to 2 nearby enemies on projectile hit applying 15% Armor Bleed for 3s.' },
         ChronoDevourer: { name: 'THE CHRONO-DEVOURER', desc: 'A parasitic anomaly that feeds on both temporal energy and biomatter, accelerating your systems with every successful consumption.', skillDesc: 'Zombies have 10% chance to consume enemies on first bite. Zombie kills reduce all active skill cooldowns by 0.03s.' },
         perks: {
-            EcoDMG: ["+0.05 DMG per kill", "+0.02 ATC per kill", "+0.05% DMG per kill", "+0.5% AOE Chance per Player Level (100px)"],
-            EcoXP: ["+0.05 XP per kill", "+0.02 Dust per kill", "+0.05 Flux per kill", "+0.05% XP per kill"],
-            EcoHP: ["+0.05 Max HP per kill", "+0.02 HP/sec per kill", "+0.05% Max HP per kill", "+0.02% HP/sec per kill"],
+            EcoDMG: ["+0.3 DMG per kill", "+0.3 ATC per kill", "+0.3% DMG per kill", "+0.5% AOE Chance per Player Level (100px)"],
+            EcoXP: ["+0.3 XP per kill", "+0.4 Dust per kill", "+0.3 Flux per kill", "+0.3% XP per kill"],
+            EcoHP: ["+0.3 Max HP per kill", "+0.4 HP/sec per kill", "+0.3% Max HP per kill", "+0.4% HP/sec per kill"],
             ComLife: ["+3% Lifesteal of DMG dealt by your Projectiles", "+5s Overheal becomes Shield", "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)", "+10% Zombie Spawn Chance (5s Delay, Feasters)"],
             ComCrit: ["+5% Crit Chance", "2% chance to execute non-bosses on hit", "Death Mark: Bosses/Elites receive additional damage (10s CD)", "2% chance to deal 10% of Boss Max HP on Hit"],
             ComWave: ["+75% of players DMG released in a massive wave around player in 1000 radius", "+1.5s Fear for enemies hit by the wave (STATIC)", "+1% additional DMG to Terror Pulse for each activation (used)", "+3% Movement speed increase for 3 seconds after wave cast"],
@@ -388,10 +388,15 @@ export const en = {
                 "+40% increased dmg to enemies inside ACID"
             ],
             DefEpi: ["+25% of players DMG dealt every second and slows for 50%", "+2% Pull strength towards the center", "+20% Radius grows over 10s", "+5% MAX HP threshold to execute enemy"],
-            CombShield: ["+0.05 Armor per kill", "+0.01% DMG reduction from Collision per kill", "+0.01% DMG reduction from Projectile per kill", "+0.02% Armor per kill"],
-            KineticBattery: ["+100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "+100% Armor granted as Shield every 1 Minute", "+100% Armor increase when HP below 50%", "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
-            RadiationCore: ["+5% of Players MAX HP/sec is dealt to enemies in 500px", "+0.2% MAX HP/sec heals player per enemy in Radiation Aura", "+1% Additional Radiation Aura DMG per 1% of your Missing HP", "0.5% of Current HP/sec enemies lose every sec MAP WIDE"],
-            ChronoPlating: ["+1% of your Armor increased your DMG%", "+1% of your Armor increased your HP%", "+0.25% Cooldown reduction every minute", "+1% of your Armor increased your HP/sec%"],
+            EcoShield: ["+0.3 Armor per kill", "+0.2% DMG reduction from Collision per kill", "+0.2% DMG reduction from Projectile per kill", "+0.3% Armor per kill"],
+            DefBattery: ["+100% Armor DMG Kinetic Bolt (Chain), 10 Targets (On Damage, 8s CD)", "+100% Armor granted as Shield every 1 Minute", "+100% Armor increase when HP below 50%", "+0.5s Stun enemies hit by Kinetic Bolt (Chain)"],
+            ComRadiation: ["+5% of Players MAX HP/sec is dealt to enemies in 500px", "+0.2% MAX HP/sec heals player per enemy in Radiation Aura", "+1% Additional Radiation Aura DMG per 1% of your Missing HP", "0.5% of Current HP/sec enemies lose every sec MAP WIDE"],
+            DefPlatting: [
+                "Time Loop: 10% of all damage taken is delayed and regained over 6s",
+                "Stasis Field: Standing still for 2s creates a 400px zone (+50% Armor, 40% Slow)",
+                "+0.25% Cooldown reduction every minute survived",
+                "Temporal Vitality: 1% of your Armor increases your HP/sec%"
+            ],
             XenoAlchemist: [
                 "GROUP:REFINERY ZONES",
                 "300% XP, Dust and Flux inside Swamp",
@@ -442,9 +447,9 @@ export const en = {
                 "1% Wave Damage for every 100 Souls harvested by Storm of Steel",
                 "0.01s Wave Cooldown reduction for every Soul harvested by Wave",
                 "GROUP:STORM OF STEEL",
-                "+0.05 DMG per kill",
-                "+0.02 ATC per kill",
-                "+0.05% DMG per kill",
+                "+0.3 DMG per kill",
+                "+0.3 ATC per kill",
+                "+0.3% DMG per kill",
                 "+0.5% AOE Chance per Player Level (100px)",
                 "GROUP:TERROR PULSE",
                 "+75% of players DMG released in a massive wave around player in 1000 radius",
@@ -462,9 +467,9 @@ export const en = {
                 "Death Mark: Bosses/Elites receive additional damage (10s CD)",
                 "2% chance to deal 10% of Boss Max HP on Hit",
                 "GROUP:STORM OF STEEL",
-                "+0.05 DMG per kill",
-                "+0.02 ATC per kill",
-                "+0.05% DMG per kill",
+                "+0.3 DMG per kill",
+                "+0.3 ATC per kill",
+                "+0.3% DMG per kill",
                 "+0.5% AOE Chance per Player Level (100px)"
             ],
             BloodForgedCapacitor: [
@@ -507,10 +512,10 @@ export const en = {
                 "+0.01% DMG reduction from Projectile per kill",
                 "+0.02% Armor per kill",
                 "GROUP:CHRONO PLATING",
-                "+1% of your Armor increased your DMG%",
-                "+1% of your Armor increased your HP%",
-                "+0.25% Cooldown reduction every minute",
-                "+1% of your Armor increased your HP/sec%"
+                "Time Loop: 10% of all damage taken is delayed and regained over 6s",
+                "Stasis Field: Standing still for 2s creates a 400px zone (+50% Armor, 40% Slow)",
+                "+0.25% Cooldown reduction every minute survived",
+                "Temporal Vitality: 1% of your Armor increases your HP/sec%"
             ],
             NeutronStar: [
                 "GROUP:EVENT HORIZON",
@@ -567,10 +572,10 @@ export const en = {
                 "+2% additional DMG on Projectiles from Enemy Max HP (Non-Bosses)",
                 "+10% Zombie Spawn Chance (5s Delay, Feasters)",
                 "GROUP:CHRONO PLATING",
-                "+1% of your Armor increased your DMG%",
-                "+1% of your Armor increased your HP%",
-                "+0.25% Cooldown reduction every minute",
-                "+1% of your Armor increased your HP/sec%"
+                "Time Loop: 10% of all damage taken is delayed and regained over 6s",
+                "Stasis Field: Standing still for 2s creates a 400px zone (+50% Armor, 40% Slow)",
+                "+0.25% Cooldown reduction every minute survived",
+                "Temporal Vitality: 1% of your Armor increases your HP/sec%"
             ],
         }
     },

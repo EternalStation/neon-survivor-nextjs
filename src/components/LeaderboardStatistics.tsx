@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import { RadarChart } from './RadarChart';
+import { RARITY_COLORS } from './modules/ModuleUtils';
+import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { getUiTranslation } from '../lib/UiTranslations';
 import { formatLargeNumber } from '../utils/Format';
@@ -192,7 +194,29 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             averagedTotal[cls] = runCount > 0 ? totalSum / runCount : 0;
         });
 
-        return { totalRuns, totalTime, avgTime, topClasses, topUpgrades, topDeaths, totalRadar: totalRadarData, averagedDpm, averagedTotal };
+        const minuteMedians = new Array(61).fill(0).map((_, min) => {
+            const values = Object.values(averagedDpm)
+                .map(hist => hist[min])
+                .filter(v => v > 0)
+                .sort((a, b) => a - b);
+            if (values.length === 0) return 0;
+            const mid = Math.floor(values.length / 2);
+            return values.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+        });
+
+        const classGrowth: Record<string, number> = {};
+        Object.keys(averagedDpm).forEach(cls => {
+            const history = averagedDpm[cls];
+            const deviations: number[] = [];
+            history.forEach((val, min) => {
+                if (val > 0 && minuteMedians[min] > 0) {
+                    deviations.push((val / minuteMedians[min]) - 1);
+                }
+            });
+            classGrowth[cls] = deviations.length > 0 ? (deviations.reduce((a, b) => a + b, 0) / deviations.length) * 100 : 0;
+        });
+
+        return { totalRuns, totalTime, avgTime, topClasses, topUpgrades, topDeaths, totalRadar: totalRadarData, averagedDpm, averagedTotal, classGrowth };
     }, [validEntries, translateDeathCause]);
 
     if (!stats) {
@@ -202,23 +226,76 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
     const { perks: _perks, ...legendaryNamesRaw } = getUiTranslation(language).legendaries;
     const legendaryNames = legendaryNamesRaw as Record<string, LegendaryNameEntry>;
 
-    const getHexImage = (type: string): string => {
-        const lower = type.toLowerCase();
-        if (lower === 'ecodmg') return 'EcoDMG.png';
-        if (lower === 'ecoxp') return 'EcoXP.png';
-        if (lower === 'ecohp') return 'EcoHP.png';
-        if (lower === 'comlife') return 'ComLife.png';
-        if (lower === 'comcrit') return 'ComCrit.png';
-        if (lower === 'comwave') return 'ComWave.png';
-        if (lower === 'defpuddle') return 'DefPuddle.png';
-        if (lower === 'defepi') return 'DefEpi.png';
-        if (lower === 'combshield') return 'EcoArmor.png';
-        if (lower === 'orbital_strike') return 'CosmicBeam.png';
-        if (lower === 'shield_passive') return 'AigisVortex.PNG';
-        if (lower === 'kineticbattery') return 'DefBattery.png';
-        if (lower === 'radiationcore') return 'ComRad.png';
-        if (lower === 'chronoplating') return 'DefChromo.png';
-        return 'MalwarePrime.png';
+  const getHexImage = (type: string) => {
+        if (!type) return '/assets/hexes/MalwarePrime.png';
+
+        const meta = LEGENDARY_UPGRADES[type] ||
+            Object.values(LEGENDARY_UPGRADES).find(v =>
+                v.type.toLowerCase() === type.toLowerCase() ||
+                v.id.toLowerCase() === type.toLowerCase() ||
+                v.name.toLowerCase() === type.toLowerCase()
+            );
+
+        if (meta?.customIcon) return meta.customIcon;
+
+        const map: Record<string, string> = {
+            'EcoDMG': '/assets/hexes/EcoDMG.png',
+            'EcoXP': '/assets/hexes/EcoXP.png',
+            'EcoHP': '/assets/hexes/EcoHP.png',
+            'ComLife': '/assets/hexes/ComLife.png',
+            'ComCrit': '/assets/hexes/ComCrit.png',
+            'ComWave': '/assets/hexes/ComWave.png',
+            'DefPuddle': '/assets/hexes/DefPuddle.png',
+            'DefEpi': '/assets/hexes/DefEpi.png',
+            'EcoShield': '/assets/hexes/EcoShield.png',
+            'DefBattery': '/assets/hexes/DefBattery.png',
+            'ComRadiation': '/assets/hexes/ComRad.png',
+            'DefPlatting': '/assets/hexes/DefChromo.png',
+            'XenoAlchemist': '/assets/Fusions/THE XENO-ALCHEMIST.png',
+            'IrradiatedMire': '/assets/Fusions/THE IRRADIATED MIRE.png',
+            'NeuralSingularity': '/assets/Fusions/THE NEURAL SINGULARITY.png',
+            'KineticTsunami': '/assets/Fusions/THE KINETIC TSUNAMI.png',
+            'SoulShatterCore': '/assets/Fusions/THE SOUL-SHATTER CORE.png',
+            'BloodForgedCapacitor': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
+            'GravityAnchor': '/assets/Fusions/THE GRAVITY ANCHOR.png',
+            'TemporalMonolith': '/assets/Fusions/THE TEMPORAL MONOLITH.png',
+            'NeutronStar': '/assets/Fusions/THE NEUTRON STAR.png',
+            'GravitationalHarvest': '/assets/Fusions/THE GRAVITATIONAL HARVEST.png',
+            'ShatteredCapacitor': '/assets/Fusions/THE SHATTERED CAPACITOR.png',
+            'ChronoDevourer': '/assets/Fusions/THE CHRONO-DEVOURER.png',
+            'orbital_strike': '/assets/hexes/CosmicBeam.png',
+            'shield_passive': '/assets/hexes/AigisVortex.PNG',
+            'blackhole': '/assets/hexes/EventHorizon.png',
+            'nanite_spit': '/assets/hexes/HiveMother.png',
+            'sandbox': '/assets/hexes/MalwarePrime.png'
+        };
+
+        const normalize = (s: string) => s.toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, '');
+        const normalizedType = normalize(type);
+
+        const foundKey = Object.keys(map).find(k => normalize(k) === normalizedType);
+        if (foundKey) return map[foundKey];
+
+        // Explicit fallback for common IDs and Names
+        if (normalizedType === 'ecohp' || normalizedType === 'essencesyphon') return '/assets/hexes/EcoHP.png';
+        if (normalizedType === 'ecodmg' || normalizedType === 'stormofsteel') return '/assets/hexes/EcoDMG.png';
+        if (normalizedType === 'ecoxp' || normalizedType === 'neuralharvest') return '/assets/hexes/EcoXP.png';
+        if (normalizedType === 'comcrit' || normalizedType === 'shatteredfate') return '/assets/hexes/ComCrit.png';
+        if (normalizedType === 'ecoshield' || normalizedType === 'aegisprotocol') return '/assets/hexes/EcoShield.png';
+        if (normalizedType === 'kinetictsunami') return '/assets/Fusions/THE KINETIC TSUNAMI.png';
+        if (normalizedType === 'chronodevourer') return '/assets/Fusions/THE CHRONO-DEVOURER.png';
+        if (normalizedType === 'shatteredcapacitor') return '/assets/Fusions/THE SHATTERED CAPACITOR.png';
+        if (normalizedType === 'temporalmonolith') return '/assets/Fusions/THE TEMPORAL MONOLITH.png';
+        if (normalizedType === 'soulshattercore') return '/assets/Fusions/THE SOUL-SHATTER CORE.png';
+        if (normalizedType === 'xenoalchemist') return '/assets/Fusions/THE XENO-ALCHEMIST.png';
+        if (normalizedType === 'irradiatedmire') return '/assets/Fusions/THE IRRADIATED MIRE.png';
+        if (normalizedType === 'neuralsingularity') return '/assets/Fusions/THE NEURAL SINGULARITY.png';
+        if (normalizedType === 'gravityanchor') return '/assets/Fusions/THE GRAVITY ANCHOR.png';
+        if (normalizedType === 'neutronstar') return '/assets/Fusions/THE NEUTRON STAR.png';
+        if (normalizedType === 'gravitationalharvest') return '/assets/Fusions/THE GRAVITATIONAL HARVEST.png';
+        if (normalizedType === 'bloodforgedcapacitor' || normalizedType === 'necrokineticengine') return '/assets/Fusions/THE NECRO-KINETIC ENGINE.png';
+
+        return '/assets/hexes/MalwarePrime.png';
     };
 
     return (
@@ -280,7 +357,7 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                                 <div className={`upgrade-rank${idx < 3 ? ' upgrade-rank-top' : ''}`}>#{idx + 1}</div>
                                 <img src={`/assets/hexes/${getHexImage(id)}`} alt={id} className="upgrade-icon" />
                                 <div className="upgrade-name">
-                                    {legendaryNames[id]?.name || id}
+                                    {legendaryNames[id]?.name || ((getUiTranslation(language).legendaries as any)?.[id]?.name) || id}
                                 </div>
                                 <div className="upgrade-count">{count}</div>
                             </div>
@@ -350,6 +427,7 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                         { name: 'Hive Mother', id: 'hivemother' }
                     ].map(cls => {
                         const avg = stats.averagedTotal[cls.id] || 0;
+                        const growth = stats.classGrowth[cls.id] || 0;
                         const classColor = getClassColor(cls.id);
                         return (
                             <div key={cls.id} className="meta-card meta-class-card" style={{ '--card-color': classColor } as CardCSSProperties}>
@@ -412,7 +490,10 @@ const DamageLineChart: React.FC<DamageLineChartProps> = ({ data, getClassColor }
             <text x={5} y={height / 2} className="chart-axis-label chart-axis-label-center" transform={`rotate(-90, 5, ${height / 2})`}>AVG. DAMAGE (LOG)</text>
 
             {Object.entries(data).map(([cls, history]) => {
-                const points = history.map((d, min) => `${getX(min)},${getY(d)}`).join(' ');
+                const lastIdx = history.reduce((acc, val, idx) => (val > 0 ? idx : acc), -1);
+                if (lastIdx < 0) return null;
+                const visible = history.slice(0, lastIdx + 1);
+                const points = visible.map((d, min) => `${getX(min)},${getY(d)}`).join(' ');
                 const color = getClassColor(cls);
                 return (
                     <g key={cls} style={{ '--line-color': color } as LineCSSProperties}>
@@ -420,7 +501,7 @@ const DamageLineChart: React.FC<DamageLineChartProps> = ({ data, getClassColor }
                             points={points}
                             className="chart-line"
                         />
-                        {history.map((d, i) => (
+                        {visible.map((d, i) => (
                             <circle key={i} cx={getX(i)} cy={getY(d)} r="2" className="chart-dot" />
                         ))}
                     </g>

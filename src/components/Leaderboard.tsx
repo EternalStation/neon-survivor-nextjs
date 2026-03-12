@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/Client';
 import { RadarChart } from './RadarChart';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
+import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
 import { formatLargeNumber } from '../utils/Format';
 import { useLanguage } from '../lib/LanguageContext';
 import { getUiTranslation, UI_TRANSLATIONS } from '../lib/UiTranslations';
@@ -549,26 +550,65 @@ export default function Leaderboard({ onClose, currentUsername }: LeaderboardPro
                                                                                             <div key={i} className="hex-step-item">
                                                                                                 <div className="hex-icon-wrapper-small">
                                                                                                     <img
-                                                                                                        src={`/assets/hexes/${hexBase.type === 'EcoDMG' ? 'EcoDMG' :
-                                                                                                            hexBase.type === 'EcoXP' ? 'EcoXP' :
-                                                                                                                hexBase.type === 'EcoHP' ? 'EcoHP' :
-                                                                                                                    hexBase.type === 'ComLife' ? 'ComLife' :
-                                                                                                                        hexBase.type === 'ComCrit' ? 'ComCrit' :
-                                                                                                                            hexBase.type === 'ComWave' ? 'ComWave' :
-                                                                                                                                hexBase.type === 'DefPuddle' ? 'DefPuddle' :
-                                                                                                                                    hexBase.type === 'DefEpi' ? 'DefEpi' :
-                                                                                                                                        hexBase.type === 'CombShield' ? 'EcoArmor' :
-                                                                                                                                            hexBase.type === 'orbital_strike' ? 'CosmicBeam' :
-                                                                                                                                                hexBase.type === 'shield_passive' ? 'AigisVortex' :
-                                                                                                                                                    hexBase.type === 'KineticBattery' ? 'DefBattery' :
-                                                                                                                                                        hexBase.type === 'RadiationCore' ? 'ComRad' :
-                                                                                                                                                            hexBase.type === 'ChronoPlating' ? 'DefChromo' :
-                                                                                                                                                                'MalwarePrime'
-                                                                                                            }${hexBase.type === 'shield_passive' ? '.PNG' : '.png'}`}
+                                                                                                        src={(() => {
+                                                                                                            const meta = LEGENDARY_UPGRADES[hexBase.type];
+                                                                                                            if (meta?.customIcon) return meta.customIcon;
+
+                                                                                                            const typeToPath: Record<string, string> = {
+                                                                                                                'EcoDMG': '/assets/hexes/EcoDMG.png',
+                                                                                                                'EcoXP': '/assets/hexes/EcoXP.png',
+                                                                                                                'EcoHP': '/assets/hexes/EcoHP.png',
+                                                                                                                'ComLife': '/assets/hexes/ComLife.png',
+                                                                                                                'ComCrit': '/assets/hexes/ComCrit.png',
+                                                                                                                'ComWave': '/assets/hexes/ComWave.png',
+                                                                                                                'DefPuddle': '/assets/hexes/DefPuddle.png',
+                                                                                                                'DefEpi': '/assets/hexes/DefEpi.png',
+                                                                                                                'EcoShield': '/assets/hexes/EcoShield.png',
+                                                                                                                'orbital_strike': '/assets/hexes/CosmicBeam.png',
+                                                                                                                'shield_passive': '/assets/hexes/AigisVortex.PNG',
+                                                                                                                'blackhole': '/assets/hexes/EventHorizon.png',
+                                                                                                                'nanite_spit': '/assets/hexes/HiveMother.png',
+                                                                                                                'sandbox': '/assets/hexes/MalwarePrime.png',
+                                                                                                                'DefBattery': '/assets/hexes/DefBattery.png',
+                                                                                                                'ComRadiation': '/assets/hexes/ComRad.png',
+                                                                                                                'DefPlatting': '/assets/hexes/DefChromo.png',
+                                                                                                                'XenoAlchemist': '/assets/Fusions/THE XENO-ALCHEMIST.png',
+                                                                                                                'IrradiatedMire': '/assets/Fusions/THE IRRADIATED MIRE.png',
+                                                                                                                'NeuralSingularity': '/assets/Fusions/THE NEURAL SINGULARITY.png',
+                                                                                                                'KineticTsunami': '/assets/Fusions/THE KINETIC TSUNAMI.png',
+                                                                                                                'SoulShatterCore': '/assets/Fusions/THE SOUL-SHATTER CORE.png',
+                                                                                                                'BloodForgedCapacitor': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
+                                                                                                                'GravityAnchor': '/assets/Fusions/THE GRAVITY ANCHOR.png',
+                                                                                                                'TemporalMonolith': '/assets/Fusions/THE TEMPORAL MONOLITH.png',
+                                                                                                                'NeutronStar': '/assets/Fusions/THE NEUTRON STAR.png',
+                                                                                                                'GravitationalHarvest': '/assets/Fusions/THE GRAVITATIONAL HARVEST.png',
+                                                                                                                'ShatteredCapacitor': '/assets/Fusions/THE SHATTERED CAPACITOR.png',
+                                                                                                                'ChronoDevourer': '/assets/Fusions/THE CHRONO-DEVOURER.png',
+                                                                                                                'malware': '/assets/hexes/MalwarePrime.png',
+                                                                                                                'eventhorizon': '/assets/hexes/EventHorizon.png',
+                                                                                                                'stormstrike': '/assets/hexes/CosmicBeam.png',
+                                                                                                                'aigis': '/assets/hexes/AigisVortex.PNG',
+                                                                                                                'hivemother': '/assets/hexes/HiveMother.png'
+                                                                                                            };
+
+                                                                                                            const lookup = (step as any).type || (hexBase as any).type || hexBase.id;
+                                                                                                            if (!lookup) return '/assets/hexes/MalwarePrime.png';
+                                                                                                            const norm = (s: string) => s.toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, '');
+                                                                                                            const normalizedLookup = norm(lookup);
+                                                                                                            const foundKey = Object.keys(typeToPath).find(k => norm(k) === normalizedLookup);
+                                                                                                            if (foundKey) return typeToPath[foundKey];
+                                                                                                            if (normalizedLookup === 'ecohp' || normalizedLookup === 'essencesyphon') return '/assets/hexes/EcoHP.png';
+                                                                                                            if (normalizedLookup === 'ecodmg' || normalizedLookup === 'stormofsteel') return '/assets/hexes/EcoDMG.png';
+                                                                                                            if (normalizedLookup === 'ecoxp' || normalizedLookup === 'neuralharvest') return '/assets/hexes/EcoXP.png';
+                                                                                                            if (normalizedLookup === 'comcrit' || normalizedLookup === 'shatteredfate') return '/assets/hexes/ComCrit.png';
+                                                                                                            if (normalizedLookup === 'ecoshield' || normalizedLookup === 'aegisprotocol') return '/assets/hexes/EcoShield.png';
+
+                                                                                                            return '/assets/hexes/MalwarePrime.png';
+                                                                                                        })()}
                                                                                                         alt={hexBase.name}
                                                                                                     />
                                                                                                 </div>
-                                                                                                <div className="hex-step-level">LVL {step.level}</div>
+                                                                                                <div className="hex-step-level">{step.level === 5 ? 'FUSION' : `LVL ${step.level}`}</div>
                                                                                                 <div className="hex-step-kills">{step.gameTime ? formatTime(step.gameTime) : ''}</div>
                                                                                             </div>
                                                                                         );
