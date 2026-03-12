@@ -341,6 +341,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                 const charges = gameState.activeBlueprintCharges[hoveredBlueprint.type];
                                                 const endTime = gameState.activeBlueprintBuffs[hoveredBlueprint.type];
                                                 const isActive = isBuffActive(gameState, hoveredBlueprint.type);
+                                                const isBroken = hoveredBlueprint.status === 'broken';
 
                                                 if (isActive && charges !== undefined) {
                                                     return (

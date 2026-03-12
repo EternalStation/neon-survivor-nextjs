@@ -13,7 +13,7 @@ import {
     setSfxVolume
 } from '../logic/audio/AudioLogic';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 export const MusicPlayer: React.FC = () => {
     const { language } = useLanguage();

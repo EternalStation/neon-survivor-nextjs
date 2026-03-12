@@ -1,6 +1,6 @@
 import type { GameState, Player } from '../core/Types';
 import { GAME_CONFIG } from '../core/GameConfig';
-import { PLAYER_CLASSES } from '../core/classes';
+import { PLAYER_CLASSES } from '../core/Classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus, getLogarithmicSum } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';

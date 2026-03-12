@@ -157,7 +157,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isXeno = state.moduleSockets.hexagons.some(h => h?.type === 'XenoAlchemist');
                         const isMirePuddle = state.moduleSockets.hexagons.some(h => h?.type === 'IrradiatedMire');
                         const puddleSource = isXeno ? 'Xeno Alchemist (Puddle)' : (isMirePuddle ? 'Irradiated Mire (Puddle)' : (effect.level >= 4 ? 'Toxic Puddle (LVL 4)' : 'Toxic Puddle (LVL 1)'));
-                        recordDamage(state, puddleSource as import('../logic/core/types').DamageSource, dotDmg, e);
+                        recordDamage(state, puddleSource as import('../logic/core/Types').DamageSource, dotDmg, e);
 
                         e.puddleDmgAcc = (e.puddleDmgAcc || 0) + dotDmg;
                         e.puddleDmgTimer = (e.puddleDmgTimer || 0) + step;

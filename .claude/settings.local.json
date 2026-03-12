@@ -11,7 +11,8 @@
       "Read(//c/Users/riot1/.local/bin//**)",
       "Read(//c/Users/riot1/AppData/Local/**)",
       "Bash(rm:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(python3:*)"
     ]
   },
   "outputStyle": "default"

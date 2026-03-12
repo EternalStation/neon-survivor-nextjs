@@ -5,9 +5,6 @@ import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
 import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { getUiTranslation } from '../lib/UiTranslations';
 import { formatLargeNumber } from '../utils/Format';
-import { PLAYER_CLASSES } from '../logic/core/Classes';
-import { getUiTranslation } from '../lib/UiTranslations';
-import { formatLargeNumber } from '../utils/Format';
 import type { Language } from '../lib/LanguageContext';
 import './LeaderboardStatistics.css';
 

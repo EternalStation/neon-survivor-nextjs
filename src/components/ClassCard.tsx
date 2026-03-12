@@ -1,5 +1,5 @@
 import React from 'react';
-import { type PlayerClass } from '../logic/core/types';
+import { type PlayerClass } from '../logic/core/Types';
 
 interface ClassCardProps {
     cls: PlayerClass;
