@@ -16,7 +16,7 @@ import {
 } from '../logic/audio/AudioLogic';
 import { KeybindSettings } from './KeybindSettings';
 import { useLanguage, Language } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface SettingsMenuProps {
     onClose: () => void;

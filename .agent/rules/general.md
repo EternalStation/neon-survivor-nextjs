@@ -20,7 +20,7 @@ This document contains the core rules that the AI assistant must follow for ever
 - **Index.md Integration**: Every new or updated documentation file MUST be accurately indexed in `docs/Index.md`. If a file is missing from `Index.md`, it must be added immediately with a concise description.
 - **Goal**: Maintain a comprehensive and up-to-date archive of all game mechanics, classes, and enemies.
 ## 4. Library & Navigation (`docs/Index.md`)
-- **Primary Map**: Use `docs/Index.md` as the authoritative library and navigation map for the project. 
+- **Primary Map**: Use `docs/Index.md` as the authoritative library and navigation map for the project.
 - **Efficiency**: Consult `Index.md` at the start of every request to identify relevant files efficiently and minimize context/token consumption.
 - **Maintenance**: Continuously optimize the structure and logic of `Index.md`. Ensure it provides the most logical and efficient map of the codebase. Check and refine its structure periodically to maintain peak organization.
 - **Formatting**: Descriptions in `Index.md` must be short, clear, and focused on the file's current behavior.

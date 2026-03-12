@@ -1,9 +1,9 @@
-import type { Enemy, GameState } from '../../core/types';
+import type { Enemy, GameState } from '../../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 import { calcStat, getDefenseReduction, distToSegment } from '../../utils/MathUtils';
 import { applyDamageToPlayer } from '../../utils/CombatUtils';
-import { PALETTES } from '../../core/constants';
+import { PALETTES } from '../../core/Constants';
 
 export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
     let isBerserk = false;
@@ -129,6 +129,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                     if (dist < pSize + 15) {
                         applyDamageToPlayer(state, state.player, fenceDmg, {
                             sourceType: 'other',
+                            incomingDamageSource: 'Diamond Boss',
                             deathCause: `Diamond Boss Level ${e.bossTier} Laser Fence`,
                             killerHp: e.hp,
                             killerMaxHp: e.maxHp,
@@ -229,6 +230,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                     if (d < 60) {
                         applyDamageToPlayer(state, state.player, dmg, {
                             sourceType: 'other',
+                            incomingDamageSource: 'Diamond Boss',
                             deathCause: `Diamond Boss Level ${e.bossTier} Satellite Orbital Beam`,
                             killerHp: e.hp,
                             killerMaxHp: e.maxHp,
@@ -329,6 +331,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                             const finalDmg = e.maxHp * 0.005;
                             applyDamageToPlayer(state, state.player, finalDmg, {
                                 sourceType: 'projectile',
+                                incomingDamageSource: 'Diamond Boss',
                                 deathCause: `Diamond Boss Level ${e.bossTier} Beam Attack`,
                                 killerHp: e.hp,
                                 killerMaxHp: e.maxHp,
@@ -348,6 +351,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
                     const finalDmg = e.maxHp * 0.05;
                     applyDamageToPlayer(state, state.player, finalDmg, {
                         sourceType: 'projectile',
+                        incomingDamageSource: 'Diamond Boss',
                         deathCause: `Diamond Boss Level ${e.bossTier} Beam Attack`,
                         killerHp: e.hp,
                         killerMaxHp: e.maxHp,
@@ -487,6 +491,7 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
                                 const oneShotDmg = maxHp * 1.5;
                                 applyDamageToPlayer(state, state.player, oneShotDmg, {
                                     sourceType: 'collision',
+                                    incomingDamageSource: 'Pentagon Boss',
                                     deathCause: `Pentagon Boss Level ${e.bossTier} Phalanx Drone Charge`,
                                     floatingNumberColor: '#ef4444'
                                 });
@@ -522,6 +527,7 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
 
                         applyDamageToPlayer(state, state.player, realDrain, {
                             sourceType: 'other',
+                            incomingDamageSource: 'Pentagon Boss',
                             deathCause: `Pentagon Boss Level ${e.bossTier} Parasitic Soul Link`,
                             killerHp: e.hp,
                             killerMaxHp: e.maxHp,

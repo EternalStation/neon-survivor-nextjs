@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { GameState } from '../logic/core/types';
+import { GameState } from '../logic/core/Types';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { AssistantEmotion } from '../components/hud/AssistantOverlay';
 import { calculateMeteoriteEfficiency } from '../logic/upgrades/EfficiencyLogic';
@@ -32,8 +32,8 @@ import {
     getAfkLineDeath,
     getAfkFastDeathLine,
     getAfkLineStillAlive,
-} from '../lib/orbitTranslations';
-import { getUiTranslation } from '../lib/uiTranslations';
+} from '../lib/OrbitTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 export interface AssistantMessage {
     text: string;

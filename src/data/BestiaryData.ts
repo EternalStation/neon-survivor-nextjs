@@ -1,4 +1,4 @@
-import type { ShapeType } from '../logic/core/types';
+import type { ShapeType } from '../logic/core/Types';
 
 export interface BestiaryEntry {
     id: string;

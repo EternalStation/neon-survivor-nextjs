@@ -1,0 +1,421 @@
+.panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 600px;
+    height: 100%;
+    bottom: 0;
+    background: rgba(5, 5, 5, 0.98);
+    border-left: 2px solid var(--neon-cyan);
+    box-shadow: -20px 0 50px rgba(0, 0, 0, 1);
+    padding: 10px 30px 30px 30px;
+    z-index: 1500;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.tabBar {
+    display: flex;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 10px;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748b;
+}
+
+.tabSystemActive {
+    background: rgba(34, 211, 238, 0.1);
+    border-bottom: 2px solid #22d3ee;
+    color: #22d3ee;
+}
+
+.tabThreatActive {
+    background: rgba(239, 68, 68, 0.1);
+    border-bottom: 2px solid #ef4444;
+    color: #ef4444;
+}
+
+.sectionHeader {
+    padding: 0 10px 10px 10px;
+    text-align: center;
+    font-weight: 900;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.tabPanel {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+.radarContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.radarWrapper {
+    display: inline-block;
+    padding: 15px 5px 5px 5px;
+}
+
+.statsCalculations {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: -10px;
+}
+
+.sectionDivider {
+    color: #475569;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    padding: 4px 0;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 4px;
+}
+
+.subGroupLabel {
+    color: #334155;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    padding-top: 10px;
+    padding-bottom: 3px;
+}
+
+.subGroupLabelFirst {
+    padding-top: 2px;
+}
+
+.statRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #1e293b;
+}
+
+.statLabel {
+    color: #94a3b8;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.statLabelMuted {
+    color: #475569;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.statValue {
+    color: #fbbf24;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.xpRow {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.xpFinalValue {
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+}
+
+.textMuted {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.textBonus {
+    color: #fbbf24;
+    font-size: 12px;
+}
+
+.textArena {
+    color: #3b82f6;
+    font-size: 12px;
+}
+
+.textPurple {
+    color: #d946ef;
+    font-size: 12px;
+}
+
+.textRefinery {
+    color: #22d3ee;
+    font-size: 12px;
+}
+
+.textGreen {
+    color: #4ade80;
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+}
+
+.classSection {
+    margin-top: 8px;
+}
+
+.classSectionHeader {
+    color: #475569;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    padding: 8px 0 4px 0;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.classNameRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e293b;
+}
+
+.classIcon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px var(--class-color));
+}
+
+.className {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--class-color);
+}
+
+.metricRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    border-bottom: 1px solid #1e293b;
+}
+
+.metricLabelGroup {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.metricLabel {
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.badgeStatic {
+    color: #475569;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.badgeResonant {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--class-color);
+}
+
+.metricValue {
+    font-size: 16px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.specialSection {
+    margin-top: 8px;
+}
+
+.speedRow {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.speedValue {
+    color: #64748b;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.speedMod {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.threatPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.damagePanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+.totalDamageCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.totalDamageValue {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.totalDamageLabel {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--class-color);
+}
+
+.damageList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.noData {
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 40px;
+    letter-spacing: 1px;
+}
+
+.childList {
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: -4px;
+}
+
+.childRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+    align-items: center;
+}
+
+.childRowLabel {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.childRowValue {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--source-color, #94a3b8);
+}
+
+.footer {
+    margin-top: auto;
+    padding-top: 20px;
+    color: #475569;
+    font-size: 10px;
+    text-align: center;
+}
+
+.headerSystem { color: #22d3ee; }
+.headerThreat { color: #f87171; }
+
+.tabPanelHidden { display: none; }
+.tabPanelSystem { display: block; }
+.tabPanelThreat { display: flex; flex-direction: column; gap: 20px; }
+.tabPanelDamage { display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
+
+.statsColumn { display: flex; flex-direction: column; }
+
+.lifestealValue { font-size: 18px; font-weight: 600; }
+.lifestealEnabled { color: #fbbf24; }
+.lifestealDisabled { color: #ef4444; }
+
+.xpNormalMult { color: #94a3b8; font-size: 12px; }
+.xpBlueprintMult { color: #60a5fa; font-size: 12px; }
+.speedClassMult { font-size: 12px; color: var(--class-color); }
+
+.textRefineryValue {
+    color: #22d3ee;
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+}
+
+.tabDamageActive {
+    background: rgba(var(--class-rgb), 0.1);
+    border-bottom: 2px solid var(--class-color);
+    color: var(--class-color);
+}
+
+.tabIncomingActive {
+    background: rgba(239, 68, 68, 0.08);
+    border-bottom: 2px solid #f87171;
+    color: #f87171;
+}
+
+.headerDamage { color: var(--class-color); }
+.headerIncoming { color: #f87171; }
+.tabPanelIncoming { display: flex; flex-direction: column; gap: 16px; padding: 0 0 10px 0; }
+
+.classDiamond { color: var(--class-color); }
+
+.totalDamageCardThemed {
+    background: rgba(var(--class-rgb), 0.1);
+    border: 1px solid rgba(var(--class-rgb), 0.2);
+}
+
+.metricValueResonant { color: var(--class-color); }
+.metricValuePositive { color: var(--class-color); }
+.metricValueNegative { color: #ef4444; }

@@ -1,14 +1,16 @@
 
-import type { GameState, Player } from '../core/types';
+import type { GameState, Player } from '../core/Types';
 import { calcStat, getDefenseReduction } from './MathUtils';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
+import { recordIncomingDamage } from './DamageTracking';
 
 export interface DamageOptions {
     sourceType?: 'collision' | 'projectile' | 'other';
+    incomingDamageSource?: string;
     bypassArmor?: boolean;
     bypassShield?: boolean;
-    onEvent?: (event: string, data?: any) => void;
+    onEvent?: (event: string, data?: unknown) => void;
     triggerDeath?: () => void;
     deathCause?: string;
     killerHp?: number;
@@ -111,6 +113,12 @@ export function applyDamageToPlayer(
         }
         player.damageTaken = (player.damageTaken || 0) + finalDmg;
         player.lastHitDamage = finalDmg;
+
+        const incomingSrc = options.incomingDamageSource
+            || (options.sourceType === 'collision' ? 'Collision'
+            : options.sourceType === 'projectile' ? 'Projectile'
+            : 'Special Attack');
+        recordIncomingDamage(player, incomingSrc, finalDmg);
         if (options.killerHp !== undefined) player.killerHp = options.killerHp;
         if (options.killerMaxHp !== undefined) player.killerMaxHp = options.killerMaxHp;
 

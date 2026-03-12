@@ -84,9 +84,9 @@ export const UI_TRANSLATIONS = {
             metaTopUpgrades: 'POPULAR LEGENDARY UPGRADES',
             metaRadar: 'AVERAGE HARDWARE PROFILE',
             metaDeathCauses: 'FREQUENT CAUSES OF DEATH',
+            metaDamageCharts: 'AVERAGE ACTIVE SKILL DAMAGE PER MINUTE (LOG SCALE)',
             metaNoData: 'INSUFFICIENT DATA (NEED RUNS > 2 MIN)'
         },
-        // Settings Menu
         settings: {
             systemPaused: 'SYSTEM PAUSED',
             systemSettings: 'SYSTEM SETTINGS',
@@ -600,7 +600,10 @@ export const UI_TRANSLATIONS = {
                     "10% of all dmg dealt to you is dealt over 6 seconds",
                     "400px Zone Slow enemies and their projectiles by 50% if you stay in one place for 2 seconds",
                     "+0.25% Cooldown reduction every minute survived",
-                    "1% of your armour increases your HP/sec %"
+                    "1% of your armour increases your HP/sec %",
+                    "+1% of your Armor increased your DMG%",
+                    "+1% of your Armor increased your HP%",
+                    "+1% of your Armor increased your HP/sec%"
                 ],
             }
         },
@@ -693,12 +696,14 @@ export const UI_TRANSLATIONS = {
             tabs: {
                 system: 'SYSTEM',
                 threat: 'THREAT',
-                damage: 'DAMAGE'
+                damage: 'OUTGOING',
+                incoming: 'INCOMING'
             },
             headers: {
                 system: 'SYSTEM DIAGNOSTICS',
                 threat: 'THREAT PROGRESSION',
-                damage: 'DAMAGE ATTRIBUTION'
+                damage: 'OUTGOING DAMAGE',
+                incoming: 'VITALS ANALYSIS'
             },
             labels: {
                 health: 'Health',
@@ -768,6 +773,14 @@ export const UI_TRANSLATIONS = {
                 analysis: 'Real-time Threat Analysis',
                 nextBossHp: 'Next Boss Health',
                 collisionDmg: 'Collision Damage (including your damage reduction)'
+            },
+            vitals: {
+                sectionTitle: 'VITALS ANALYSIS',
+                avgHp: 'AVG HP %',
+                avgHpDesc: 'Running average over session',
+                incomingDmg: 'INCOMING DAMAGE',
+                healingSources: 'HEALING SOURCES',
+                noData: 'NO DATA YET'
             },
             radar: {
                 dps: 'DPS',
@@ -1044,9 +1057,9 @@ export const UI_TRANSLATIONS = {
             metaTopUpgrades: 'ПОПУЛЯРНЫЕ ЛЕГЕНДАРНЫЕ УЛУЧШЕНИЯ',
             metaRadar: 'СРЕДНИЙ ПРОФИЛЬ ОБОРУДОВАНИЯ',
             metaDeathCauses: 'ЧАСТЫЕ ПРИЧИНЫ СМЕРТИ',
+            metaDamageCharts: 'СРЕДНЕЕ DAMAGE ОТ АКТИВНЫХ УМЕНИЙ В МИНУТУ (ЛОГ. ШКАЛА)',
             metaNoData: 'НЕДОСТАТОЧНО ДАННЫХ (НУЖНЫ ЗАБЕГИ > 2 МИН)'
         },
-        // Settings Menu
         settings: {
             systemPaused: 'СИСТЕМА ПРИОСТАНОВЛЕНА',
             systemSettings: 'СИСТЕМНЫЕ НАСТРОЙКИ',
@@ -1641,12 +1654,14 @@ export const UI_TRANSLATIONS = {
             tabs: {
                 system: 'СИСТЕМА',
                 threat: 'УГРОЗА',
-                damage: 'DAMAGE'
+                damage: 'DAMAGE',
+                incoming: 'INCOMING'
             },
             headers: {
                 system: 'ДИАГНОСТИКА СИСТЕМЫ',
                 threat: 'ПРОГРЕССИЯ УГРОЗЫ',
-                damage: 'DAMAGE ATTRIBUTION'
+                damage: 'DAMAGE ATTRIBUTION',
+                incoming: 'VITALS ANALYSIS'
             },
             labels: {
                 health: 'Здоровье',
@@ -1700,6 +1715,14 @@ export const UI_TRANSLATIONS = {
                 analysis: 'Анализ угроз в реальном времени',
                 nextBossHp: 'Здоровье следующего Босса',
                 collisionDmg: 'Урон от столкновения'
+            },
+            vitals: {
+                sectionTitle: 'VITALS ANALYSIS',
+                avgHp: 'AVG HP %',
+                avgHpDesc: 'Running average over session',
+                incomingDmg: 'INCOMING DAMAGE',
+                healingSources: 'HEALING SOURCES',
+                noData: 'NO DATA YET'
             },
             radar: {
                 dps: 'УРОН',

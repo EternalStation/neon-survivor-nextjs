@@ -1,4 +1,4 @@
-import type { Enemy } from './types';
+import type { Enemy } from './Types';
 
 export class SpatialGrid {
     private cellSize: number;

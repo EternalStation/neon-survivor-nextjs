@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '@/api/client';
-import { getTokenFromRequest, verifyToken } from '@/lib/auth';
+import { api } from '@/api/Client';
+import './FeedbackModal.css';
 
 interface Feedback {
     id: number;
@@ -13,6 +13,15 @@ interface Feedback {
 interface FeedbackModalProps {
     onClose: () => void;
     username: string;
+}
+
+function getStatusClassName(status: string): string {
+    const normalized = status.toLowerCase();
+    if (normalized === 'fixed' || normalized === 'implemented') return 'fixed';
+    if (normalized === 'rejected') return 'rejected';
+    if (normalized === 'considered') return 'considered';
+    if (normalized === 'reviewed') return 'reviewed';
+    return 'default';
 }
 
 export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
@@ -57,72 +66,48 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
             setSubmitSuccess(true);
             setMessage('');
             setTimeout(() => setSubmitSuccess(false), 3000);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Failed to submit", error);
-            setErrorMsg('Failed to submit: ' + (error.message || 'Unknown error'));
+            const errMessage = error instanceof Error ? error.message : 'Unknown error';
+            setErrorMsg('Failed to submit: ' + errMessage);
         }
         setLoading(false);
     };
 
     return (
-        <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 100000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto'
-        }} onClick={(e) => e.stopPropagation()}>
-            <div style={{
-                width: '600px', background: '#111', border: '1px solid #333',
-                borderRadius: '8px', padding: '24px', color: '#fff',
-                fontFamily: `'Rajdhani', sans-serif`, position: 'relative'
-            }}>
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute', top: '16px', right: '16px',
-                        background: 'transparent', border: 'none', color: '#888',
-                        fontSize: '24px', cursor: 'pointer'
-                    }}
-                >
+        <div className="feedback-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="feedback-modal">
+                <button onClick={onClose} className="feedback-close-btn">
                     &times;
                 </button>
 
-                <h2 style={{ margin: '0 0 20px 0', fontSize: '24px', color: '#00f3ff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+                <h2 className="feedback-title">
                     Feedback & Bug Reports
                 </h2>
 
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <div className="feedback-tabs">
                     <button
                         onClick={() => setTab('submit')}
-                        style={{
-                            flex: 1, padding: '10px', background: tab === 'submit' ? '#222' : 'transparent',
-                            border: `1px solid ${tab === 'submit' ? '#00f3ff' : '#333'}`,
-                            color: tab === 'submit' ? '#00f3ff' : '#888',
-                            cursor: 'pointer', borderRadius: '4px'
-                        }}
+                        className={`feedback-tab-btn${tab === 'submit' ? ' active' : ''}`}
                     >
                         Submit Feedback
                     </button>
                     <button
                         onClick={() => setTab('history')}
-                        style={{
-                            flex: 1, padding: '10px', background: tab === 'history' ? '#222' : 'transparent',
-                            border: `1px solid ${tab === 'history' ? '#00f3ff' : '#333'}`,
-                            color: tab === 'history' ? '#00f3ff' : '#888',
-                            cursor: 'pointer', borderRadius: '4px'
-                        }}
+                        className={`feedback-tab-btn${tab === 'history' ? ' active' : ''}`}
                     >
                         My Reports
                     </button>
                 </div>
 
                 {tab === 'submit' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div className="feedback-form">
                         <div>
-                            <label style={{ marginRight: '15px' }}>
+                            <label className="feedback-radio-label">
                                 <input
                                     type="radio" name="type" checked={type === 'bug'}
                                     onChange={() => setType('bug')}
-                                    style={{ marginRight: '5px' }}
+                                    className="feedback-radio-input"
                                 />
                                 Report a Bug
                             </label>
@@ -130,7 +115,7 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
                                 <input
                                     type="radio" name="type" checked={type === 'suggestion'}
                                     onChange={() => setType('suggestion')}
-                                    style={{ marginRight: '5px' }}
+                                    className="feedback-radio-input"
                                 />
                                 Submit an Idea
                             </label>
@@ -145,37 +130,26 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
                             autoFocus
                             placeholder="Describe your bug or idea here (max 500 characters)..."
                             maxLength={500}
-                            style={{
-                                width: '100%', height: '150px', padding: '10px',
-                                background: '#1a1a1a', border: '1px solid #333',
-                                color: '#eee', borderRadius: '4px', resize: 'none',
-                                fontFamily: `'Rajdhani', sans-serif`, fontSize: '16px',
-                                boxSizing: 'border-box'
-                            }}
+                            className="feedback-textarea"
                         />
-                        <div style={{ textAlign: 'right', fontSize: '12px', color: message.length >= 500 ? '#ff4444' : '#888' }}>
+                        <div className={`feedback-char-count${message.length >= 500 ? ' limit-reached' : ''}`}>
                             {message.length} / 500
                         </div>
 
                         <button
                             onClick={handleSubmit}
                             disabled={loading || !message.trim()}
-                            style={{
-                                padding: '12px', background: '#00f3ff', color: '#000',
-                                border: 'none', borderRadius: '4px', fontWeight: 'bold',
-                                fontSize: '16px', cursor: loading || !message.trim() ? 'not-allowed' : 'pointer',
-                                opacity: loading || !message.trim() ? 0.5 : 1
-                            }}
+                            className="feedback-submit-btn"
                         >
                             {loading ? 'Submitting...' : 'Submit'}
                         </button>
                         {submitSuccess && (
-                            <div style={{ color: '#00ff00', textAlign: 'center', marginTop: '10px' }}>
+                            <div className="feedback-success">
                                 Feedback submitted successfully!
                             </div>
                         )}
                         {errorMsg && (
-                            <div style={{ color: '#ff4444', textAlign: 'center', marginTop: '10px' }}>
+                            <div className="feedback-error">
                                 {errorMsg}
                             </div>
                         )}
@@ -183,24 +157,18 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
                 )}
 
                 {tab === 'history' && (
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                        {loading && <div style={{ textAlign: 'center', color: '#888' }}>Loading...</div>}
+                    <div className="feedback-history">
+                        {loading && <div className="feedback-loading">Loading...</div>}
                         {!loading && feedbacks.length === 0 && (
-                            <div style={{ textAlign: 'center', color: '#888', padding: '20px' }}>
+                            <div className="feedback-empty">
                                 No feedbacks submitted yet.
                             </div>
                         )}
                         {!loading && feedbacks.map(f => (
-                            <div key={f.id} style={{
-                                padding: '15px', background: '#1a1a1a', border: '1px solid #333',
-                                marginBottom: '10px', borderRadius: '4px'
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{
-                                            color: f.type === 'bug' ? '#ff4444' : '#00ff00',
-                                            fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12px'
-                                        }}>
+                            <div key={f.id} className="feedback-item">
+                                <div className="feedback-item-header">
+                                    <div className="feedback-type-label">
+                                        <span className={`feedback-type ${f.type}`}>
                                             {f.type}
                                         </span>
                                         {f.type === 'bug' && (
@@ -218,20 +186,14 @@ export function FeedbackModal({ onClose, username }: FeedbackModalProps) {
                                             </svg>
                                         )}
                                     </div>
-                                    <span style={{
-                                        color: f.status === 'Fixed' || f.status === 'Implemented' ? '#4ade80' :
-                                            f.status === 'Rejected' ? '#ef4444' :
-                                                f.status === 'Considered' ? '#38bdf8' :
-                                                    f.status === 'Reviewed' ? '#fbbf24' : '#94a3b8',
-                                        fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px'
-                                    }}>
+                                    <span className={`feedback-status ${getStatusClassName(f.status)}`}>
                                         {f.status}
                                     </span>
                                 </div>
-                                <div style={{ color: '#ccc', fontSize: '14px', whiteSpace: 'pre-wrap' }}>
+                                <div className="feedback-message">
                                     {f.message}
                                 </div>
-                                <div style={{ fontSize: '11px', color: '#666', marginTop: '10px', textAlign: 'right' }}>
+                                <div className="feedback-date">
                                     {new Date(f.created_at).toLocaleString()}
                                 </div>
                             </div>

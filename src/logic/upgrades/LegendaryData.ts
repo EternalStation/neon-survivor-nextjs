@@ -1,4 +1,4 @@
-import type { LegendaryHex } from '../core/types';
+import type { LegendaryHex } from '../core/Types';
 
 export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
     EcoDMG: {

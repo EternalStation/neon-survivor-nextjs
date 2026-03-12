@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/types';
+import type { GameState, LegendaryHex, PlayerClass } from '../../logic/core/Types';
 import { calculateMeteoriteEfficiency, getSector } from '../../logic/upgrades/EfficiencyLogic';
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 import type { BestiaryEntry } from '../../data/BestiaryData';
 import { FusionMenu } from './FusionMenu';
 import { playSfx } from '../../logic/audio/AudioLogic';

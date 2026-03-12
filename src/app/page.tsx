@@ -19,14 +19,14 @@ import { LegendarySelectionMenu } from '@/components/LegendarySelectionMenu';
 import { ClassSelection } from '@/components/ClassSelection';
 import { LobbyScreen } from '@/components/LobbyScreen';
 import { AssistantOverlay } from '@/components/hud/AssistantOverlay';
-import { type PlayerClass } from '@/logic/core/types';
-import { PLAYER_CLASSES } from '@/logic/core/classes';
+import { type PlayerClass } from '@/logic/core/Types';
+import { PLAYER_CLASSES } from '@/logic/core/Classes';
 
 import { useGameLoop } from '@/hooks/UseGame';
 import { useWindowScale } from '@/hooks/UseWindowScale';
 import { startBGM, startMenuMusic } from '@/logic/audio/AudioLogic';
-import api from '@/api/client';
-import '@/styles/menu_additions.css';
+import api from '@/api/Client';
+import '@/styles/MenuAdditions.css';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import { initKeybinds } from '@/logic/utils/Keybinds';
 

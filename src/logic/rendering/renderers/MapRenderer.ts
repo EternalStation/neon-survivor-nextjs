@@ -1,4 +1,4 @@
-import type { GameState } from '../../core/types';
+import type { GameState } from '../../core/Types';
 import { ARENA_CENTERS, ARENA_RADIUS, PORTALS, getHexWallLine } from '../../mission/MapLogic';
 import { drawCurvedText } from './TextHelper';
 

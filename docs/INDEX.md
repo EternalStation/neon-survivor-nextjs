@@ -30,6 +30,9 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | [Mechanics/Abilities/DashAbility.md](Mechanics/Abilities/DashAbility.md) | Dash mechanics: Distance (240px), Cooldown (4s), and cyan particle effects. |
 | [Mechanics/Systems/SkillDamageTracking.md](Mechanics/Systems/SkillDamageTracking.md) | Class-specific filtering of active skill damage for the leaderboard. |
 | [Mechanics/Systems/SkillSlotRules.md](Mechanics/Systems/SkillSlotRules.md) | **Skill Slots**: Rules for the 6-slot limit and conditional legendary upgrade pooling. |
+| [Mechanics/LootSystem.md](Mechanics/LootSystem.md) | **Loot & Resources**: Enemy drop rates, Flux/Dust acquisition, and item rewards. |
+| [Mechanics/EnemyCollisionDamage.md](Mechanics/EnemyCollisionDamage.md) | **Collision Damage**: Standardized 7.5% current HP calculation for all enemies. |
+| [Mechanics/RegularUpgrades.md](Mechanics/RegularUpgrades.md) | **Regular Upgrades**: Pool generation, rarity scaling, and base stat values. |
 
 ### Stat Modules
 | File | Description |
@@ -77,9 +80,11 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 
 | File | Description |
 | :--- | :--- |
+| [Enemies/EliteTriangle.md](Enemies/EliteTriangle.md) | **Elite Triangle**: Tactical dash with 0.5s telegraph and high-speed wobbling. |
 | [Enemies/Snitch.md](Enemies/Snitch.md) | **Quantum Snitch**: Rare evasive target with 1HP and tactical teleportation. |
 | [Enemies/Overlord.md](Enemies/Overlord.md) | **The Anomaly**: Multi-phase evolution, HP regeneration, and heat auras. |
 | [Enemies/PentagonBoss.md](Enemies/PentagonBoss.md) | **Pentagon Boss**: Rocket transformations and area-denial fire trails. |
+| [Enemies/DiamondBoss.md](Enemies/DiamondBoss.md) | **Diamond Boss**: Focused beam attacks, orbital satellite strikes, and pentagonal electric fences. |
 | [Mechanics/Visuals/BossSizeAndVisuals.md](Mechanics/Visuals/BossSizeAndVisuals.md) | Scaling multipliers and visual padding to prevent overlap with the Overlord. |
 | [Mechanics/Visuals/EnemyVisuals.md](Mechanics/Visuals/EnemyVisuals.md) | **4-Layer Rendering**: Core, Ring, Body, Outline. Neon era color palettes. |
 | [Mechanics/Visuals/EnemyHpBars.md](Mechanics/Visuals/EnemyHpBars.md) | HP bar rendering logic for Elites and Boss stage separators (33%/66%). |
@@ -94,7 +99,7 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | [Mechanics/Audio/MusicPlayer.md](Mechanics/Audio/MusicPlayer.md) | **Music Player**: BPM folders, track skipping, and persistent liked tracks. |
 | [Mechanics/Audio/SoundEffects.md](Mechanics/Audio/SoundEffects.md) | **Sound Effects**: Real-time synthesis, asset loading, and rarity-tier audio cues. |
 | [Mechanics/UI/MainMenuVisuals.md](Mechanics/UI/MainMenuVisuals.md) | **Main Menu**: Multi-layer canvas with stars, autonomous "Troll" drone, and cinematic Eye Dive transition. |
-| [Mechanics/UI/MenuAnimation.md](Mechanics/UI/MenuAnimation.md) | **Upgrade Menu**: Scanning effect, "DECRYPTING" animations, and 1s initial delay. |
+| [Mechanics/UI/MenuAnimation.md](Mechanics/UI/MenuAnimation.md) | **Upgrade Menu**: Scanning effect, "DECRYPTING" animations, and 0.5s-1.0s initial delay. |
 | [Mechanics/Visuals/MatrixSectorColors.md](Mechanics/Visuals/MatrixSectorColors.md) | Unified purple palette for Sector 01-03 identifiers. |
 | [Mechanics/Core/Cooldown.md](Mechanics/Core/Cooldown.md) | Description of the three disparate cooldown systems used in the game. |
 | [Mechanics/Debug/CheatCodes.md](Mechanics/Debug/CheatCodes.md) | Debug protocols for resources, bosses, and time manipulation. |

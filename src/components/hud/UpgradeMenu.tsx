@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
-import type { GameState, UpgradeChoice } from '../../logic/core/types';
+import type { GameState, UpgradeChoice } from '../../logic/core/Types';
 import { playUpgradeSfx } from '../../logic/audio/AudioLogic';
 import { getKeybinds } from '../../logic/utils/Keybinds';
 import { UpgradeCard } from '../UpgradeCard';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 interface UpgradeMenuProps {
     upgradeChoices: UpgradeChoice[];
@@ -24,7 +24,12 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
     useEffect(() => {
         setSelectedIndex(0);
         setCanSelect(false);
+<<<<<<< HEAD
         const timer = setTimeout(() => setCanSelect(true), 500);
+=======
+        const delay = upgradeChoices[0]?.isSpecial ? 1000 : 500;
+        const timer = setTimeout(() => setCanSelect(true), delay);
+>>>>>>> origin/main
         return () => clearTimeout(timer);
     }, [upgradeChoices]);
 

@@ -1,4 +1,4 @@
-import type { GameState, GameEventType, GameEvent } from '../core/types';
+import type { GameState, GameEventType, GameEvent } from '../core/Types';
 import { playSfx } from '../audio/AudioLogic';
 
 const CHECK_INTERVAL = 120;

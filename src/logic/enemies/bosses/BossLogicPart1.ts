@@ -1,4 +1,4 @@
-import type { Enemy, GameState } from '../../core/types';
+import type { Enemy, GameState } from '../../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic';
 import { playSfx } from '../../audio/AudioLogic';
 

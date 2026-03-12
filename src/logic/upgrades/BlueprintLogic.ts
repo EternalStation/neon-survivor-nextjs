@@ -1,4 +1,4 @@
-import type { GameState, Blueprint, BlueprintType, PlayerStats } from '../core/types';
+import type { GameState, Blueprint, BlueprintType, PlayerStats } from '../core/Types';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 

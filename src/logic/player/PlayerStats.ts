@@ -1,6 +1,7 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { calcStat } from '../utils/MathUtils';
+import { recordHealing } from '../utils/DamageTracking';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
@@ -12,7 +13,6 @@ import { applyHealToPlayer } from '../utils/CombatUtils';
 export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     const player = overridePlayer || state.player;
     const curseMult = state.assistant.history.curseIntensity || 1.0;
-
 
     player.hp.hexFlat = calculateLegendaryBonus(state, 'hp_per_kill', false, player);
     player.hp.hexMult = calculateLegendaryBonus(state, 'hp_pct_per_kill', false, player);
@@ -49,7 +49,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     }
 
 
-    (player as any).inRefineryZone = false;
+    player.inRefineryZone = false;
     const alchemist = state.moduleSockets.hexagons.find(h => h?.type === 'XenoAlchemist');
     if (alchemist) {
         const playerInPuddle = state.areaEffects.some(ae =>
@@ -57,7 +57,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
             Math.hypot(ae.x - player.x, ae.y - player.y) < ae.radius
         );
         if (playerInPuddle) {
-            (player as any).inRefineryZone = true;
+            player.inRefineryZone = true;
         }
     }
 
@@ -108,9 +108,6 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
         player.atk.hexMult = (player.atk.hexMult || 0) + surge.atk;
     }
 
-    if (player.buffs?.vitalRecovery && state.gameTime < player.buffs.vitalRecovery) {
-        state.hpRegenBuffMult *= 1.2;
-    }
 
 
     const kinLvl = getHexLevel(state, 'DefBattery');
@@ -147,25 +144,24 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
 
         player.cooldownReduction += minutes * 0.0025 * mult;
     }
-
-
-
-
     if (player.healingDisabled) {
         regenAmount = 0;
     }
 
     if (player.timeLoopPool && player.timeLoopPool > 0) {
-        const tickDmg = player.timeLoopPool / (6 * 60); // 6 seconds at 60fps
-        player.curHp = Math.max(0.1, player.curHp - tickDmg); // Leave at least 0.1 to avoid instant death from dot?
-        // Actually, dots can kill. But I'll leave 0.1 for now or just let it kill.
-        // I'll use 0 to allow death.
+        const tickDmg = player.timeLoopPool / (6 * 60);
+        player.curHp = Math.max(0.1, player.curHp - tickDmg);
         player.timeLoopPool -= tickDmg;
         if (player.timeLoopPool < 0.01) player.timeLoopPool = 0;
     }
 
     if (regenAmount > 0) {
         applyHealToPlayer(state, player, regenAmount, 'regen');
+    }
+
+    if (maxHp > 0) {
+        player.avgHpAccumulator = (player.avgHpAccumulator || 0) + (player.curHp / maxHp) * 100;
+        player.avgHpSampleCount = (player.avgHpSampleCount || 0) + 1;
     }
 
 

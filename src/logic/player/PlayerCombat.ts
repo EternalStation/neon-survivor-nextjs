@@ -1,6 +1,6 @@
 
-import type { GameState, Enemy, Player } from '../core/types';
-import { getPlayerThemeColor } from '../utils/helpers';
+import type { GameState, Enemy, Player } from '../core/Types';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx } from '../audio/AudioLogic';
@@ -11,7 +11,7 @@ import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
 import { spawnBullet } from '../combat/ProjectileSpawning';
-import { recordDamage } from '../utils/DamageTracking';
+import { recordDamage, recordHealing } from '../utils/DamageTracking';
 import { applyDamageToPlayer, applyHealToPlayer } from '../utils/CombatUtils';
 
 export function handlePlayerCombat(
@@ -58,7 +58,6 @@ export function handlePlayerCombat(
             const playerMaxHp = calcStat(player.hp, state.hpRegenBuffMult, curseMult);
             const enemiesInAura: Enemy[] = [];
 
-            // Pre-filter puddles outside the loop for performance
             const puddles = mireActive ? state.areaEffects.filter(ef => ef.type === 'puddle') : [];
 
             state.enemies.forEach(e => {
@@ -113,9 +112,8 @@ export function handlePlayerCombat(
                         e.hp -= finalTickDmg;
                         player.damageDealt += finalTickDmg;
                         const auraSrc = neutronActive ? 'Neutron Star (Aura)' : (mireActive ? 'Irradiated Mire (Aura)' : 'Radiation Aura');
-                        recordDamage(state, auraSrc as import('../core/types').DamageSource, finalTickDmg, e);
+                        recordDamage(state, auraSrc as import('../core/Types').DamageSource, finalTickDmg, e);
 
-                        // Disable text for global damage to avoid heavy performance hit
                         const shouldShowText = inRange ? (Math.random() < 0.3) : false;
 
                         if (shouldShowText) {
@@ -224,7 +222,7 @@ export function handleEnemyContact(
                 const isLinked = e.soulLinkHostId !== undefined || (e.soulLinkTargets && e.soulLinkTargets.length > 0);
                 if (isLinked) {
                     const linkColor = getPlayerThemeColor(state);
-                    rawDmg = e.hp * 0.30;
+                    rawDmg = e.hp * 0.075;
                     let linkedTargets: Enemy[] = [];
                     if (e.soulLinkHostId) {
                         const host = state.enemies.find(h => h.id === e.soulLinkHostId && !h.dead);
@@ -245,34 +243,23 @@ export function handleEnemyContact(
                     });
                     if (!e.boss) e.hp = 0;
                 } else if (e.shape === 'minion' && e.parentId !== undefined) {
-                    const mother = state.enemies.find(m => m.id === e.parentId && !m.dead);
-
-                    rawDmg = (mother ? mother.hp : e.hp) * (e.stunOnHit ? GAME_CONFIG.ENEMY.MINION_STUN_DAMAGE_RATIO : GAME_CONFIG.ENEMY.MINION_DAMAGE_RATIO);
-                } else if (e.customCollisionDmg !== undefined) {
-                    const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
-                    rawDmg = playerMaxHp * (e.customCollisionDmg / 100) * (e.hp / e.maxHp);
+                    rawDmg = e.hp * 0.075;
                 } else {
-
-                    if (e.boss && e.shape === 'triangle' && e.isLevel4) {
-                        const playerMaxHp = calcStat(player.hp, 1.0, curseMult);
-                        rawDmg = playerMaxHp * 0.15;
-                        e.wormTrueDamage = 15;
-                    } else {
-                        rawDmg = e.hp * 0.075;
-                    }
-                }
-
-                if (e.boss && !e.isLevel4) {
-                    if (!e.isAnomaly) rawDmg *= 1.5;
+                    rawDmg = e.hp * 0.075;
                 }
             }
 
 
             const finalDmg = applyDamageToPlayer(state, player, rawDmg, {
                 sourceType: 'collision',
+                incomingDamageSource: e.boss
+                    ? e.shape.charAt(0).toUpperCase() + e.shape.slice(1) + ' Boss'
+                    : e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                 onEvent,
                 triggerDeath: () => handlePlayerLethalHit(state, e, onEvent, triggerDeath),
-                deathCause: '' // handeled by handlePlayerLethalHit
+                deathCause: '',
+                killerHp: e.hp,
+                killerMaxHp: e.maxHp
             });
 
             if (kinLvl >= 1) triggerKineticBatteryZap(state, player);
@@ -367,7 +354,7 @@ export function triggerHiveMotherCone(state: GameState, player: Player, cursorX:
     playSfx('shoot');
 }
 
-export function spawnNanitesFromCloud(state: GameState, effect: import('../core/types').AreaEffect) {
+export function spawnNanitesFromCloud(state: GameState, effect: import('../core/Types').AreaEffect) {
     const owner = state.players?.[effect.ownerId!] || state.player;
     const count = effect.naniteCount || 20;
     const dmg = effect.naniteDmg || 1;
@@ -654,7 +641,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 target.hp -= zap.dmg;
                 state.player.damageDealt += zap.dmg;
 
-                let source: import('../core/types').DamageSource = 'Kinetic Bolt (LVL 1)';
+                let source: import('../core/Types').DamageSource = 'Kinetic Bolt (LVL 1)';
                 if (zap.color === '#4ade80') {
                     const bloodLvl = getHexLevel(state, 'BloodForgedCapacitor');
                     source = bloodLvl > 0 ? 'Necro-Kinetic Engine' : 'Crimson Feast (LVL 4)';

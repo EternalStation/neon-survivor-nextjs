@@ -1,11 +1,11 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { isInMap, getHexDistToWall, ARENA_CENTERS } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
 import { recordDamage } from '../utils/DamageTracking';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { calcStat } from '../utils/MathUtils';
 import { GAME_CONFIG } from '../core/GameConfig';
@@ -79,6 +79,9 @@ export function updateSingleEnemy(
                     const dmg = calcStat(p.hp) * currentBurnPct;
                     applyDamageToPlayer(state, p, dmg, {
                         sourceType: 'other',
+                        incomingDamageSource: e.boss
+                            ? e.shape.charAt(0).toUpperCase() + e.shape.slice(1) + ' Boss'
+                            : e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                         deathCause: "Overlord Burn"
                     });
                 }
@@ -142,6 +145,7 @@ export function updateSingleEnemy(
                 const oneShotDmg = calcStat(state.player.hp) * 1.5;
                 applyDamageToPlayer(state, state.player, oneShotDmg, {
                     sourceType: 'collision',
+                    incomingDamageSource: 'Pentagon Boss',
                     deathCause: `Pentagon Boss Level ${(host && host.bossTier) || 1} Phalanx Drone Charge`,
                     floatingNumberColor: '#ef4444'
                 });
@@ -163,6 +167,7 @@ export function updateSingleEnemy(
                 const dmg = calcStat(state.player.hp) * 0.4;
                 applyDamageToPlayer(state, state.player, dmg, {
                     sourceType: 'collision',
+                    incomingDamageSource: 'Pentagon Boss',
                     deathCause: `Pentagon Boss Rocket Projectile`,
                     floatingNumberColor: '#ef4444'
                 });
@@ -514,7 +519,7 @@ export function updateSingleEnemy(
     } else if (e.isElite) {
         switch (e.shape) {
             case 'circle': v = updateEliteCircle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
-            case 'triangle': v = updateEliteTriangle(e, state, dist, dx, dy, currentSpd, pushX, pushY); break;
+            case 'triangle': v = updateEliteTriangle(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY); break;
             case 'square': v = updateEliteSquare(e, state, currentSpd, dx, dy, pushX, pushY); break;
             case 'diamond': v = updateEliteDiamond(e, state, state.player, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;
             case 'pentagon': v = updateElitePentagon(e, state, dist, dx, dy, currentSpd, pushX, pushY, onEvent); break;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { GameState, UpgradeChoice } from '../logic/core/types';
+import type { GameState, UpgradeChoice } from '../logic/core/Types';
 import { calcStat } from '../logic/utils/MathUtils';
 import { getArenaIndex, SECTOR_NAMES } from '../logic/mission/MapLogic';
 import { Minimap } from './Minimap';
@@ -16,9 +16,9 @@ import { IncubatorMonitor } from './hud/IncubatorMonitor';
 import { SpotlightOverlay } from './common/SpotlightOverlay';
 import { AssistantOverlay } from './hud/AssistantOverlay';
 import { getKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
-import { TutorialStep } from '../logic/core/types';
+import { TutorialStep } from '../logic/core/Types';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 
 interface HUDProps {

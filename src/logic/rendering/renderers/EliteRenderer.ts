@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 
 export function renderEliteEffects(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     if (!e.isElite) return;
@@ -45,31 +45,23 @@ export function renderEliteEffects(ctx: CanvasRenderingContext2D, e: Enemy, stat
         }
     }
 
-    if (e.shape === 'pentagon') {
-        ctx.save();
-        ctx.translate(e.x, e.y);
-        if (e.rotationPhase) ctx.rotate(e.rotationPhase);
 
-        const glowSize = e.size * 2.2;
-        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
-        grad.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
-        grad.addColorStop(0.5, 'rgba(34, 211, 238, 0.05)');
-        grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (state.frameCount % 5 === 0) {
-            const rx = (Math.random() - 0.5) * e.size * 2;
-            const ry = (Math.random() - 0.5) * e.size * 2;
-            ctx.fillStyle = '#22d3ee';
-            ctx.globalAlpha = 0.6;
+    if (e.shape === 'triangle') {
+        if (e.eliteState === 1) {
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            const pulse = 1.2 + Math.sin(state.gameTime * 20) * 0.3;
+            ctx.strokeStyle = '#EF4444';
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.6 + Math.sin(state.gameTime * 20) * 0.4;
             ctx.beginPath();
-            ctx.arc(rx, ry, 2, 0, Math.PI * 2);
-            ctx.fill();
+            const warningSize = e.size * pulse;
+            ctx.moveTo(0, -warningSize);
+            ctx.lineTo(warningSize * 0.866, warningSize * 0.5);
+            ctx.lineTo(-warningSize * 0.866, warningSize * 0.5);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
         }
-        ctx.restore();
     }
 }

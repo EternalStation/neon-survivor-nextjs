@@ -1,5 +1,6 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql } from '@/lib/Db';
 
 export async function GET(
     request: NextRequest,
@@ -20,6 +21,9 @@ export async function GET(
             await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_collision NUMERIC DEFAULT 0`;
             await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_projectile NUMERIC DEFAULT 0`;
             await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS damage_blocked_shield NUMERIC DEFAULT 0`;
+            await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS avg_hp_percent NUMERIC DEFAULT 100`;
+            await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS incoming_damage_breakdown JSONB DEFAULT '{}'::jsonb`;
+            await sql`ALTER TABLE game_runs ADD COLUMN IF NOT EXISTS healing_breakdown JSONB DEFAULT '{}'::jsonb`;
         } catch (e) {
             // Ignore migration errors
         }
@@ -33,7 +37,8 @@ export async function GET(
                 gr.damage_blocked_shield,
                 gr.radar_counts, gr.portals_used, gr.hex_levelup_order,
                 gr.snitches_caught, gr.death_cause, gr.patch_version, gr.final_stats, gr.blueprints,
-                gr.damage_breakdown, gr.class_skill_dmg_history
+                gr.damage_breakdown, gr.class_skill_dmg_history,
+                gr.avg_hp_percent, gr.incoming_damage_breakdown, gr.healing_breakdown
             FROM game_runs gr
             JOIN players p ON gr.player_id = p.id
             WHERE gr.patch_version = ${version}

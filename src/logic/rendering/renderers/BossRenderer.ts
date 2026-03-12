@@ -1,7 +1,7 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 import { spawnParticles } from '../../effects/ParticleLogic';
-import { PALETTES } from '../../core/constants';
-import { formatLargeNumber } from '../../../utils/format';
+import { PALETTES } from '../../core/Constants';
+import { formatLargeNumber } from '../../../utils/Format';
 
 export function renderAnomalyAura(ctx: CanvasRenderingContext2D, e: Enemy, state: GameState) {
     if (!e.isAnomaly || e.dead) return;

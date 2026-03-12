@@ -1,4 +1,4 @@
-import type { Enemy, GameState } from '../core/types';
+import type { Enemy, GameState } from '../core/Types';
 import { updateAbominationBoss, updateSquareBoss, updateCircleBoss } from './bosses/BossLogicPart1';
 import { updateTriangleBoss, updateDiamondBoss, updatePentagonBoss } from './bosses/BossLogicPart2';
 

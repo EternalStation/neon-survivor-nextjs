@@ -1,4 +1,4 @@
-import { GameState, Bullet, Player } from '../core/types';
+import { GameState, Bullet, Player } from '../core/Types';
 import { isInMap } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
@@ -91,6 +91,9 @@ export function updateSingleEnemyBullet(
         if (Math.hypot(p.x - eb.x, p.y - eb.y) < p.size + 10) {
             const finalDmg = applyDamageToPlayer(state, p, eb.dmg, {
                 sourceType: 'projectile',
+                incomingDamageSource: eb.sourceShape
+                    ? eb.sourceShape.charAt(0).toUpperCase() + eb.sourceShape.slice(1)
+                    : 'Projectile',
                 onEvent,
                 triggerDeath,
                 deathCause: 'Enemy Projectile'

@@ -1,4 +1,4 @@
-import type { GameState, LegendaryHex } from '../core/types';
+import type { GameState, LegendaryHex } from '../core/Types';
 import { syncLegendaryHex } from './LegendaryLogic';
 import { LEGENDARY_UPGRADES } from './LegendaryData';
 import { GAME_CONFIG } from '../core/GameConfig';

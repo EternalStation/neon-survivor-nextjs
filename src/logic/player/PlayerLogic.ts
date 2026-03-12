@@ -1,6 +1,6 @@
 
-import type { GameState } from '../core/types';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/constants';
+import type { GameState } from '../core/Types';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/Constants';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { handlePlayerMovement } from './PlayerMovement';
 import { updatePlayerStats } from './PlayerStats';
@@ -44,7 +44,7 @@ export function updatePlayer(
 
 
     if (player.activeSkills) {
-        player.activeSkills.forEach((skill: import('../core/types').ActiveSkill) => {
+        player.activeSkills.forEach((skill: import('../core/Types').ActiveSkill) => {
             if (skill.duration && skill.duration > 0) {
                 skill.duration -= 1 / 60;
                 if (skill.duration <= 0) {
@@ -82,7 +82,7 @@ export function updatePlayer(
         const tickBonus = (1 / 60) * recoveryBonusRate;
 
         if (player.activeSkills) {
-            player.activeSkills.forEach((s: import('../core/types').ActiveSkill) => {
+            player.activeSkills.forEach((s: import('../core/Types').ActiveSkill) => {
                 s.lastUsed -= tickBonus;
             });
         }

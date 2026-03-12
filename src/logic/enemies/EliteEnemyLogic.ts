@@ -1,4 +1,4 @@
-import type { GameState, Enemy } from '../core/types';
+import type { GameState, Enemy } from '../core/Types';
 import { ARENA_CENTERS, ARENA_RADIUS } from '../mission/MapLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
@@ -49,22 +49,62 @@ export function updateEliteCircle(e: Enemy, state: GameState, player: any, dist:
     return { vx, vy };
 }
 
-export function updateEliteTriangle(e: Enemy, state: GameState, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
+export function updateEliteTriangle(e: Enemy, state: GameState, player: any, dist: number, dx: number, dy: number, currentSpd: number, pushX: number, pushY: number) {
     let vx = 0, vy = 0;
     if (!e.eliteState) e.eliteState = 0;
+
     if (e.eliteState === 0) {
-        if ((!e.timer || state.gameTime > e.timer) && dist < 600) {
-            e.eliteState = 1; e.timer = state.gameTime + 2.0;
-        }
         const a = Math.atan2(dy, dx);
         vx = Math.cos(a) * currentSpd + pushX; vy = Math.sin(a) * currentSpd + pushY;
-    } else {
-        e.rotationPhase = (e.rotationPhase || 0) + 0.5;
-        const a = Math.atan2(dy, dx) + Math.sin(state.gameTime * 20) * 0.5;
-        const fast = currentSpd * 1.75;
-        vx = Math.cos(a) * fast + pushX; vy = Math.sin(a) * fast + pushY;
+
+        if ((!e.timer || state.gameTime > e.timer) && dist < 600) {
+            e.eliteState = 1; e.timer = state.gameTime + 0.7;
+            e.dashState = 1;
+            playSfx('warning');
+            vx = 0; vy = 0; e.jitterX = 0; e.jitterY = 0;
+        } else {
+            e.jitterX = 0; e.jitterY = 0;
+        }
+    } else if (e.eliteState === 1) {
+        vx = 0; vy = 0;
+        e.rotationPhase = (e.rotationPhase || 0) + 0.25;
+        e.dashState = 1;
+        e.jitterX = (Math.random() - 0.5) * 6;
+        e.jitterY = (Math.random() - 0.5) * 6;
+
         if (state.gameTime > (e.timer || 0)) {
-            e.eliteState = 0; e.timer = state.gameTime + 5.0 + Math.random() * 2.0;
+            const players = (state.players && Object.keys(state.players).length > 0) ? Object.values(state.players) : [state.player];
+            let nearestP: any = players[0];
+            let minD = Infinity;
+            players.forEach(p => {
+                const d = Math.hypot(p.x - e.x, p.y - e.y);
+                if (d < minD) { minD = d; nearestP = p; }
+            });
+
+            const ta = Math.atan2(nearestP.y - e.y, nearestP.x - e.x);
+            e.lockedTargetX = nearestP.x + Math.cos(ta) * 300;
+            e.lockedTargetY = nearestP.y + Math.sin(ta) * 300;
+            e.eliteState = 2;
+            e.timer = state.gameTime + 1.5;
+            e.jitterX = 0; e.jitterY = 0;
+        }
+    } else if (e.eliteState === 2) {
+        e.dashState = 1; e.jitterX = 0; e.jitterY = 0;
+        if (e.lockedTargetX !== undefined && e.lockedTargetY !== undefined) {
+            const rDx = e.lockedTargetX - e.x, rDy = e.lockedTargetY - e.y, rDist = Math.hypot(rDx, rDy);
+
+            if (rDist > 10 && state.gameTime < (e.timer || 0)) {
+                e.rotationPhase = (e.rotationPhase || 0) + 0.6;
+                const a = Math.atan2(rDy, rDx) + Math.sin(state.gameTime * 20) * 0.3;
+                vx = Math.cos(a) * 10; vy = Math.sin(a) * 10;
+            } else {
+                e.eliteState = 0;
+                e.timer = state.gameTime + 4.0 + Math.random() * 2.0;
+                e.lockedTargetX = undefined; e.lockedTargetY = undefined;
+                e.dashState = 0;
+            }
+        } else {
+            e.eliteState = 0; e.dashState = 0;
         }
     }
     return { vx, vy };
@@ -179,6 +219,7 @@ export function updateEliteDiamond(e: Enemy, state: GameState, player: any, dist
 
                 applyDamageToPlayer(state, p, rawDmg, {
                     sourceType: 'projectile',
+                    incomingDamageSource: e.shape.charAt(0).toUpperCase() + e.shape.slice(1),
                     onEvent,
                     deathCause: 'Incinerated by Elite Diamond Laser',
                     killerHp: e.hp,

@@ -1,4 +1,4 @@
-import type { GameState, Player } from '../core/types';
+import type { GameState, Player } from '../core/Types';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus, getLogarithmicSum } from '../upgrades/LegendaryLogic';
@@ -7,8 +7,8 @@ import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
-import { PALETTES } from '../core/constants';
-import { getPlayerThemeColor } from '../utils/helpers';
+import { PALETTES } from '../core/Constants';
+import { getPlayerThemeColor } from '../utils/Helpers';
 import { networkManager } from '../networking/NetworkManager';
 
 
@@ -287,7 +287,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
     }
 }
 
-export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000') {
+export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: number, dmg: number, _color: string = '#FF0000', sourceShape?: string) {
     const spd = GAME_CONFIG.PROJECTILE.ENEMY_BULLET_SPEED * (state.gameSpeedMult ?? 1);
 
 

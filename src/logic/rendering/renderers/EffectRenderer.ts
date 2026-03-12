@@ -1,4 +1,4 @@
-import type { GameState } from '../../core/types';
+import type { GameState } from '../../core/Types';
 import { calcStat } from '../../utils/MathUtils';
 
 export function renderAreaEffects(ctx: CanvasRenderingContext2D, state: GameState) {

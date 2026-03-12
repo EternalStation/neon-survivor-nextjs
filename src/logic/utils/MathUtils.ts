@@ -1,4 +1,4 @@
-import type { PlayerStats } from '../core/types';
+import type { PlayerStats } from '../core/Types';
 
 export function calcStat(s: PlayerStats, arenaMult: number = 1, curseMult: number = 1): number {
     const baseSum = s.base + s.flat + (s.hexFlat || 0);

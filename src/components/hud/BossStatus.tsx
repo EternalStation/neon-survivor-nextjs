@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import type { GameState } from '../../logic/core/types';
-import { formatLargeNumber } from '../../utils/format';
+import type { GameState } from '../../logic/core/Types';
+import { formatLargeNumber } from '../../utils/Format';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getUiTranslation } from '../../lib/uiTranslations';
+import { getUiTranslation } from '../../lib/UiTranslations';
 
 
 interface BossStatusProps {

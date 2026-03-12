@@ -12,5 +12,5 @@ export const FUSIONS = [
     { id: 'NeutronStar', result: 'NeutronStar', bases: ['EcoHP', 'ComRadiation'], perform: MergeLogic.performNeutronStarMerge },
     { id: 'GravitationalHarvest', result: 'GravitationalHarvest', bases: ['EcoHP', 'DefEpi'], perform: MergeLogic.performGravitationalHarvestMerge },
     { id: 'ShatteredCapacitor', result: 'ShatteredCapacitor', bases: ['ComCrit', 'DefBattery'], perform: MergeLogic.performShatteredCapacitorMerge },
-    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'DefPlatting'], perform: MergeLogic.performChronoDevourerMerge }
+    { id: 'ChronoDevourer', result: 'ChronoDevourer', bases: ['ComLife', 'DefPlatting'], perform: MergeLogic.performChronoDevourerMerge },
 ];

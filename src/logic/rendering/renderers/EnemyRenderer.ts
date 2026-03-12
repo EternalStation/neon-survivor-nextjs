@@ -1,11 +1,11 @@
-import type { GameState, Enemy } from '../../core/types';
+import type { GameState, Enemy } from '../../core/Types';
 import { getShellVisibility } from '../ColorPalettes';
-import { PALETTES } from '../../core/constants';
+import { PALETTES } from '../../core/Constants';
 import { renderAnomalyAura, renderBossSkills, renderLegionShield, renderBossBodyPre, renderBossBodyPost } from './BossRenderer';
 import { renderEliteEffects } from './EliteRenderer';
 import { renderUniqueEnemy } from './UniqueEnemyRenderer';
 import { renderBossDistortion, drawDistortedBossShape, renderBossAfterglow, drawAbominationPath } from './BossVisualFX';
-import { renderCircleSoulSuck, renderOrbitalShield, renderDiamondBeamChargeUp, renderDiamondSatelliteStrike, renderPentagonSoulLinks, renderPentagonParasiteLink, renderPhalanxDrone } from './BossSkillRenderer';
+import { renderCircleSoulSuck, renderOrbitalShield, renderDiamondBeamChargeUp, renderDiamondSatelliteStrike, renderDiamondCrystalFence, renderPentagonSoulLinks, renderPentagonParasiteLink, renderPhalanxDrone } from './BossSkillRenderer';
 import { renderMergeConnections } from './MergeRenderer';
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, meteoriteImages: Record<string, HTMLImageElement>) {
@@ -29,6 +29,7 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
             renderCircleSoulSuck(ctx, e, state);
             renderDiamondBeamChargeUp(ctx, e, state);
             renderDiamondSatelliteStrike(ctx, e, state);
+            renderDiamondCrystalFence(ctx, e, state);
             renderPentagonSoulLinks(ctx, e, state);
             renderPentagonParasiteLink(ctx, e, state);
         }
@@ -151,13 +152,6 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, m
         }
 
 
-        if (e.isElite && e.shape === 'pentagon') {
-            ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth = 3;
-            ctx.globalAlpha = 0.4 + Math.sin(state.gameTime * 5) * 0.2;
-            ctx.stroke();
-            ctx.globalAlpha = 1.0;
-        }
 
 
         ctx.beginPath();

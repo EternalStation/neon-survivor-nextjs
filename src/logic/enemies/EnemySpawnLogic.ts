@@ -1,6 +1,6 @@
 
-import type { GameState, Enemy, ShapeType } from '../core/types';
-import { SHAPE_DEFS, PALETTES, PULSE_RATES, SHAPE_CYCLE_ORDER } from '../core/constants';
+import type { GameState, Enemy, ShapeType } from '../core/Types';
+import { SHAPE_DEFS, PALETTES, PULSE_RATES, SHAPE_CYCLE_ORDER } from '../core/Constants';
 import { isInMap, getArenaIndex, getRandomPositionInArena } from '../mission/MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';

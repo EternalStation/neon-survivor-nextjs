@@ -73,7 +73,7 @@ export async function playUpgradeSfx(rarityId: string) {
         'legendary': 880,
         'mythical': 1174.66,
         'ancient': 1760,
-        'divine': 220 
+        'divine': 220
     };
 
     const baseFreq = rarityMap[rarityId] || 440;
@@ -171,7 +171,7 @@ export function playSfx(type: SfxType) {
             const source = audioCtx.createBufferSource();
             const voiceGain = audioCtx.createGain();
             source.buffer = robotVoiceBuffer;
-            voiceGain.gain.setValueAtTime(sfxVolume * 0.6, t); 
+            voiceGain.gain.setValueAtTime(sfxVolume * 0.6, t);
             source.connect(voiceGain);
             voiceGain.connect(masterSfxGain as AudioNode);
             source.start(t);
@@ -188,7 +188,7 @@ export function playSfx(type: SfxType) {
                 source.start(t + delay);
             };
             playOnce(0);
-            playOnce(0.8); 
+            playOnce(0.8);
         }
         return;
     }
@@ -218,7 +218,7 @@ export function playSfx(type: SfxType) {
     }
 
     if (type === 'turret-fire') {
-        playShootDing(); 
+        playShootDing();
         return;
     }
 
@@ -289,7 +289,7 @@ export function playSfx(type: SfxType) {
         osc.frequency.setValueAtTime(600, t);
         osc.frequency.linearRampToValueAtTime(800, t + 0.1);
         osc.frequency.linearRampToValueAtTime(600, t + 0.2);
-        g.gain.setValueAtTime(0.15, t); 
+        g.gain.setValueAtTime(0.15, t);
         g.gain.linearRampToValueAtTime(0, t + 0.3);
         osc.start(t);
         osc.stop(t + 0.3);

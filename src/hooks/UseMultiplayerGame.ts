@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { GameState } from '../logic/core/types';
+import { GameState } from '../logic/core/Types';
 import { networkManager } from '../logic/networking/NetworkManager';
-import { PALETTES } from '../logic/core/constants';
+import { PALETTES } from '../logic/core/Constants';
 import { createInitialPlayer } from '../logic/core/GameState';
 
 export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>, gameStarted: boolean) {

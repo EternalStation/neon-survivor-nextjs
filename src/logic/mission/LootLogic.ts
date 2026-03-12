@@ -1,4 +1,4 @@
-import type { GameState, Meteorite, MeteoriteRarity } from '../core/types';
+import type { GameState, Meteorite, MeteoriteRarity } from '../core/Types';
 import { playSfx } from '../audio/AudioLogic';
 import { calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
@@ -179,7 +179,7 @@ export function createMeteorite(state: GameState, rarity: MeteoriteRarity, x: nu
 
     const rand = Math.random();
     let isCorrupted = false;
-    let quality: import('../core/types').MeteoriteQuality = 'Broken';
+    let quality: import('../core/Types').MeteoriteQuality = 'Broken';
 
 
     if (rand < 0.05) {

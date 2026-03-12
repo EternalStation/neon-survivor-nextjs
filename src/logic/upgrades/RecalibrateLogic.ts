@@ -1,4 +1,4 @@
-import { GameState, Meteorite, MeteoriteQuality, RARITY_ORDER } from '../core/types';
+import { GameState, Meteorite, MeteoriteQuality, RARITY_ORDER } from '../core/Types';
 import { PERK_POOLS } from '../mission/LootLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';

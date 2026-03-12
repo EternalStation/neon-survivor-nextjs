@@ -1,7 +1,7 @@
 
-import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/core/types';
-import { getUiTranslation } from '../../lib/uiTranslations';
-import { RARITY_ORDER } from '../../logic/core/types';
+import type { Meteorite, MeteoriteRarity, LegendaryCategory } from '../../logic/core/Types';
+import { getUiTranslation } from '../../lib/UiTranslations';
+import { RARITY_ORDER } from '../../logic/core/Types';
 
 export type PerkFilter = {
     active: boolean;

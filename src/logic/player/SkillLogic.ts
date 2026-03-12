@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { getHexLevel, getHexMultiplier, getLogarithmicSum } from '../upgrades/LegendaryLogic';
 import { triggerShockwave } from '../combat/ProjectileSpawning';
 import { GAME_CONFIG } from '../core/GameConfig';

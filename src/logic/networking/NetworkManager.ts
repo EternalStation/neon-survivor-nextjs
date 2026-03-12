@@ -1,5 +1,5 @@
 import Peer, { DataConnection } from 'peerjs';
-import { GameState, Player } from '../core/types';
+import { GameState, Player } from '../core/Types';
 
 export type NetworkMessage =
     | { type: 'JOIN_REQUEST'; payload: { name: string } }

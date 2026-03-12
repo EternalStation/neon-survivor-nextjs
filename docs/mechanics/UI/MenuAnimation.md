@@ -6,7 +6,7 @@ To prevent accidental clicks and enhance the "tactical hacker" aesthetic of Neon
 ## Animation Mechanics
 
 ### 1. Initial State (Locked)
-- **Duration**: 500ms.
+- **Duration**: 500ms (1000ms for Special/Void Tech).
 - **Visuals**:
     - Cards are slightly desaturated and dimmed.
     - Card content (icons, titles, values) is blurred using a CSS filter (`blur(8px)`).
@@ -15,7 +15,7 @@ To prevent accidental clicks and enhance the "tactical hacker" aesthetic of Neon
     - A "DECRYPTING..." status indicator with a glitch pulse effect is shown.
 
 ### 2. Decryption (Unlocked)
-- After 500ms, the `canSelect` state becomes `true`.
+- After the protocol duration (500ms or 1000ms), the `canSelect` state becomes `true`.
 - The following transitions occur:
     - **Blur Removal**: Content becomes sharp instantly.
     - **Overlay Fade**: Scanning UI elements are removed.

@@ -1,10 +1,10 @@
 
-import type { GameState } from '../core/types';
+import type { GameState } from '../core/Types';
 import { ARENA_DATA, ARENA_CENTERS, ARENA_RADIUS, getRandomPositionInArena, getLocalizedArenaDetails } from './MapLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { playTypewriterClick } from '../audio/SfxLogic';
 import { getStoredLanguage } from '../../lib/LanguageContext';
-import { getExtractionMessages, ExtractionMessage } from '../../lib/orbitTranslations';
+import { getExtractionMessages, ExtractionMessage } from '../../lib/OrbitTranslations';
 
 
 

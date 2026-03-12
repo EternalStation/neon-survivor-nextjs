@@ -10,7 +10,7 @@ import { useGameLogic } from './UseGameLogic';
 import { useOrbit } from './UseOrbit';
 import { useGameUIHandlers } from './UseGameUIHandlers';
 import { updateTutorial } from '../logic/core/TutorialLogic';
-import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/types';
+import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/Types';
 import { useMultiplayerGame } from './UseMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
 import { getKeybinds } from '../logic/utils/Keybinds';
@@ -130,6 +130,7 @@ export function useGameLoop(gameStarted: boolean) {
         setShowSettings,
         setShowStats,
         setShowModuleMenu,
+        setShowBossSkillDetail,
         setShowAdminConsole,
         setShowCheatPanel,
         setGameOver,
@@ -188,7 +189,7 @@ export function useGameLoop(gameStarted: boolean) {
             { key: 'dust_pile', src: '/assets/Icons/MeteoriteDust.png' }
         ];
 
-        const hexes = ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'];
+      const hexes = ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'];
 
         assets.forEach(a => {
             if (!(meteoriteImagesRef.current as any)[a.key]) {
@@ -396,7 +397,6 @@ export function useGameLoop(gameStarted: boolean) {
                 framesRef.current = 0;
                 lastFpsUpdateRef.current = now;
             }
-
             if (steps > 0) {
                 state.interactPressed = false;
             }

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getKeybinds, saveKeybinds, getKeyDisplay } from '../logic/utils/Keybinds';
 import type { Keybinds } from '../logic/utils/Keybinds';
 import { useLanguage } from '../lib/LanguageContext';
-import { getUiTranslation } from '../lib/uiTranslations';
+import { getUiTranslation } from '../lib/UiTranslations';
 
 interface KeybindSettingsProps {
     onBack: () => void;

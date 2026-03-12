@@ -16,7 +16,7 @@
 - **Visuals**:
     - **Normal**: Simple arrow-shaped enemies.
     - **Elite**: A larger, more powerful version of the standard minion, maintaining identical aerodynamic geometry but with increased scale.
-- **Elite Pentagon (Lead)**: Maintains a perfect pentagonal geometry but is significantly larger than standard units. It is distinguishable by its intense cyan energy aura and periodic electrical reactor sparks.
+- **Elite Pentagon (Lead)**: Maintains a perfect pentagonal geometry but is significantly larger than standard units.
 - **Spawn Rates**: 
     - Spawns 3 minions every 15 seconds (reduced for balance).
     - Initial spawn delay is preserved for tactical buildup.

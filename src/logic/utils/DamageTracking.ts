@@ -1,4 +1,4 @@
-import { GameState, DamageSource, Enemy } from '../core/types';
+import { GameState, DamageSource, Enemy, Player } from '../core/Types';
 
 export function recordDamage(state: GameState, source: DamageSource, amount: number, target?: Enemy) {
     if (amount <= 0) return;
@@ -18,12 +18,21 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
         'eventhorizon': ['Void Singularity']
     };
 
+    const classSkillSources: DamageSource[] = [
+        'Orbital Vortex',
+        'Storm Circle',
+        'Void Singularity',
+        'Nanite Swarm',
+        'Malware Wall Bonus',
+        'Wall Shockwave',
+        'Aegis Rings'
+    ];
+
     const playerClass = player.playerClass;
-    if (!playerClass) return;
 
-    const currentMinuteSources = classSpecificSources[playerClass] || [];
+    const currentMinuteSources = playerClass ? (classSpecificSources[playerClass] || []) : [];
 
-    if (currentMinuteSources.includes(source)) {
+    if (currentMinuteSources.includes(source) || classSkillSources.includes(source)) {
         state.currentMinuteClassSkillDamage = (state.currentMinuteClassSkillDamage || 0) + amount;
 
         if (!player.activeSkillDamageByMinute) {
@@ -35,4 +44,20 @@ export function recordDamage(state: GameState, source: DamageSource, amount: num
         }
         player.activeSkillDamageByMinute[currentMinute] += amount;
     }
+}
+
+export function recordHealing(player: Player, source: string, amount: number) {
+    if (amount <= 0) return;
+    if (!player.healingBreakdown) {
+        player.healingBreakdown = {};
+    }
+    player.healingBreakdown[source] = (player.healingBreakdown[source] || 0) + amount;
+}
+
+export function recordIncomingDamage(player: Player, source: string, amount: number) {
+    if (amount <= 0) return;
+    if (!player.incomingDamageBreakdown) {
+        player.incomingDamageBreakdown = {};
+    }
+    player.incomingDamageBreakdown[source] = (player.incomingDamageBreakdown[source] || 0) + amount;
 }

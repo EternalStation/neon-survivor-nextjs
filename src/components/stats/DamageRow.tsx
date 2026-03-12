@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatLargeNumber } from '../../utils/format';
+import { formatLargeNumber } from '../../utils/Format';
 
 interface DamageRowProps {
     label: string;

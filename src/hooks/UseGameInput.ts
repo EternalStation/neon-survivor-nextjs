@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/types';
+import type { GameState, MeteoriteRarity, MapPOI } from '../logic/core/Types';
 import { spawnEnemy, spawnRareEnemy } from '../logic/enemies/EnemyLogic';
 import { createMeteorite } from '../logic/mission/LootLogic';
 import { castSkill } from '../logic/player/SkillLogic';
@@ -12,7 +12,7 @@ import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { getChassisResonance } from '../logic/upgrades/EfficiencyLogic';
-import { BlueprintType } from '../logic/core/types';
+import { BlueprintType } from '../logic/core/Types';
 
 import { spawnVoidBurrower } from '../logic/enemies/WormLogic';
 import { applyLegendarySelection } from '../logic/upgrades/LegendaryLogic';
@@ -24,6 +24,7 @@ interface GameInputProps {
     setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
     setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
     setShowModuleMenu: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowBossSkillDetail?: React.Dispatch<React.SetStateAction<boolean>>;
     setShowAdminConsole?: React.Dispatch<React.SetStateAction<boolean>>;
     setShowCheatPanel?: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,7 +34,7 @@ interface GameInputProps {
     windowScaleFactor: React.MutableRefObject<number>;
 }
 
-export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime, windowScaleFactor }: GameInputProps) {
+export function useGameInput({ gameState, keys: providedKeys, setShowSettings, setShowStats, setShowModuleMenu, setShowBossSkillDetail, setShowAdminConsole, setShowCheatPanel, setGameOver, triggerPortal, refreshUI, skipTime, windowScaleFactor }: GameInputProps) {
     const localKeys = useRef<Record<string, boolean>>({});
     const keys = providedKeys || localKeys;
     const inputVector = useRef({ x: 0, y: 0 });
@@ -77,11 +78,27 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
             }
 
             if (key === 'escape' || code === 'escape') {
-                if (gameState.current.showModuleMenu || gameState.current.showBossSkillDetail) {
+                if (gameState.current.showModuleMenu) {
+                    const isExtractionActive = ['requested', 'waiting'].includes(gameState.current.extractionStatus);
+                    if (!gameState.current.pendingLegendaryHex && !isExtractionActive) {
+                        setShowModuleMenu(false);
+                    }
+                    return;
+                }
+                if (gameState.current.showBossSkillDetail && setShowBossSkillDetail) {
+                    setShowBossSkillDetail(false);
                     return;
                 }
                 if (gameState.current.showStats) {
                     setShowStats(false);
+                    return;
+                }
+                if (gameState.current.showAdminConsole && setShowAdminConsole) {
+                    setShowAdminConsole(false);
+                    return;
+                }
+                if (gameState.current.showCheatPanel && setShowCheatPanel) {
+                    setShowCheatPanel(false);
                     return;
                 }
                 setShowSettings(prev => !prev);
@@ -730,6 +747,23 @@ export function useGameInput({ gameState, keys: providedKeys, setShowSettings, s
                 const next = Math.min(0.9, cur + 0.2);
                 state.player.cooldownReductionBonus = next;
                 spawnFloatingNumber(state, state.player.x, state.player.y, `CDR ${(next * 100).toFixed(0)}%`, '#00ffff', true);
+                playSfx('power-up');
+                refreshUI();
+                cheatBuffer = '';
+            }
+
+            // GOD - Max armor/col/proj reduction + 1B HP + 1B regen
+            if (cheatBuffer.endsWith('god')) {
+                gameState.current.cheatsUsed = true;
+                if (typeof window !== 'undefined') (window as any).__cheatsUsed = true;
+                const p = gameState.current.player;
+                p.arm.base = 200000;
+                p.godColRedBonus = 60000;
+                p.godProjRedBonus = 60000;
+                p.hp.base = 1_000_000_000;
+                p.reg.base = 1_000_000_000;
+                p.curHp = 1_000_000_000;
+                spawnFloatingNumber(gameState.current, p.x, p.y, 'GOD MODE', '#ff0000', true);
                 playSfx('power-up');
                 refreshUI();
                 cheatBuffer = '';

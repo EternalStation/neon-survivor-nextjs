@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { GameState } from '../../logic/core/types';
+import type { GameState } from '../../logic/core/Types';
 import { BESTIARY_DATA, getThreatColor, type BestiaryEntry } from '../../data/BestiaryData';
 
 interface BestiaryViewProps {

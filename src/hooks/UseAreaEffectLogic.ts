@@ -1,11 +1,11 @@
-import { GameState, AreaEffect, Enemy, Player } from '../logic/core/types';
+import { GameState, AreaEffect, Enemy, Player } from '../logic/core/Types';
 import { getHexLevel, getHexMultiplier } from '../logic/upgrades/LegendaryLogic';
 import { spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { handleEnemyDeath } from '../logic/mission/DeathLogic';
 import { spawnNanitesFromCloud } from '../logic/player/PlayerCombat';
 import { recordDamage } from '../logic/utils/DamageTracking';
 import { calcStat } from '../logic/utils/MathUtils';
-import { PLAYER_CLASSES } from '../logic/core/classes';
+import { PLAYER_CLASSES } from '../logic/core/Classes';
 import { playSfx } from '../logic/audio/AudioLogic';
 import { GAME_CONFIG } from '../logic/core/GameConfig';
 import { applyDamageToPlayer } from '../logic/utils/CombatUtils';
@@ -208,7 +208,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isHarvestExec = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
                         const isGravityExec = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
                         const execSource = isHarvestExec ? 'Gravitational Harvest' : (isGravityExec ? 'Gravity Anchor' : 'Epicenter (LVL 4)');
-                        recordDamage(state, execSource as import('../logic/core/types').DamageSource, executedHp, e);
+                        recordDamage(state, execSource as import('../logic/core/Types').DamageSource, executedHp, e);
                         e.hp = 0;
                         e.isExecuted = true;
                         spawnFloatingNumber(state, e.x, e.y, "EXECUTED", '#0ea5e9', true, undefined, 12);
@@ -234,7 +234,7 @@ export function updateAreaEffects(state: GameState, step: number, onEvent?: (eve
                         const isHarvest = effect.isGravitationalHarvest || state.moduleSockets.hexagons.some(h => h?.type === 'GravitationalHarvest');
                         const isGravityAnc = effect.isGravityAnchor || state.moduleSockets.hexagons.some(h => h?.type === 'GravityAnchor');
                         const epicSource = isHarvest ? 'Gravitational Harvest' : (isGravityAnc ? 'Gravity Anchor' : 'Epicenter (LVL 1)');
-                        recordDamage(state, epicSource as import('../logic/core/types').DamageSource, dmg, e);
+                        recordDamage(state, epicSource as import('../logic/core/Types').DamageSource, dmg, e);
                         spawnFloatingNumber(state, e.x, e.y, Math.round(dmg).toString(), '#0ea5e9', false);
                         if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, eventHandler);
                     }

@@ -1,11 +1,11 @@
-import type { GameState, LegendaryHex } from '../logic/core/types';
+import type { GameState, LegendaryHex } from '../logic/core/Types';
 import { LEGENDARY_UPGRADES } from '../logic/upgrades/LegendaryData';
-import api from '../api/client';
+import api from '../api/Client';
 import { calcStat } from '../logic/utils/MathUtils';
 import { calculateLegendaryBonus } from '../logic/upgrades/LegendaryLogic';
 import { getArenaIndex } from '../logic/mission/MapLogic';
 import { isBuffActive } from '../logic/upgrades/BlueprintLogic';
-import { normalizeDeathCause } from './deathCauseUtils';
+import { normalizeDeathCause } from './DeathCauseUtils';
 
 export const CURRENT_PATCH_VERSION = '1.0.3';
 
@@ -44,6 +44,9 @@ export interface RunSubmissionData {
     damageBreakdown: Record<string, number>;
     class_skill_dmg_history?: number[];
     timezoneOffset: number;
+    avgHpPercent: number;
+    incomingDamageBreakdown: Record<string, number>;
+    healingBreakdown: Record<string, number>;
 }
 
 
@@ -142,6 +145,11 @@ export function prepareRunData(gameState: GameState): RunSubmissionData {
         snitchesCaught: Math.ceil(gameState.snitchCaught || 0),
         deathCause: normalizeDeathCause(gameState.player.deathCause || 'Unknown'),
         timezoneOffset: new Date().getTimezoneOffset(),
+        avgHpPercent: (gameState.player.avgHpSampleCount || 0) > 0
+            ? Number(((gameState.player.avgHpAccumulator || 0) / (gameState.player.avgHpSampleCount || 1)).toFixed(1))
+            : 100,
+        incomingDamageBreakdown: gameState.player.incomingDamageBreakdown || {},
+        healingBreakdown: gameState.player.healingBreakdown || {},
         blueprints: (() => {
             const grouped: Record<string, { name: string; type: string; count: number }> = {};
             const allBps = [
