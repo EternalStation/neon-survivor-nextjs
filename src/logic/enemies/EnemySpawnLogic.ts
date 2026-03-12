@@ -59,7 +59,7 @@ export function getCurrentMinuteEnemyHp(gameTime: number, extractionPowerMult: n
 export function getSpawnPosition(state: GameState, isBoss: boolean = false): { x: number, y: number } {
     const { player } = state;
     const playerArena = getArenaIndex(player.x, player.y);
-    
+
     for (let i = 0; i < 15; i++) {
         const a = Math.random() * 6.28;
         const d = (isBoss ? 1500 : 1200) + Math.random() * 300;
@@ -149,8 +149,8 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         type: (isBoss ? 'boss' : chosenShape) as 'boss' | ShapeType,
         x: spawnPos.x, y: spawnPos.y,
         size,
-        hp: (isBoss ? baseHp * bossHpMult : baseHp) * hpMult * (isElite ? 2.5 : 1.0),
-        maxHp: (isBoss ? baseHp * bossHpMult : baseHp) * hpMult * (isElite ? 2.5 : 1.0),
+        hp: Math.floor(hp * (isElite ? 2.5 : 1.0)),
+        maxHp: Math.floor(hp * (isElite ? 2.5 : 1.0)),
         spd: isAnomaly ? player.speed * 0.84 : player.speed * SHAPE_DEFS[chosenShape].speedMult * (isBoss ? 0.9 : (isElite ? 1.1 : 1.0)),
         boss: isBoss,
         bossType: isBoss ? Math.floor(Math.random() * 2) : 0,
