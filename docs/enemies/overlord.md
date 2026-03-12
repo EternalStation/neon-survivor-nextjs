@@ -7,7 +7,7 @@ The Overlord is a massive, high-priority boss that spawns through infernal breac
 - **Visual Scale**: 80% of original Abomination size (Reduced for better tactical visibility).
 - **Movement Speed**: 84% of the player's base speed.
 - **Particle System**: Surrounded by a high-intensity orbit of 180 particles.
-- **Health Scaling**: Base HP scales significantly with mission time and "Anomaly Generation" (Boss level).
+- **Health Scaling**: Base HP scales significantly with mission time and is multiplied by a generation factor of `1.5 + (0.8 * Anomaly Generation)`.
 
 ## 2. Core Ability: HEAT AURA (Infernal Combustion)
 The Overlord emits a constant, lethal heat aura that damages anything in its vicinity.
