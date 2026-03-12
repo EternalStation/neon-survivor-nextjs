@@ -1,8 +1,5 @@
-// API Client for Void Nexus Backend
 
-const API_URL = process.env.NODE_ENV === 'development'
-    ? 'https://neon-survivor-nextjs.vercel.app/api'
-    : '/api';
+const API_URL = '/api';
 
 class ApiClient {
     private token: string | null;
@@ -57,7 +54,6 @@ class ApiClient {
         return data;
     }
 
-    // Auth endpoints
     async register(username: string, password: string) {
         const data = await this.request('/auth/register', {
             method: 'POST',
@@ -89,7 +85,6 @@ class ApiClient {
         this.setToken(null);
     }
 
-    // Leaderboard endpoints
     async getGlobalLeaderboard(limit = 100, offset = 0) {
         return this.request(`/leaderboard/global?limit=${limit}&offset=${offset}`);
     }
@@ -114,7 +109,6 @@ class ApiClient {
         return this.request(`/leaderboard/rank/${runId}`);
     }
 
-    // Run endpoints
     async submitRun(runData: {
         score: string | number;
         survivalTime: number;
@@ -176,7 +170,6 @@ class ApiClient {
         });
     }
 
-    // Feedback endpoints
     async submitFeedback(type: 'bug' | 'suggestion', message: string) {
         return this.request('/feedback', {
             method: 'POST',

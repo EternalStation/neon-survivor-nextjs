@@ -32,7 +32,23 @@ const EnemyShapeIcon: React.FC<{ shape: string, size?: number, color?: string }>
                 }).join(' ');
                 return <polygon points={hexPoints} fill={color} stroke={color} strokeWidth={strokeWidth} opacity="0.8" />;
             case 'minion': return <polygon points={`${size + s},${size} ${size - s},${size + s * 0.7} ${size - s * 0.3},${size} ${size - s},${size - s * 0.7}`} fill={color} stroke={color} strokeWidth="2" opacity="0.8" />;
-            case 'snitch': return <g><circle cx={size} cy={size} r={s * 0.7} fill={color} opacity="0.8" /><polygon points={`${size - s * 0.8},${size - s * 0.6} ${size - s * 2.2},${size - s * 0.4} ${size - s * 2.0},${size} ${size - s * 0.8},${size - s * 0.2}`} fill={color} opacity="0.6" /><polygon points={`${size + s * 0.8},${size - s * 0.6} ${size + s * 2.2},${size - s * 0.4} ${size + s * 2.0},${size} ${size + s * 0.8},${size - s * 0.2}`} fill={color} opacity="0.6" /></g>;
+            case 'snitch':
+                return (
+                    <g>
+                        {/* Floaties */}
+                        <g transform={`rotate(15, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        <g transform={`rotate(135, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        <g transform={`rotate(255, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        {/* Core */}
+                        <circle cx={size} cy={size} r={s * 0.6} fill={color} opacity="0.9" />
+                    </g>
+                );
             case 'glitcher': return <g><line x1={size} y1={size} x2={size + s * 1.5} y2={size - s * 1.5} stroke="#ff00ff" strokeWidth="3" opacity="0.7" /><line x1={size} y1={size} x2={size - s * 1.5} y2={size + s * 1.5} stroke="#00ffff" strokeWidth="3" opacity="0.7" /></g>;
             case 'worm':
                 return (

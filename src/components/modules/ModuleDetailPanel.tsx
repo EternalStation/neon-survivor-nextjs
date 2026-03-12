@@ -371,19 +371,19 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                                     );
                                                 }
 
-                                                if (isBroken) {
-                                                    return <div className={styles.statusBrokenBlock}>PROTOCOL EXHAUSTED — RECYCLE FOR DUST</div>;
-                                                }
 
                                                 return null;
                                             })()}
-
                                             <div className={styles.bpCostBlock}>
                                                 <div>
                                                     <div className={styles.bpCostLabel}>{t.activation.title}</div>
                                                     <div className={styles.bpCostAmountRow}>
-                                                        <span className={styles.bpCostAmountValue}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'ACTIVE' : hoveredBlueprint.cost.toLocaleString()}</span>
-                                                        <span className={styles.bpCostAmountLabel}>{(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'PROTO-RUNNING' : t.activation.dustRequired}</span>
+                                                        <span className={styles.bpCostAmountValue}>
+                                                            {(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'ACTIVE' : hoveredBlueprint.cost.toLocaleString()}
+                                                        </span>
+                                                        <span className={styles.bpCostAmountLabel}>
+                                                            {(isBuffActive(gameState, hoveredBlueprint.type) || (hoveredBlueprint.type !== 'QUANTUM_SCRAPPER' && Object.keys(gameState.activeBlueprintBuffs).length > 0)) ? 'PROTO-RUNNING' : t.activation.dustRequired}
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div className={styles.bpCostIcon}>
@@ -394,7 +394,7 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                                     </>
                                 )}
                             </div>
-                        );
+                        )
                     })()
                 ) : (hoveredItem && !movedItem && (!recalibrateSlot || hoveredItem.item !== recalibrateSlot)) ? (
                     (hoveredItem.item as Blueprint).isBlueprint ? (
@@ -402,18 +402,19 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                     ) : (
                         <div className={styles.itemTooltipWrap}>
                             <div className={styles.itemTooltipBg} />
-                            <MeteoriteTooltip meteorite={hoveredItem.item as Meteorite} gameState={gameState} meteoriteIdx={hoveredItem.index} x={0} y={0} isEmbedded={true} />
+                            <MeteoriteTooltip meteorite={hoveredItem!.item as Meteorite} gameState={gameState} meteoriteIdx={hoveredItem!.index} x={0} y={0} isEmbedded={true} />
                         </div>
                     )
                 ) : recalibrateSlot ? (
                     <div className={styles.recalibrateWrap}>
                         <RecalibrateInterface
-                            item={recalibrateSlot}
+                            item={recalibrateSlot!}
                             gameState={gameState}
                             onClose={handleExitRecalibrate}
-                            onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot)) onUpdate?.(); }}
+                            onUpgradeQuality={() => { if (upgradeMeteoriteQuality(gameState, recalibrateSlot!)) onUpdate?.(); }}
                             onRerollType={(indices: number[]) => {
-                                if (rerollPerkType(gameState, recalibrateSlot, indices)) {
+                                if (rerollPerkType(gameState, recalibrateSlot!, indices)) {
+
                                     const newLocked = [...indices];
                                     let changed = false;
                                     recalibrateSlot.perks.forEach((p, idx) => {
@@ -458,21 +459,21 @@ export const ModuleDetailPanel: React.FC<ModuleDetailPanelProps> = ({
                             onMouseDown={(e) => {
                                 if (e.button === 0 && setMovedItem) {
                                     e.preventDefault();
-                                    setMovedItem({ item: recalibrateSlot, source: 'recalibrate', index: -1 });
+                                    setMovedItem({ item: recalibrateSlot!, source: 'recalibrate', index: -1 });
                                 }
                             }}
                         />
                     </div>
                 ) : lockedItem ? (
-                    (lockedItem.item as Blueprint).isBlueprint ? (
-                        renderBlueprintPanel(lockedItem.item as Blueprint, gameState, onUpdate)
+                    (lockedItem!.item as Blueprint).isBlueprint ? (
+                        renderBlueprintPanel(lockedItem!.item as Blueprint, gameState, onUpdate)
                     ) : (
                         <div className={styles.lockedTooltipWrap}>
-                            <MeteoriteTooltip meteorite={lockedItem.item as Meteorite} gameState={gameState} meteoriteIdx={lockedItem.index} x={0} y={0} isEmbedded={true} />
+                            <MeteoriteTooltip meteorite={lockedItem!.item as Meteorite} gameState={gameState} meteoriteIdx={lockedItem!.index} x={0} y={0} isEmbedded={true} />
                         </div>
                     )
                 ) : selectedBestiaryEnemy ? (
-                    <BestiaryDetailView entry={selectedBestiaryEnemy} />
+                    <BestiaryDetailView entry={selectedBestiaryEnemy!} />
                 ) : extractionDialogActive ? (
                     <div className={styles.terminalWrap}>
                         <div ref={terminalRef} className={`${styles.terminal} ${isAlertActive ? styles.terminalAlert : styles.terminalDefault}`}>

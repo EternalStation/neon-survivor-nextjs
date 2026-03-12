@@ -6,6 +6,8 @@ import { applyDamageToPlayer } from '../../utils/CombatUtils';
 import { PALETTES } from '../../core/Constants';
 
 export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
+    checkBossStageTransition(e, state);
+    const stage = e.stage || 1;
     let isBerserk = false;
 
 
@@ -24,7 +26,7 @@ export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy:
         if (!e.berserkTimer) e.berserkTimer = 0;
         e.berserkTimer++;
 
-        const CD = 300;
+        const CD = 300 - (stage - 1) * 75;
         const DURATION = 180;
 
         if (!e.berserkState) {
@@ -60,6 +62,8 @@ export function updateTriangleBoss(e: Enemy, currentSpd: number, dx: number, dy:
 }
 
 export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, isLevel5: boolean, onEvent?: (event: string, data?: any) => void) {
+    checkBossStageTransition(e, state);
+    const stage = e.stage || 1;
     if (isLevel5) e.bossTier = 5;
     else if (isLevel4) e.bossTier = 4;
     else if (isLevel3) e.bossTier = 3;
@@ -161,14 +165,15 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
         if (!e.satelliteState) e.satelliteState = 0;
 
         if (e.satelliteState === 0) {
-            if (e.satelliteTimer > 600) {
+            const interval = 600 - (stage - 1) * 150;
+            if (e.satelliteTimer > interval) {
                 e.satelliteState = 1;
                 e.satelliteTimer = 0;
                 e.satelliteTargets = [];
 
-
-                for (let k = 0; k < 3; k++) {
-                    const a = (k * Math.PI * 2) / 3 + Math.random();
+                const count = 4 + (isLevel2 ? 2 : 0) + (isLevel4 ? 4 : 0) + (stage - 1) * 2;
+                for (let k = 0; k < count; k++) {
+                    const a = (k * Math.PI * 2) / count + Math.random();
                     const r = 150 + Math.random() * 100;
                     e.satelliteTargets.push({
                         x: state.player.x + Math.cos(a) * r,
@@ -257,7 +262,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
         e.beamTimer++;
         if (!e.beamState) e.beamState = 0;
 
-        const CD = 300;
+        const beamCD = 300 - (stage - 1) * 60;
 
         if (e.beamState === 0) {
 
@@ -269,7 +274,7 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
             const vx = Math.cos(angle) * distFactor * currentSpd + pushX;
             const vy = Math.sin(angle) * distFactor * currentSpd + pushY;
 
-            if (e.beamTimer > CD) {
+            if (e.beamTimer > beamCD) {
                 e.beamState = 1;
                 e.beamTimer = 0;
                 e.beamX = state.player.x;
@@ -391,7 +396,29 @@ export function updateDiamondBoss(e: Enemy, currentSpd: number, dx: number, dy: 
     return { vx, vy };
 }
 
+function checkBossStageTransition(e: Enemy, state: GameState) {
+    if (!e.stage) e.stage = 1;
+    const hpPct = e.hp / e.maxHp;
+    let transitioned = false;
+
+    if (e.stage === 1 && hpPct < 0.66) {
+        e.stage = 2;
+        transitioned = true;
+    } else if (e.stage === 2 && hpPct < 0.33) {
+        e.stage = 3;
+        transitioned = true;
+    }
+
+    if (transitioned) {
+        e.invincibleUntil = state.gameTime + 1.0;
+        spawnFloatingNumber(state, e.x, e.y, `STAGE ${e.stage}`, '#ef4444', true, undefined, 36, e.id);
+        playSfx('rare-spawn');
+    }
+}
+
 export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean, onEvent?: (event: string, data?: any) => void) {
+    checkBossStageTransition(e, state);
+    const stage = e.stage || 1;
     e.isLevel3 = isLevel3;
     e.isLevel4 = isLevel4;
     if (isLevel4) e.bossTier = 4;
@@ -545,12 +572,11 @@ export function updatePentagonBoss(e: Enemy, currentSpd: number, dx: number, dy:
         }
 
         if (isLevel2 && !isLevel4) {
-            if (e.phalanxTimer === undefined) e.phalanxTimer = 0;
-            e.phalanxTimer++;
-
-            const interval = isLevel3 ? 300 : 450;
-            if (e.phalanxTimer > interval) {
-                e.phalanxTimer = 0;
+            if (!e.rocketTimer) e.rocketTimer = 0;
+            e.rocketTimer++;
+            const fireInterval = (isLevel4 ? 40 : (isLevel2 ? 45 : 60)) - (stage - 1) * 10;
+            if (e.rocketTimer > fireInterval) {
+                e.rocketTimer = 0;
                 const angleToPlayer = Math.atan2(state.player.y - e.y, state.player.x - e.x);
                 const count = isLevel3 ? 5 : 3;
 

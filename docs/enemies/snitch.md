@@ -48,31 +48,43 @@ Rare unique enemy target of high value. Does not cause damage to the player, but
 **Precondition:** the initial phase immediately after spawn.
 
 1. Snitch orbits around the player's position at a distance of **~1100 px**.
-2. The orbital angle slowly shifts by `+0.005 rad/frame`.
-3. Speed ​​= `player.speed × 0.8`.
-4. If the orbital target is outside the map, reduce the orbital radius (to 400 px minimum) until an acceptable point is found.
-5. Transition to Phase 1: distance to the nearest player < **500 px**.
+2. The orbital angle is jittery, shifting by `+0.01 + sin(t*5)*0.005` rad/frame.
+3. Speed = `player.speed × 1.1`.
+4. Transition to Phase 1: distance to player < **550 px** or any active skill detected within 150px of radius.
    - The color changes to orange (`#f97316`, `#ea580c`, `#c2410c`).
+   - Spawns 2 **Quantum Decoys** upon transition.
 
 ### Phase 1 - Active Evasion (rarePhase === 1)
 
-**Precondition:** the player has moved < 500 px.
+**Precondition:** the player has moved < 550 px or skill detected.
 
-1. Moves to a random blocked target 500–800 px from the player.
-2. When reaching the goal (`dist < 50 px`) - selects a new random point.
-3. **Tactical teleport** at a distance < 350 px from the player (if cooldown ≥ 0):
-   - Swaps position with the nearest normal enemy (excluding bosses, legionnaires and other Snitch).
-   - Spawns smoke particles (gray) at both points.
-   - Teleport cooldown: **4 seconds**.
-   - If there is no suitable enemy - a random blink at 800–1000 px from the player (`forceTeleport` fallback).
-4. **Panic:** within 1 second after the teleport, the speed doubles.
-5. **Retreat:** at a distance < 250 px - moves directly **away** from the player at double speed.
+1. **Quantum Resources**:
+   - `Blink Charges`: 3 charges, recharges 1 every 3.0s.
+2. Moves to a random target 600–1000 px from the player.
+   - When reaching the goal (`dist < 50 px`) - selects a new random point.
+3. **Quantum Dash (Short Teleport)**:
+   - Within 320 px of player and has `Blink Charges` > 0: Performs a short teleport (450px) away from player.
+   - 1.0s internal cooldown.
+4. **Tactical Teleport (Swap)**:
+   - Within 250 px of player or detecting skills (Black Hole, Storm Zone, etc) within area + 150px.
+   - Swaps position with the furthest normal enemy (> 700 px from player).
+   - Spawns decoys at old position with 40% probability.
+5. **Panic:** within 1.2 seconds after any teleport, the speed increases by 40%.
+6. **Retreat:** at a distance < 220 px - moves directly **away** from the player at 2.8x speed.
+7. **Quantum Jitter**: Occasionally jitters by 12px (visual glitch).
+
+### Quantum Decoys
+- Non-colliding, 15px size snitch "shadows".
+- HP = 1.
+- Survive for 2.5 seconds.
+- Move away from the player at 80% snitch speed.
 
 ### General traffic rules (both phases)
 
-- When hit outside the map (`!isInMap`) - moves to the center of the arena or is pushed away from the wall along the normal.
-- Checking proximity to walls: if < 200 px - immediate teleport to a valid point (> 300 px from the walls).
-- Upon contact with **Elite Square** (`isElite && shape === 'square'`) - the central color changes to green (`#4ade80`), signaling "informing".
+- When hit outside the map (`!isInMap`) - pushed away from the wall along the normal.
+- Proximity to walls (< 180 px): Immediate short blink to a safe location.
+- Upon contact with **Elite Square** (`isElite && shape === 'square'`) - the palette changes to green (`#4ade80`), signaling "informing".
+
 
 ---
 

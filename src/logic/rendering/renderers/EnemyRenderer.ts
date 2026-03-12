@@ -261,6 +261,13 @@ function renderStatusOverlays(ctx: CanvasRenderingContext2D, e: Enemy, state: Ga
         ctx.fillStyle = hpColor;
         ctx.fillRect(-barW / 2, y, barW * (e.hp / e.maxHp), barH);
 
+        if (e.boss) {
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(-barW / 2 + barW * 0.33, y, 1.5, barH);
+            ctx.fillRect(-barW / 2 + barW * 0.66, y, 1.5, barH);
+        }
+
         ctx.restore();
     }
 

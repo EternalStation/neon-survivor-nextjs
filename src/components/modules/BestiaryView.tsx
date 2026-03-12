@@ -100,10 +100,18 @@ const EnemyShapeIcon: React.FC<{ shape: string, size?: number, color?: string }>
             case 'snitch':
                 return (
                     <g>
-                        <circle cx={size} cy={size} r={s * 0.7} fill={color} opacity="0.8" />
-                        {/* Blades */}
-                        <polygon points={`${size - s * 0.8},${size - s * 0.6} ${size - s * 2.2},${size - s * 0.4} ${size - s * 2.0},${size} ${size - s * 0.8},${size - s * 0.2}`} fill={color} opacity="0.6" />
-                        <polygon points={`${size + s * 0.8},${size - s * 0.6} ${size + s * 2.2},${size - s * 0.4} ${size + s * 2.0},${size} ${size + s * 0.8},${size - s * 0.2}`} fill={color} opacity="0.6" />
+                        {/* Floaties */}
+                        <g transform={`rotate(15, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        <g transform={`rotate(135, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        <g transform={`rotate(255, ${size}, ${size})`}>
+                            <polygon points={`${size},${size - s * 1.1} ${size + 4},${size - s * 0.8} ${size - 4},${size - s * 0.8}`} fill={color} opacity="0.6" />
+                        </g>
+                        {/* Core */}
+                        <circle cx={size} cy={size} r={s * 0.6} fill={color} opacity="0.9" />
                     </g>
                 );
 

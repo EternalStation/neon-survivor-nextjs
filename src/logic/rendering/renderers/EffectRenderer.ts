@@ -977,7 +977,7 @@ export function renderFloatingNumbers(ctx: CanvasRenderingContext2D, state: Game
         const age = fn.life / fn.maxLife;
         ctx.save();
 
-        ctx.translate(fn.x + 10, fn.y - 10);
+        ctx.translate(fn.x, fn.y);
 
         let style: 'normal' | 'crit' | 'alert' = 'normal';
         const isCombatText = /^[+-]?\d+(?:\.\d+)?[a-zA-Z]?$/.test(fn.value) || fn.value === "CRIT";

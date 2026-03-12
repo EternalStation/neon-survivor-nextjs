@@ -43,13 +43,13 @@ export function updateSingleEnemy(
         if (hpPct <= 0.66 && (e.stage || 0) < 2) {
             e.stage = 2;
             e.stage2StartTime = state.gameTime;
-            spawnFloatingNumber(state, e.x, e.y, "STAGE 2: EXPANDING INFERNO", '#ef4444', true);
+            spawnFloatingNumber(state, e.x, e.y, "STAGE 2: EXPANDING INFERNO", '#ef4444', true, undefined, 36, e.id);
             playSfx('rare-spawn');
         }
         if (hpPct <= 0.33 && (e.stage || 0) < 3) {
             e.stage = 3;
             e.stage3StartTime = state.gameTime;
-            spawnFloatingNumber(state, e.x, e.y, "STAGE 3: ETERNAL FLAME", '#b91c1c', true);
+            spawnFloatingNumber(state, e.x, e.y, "STAGE 3: ETERNAL FLAME", '#ef4444', true, undefined, 36, e.id);
             playSfx('rare-spawn');
         }
 
@@ -721,10 +721,6 @@ export function updateSingleEnemy(
             e.knockback.x = normal.x * 20;
             e.knockback.y = normal.y * 20;
             if (e.hp <= 0 && !e.dead) handleEnemyDeath(state, e, onEvent);
-        } else if (e.shape === 'snitch' && e.rareReal) {
-            const c = ARENA_CENTERS[0];
-            const a = Math.atan2(c.y - e.y, c.x - e.x);
-            e.x += Math.cos(a) * 50; e.y += Math.sin(a) * 50;
         } else if (e.shape === 'snitch' || e.legionId) {
             const { dist: wDist, normal } = getHexDistToWall(e.x, e.y);
             e.x += normal.x * (Math.abs(wDist) + 50);
@@ -751,7 +747,8 @@ export function updateSingleEnemy(
     }
 
     const { pulseDef } = getProgressionParams(state.gameTime);
-    e.pulsePhase = (e.pulsePhase + (Math.PI * 2) / pulseDef.interval * (state.gameSpeedMult ?? 1)) % (Math.PI * 2);
+    const pulseStageMult = e.boss ? (1 + ((e.stage || 1) - 1) * 0.5) : 1;
+    e.pulsePhase = (e.pulsePhase + (Math.PI * 2) / pulseDef.interval * (state.gameSpeedMult || 1) * pulseStageMult) % (Math.PI * 2);
 
 
     const isSpinning = isInVortexField || isRecoveringFromVortex || isInInertia;

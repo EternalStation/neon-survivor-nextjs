@@ -147,10 +147,10 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
     if (player.healingDisabled) {
         regenAmount = 0;
     }
-
     if (player.timeLoopPool && player.timeLoopPool > 0) {
-        const tickDmg = player.timeLoopPool / (6 * 60);
-        player.curHp = Math.max(0.1, player.curHp - tickDmg);
+        const tickDmg = player.timeLoopPool / (6 * 60); // 6 seconds at 60fps
+        player.curHp = Math.max(0.1, player.curHp - tickDmg); 
+
         player.timeLoopPool -= tickDmg;
         if (player.timeLoopPool < 0.01) player.timeLoopPool = 0;
     }

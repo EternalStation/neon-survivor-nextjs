@@ -226,7 +226,7 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
     const { perks: _perks, ...legendaryNamesRaw } = getUiTranslation(language).legendaries;
     const legendaryNames = legendaryNamesRaw as Record<string, LegendaryNameEntry>;
 
-  const getHexImage = (type: string) => {
+    const getHexImage = (type: string) => {
         if (!type) return '/assets/hexes/MalwarePrime.png';
 
         const meta = LEGENDARY_UPGRADES[type] ||
@@ -251,18 +251,18 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
             'DefBattery': '/assets/hexes/DefBattery.png',
             'ComRadiation': '/assets/hexes/ComRad.png',
             'DefPlatting': '/assets/hexes/DefChromo.png',
-            'XenoAlchemist': '/assets/Fusions/THE XENO-ALCHEMIST.png',
-            'IrradiatedMire': '/assets/Fusions/THE IRRADIATED MIRE.png',
-            'NeuralSingularity': '/assets/Fusions/THE NEURAL SINGULARITY.png',
-            'KineticTsunami': '/assets/Fusions/THE KINETIC TSUNAMI.png',
-            'SoulShatterCore': '/assets/Fusions/THE SOUL-SHATTER CORE.png',
-            'BloodForgedCapacitor': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
-            'GravityAnchor': '/assets/Fusions/THE GRAVITY ANCHOR.png',
-            'TemporalMonolith': '/assets/Fusions/THE TEMPORAL MONOLITH.png',
-            'NeutronStar': '/assets/Fusions/THE NEUTRON STAR.png',
-            'GravitationalHarvest': '/assets/Fusions/THE GRAVITATIONAL HARVEST.png',
-            'ShatteredCapacitor': '/assets/Fusions/THE SHATTERED CAPACITOR.png',
-            'ChronoDevourer': '/assets/Fusions/THE CHRONO-DEVOURER.png',
+            'XenoAlchemist': '/assets/Fusions/TheXenoAlchemist.png',
+            'IrradiatedMire': '/assets/Fusions/TheIrradiatedMire.png',
+            'NeuralSingularity': '/assets/Fusions/TheNeuralSingularity.png',
+            'KineticTsunami': '/assets/Fusions/TheKineticTsunami.png',
+            'SoulShatterCore': '/assets/Fusions/TheSoulShatterCore.png',
+            'BloodForgedCapacitor': '/assets/Fusions/TheNecroKineticEngine.png',
+            'GravityAnchor': '/assets/Fusions/TheGravityAnchor.png',
+            'TemporalMonolith': '/assets/Fusions/TheTemporalMonolith.png',
+            'NeutronStar': '/assets/Fusions/TheNeutronStar.png',
+            'GravitationalHarvest': '/assets/Fusions/TheGravitationalHarvest.png',
+            'ShatteredCapacitor': '/assets/Fusions/TheShatteredCapacitor.png',
+            'ChronoDevourer': '/assets/Fusions/TheChronoDevourer.png',
             'orbital_strike': '/assets/hexes/CosmicBeam.png',
             'shield_passive': '/assets/hexes/AigisVortex.PNG',
             'blackhole': '/assets/hexes/EventHorizon.png',
@@ -276,24 +276,24 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
         const foundKey = Object.keys(map).find(k => normalize(k) === normalizedType);
         if (foundKey) return map[foundKey];
 
-        // Explicit fallback for common IDs and Names
+        
         if (normalizedType === 'ecohp' || normalizedType === 'essencesyphon') return '/assets/hexes/EcoHP.png';
         if (normalizedType === 'ecodmg' || normalizedType === 'stormofsteel') return '/assets/hexes/EcoDMG.png';
         if (normalizedType === 'ecoxp' || normalizedType === 'neuralharvest') return '/assets/hexes/EcoXP.png';
         if (normalizedType === 'comcrit' || normalizedType === 'shatteredfate') return '/assets/hexes/ComCrit.png';
         if (normalizedType === 'ecoshield' || normalizedType === 'aegisprotocol') return '/assets/hexes/EcoShield.png';
-        if (normalizedType === 'kinetictsunami') return '/assets/Fusions/THE KINETIC TSUNAMI.png';
-        if (normalizedType === 'chronodevourer') return '/assets/Fusions/THE CHRONO-DEVOURER.png';
-        if (normalizedType === 'shatteredcapacitor') return '/assets/Fusions/THE SHATTERED CAPACITOR.png';
-        if (normalizedType === 'temporalmonolith') return '/assets/Fusions/THE TEMPORAL MONOLITH.png';
-        if (normalizedType === 'soulshattercore') return '/assets/Fusions/THE SOUL-SHATTER CORE.png';
-        if (normalizedType === 'xenoalchemist') return '/assets/Fusions/THE XENO-ALCHEMIST.png';
-        if (normalizedType === 'irradiatedmire') return '/assets/Fusions/THE IRRADIATED MIRE.png';
-        if (normalizedType === 'neuralsingularity') return '/assets/Fusions/THE NEURAL SINGULARITY.png';
-        if (normalizedType === 'gravityanchor') return '/assets/Fusions/THE GRAVITY ANCHOR.png';
-        if (normalizedType === 'neutronstar') return '/assets/Fusions/THE NEUTRON STAR.png';
-        if (normalizedType === 'gravitationalharvest') return '/assets/Fusions/THE GRAVITATIONAL HARVEST.png';
-        if (normalizedType === 'bloodforgedcapacitor' || normalizedType === 'necrokineticengine') return '/assets/Fusions/THE NECRO-KINETIC ENGINE.png';
+        if (normalizedType === 'kinetictsunami') return '/assets/Fusions/TheKineticTsunami.png';
+        if (normalizedType === 'chronodevourer') return '/assets/Fusions/TheChronoDevourer.png';
+        if (normalizedType === 'shatteredcapacitor') return '/assets/Fusions/TheShatteredCapacitor.png';
+        if (normalizedType === 'temporalmonolith') return '/assets/Fusions/TheTemporalMonolith.png';
+        if (normalizedType === 'soulshattercore') return '/assets/Fusions/TheSoulShatterCore.png';
+        if (normalizedType === 'xenoalchemist') return '/assets/Fusions/TheXenoAlchemist.png';
+        if (normalizedType === 'irradiatedmire') return '/assets/Fusions/TheIrradiatedMire.png';
+        if (normalizedType === 'neuralsingularity') return '/assets/Fusions/TheNeuralSingularity.png';
+        if (normalizedType === 'gravityanchor') return '/assets/Fusions/TheGravityAnchor.png';
+        if (normalizedType === 'neutronstar') return '/assets/Fusions/TheNeutronStar.png';
+        if (normalizedType === 'gravitationalharvest') return '/assets/Fusions/TheGravitationalHarvest.png';
+        if (normalizedType === 'bloodforgedcapacitor' || normalizedType === 'necrokineticengine') return '/assets/Fusions/TheNecroKineticEngine.png';
 
         return '/assets/hexes/MalwarePrime.png';
     };
@@ -352,16 +352,18 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                 <div className="meta-card meta-upgrades">
                     <div className="meta-card-title meta-card-title-mb">{t.metaTopUpgrades || 'MOST POPULAR LEGENDARY UPGRADES'}</div>
                     <div className="upgrades-list">
-                        {stats.topUpgrades.map(([id, count], idx) => (
-                            <div key={id} className="upgrade-meta-row">
-                                <div className={`upgrade-rank${idx < 3 ? ' upgrade-rank-top' : ''}`}>#{idx + 1}</div>
-                                <img src={`/assets/hexes/${getHexImage(id)}`} alt={id} className="upgrade-icon" />
-                                <div className="upgrade-name">
-                                    {legendaryNames[id]?.name || ((getUiTranslation(language).legendaries as any)?.[id]?.name) || id}
+                        {stats.topUpgrades.map(([id, count], idx) => {
+                            return (
+                                <div key={id} className="upgrade-meta-row">
+                                    <div className={`upgrade-rank${idx < 3 ? ' upgrade-rank-top' : ''}`}>#{idx + 1}</div>
+                                    <img src={getHexImage(id)} alt={id} className="upgrade-icon" />
+                                    <div className="upgrade-name">
+                                        {legendaryNames[id]?.name || ((getUiTranslation(language).legendaries as any)?.[id]?.name) || id}
+                                    </div>
+                                    <div className="upgrade-count">{count}</div>
                                 </div>
-                                <div className="upgrade-count">{count}</div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -431,8 +433,13 @@ export const LeaderboardStatistics: React.FC<LeaderboardStatisticsProps> = ({
                         const classColor = getClassColor(cls.id);
                         return (
                             <div key={cls.id} className="meta-card meta-class-card" style={{ '--card-color': classColor } as CardCSSProperties}>
-                                <div className="meta-card-title meta-class-title">{cls.name.toUpperCase()} AVG / RUN</div>
-                                <div className="meta-card-value meta-class-value">{formatLargeNumber(Math.round(avg))}</div>
+                                <div className="meta-card-title meta-class-title">{cls.name.toUpperCase()} PERFORMANCE</div>
+                                <div className="meta-card-value meta-class-value" style={{ color: growth >= 0 ? '#10b981' : '#ef4444' }}>
+                                    {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%
+                                </div>
+                                <div className="meta-card-subtitle">
+                                    {t.metaMedianDivergence || 'MEDIAN DIVERGENCE'}
+                                </div>
                             </div>
                         );
                     })}
@@ -502,7 +509,7 @@ const DamageLineChart: React.FC<DamageLineChartProps> = ({ data, getClassColor }
                             className="chart-line"
                         />
                         {visible.map((d, i) => (
-                            <circle key={i} cx={getX(i)} cy={getY(d)} r="2" className="chart-dot" />
+                            <circle key={i} cx={getX(i)} cy={getY(d)} r="2" fill={color} style={{ opacity: 0.8 }} />
                         ))}
                     </g>
                 );

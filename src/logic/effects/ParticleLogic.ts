@@ -94,12 +94,19 @@ export function updateParticles(state: GameState) {
     if (state.floatingNumbers) {
         state.floatingNumbers = state.floatingNumbers.filter(fn => {
             fn.life--;
+            if (fn.anchorId !== undefined) {
+                const enemy = state.enemies.find(e => e.id === fn.anchorId);
+                if (enemy && !enemy.dead) {
+                    fn.x = enemy.x;
+                    fn.y = enemy.y - enemy.size - 70;
+                }
+            }
             return fn.life > 0;
         });
     }
 }
 
-export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string, fontSize?: number) {
+export function spawnFloatingNumber(state: GameState, x: number, y: number, value: string, color: string = '#ffffff', isCrit: boolean = false, backgroundColor?: string, fontSize?: number, anchorId?: number) {
     if (!state.floatingNumbers) state.floatingNumbers = [];
 
     const distSq = (x - state.player.x) ** 2 + (y - state.player.y) ** 2;
@@ -128,6 +135,7 @@ export function spawnFloatingNumber(state: GameState, x: number, y: number, valu
         life: lifeDuration,
         maxLife: lifeDuration,
         isCrit,
-        fontSize
+        fontSize,
+        anchorId
     });
 }

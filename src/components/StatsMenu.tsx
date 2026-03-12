@@ -445,11 +445,11 @@ export const StatsMenu: React.FC<StatsMenuProps> = ({ gameState }) => {
                             const label = labels.damageSources[sourceKey] || source;
 
                             const fusionIconMap: Record<string, string> = {
-                                'Neural Singularity': '/assets/Fusions/THE NEURAL SINGULARITY.png',
-                                'Kinetic Tsunami': '/assets/Fusions/THE KINETIC TSUNAMI.png',
-                                'Neutron Star (Aura)': '/assets/Fusions/THE NEUTRON STAR.png',
-                                'Gravitational Harvest': '/assets/Fusions/THE GRAVITATIONAL HARVEST.png',
-                                'Necro-Kinetic Engine': '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
+                                'Neural Singularity': '/assets/Fusions/TheNeuralSingularity.png',
+                                'Kinetic Tsunami': '/assets/Fusions/TheKineticTsunami.png',
+                                'Neutron Star (Aura)': '/assets/Fusions/TheNeutronStar.png',
+                                'Gravitational Harvest': '/assets/Fusions/TheGravitationalHarvest.png',
+                                'Necro-Kinetic Engine': '/assets/Fusions/TheNecroKineticEngine.png',
                             };
 
                             const classSkills = [

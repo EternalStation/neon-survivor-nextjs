@@ -928,24 +928,25 @@
     font-family: 'Orbitron', sans-serif;
 }
 
-.class-cell {
+.leaderboard-table td.class-cell {
     font-weight: 700;
     font-family: 'Orbitron', sans-serif;
     color: var(--class-color, #00ffff);
+    text-shadow: 0 0 5px color-mix(in srgb, var(--class-color, #00ffff), transparent 60%);
 }
 
-.cause-cell {
+.leaderboard-table td.cause-cell {
     font-size: 0.9em;
     font-weight: 500;
     font-family: 'Orbitron', sans-serif;
 }
 
-.cause-evacuated {
-    color: #10b981;
+.leaderboard-table td.cause-evacuated {
+    color: #10b981 !important;
 }
 
-.cause-killed {
-    color: #ef4444;
+.leaderboard-table td.cause-killed {
+    color: #ef4444 !important;
 }
 
 .patch-cell {

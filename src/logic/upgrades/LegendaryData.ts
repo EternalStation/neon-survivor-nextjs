@@ -168,7 +168,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'XenoAlchemist',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE XENO-ALCHEMIST.png'
+        customIcon: '/assets/Fusions/TheXenoAlchemist.png'
     },
     IrradiatedMire: {
         id: 'irradiated_mire',
@@ -181,7 +181,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'IrradiatedMire',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE IRRADIATED MIRE.png'
+        customIcon: '/assets/Fusions/TheIrradiatedMire.png'
     },
     NeuralSingularity: {
         id: 'neural_singularity',
@@ -194,7 +194,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'NeuralSingularity',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE NEURAL SINGULARITY.png'
+        customIcon: '/assets/Fusions/TheNeuralSingularity.png'
     },
     KineticTsunami: {
         id: 'kinetic_tsunami',
@@ -207,7 +207,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'KineticTsunami',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE KINETIC TSUNAMI.png'
+        customIcon: '/assets/Fusions/TheKineticTsunami.png'
     },
     SoulShatterCore: {
         id: 'soul_shatter_core',
@@ -220,7 +220,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'SoulShatterCore',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE SOUL-SHATTER CORE.png'
+        customIcon: '/assets/Fusions/TheSoulShatterCore.png'
     },
     BloodForgedCapacitor: {
         id: 'blood_forged_capacitor',
@@ -233,7 +233,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'BloodForgedCapacitor',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE NECRO-KINETIC ENGINE.png'
+        customIcon: '/assets/Fusions/TheNecroKineticEngine.png'
     },
     GravityAnchor: {
         id: 'gravity_anchor',
@@ -246,7 +246,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'GravityAnchor',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE GRAVITY ANCHOR.png'
+        customIcon: '/assets/Fusions/TheGravityAnchor.png'
     },
     TemporalMonolith: {
         id: 'temporal_monolith',
@@ -259,7 +259,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'TemporalMonolith',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE TEMPORAL MONOLITH.png'
+        customIcon: '/assets/Fusions/TheTemporalMonolith.png'
     },
     NeutronStar: {
         id: 'neutron_star',
@@ -272,7 +272,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'NeutronStar',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE NEUTRON STAR.png'
+        customIcon: '/assets/Fusions/TheNeutronStar.png'
     },
     GravitationalHarvest: {
         id: 'gravitational_harvest',
@@ -285,7 +285,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'GravitationalHarvest',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE GRAVITATIONAL HARVEST.png'
+        customIcon: '/assets/Fusions/TheGravitationalHarvest.png'
     },
     ShatteredCapacitor: {
         id: 'shattered_capacitor',
@@ -298,7 +298,7 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ShatteredCapacitor',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE SHATTERED CAPACITOR.png'
+        customIcon: '/assets/Fusions/TheShatteredCapacitor.png'
     },
     ChronoDevourer: {
         id: 'chrono_devourer',
@@ -311,6 +311,6 @@ export const LEGENDARY_UPGRADES: Record<string, LegendaryHex> = {
         type: 'ChronoDevourer',
         level: 5,
         killsAtAcquisition: 0,
-        customIcon: '/assets/Fusions/THE CHRONO-DEVOURER.png'
+        customIcon: '/assets/Fusions/TheChronoDevourer.png'
     },
 };

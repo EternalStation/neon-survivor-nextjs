@@ -3,20 +3,10 @@ import { spawnParticles, spawnFloatingNumber } from '../../effects/ParticleLogic
 import { playSfx } from '../../audio/AudioLogic';
 
 export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel4: boolean) {
-    if (!e.stage) e.stage = 1;
+    checkBossStageTransition(e, state);
 
 
     const hpPct = e.hp / e.maxHp;
-
-
-    if (e.stage === 1 && hpPct < 0.66) {
-        e.stage = 2;
-    }
-
-    if (e.stage === 2 && hpPct < 0.33) {
-        e.stage = 3;
-    }
-
 
 
     const effectiveSpd = currentSpd;
@@ -30,10 +20,12 @@ export function updateAbominationBoss(e: Enemy, currentSpd: number, dx: number, 
 }
 
 export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
+    checkBossStageTransition(e, state);
     let effectiveSpd = currentSpd;
+    const stage = e.stage || 1;
     if (isLevel2) {
-        e.thorns = 0.03;
-        effectiveSpd = currentSpd * 0.85;
+        e.thorns = 0.03 + (stage - 1) * 0.01;
+        effectiveSpd = currentSpd * (0.85 - (stage - 1) * 0.05);
     }
 
     if (isLevel4) {
@@ -73,7 +65,8 @@ export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: n
 
 
             e.shieldRegenTimer = (e.shieldRegenTimer || 0) + 1;
-            if (e.shieldRegenTimer > 900) {
+            const regenThreshold = 900 - (stage - 1) * 200;
+            if (e.shieldRegenTimer > regenThreshold) {
 
                 for (let i = 0; i < 3; i++) {
 
@@ -105,7 +98,9 @@ export function updateSquareBoss(e: Enemy, currentSpd: number, dx: number, dy: n
 }
 
 export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, isLevel2: boolean, isLevel3: boolean, isLevel4: boolean) {
+    checkBossStageTransition(e, state);
     const distToPlayer = Math.hypot(dx, dy);
+    const stage = e.stage || 1;
 
 
     if (isLevel4) {
@@ -157,8 +152,8 @@ export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: n
 
 
         if (e.cycloneState === 1) {
-
-            if (e.cycloneTimer > 120) {
+            const duration = 120 + (stage - 1) * 40;
+            if (e.cycloneTimer > duration) {
                 e.cycloneState = 0;
                 e.cycloneTimer = 0;
             } else {
@@ -181,8 +176,8 @@ export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: n
                 return { vx: 0, vy: 0 };
             }
         } else {
-
-            if (e.cycloneTimer > 600) {
+            const interval = 600 - (stage - 1) * 150;
+            if (e.cycloneTimer > interval) {
 
 
 
@@ -205,7 +200,7 @@ export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: n
     if (isLevel2) {
         if (!e.dashTimer) e.dashTimer = 0;
         e.dashTimer++;
-        const CD = 390;
+        const CD = 390 - (stage - 1) * 90;
 
 
         if (e.dashState !== 1 && e.dashState !== 2) {
@@ -263,4 +258,24 @@ export function updateCircleBoss(e: Enemy, currentSpd: number, dx: number, dy: n
     const vx = Math.cos(angle) * currentSpd + pushX;
     const vy = Math.sin(angle) * currentSpd + pushY;
     return { vx, vy };
+}
+
+function checkBossStageTransition(e: Enemy, state: GameState) {
+    if (!e.stage) e.stage = 1;
+    const hpPct = e.hp / e.maxHp;
+    let transitioned = false;
+
+    if (e.stage === 1 && hpPct < 0.66) {
+        e.stage = 2;
+        transitioned = true;
+    } else if (e.stage === 2 && hpPct < 0.33) {
+        e.stage = 3;
+        transitioned = true;
+    }
+
+    if (transitioned) {
+        e.invincibleUntil = state.gameTime + 1.0;
+        spawnFloatingNumber(state, e.x, e.y, `STAGE ${e.stage}`, '#ef4444', true, undefined, 36, e.id);
+        playSfx('rare-spawn');
+    }
 }

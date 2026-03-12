@@ -1,5 +1,5 @@
 import { GameState, AreaEffect, Enemy, Player } from '../logic/core/Types';
-import { getHexLevel, getHexMultiplier } from '../logic/upgrades/LegendaryLogic';
+import { getHexLevel, getHexMultiplier, getLogarithmicSum } from '../logic/upgrades/LegendaryLogic';
 import { spawnParticles, spawnFloatingNumber } from '../logic/effects/ParticleLogic';
 import { handleEnemyDeath } from '../logic/mission/DeathLogic';
 import { spawnNanitesFromCloud } from '../logic/player/PlayerCombat';

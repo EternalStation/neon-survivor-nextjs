@@ -307,7 +307,8 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
         isEnemy: true,
         hits: new Set(),
         color: brightColor,
-        size: 4
+        size: 4,
+        sourceShape
     });
 
 

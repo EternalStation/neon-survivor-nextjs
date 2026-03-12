@@ -5,7 +5,7 @@
     border-radius: 4px;
     padding: 6px 12px;
     color: white;
-    font-family: 'JetBrains Mono', 'Inter', monospace;
+    font-family: 'Orbitron', 'Inter', sans-serif;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(59, 130, 246, 0.05);
     margin-top: 4px;
     height: 175px;
@@ -85,10 +85,10 @@
 .forge-complex { flex: 1; }
 
 .section-header {
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 950;
     color: #fff;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     margin-bottom: 8px;
     padding-bottom: 4px;
@@ -127,6 +127,14 @@
 }
 .tube-fill.fuel.horizontal {
     background: linear-gradient(90deg, #0c4a6e, #0ea5e9, #7dd3fc);
+}
+.tube-fill.fuel.horizontal.fueling-active {
+    animation: fuel-pulse 0.3s infinite ease-in-out;
+}
+@keyframes fuel-pulse {
+    0% { filter: brightness(1) drop-shadow(0 0 5px #0ea5e9); }
+    50% { filter: brightness(1.6) drop-shadow(0 0 15px #7dd3fc); }
+    100% { filter: brightness(1) drop-shadow(0 0 5px #0ea5e9); }
 }
 .load-fuel-btn {
     background: #0ea5e9;

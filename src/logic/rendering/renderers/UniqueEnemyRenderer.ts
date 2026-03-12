@@ -173,6 +173,67 @@ export function renderUniqueEnemy(ctx: CanvasRenderingContext2D, e: Enemy, state
         return true;
     }
 
+    if (e.shape === 'snitch') {
+        const t = state.gameTime;
+        const isReal = e.rareReal !== false;
+        
+        ctx.save();
+        ctx.globalAlpha = isReal ? 1.0 : 0.6;
+        
+        const ringRot = isReal ? t * 4 : t * 2;
+        ctx.rotate(ringRot);
+        
+        // 2. Floating "Wings" (Triangles)
+        const wingCount = isReal ? 3 : 2;
+        for (let i = 0; i < wingCount; i++) {
+            ctx.save();
+            const angle = (i / wingCount) * Math.PI * 2 - ringRot * 1.5;
+            ctx.rotate(angle);
+            ctx.translate(e.size * 0.9, 0);
+            
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.lineTo(-4, -6);
+            ctx.lineTo(-4, 6);
+            ctx.closePath();
+            
+            ctx.fillStyle = innerColor;
+            ctx.globalAlpha = 0.8;
+            ctx.fill();
+            
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        // 3. Quantum Core
+        const corePulse = 1.0 + Math.sin(t * 15) * 0.15;
+        ctx.save();
+        ctx.scale(corePulse, corePulse);
+        
+        // Scanlines/Glitch effect on core
+        if (isReal && Math.floor(t * 20) % 10 === 0) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = coreColor;
+            ctx.translate((Math.random() - 0.5) * 3, 0);
+        }
+        
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, e.size * 0.6);
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.4, coreColor);
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, e.size * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
+        
+        ctx.restore();
+        return true;
+    }
+
     if (e.shape === 'glitcher') {
         const t = state.gameTime;
         const lineCount = 2;
@@ -193,3 +254,4 @@ export function renderUniqueEnemy(ctx: CanvasRenderingContext2D, e: Enemy, state
 
     return false;
 }
+

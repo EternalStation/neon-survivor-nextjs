@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { GameState, Blueprint, Meteorite } from '../logic/core/Types';
 import { BLUEPRINT_DATA, activateBlueprint, researchBlueprint, scrapBlueprint, checkResearchProgress, isBuffActive } from '../logic/upgrades/BlueprintLogic';
 import { TICK_INTERVAL } from '../logic/upgrades/IncubatorLogic';
@@ -45,6 +45,8 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
     const [promptBlueprint, setPromptBlueprint] = useState<Blueprint | null>(null);
     const [isHoveringForge, setHoveringForge] = useState(false);
     const [fuelError, setFuelError] = useState(false);
+    const [isFueling, setIsFueling] = useState(false);
+    const fuelingInterval = useRef<NodeJS.Timeout | null>(null);
     const [, setTick] = useState(0);
     // Shutter stays OPEN if: hovering, dragging, OR meteorite is inside
     const isForgeShieldOpen = !!movedItem || isHoveringForge || !!gameState.incubator[0];
@@ -57,7 +59,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onRegisterBlueprintClick]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const hasResearch = gameState.inventory.some(item => item?.isBlueprint && item.status === 'researching');
         if (hasResearch) {
             const interval = setInterval(() => {
@@ -71,6 +73,70 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
             return () => clearInterval(interval);
         }
     }, [gameState.inventory, onUpdate]);
+
+    const handleAddFuel = useCallback(() => {
+        if (gameState.incubatorFuel >= gameState.incubatorFuelMax) {
+            return false;
+        }
+
+        if (gameState.player.dust >= 1) {
+            gameState.player.dust -= 1;
+            gameState.incubatorFuel = Math.min(gameState.incubatorFuelMax, gameState.incubatorFuel + 1);
+            playSfx('upgrade-confirm');
+            onUpdate();
+            return true;
+        } else {
+            playSfx('ui-click');
+            setFuelError(true);
+            setTimeout(() => setFuelError(false), 2000);
+            if (onInsufficientDust) onInsufficientDust();
+            return false;
+        }
+    }, [gameState, onUpdate, onInsufficientDust]);
+
+    const stopFueling = useCallback(() => {
+        if (fuelingInterval.current) {
+            clearInterval(fuelingInterval.current);
+            fuelingInterval.current = null;
+        }
+        setIsFueling(false);
+    }, []);
+
+    const startFueling = useCallback(() => {
+        if (gameState.incubatorFuel >= gameState.incubatorFuelMax) return;
+        
+        const success = handleAddFuel();
+        if (!success) return;
+
+        setIsFueling(true);
+        
+        let delay = 300; // Start with a small delay before repeating
+        
+        const tick = () => {
+            if (fuelingInterval.current) {
+                const stillSuccess = handleAddFuel();
+                if (!stillSuccess) {
+                    stopFueling();
+                }
+            }
+        };
+
+        // First repeat after delay
+        fuelingInterval.current = setTimeout(() => {
+            tick();
+            // Then start faster interval
+            if (fuelingInterval.current) {
+                clearInterval(fuelingInterval.current);
+                fuelingInterval.current = setInterval(tick, 80);
+            }
+        }, delay) as any;
+    }, [gameState.incubatorFuel, gameState.incubatorFuelMax, handleAddFuel, stopFueling]);
+
+    useEffect(() => {
+        return () => {
+            if (fuelingInterval.current) clearInterval(fuelingInterval.current);
+        };
+    }, []);
 
     const handleConfirmActivate = () => {
         if (promptBlueprint) {
@@ -190,7 +256,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                         <div className="fuel-header-wrap">
                             <span className="fuel-text">{gameState.incubatorFuel}/30</span>
                             <div className="tube-container horizontal" style={{ width: '64px' }}>
-                                <div className="tube-fill fuel horizontal" style={{ width: `${(gameState.incubatorFuel / gameState.incubatorFuelMax) * 100}%` }}>
+                                <div className={`tube-fill fuel horizontal ${isFueling ? 'fueling-active' : ''}`} style={{ width: `${(gameState.incubatorFuel / gameState.incubatorFuelMax) * 100}%` }}>
                                     <div className="plasma-core horizontal" />
                                     <div className="plasma-bubbles horizontal" />
                                 </div>
@@ -198,21 +264,9 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                             </div>
                             <button
                                 className="load-fuel-btn mini"
-                                onClick={() => {
-                                    if (gameState.incubatorFuel >= gameState.incubatorFuelMax) return;
-
-                                    if (gameState.player.dust >= 3) {
-                                        gameState.player.dust -= 3;
-                                        gameState.incubatorFuel = Math.min(gameState.incubatorFuelMax, gameState.incubatorFuel + 3);
-                                        playSfx('upgrade-confirm');
-                                        onUpdate();
-                                    } else {
-                                        playSfx('ui-click');
-                                        setFuelError(true);
-                                        setTimeout(() => setFuelError(false), 2000);
-                                        if (onInsufficientDust) onInsufficientDust();
-                                    }
-                                }}
+                                onMouseDown={startFueling}
+                                onMouseUp={stopFueling}
+                                onMouseLeave={stopFueling}
                                 disabled={gameState.incubatorFuel >= gameState.incubatorFuelMax}
                             >
                                 {t.incubator.loadFuel}
@@ -311,7 +365,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                         transform: 'translateX(-50%)',
                                         whiteSpace: 'nowrap',
                                         color: (gameState.incubator[0].isRuined || gameState.incubatorFuel <= 0) ? '#ef4444' : '#00d9ff',
-                                        fontSize: '10px',
+                                        fontSize: '9px',
                                         fontWeight: 950,
                                         textAlign: 'center',
                                         textShadow: (gameState.incubator[0].isRuined || gameState.incubatorFuel <= 0)
@@ -323,7 +377,7 @@ export const BlueprintBay: React.FC<BlueprintBayProps> = ({
                                             ? t.incubator.criticalFailure
                                             : gameState.incubatorFuel <= 0
                                                 ? t.incubator.offline
-                                                : `${t.meteorites.stats.incubLabel || 'INCUB'}: +${gameState.incubator[0].incubatorBoost || 0}%`}
+                                                : `${t.meteorites.stats.incubLabel || 'INCUB:'} +${gameState.incubator[0].incubatorBoost || 0}%`}
                                     </div>
 
                                     <div className="socket-item-wrap floating-forge" style={{ width: '52px', height: '72px', zIndex: 1 }}>

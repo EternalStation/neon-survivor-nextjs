@@ -63,7 +63,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
     const [isBlackout, setIsBlackout] = useState(false);
     const [isFlickering, setIsFlickering] = useState(false);
     
-    // Physics-based buttons system
     const buttonPhysicsRef = React.useRef<Record<string, {
         x: number; y: number; r: number; 
         vx: number; vy: number; vr: number; 
@@ -134,7 +133,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             const phys = buttonPhysicsRef.current[id];
             if (phys) {
                 phys.isDragging = false;
-                // Add some toss velocity
                 phys.vr = (Math.random() - 0.5) * 10;
             }
             dragTargetRef.current = null;
@@ -143,7 +141,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
 
     const handleStart = () => {
         playSfx('transition');
-        // Pre-calculate target to avoid layout thrashing at frame 1
         const canvas = document.getElementById('menu-particles');
         if (canvas) {
             const w = canvas.clientWidth;
@@ -278,7 +275,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 const dx = this.x - mx;
                 const dy = this.y - my;
                 this.dist = Math.sqrt(dx * dx + dy * dy);
-                const maxDist = 350; // Smaller radius for tighter focus
+                const maxDist = 350; 
 
                 if (this.dist < maxDist) {
                     const factor = 1 - this.dist / maxDist;
@@ -286,8 +283,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     
                     const bonusSize = power * 10; 
                     
-                    // Smooth displacement: Multiply by distance ratio to prevent center-jumping
-                    // As dist -> 0, displacement -> 0, making the central hex stable.
                     const smoothDisp = power * 15; 
                     this.dispX = dx * (smoothDisp / maxDist);
                     this.dispY = dy * (smoothDisp / maxDist);
@@ -344,7 +339,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 
                 ctx.save();
                 if (zoom > 1) {
-                    // Zoom origin is the target eye
+                    
                     ctx.translate(targetX, targetY);
                     ctx.scale(zoom, zoom);
                     ctx.translate(-targetX, -targetY);
@@ -364,7 +359,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 const eyeWidth = 110;
                 const currentHeight = 1 + (35 * this.openAmount);
 
-                // Disable eye movement during transition for perfect zoom targeting
+                
                 const isTransitioning = zoom > 1.1;
                 const ldx = isTransitioning ? 0 : (mx - this.x) / 10;
                 const ldy = isTransitioning ? 0 : (my - this.y) / 10;
@@ -373,9 +368,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.save();
                     ctx.translate(side * eyeSpread + ldx, ldy);
                     
-                    ctx.shadowBlur = 20 * this.openAmount; // Less intense glow
+                    ctx.shadowBlur = 20 * this.openAmount; 
                     ctx.shadowColor = '#880000';
-                    ctx.fillStyle = `rgba(180, 0, 0, ${0.4 * this.openAmount})`; // Dimmer red
+                    ctx.fillStyle = `rgba(180, 0, 0, ${0.4 * this.openAmount})`; 
                     
                     ctx.beginPath();
                     ctx.moveTo(-eyeWidth/2, -2);
@@ -383,8 +378,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.quadraticCurveTo(0, currentHeight/2 + 5, -eyeWidth/2, 2);
                     ctx.fill();
 
-                    // Pupil - The "Infinite Void"
-                    // Pupil expands to fill view as we get extremely close
+                    
+                    
                     const pupilExpand = zoom > 100 ? (zoom - 100) / 3 : 0;
                     const pupilW = 6 + pupilExpand;
                     const pupilH = (currentHeight/3 + 2) + pupilExpand;
@@ -394,11 +389,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.ellipse(0, 0, pupilW, pupilH, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // If zooming, draw "nested" void layers to create a tunnel effect
+                    
                     if (zoom > 5) {
                         const layers = Math.min(10, Math.floor(zoom / 3));
                         for (let i = 0; i < layers; i++) {
-                            // Shifting offsets based on zoom for a "travelling inside" feel
+                            
                             const layerScale = 1 + (i * 0.8);
                             ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 / layerScale})`;
                             ctx.lineWidth = 1 / zoom;
@@ -463,7 +458,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                             this.targetId = ids[Math.floor(Math.random() * ids.length)];
                             this.state = Math.random() > 0.5 ? 'hunting' : 'observing';
                         }
-                        // Gentle idle drift instead of homing to corner
+                        
                         this.tx += Math.sin(Date.now() / 2000) * 0.5;
                         this.ty += Math.cos(Date.now() / 2000) * 0.5;
                     } else if (this.state === 'wandering' && this.wanderingTarget) {
@@ -490,7 +485,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                             const rect = el.getBoundingClientRect();
                             const cr = canvas.getBoundingClientRect();
                             if (this.timer === 0) { 
-                                // Push direction: Left to Right only
+                                
                                 this.pushDir = { x: 1, y: 0 };
                                 this.timer = 120 + Math.random() * 240;
                                 this.pushOffset = { x: 0, y: 0 };
@@ -499,13 +494,13 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                                     (rect.width / 2) / Math.abs(this.pushDir.x || 0.01),
                                     (rect.height / 2) / Math.abs(this.pushDir.y || 0.01)
                                 );
-                                const totalDist = distToEdge + 32; // Buffer for arms
+                                const totalDist = distToEdge + 32; 
 
                                 this.initialPos = { 
                                     x: (rect.left - cr.left + rect.width / 2) - this.pushDir.x * totalDist,
                                     y: (rect.top - cr.top + rect.height / 2) - this.pushDir.y * totalDist
                                 };
-                                // Waypoint to avoid flying through the button
+                                
                                 this.standbyPos = {
                                     x: this.initialPos.x - this.pushDir.x * 80,
                                     y: this.initialPos.y - this.pushDir.y * 80
@@ -529,7 +524,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     } else if (this.state === 'pushing' && this.targetId) {
                         this.timer--;
                         const id = this.targetId;
-                        const pushSpeed = 0.55; // Slightly faster for impact
+                        const pushSpeed = 0.55; 
                         this.pushOffset.x += this.pushDir.x * pushSpeed;
                         this.pushOffset.y += this.pushDir.y * pushSpeed;
 
@@ -560,7 +555,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     }
                 }
 
-                // Constant speed following logic - Prevents "teleporting" over long distances
+                
                 const dx = this.tx - this.x;
                 const dy = this.ty - this.y;
                 const dist = Math.hypot(dx, dy);
@@ -573,7 +568,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 this.vx = this.x - prevX;
                 this.vy = this.y - prevY;
 
-                // Rotate to face travel direction
+                
                 if (Math.hypot(this.vx, this.vy) > 0.05 || this.state === 'pushing') {
                     const targetAngle = this.state === 'pushing' ? Math.atan2(this.pushDir.y, this.pushDir.x) : Math.atan2(this.vy, this.vx);
                     let diff = targetAngle - this.angle;
@@ -586,7 +581,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 if (!ctx) return;
                 ctx.save();
                 
-                // Mechanical Vibration during load/push
+                
                 const t = Date.now();
                 let ox = 0, oy = 0;
                 if (this.state === 'pushing') {
@@ -600,7 +595,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 const hover = Math.sin(t / 400) * 3;
                 ctx.translate(0, hover);
 
-                // Heavy Plasma Boosters (Live Fire)
+                
                 const isMoving = Math.hypot(this.vx, this.vy) > 0.2 || this.state === 'pushing';
                 if (isMoving) {
                     const pCount = this.state === 'pushing' ? 3 : 1;
@@ -616,12 +611,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         ctx.fillStyle = grad;
                         ctx.beginPath();
                         ctx.moveTo(-12, -flareWidth/2);
-                        // Jittery plasma core
+                        
                         ctx.lineTo(-12 - trailLen, (Math.random() - 0.5) * 4);
                         ctx.lineTo(-12, flareWidth/2);
                         ctx.fill();
                         
-                        // Outer glow segment
+                        
                         ctx.shadowBlur = 15;
                         ctx.shadowColor = '#00ffff';
                         ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)';
@@ -631,12 +626,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     }
                 }
 
-                // Advanced Plasma Rocket Engines (Replacing Wing Housings)
+                
                 [-1, 1].forEach(side => {
                     ctx.save();
                     ctx.translate(-5, side * 5);
                     
-                    // Engine Pod
+                    
                     ctx.fillStyle = '#1e293b';
                     ctx.strokeStyle = '#22d3ee';
                     ctx.lineWidth = 1.5;
@@ -645,21 +640,21 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.fill();
                     ctx.stroke();
 
-                    // Rocket Nozzle (Backwards facing)
+                    
                     ctx.fillStyle = '#0f172a';
                     ctx.beginPath();
                     ctx.rect(-18, -4, 4, 8);
                     ctx.fill();
                     ctx.stroke();
 
-                    // Auxiliary Thusters
+                    
                     ctx.fillStyle = '#334155';
                     ctx.fillRect(-12, side * 2.5, 3, 1.5);
                     
                     ctx.restore();
                 });
 
-                // Iron Man Stabilizer Arms (Hands)
+                
                 if (this.state === 'pushing') {
                     const armLen = 14;
                     const spread = 9;
@@ -673,7 +668,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         ctx.lineTo(15 + armLen * deployProgress, side * spread);
                         ctx.stroke();
                         
-                        // Contact spark
+                        
                         if (Math.random() < 0.1) {
                             ctx.fillStyle = '#fff';
                             ctx.fillRect(14 + armLen * deployProgress, side * spread - 1, 3, 3);
@@ -681,7 +676,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     });
                 }
 
-                // Main Armored Hull (Diamond)
+                
                 ctx.fillStyle = '#0f172a';
                 ctx.strokeStyle = '#22d3ee';
                 ctx.lineWidth = 2;
@@ -694,7 +689,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 ctx.fill();
                 ctx.stroke();
 
-                // Advanced Tri-Node Core
+                
                 for (let i = 0; i < 3; i++) {
                     const ax = 10 - i * 9;
                     const as = 5 - i * 1.2;
@@ -709,7 +704,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.fill();
                 }
 
-                // Tactical Front Lens (Scanning)
+                
                 const scan = Math.sin(t / 150) * 2;
                 ctx.fillStyle = '#00ffff';
                 ctx.shadowBlur = 12;
@@ -747,7 +742,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             const cy = e.clientY - rect.top;
 
             if (Math.hypot(cx - drone.x, cy - drone.y) < 60) {
-                // Easter Egg Trigger Logic
+                
                 const now = Date.now();
                 const track = clickTrackRef.current;
                 if (now - track.lastTime > 5000) {
@@ -770,19 +765,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         const variant = dialogues[Math.floor(Math.random() * dialogues.length)];
                         setAssistantMsg(language === 'ru' ? variant.ru : variant.en);
                         
-                        // Instant Blackout Protocol - No more flickering delays
+                        
                         setTimeout(() => {
                             setAssistantMsg(null);
                             setIsFlickering(false);
-                            setIsBlackout(true); // Light off IMMEDIATELY
+                            setIsBlackout(true); 
                             
-                            // EXPLOSION PHASE - Launch everyone UP (including logout)
+                            
                             const ids = ['btn-multiplayer', 'btn-leaderboard', 'btn-settings-actual', 'btn-blueprints', 'btn-start', 'btn-logout'];
                             ids.forEach(id => {
                                 const el = document.getElementById(id);
                                 const rect = el?.getBoundingClientRect();
                                 
-                                // Account for existing drone offsets to prevent a "jump" at start
+                                
                                 const current = buttonOffsets[id] || { x: 0, y: 0, r: 0 };
                                 const initialX = rect ? (rect.left + rect.width / 2) - (current.x || 0) : (w / 2);
                                 const initialY = rect ? (rect.top + rect.height / 2) - (current.y || 0) : (h * 0.4);
@@ -801,7 +796,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                                     initialY
                                 };
                             });
-                        }, 7000); // 7 seconds delay to let user read the warning
+                        }, 7000); 
                     }
                 }
                 track.lastTime = now;
@@ -835,7 +830,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             const mx = (mouseRef.current.x + 0.5) * w;
             const my = (mouseRef.current.y + 0.5) * h;
 
-            // Update Physics for fallen buttons
+            
             if (isBlackoutRef.current) {
                 const floorOffsetFromBottom = 10; 
                 const newOffsets: Record<string, { x: number, y: number, r: number }> = {};
@@ -844,12 +839,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 Object.keys(buttonPhysicsRef.current).forEach(id => {
                     const p = buttonPhysicsRef.current[id];
                     if (!p.isDragging) {
-                        p.vy += 0.45; // Gravity
+                        p.vy += 0.45; 
                         p.x += p.vx;
                         p.y += p.vy;
                         p.r += p.vr;
 
-                        // Corner-Aware Floor Bounce
+                        
                         const isStart = id === 'btn-start';
                         const isLogout = id === 'btn-logout';
                         const w_b = isStart ? 340 : (isLogout ? 140 : 280);
@@ -859,7 +854,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         const verticalExtent = Math.abs((w_b / 2) * Math.sin(rad)) + Math.abs((h_b / 2) * Math.cos(rad));
                         const absoluteYCenter = p.y + (p.initialY || (h * 0.4));
                         
-                        // Bottom edge check
+                        
                         if (absoluteYCenter + verticalExtent > h - floorOffsetFromBottom) {
                             p.y = (h - floorOffsetFromBottom) - verticalExtent - (p.initialY || (h * 0.4));
                             p.vy *= -0.55;
@@ -877,7 +872,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                             }
                         }
 
-                        // Side Wall Bounce (using horizontal extent)
+                        
                         const horizontalExtent = Math.abs((w_b / 2) * Math.cos(rad)) + Math.abs((h_b / 2) * Math.sin(rad));
                         const absoluteXCenter = p.x + (p.initialX || (w / 2));
                         if (absoluteXCenter - horizontalExtent < 20) {
@@ -893,7 +888,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         newOffsets[id] = { x: p.x, y: p.y, r: p.r };
                         changed = true;
                     } else {
-                        // Drag logic updates p directly, just sync to state
+                        
                         newOffsets[id] = { x: p.x, y: p.y, r: p.r };
                         changed = true;
                     }
@@ -903,20 +898,20 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 }
             }
             
-            // Lurker Curiosity: Sometimes follow the drone instead of mouse
+            
             const droneDist = Math.hypot(drone.x - w/2, drone.y - h*0.35);
             const shouldWatchDrone = drone.active && (drone.state === 'pushing' || drone.state === 'hunting' || (drone.state === 'wandering' && Math.sin(now/2000) > 0.5));
             const targetX = shouldWatchDrone ? drone.x : mx;
             const targetY = shouldWatchDrone ? drone.y : my;
 
-            // Unified Transition Logic
+            
             if (transitionStartRef.current !== null) {
-                const duration = 1200; // Slow cinematic duration
+                const duration = 1200; 
                 const elapsed = now - transitionStartRef.current;
                 const progress = Math.min(elapsed / duration, 1);
                 zoomFactorRef.current = 1 + Math.pow(progress, 4) * 500; 
                 
-                // Trigger handover as soon as the eye fills the screen, cutting the trailing black time
+                
                 if (progress >= 0.82 && !onStartTriggeredRef.current) {
                     onStartTriggeredRef.current = true;
                     onStart();
@@ -926,7 +921,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             const internalZoom = zoomFactorRef.current;
             const zt = zoomTargetRef.current;
 
-            // Global background zoom/pan
+            
             ctx.save();
             if (internalZoom > 1) {
                 ctx.translate(zt.x, zt.y);
@@ -953,13 +948,13 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             sortedHexes.forEach(hex => { hex.update(mx, my); hex.draw(); });
 
             if (isBlackoutRef.current) {
-                // Draw total blackout mask - pure black or flickering
+                
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0); 
                 
                 let opacity = 1;
                 if (isFlickering) {
-                    // Slow nervous flicker logic
+                    
                     const flicker = Math.sin(now / 50) * Math.cos(now / 150);
                     opacity = flicker > 0.3 ? 0.3 : 0.85; 
                 }
@@ -968,7 +963,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                 ctx.fillRect(0, 0, w, h);
                 
                 if (isBlackout) {
-                    // Tactical Scanner beam (Only after total blackout)
+                    
                     ctx.globalCompositeOperation = 'destination-out';
                     const lightRadius = 80;
                     ctx.fillStyle = 'black';
@@ -977,11 +972,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.fill();
                     ctx.restore();
 
-                    // High-Tech HUD Rim
+                    
                     ctx.save();
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     
-                    // Outer rotating ring
+                    
                     ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
                     ctx.lineWidth = 1;
                     ctx.setLineDash([10, 20]);
@@ -989,24 +984,24 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                     ctx.arc(mx, my, lightRadius + 4, now / 800, now / 800 + Math.PI * 2);
                     ctx.stroke();
                     
-                    // Inner solid rim
+                    
                     ctx.setLineDash([]);
                     ctx.strokeStyle = 'rgba(34, 211, 238, 0.2)';
                     ctx.beginPath();
                     ctx.arc(mx, my, lightRadius, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Advanced Crosshair
+                    
                     ctx.strokeStyle = '#22d3ee';
                     ctx.globalAlpha = 0.8;
                     ctx.beginPath();
-                    // Top
+                    
                     ctx.moveTo(mx, my - lightRadius + 5); ctx.lineTo(mx, my - lightRadius + 15);
-                    // Bottom
+                    
                     ctx.moveTo(mx, my + lightRadius - 5); ctx.lineTo(mx, my + lightRadius - 15);
-                    // Left
+                    
                     ctx.moveTo(mx - lightRadius + 5, my); ctx.lineTo(mx - lightRadius + 15, my);
-                    // Right
+                    
                     ctx.moveTo(mx + lightRadius - 5, my); ctx.lineTo(mx + lightRadius - 15, my);
                     ctx.stroke();
                 }
@@ -1052,8 +1047,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
             )}
 
             <div className={`menu-container ${isBlackout ? 'in-blackout' : ''}`} style={{
-                // Disappear instantly when dive begins to clear view
-                opacity: (isTransitioning || (isBlackout && !assistantMsg && Math.hypot(mouse.x, mouse.y) > 2)) ? 0 : 1, // Keep it simple
+                
+                opacity: (isTransitioning || (isBlackout && !assistantMsg && Math.hypot(mouse.x, mouse.y) > 2)) ? 0 : 1, 
                 transform: isTransitioning ? `scale(${1 + (zoomFactorRef.current - 1) * 3})` : 'none',
                 transformOrigin: '50% 35%', 
                 pointerEvents: isTransitioning ? 'none' : 'auto',
@@ -1110,7 +1105,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                             width: '130px',
                             pointerEvents: 'none',
                             zIndex: 10,
-                            transform: 'scaleX(-1)', // Face inwards
+                            transform: 'scaleX(-1)', 
                             filter: 'brightness(0.9) drop-shadow(0 0 15px rgba(0, 243, 255, 0.3))'
                         }}
                         alt=""
@@ -1162,7 +1157,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onStartMultiplayer,
                         <button 
                             id="btn-settings"
                             className="menu-btn secondary" 
-                            style={{ display: 'none' }} // Hidden legacy buttons but kept IDs for collision if needed
+                            style={{ display: 'none' }} 
                         />
                         <button 
                             className="btn-logic" 

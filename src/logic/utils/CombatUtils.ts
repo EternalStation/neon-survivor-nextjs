@@ -3,7 +3,7 @@ import type { GameState, Player } from '../core/Types';
 import { calcStat, getDefenseReduction } from './MathUtils';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
-import { recordIncomingDamage } from './DamageTracking';
+import { recordIncomingDamage, recordHealing } from './DamageTracking';
 
 export interface DamageOptions {
     sourceType?: 'collision' | 'projectile' | 'other';
@@ -148,7 +148,7 @@ export function applyHealToPlayer(
     state: GameState,
     player: Player,
     healAmount: number,
-    source: string = 'heal',
+    source: string = 'Heal',
     optionalShieldDuration?: number
 ) {
     if (healAmount <= 0 || player.healingDisabled || player.curHp <= 0) return;
@@ -168,11 +168,15 @@ export function applyHealToPlayer(
                 expiry: state.gameTime + duration,
                 source: hasCrimsonOverheal ? 'lifesteal' : (source === 'turret' ? 'skill' : 'skill') // Default to skill if not lifesteal
             });
+            recordHealing(player, source, healAmount);
         }
         return;
     }
 
     const potentialHp = player.curHp + healAmount;
+    const actualHeal = Math.min(maxHp, potentialHp) - player.curHp;
+    if (actualHeal > 0) recordHealing(player, source, actualHeal);
+
     if (potentialHp > maxHp) {
         const excess = potentialHp - maxHp;
         player.curHp = maxHp;
@@ -190,3 +194,4 @@ export function applyHealToPlayer(
         player.curHp = potentialHp;
     }
 }
+

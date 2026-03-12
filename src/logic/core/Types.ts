@@ -30,6 +30,7 @@ export interface FloatingNumber {
     maxLife: number;
     isCrit: boolean;
     fontSize?: number;
+    anchorId?: number;
 }
 
 
@@ -730,6 +731,7 @@ export interface Enemy {
     crystalPositions?: Vector[];
     crystalState?: number;
     nextAttackCD?: number;
+    rocketTimer?: number;
 }
 
 export interface Upgrade {

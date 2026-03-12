@@ -164,6 +164,7 @@ export function spawnEnemy(state: GameState, x?: number, y?: number, shape?: Sha
         fluxState: fluxState,
         pulsePhase: 0,
         rotationPhase: Math.random() * Math.PI * 2,
+        stage: isBoss ? 1 : 1,
         lastAttack: (chosenShape === 'pentagon' || chosenShape === 'diamond') ? state.gameTime - 15.0 : state.gameTime + Math.random() * 2.0,
         timer: 0,
         summonState: 0,

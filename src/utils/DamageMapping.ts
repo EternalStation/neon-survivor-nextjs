@@ -20,7 +20,7 @@ export function getDamageMapping(playerClass?: string) {
         'Storm of Steel (LVL 4)': '/assets/hexes/EcoDMG.png',
         'Shockwave': '/assets/hexes/ComWave.png',
         'Radiation Aura': '/assets/hexes/ComRad.png',
-        'Neutron Star (Aura)': '/assets/Fusions/THE NEUTRON STAR.png',
+        'Neutron Star (Aura)': '/assets/Fusions/TheNeutronStar.png',
         'Fire Turret': '🔥',
         'Ice Turret': '❄️',
         'Wall Shockwave': '🧱',
@@ -154,7 +154,7 @@ export function getDamageMapping(playerClass?: string) {
         },
         'Necro-Core': {
             children: ['Necro-Kinetic Engine', 'Zombie', 'Crimson Feast (LVL 4)', 'Crimson Feast (LVL 3)'],
-            icon: '/assets/Fusions/THE NECRO-KINETIC ENGINE.png',
+            icon: '/assets/Fusions/TheNecroKineticEngine.png',
             color: '#4ade80',
             childLabels: {
                 'Necro-Kinetic Engine': 'Engine Pulse',
@@ -197,28 +197,28 @@ export function getDamageMapping(playerClass?: string) {
         },
         'Neural Singularity': {
             children: ['Neural Singularity'],
-            icon: '/assets/Fusions/THE NEURAL SINGULARITY.png',
+            icon: '/assets/Fusions/TheNeuralSingularity.png',
             color: '#a855f7',
             gradient: ['#4ade80', '#ef4444'],
             childLabels: { 'Neural Singularity': 'Psychic Ripple (Fusion)' }
         },
         'Kinetic Tsunami': {
             children: ['Kinetic Tsunami'],
-            icon: '/assets/Fusions/THE KINETIC TSUNAMI.png',
+            icon: '/assets/Fusions/TheKineticTsunami.png',
             color: '#fbbf24',
             gradient: ['#4ade80', '#ef4444'],
             childLabels: { 'Kinetic Tsunami': 'Sonic Avalanche (Fusion)' }
         },
         'Neutron Star': {
             children: ['Neutron Star (Aura)'],
-            icon: '/assets/Fusions/THE NEUTRON STAR.png',
+            icon: '/assets/Fusions/TheNeutronStar.png',
             color: '#facc15',
             gradient: ['#4ade80', '#ef4444'],
             childLabels: { 'Neutron Star (Aura)': 'Event Horizon (Fusion)' }
         },
         'Temporal Monolith': {
             children: ['Temporal Monolith', 'Temporal Monolith (Explosion)'],
-            icon: '/assets/Fusions/THE TEMPORAL MONOLITH.png',
+            icon: '/assets/Fusions/TheTemporalMonolith.png',
             color: '#38bdf8',
             gradient: ['#4ade80', '#3b82f6'],
             childLabels: {
@@ -228,7 +228,7 @@ export function getDamageMapping(playerClass?: string) {
         },
         'Shattered Capacitor': {
             children: ['Shattered Capacitor (Arc)', 'Shattered Capacitor (Bleed)'],
-            icon: '/assets/Fusions/THE SHATTERED CAPACITOR.png',
+            icon: '/assets/Fusions/TheShatteredCapacitor.png',
             color: '#dc2626',
             gradient: ['#ef4444', '#3b82f6'],
             childLabels: {

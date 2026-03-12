@@ -134,7 +134,7 @@ export function handlePlayerCombat(
             if (radLvl >= 2 && enemiesInAura.length > 0 && !player.healingDisabled) {
                 const healPerEnemy = playerMaxHp * (0.002 * m) / 6;
                 const totalHeal = healPerEnemy * enemiesInAura.length;
-                applyHealToPlayer(state, player, totalHeal, 'radiation_aura');
+                applyHealToPlayer(state, player, totalHeal, 'Radiation Aura');
             }
         }
 
@@ -293,6 +293,7 @@ export function handleEnemyContact(
             }
 
             if (onEvent) onEvent('player_hit', { dmg: e.wormTrueDamage ? (calcStat(player.hp) * 0.2) : finalDmg });
+            const lastHit = e.lastCollisionDamage || 0;
             e.lastCollisionDamage = now;
 
             let canDie = true;
@@ -310,13 +311,25 @@ export function handleEnemyContact(
                 canDie = true;
             }
 
-            if (canDie && (!e.lastCollisionDamage || now - e.lastCollisionDamage <= 10)) {
+            const colCooldown = e.boss ? 0.5 : 0;
+            if (canDie && (now - lastHit >= colCooldown)) {
                 if (e.hp > 0) {
-                    const colDmg = e.hp;
+                    const colDmg = e.boss ? (e.maxHp * 0.2) : e.hp;
+                    e.hp -= colDmg;
                     player.damageDealt += colDmg;
                     recordDamage(state, 'Collision', colDmg, e);
+
+                    if (e.boss) {
+                        const angle = Math.atan2(e.y - player.y, e.x - player.x);
+                        const kbPower = 45;
+                        e.knockback.x += Math.cos(angle) * kbPower;
+                        e.knockback.y += Math.sin(angle) * kbPower;
+                        spawnFloatingNumber(state, e.x, e.y, Math.round(colDmg).toString(), '#ef4444', true);
+                    }
                 }
-                handleEnemyDeath(state, e, onEvent);
+                if (e.hp <= 0) {
+                    handleEnemyDeath(state, e, onEvent);
+                }
             }
         }
     });
@@ -667,7 +680,7 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 const player = state.player;
                 if (bloodLevel >= 5 && !player.healingDisabled) {
                     const heal = zap.dmg * 0.01;
-                    applyHealToPlayer(state, player, heal, 'blood_capacitor');
+                    applyHealToPlayer(state, player, heal, 'Lifesteal');
                 }
 
                 if (zap.applyBleed) {

@@ -24,8 +24,13 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | File | Description |
 | :--- | :--- |
 | [Mechanics/Stats/StatFormula.md](Mechanics/Stats/StatFormula.md) | The universal `PlayerStats` formula: HexMultipliers, Souls, and global modifiers. |
-| [Mechanics/Systems/MeteoriteSystem.md](Mechanics/Systems/MeteoriteSystem.md) | **Meteorites**: Acquisition rates (1%), Rarity pools, and Recalibration logic. |
-| [Mechanics/Core/DamageReduction.md](Mechanics/Core/DamageReduction.md) | Collision and Projectile reduction scaling, linear summation, and 80% caps. |
+| [Mechanics/Systems/MeteoriteSystem.md](Mechanics/Systems/MeteoriteSystem.md) | **Meteorites**: Acquisition rates (1%), Rarity pools, and Structural Integrity logic. |
+| [Mechanics/Systems/RecalibrateStation.md](Mechanics/Systems/RecalibrateStation.md) | **Recalibrate Station**: Repair, Perk Rerolls, and Auto-Lock filter system. |
+
+### Core Mechanics
+| File | Description |
+| :--- | :--- |
+| [Mechanics/Core/DamageReduction.md](Mechanics/Core/DamageReduction.md) | How armor and shields mitigate incoming damage. |
 | [Mechanics/Core/RegularUpgradeMatrix.md](Mechanics/Core/RegularUpgradeMatrix.md) | **Calculated Stats**: Matrix of all regular upgrade values across all rarity tiers. |
 | [Mechanics/Abilities/DashAbility.md](Mechanics/Abilities/DashAbility.md) | Dash mechanics: Distance (240px), Cooldown (4s), and cyan particle effects. |
 | [Mechanics/Systems/SkillDamageTracking.md](Mechanics/Systems/SkillDamageTracking.md) | Class-specific filtering of active skill damage for the leaderboard. |
@@ -81,6 +86,9 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | File | Description |
 | :--- | :--- |
 | [Enemies/EliteTriangle.md](Enemies/EliteTriangle.md) | **Elite Triangle**: Tactical dash with 0.5s telegraph and high-speed wobbling. |
+| [Enemies/BossEncyclopedia.md](Enemies/BossEncyclopedia.md) | **Boss Encyclopedia**: Comprehensive guide to all boss tiers, level scaling, and unique skills. |
+| [Mechanics/Core/BossStages.md](Mechanics/Core/BossStages.md) | **Boss Stages**: Threshold-based stage system (33%/66%) and skill scaling logic. |
+| [Mechanics/Core/BossCollisionLogic.md](Mechanics/Core/BossCollisionLogic.md) | **Boss Collision Logic**: Refined collision damage cap and knockback protocols. |
 | [Enemies/Snitch.md](Enemies/Snitch.md) | **Quantum Snitch**: Rare evasive target with 1HP and tactical teleportation. |
 | [Enemies/Overlord.md](Enemies/Overlord.md) | **The Anomaly**: Multi-phase evolution, HP regeneration, and heat auras. |
 | [Enemies/PentagonBoss.md](Enemies/PentagonBoss.md) | **Pentagon Boss**: Rocket transformations and area-denial fire trails. |
@@ -99,13 +107,18 @@ This is the authoritative map of all documentation for Neon Survivor. Follow the
 | [Mechanics/Audio/MusicPlayer.md](Mechanics/Audio/MusicPlayer.md) | **Music Player**: BPM folders, track skipping, and persistent liked tracks. |
 | [Mechanics/Audio/SoundEffects.md](Mechanics/Audio/SoundEffects.md) | **Sound Effects**: Real-time synthesis, asset loading, and rarity-tier audio cues. |
 | [Mechanics/UI/MainMenuVisuals.md](Mechanics/UI/MainMenuVisuals.md) | **Main Menu**: Multi-layer canvas with stars, autonomous "Troll" drone, and cinematic Eye Dive transition. |
-| [Mechanics/UI/MenuAnimation.md](Mechanics/UI/MenuAnimation.md) | **Upgrade Menu**: Scanning effect, "DECRYPTING" animations, and 0.5s-1.0s initial delay. |
+| [Mechanics/UI/MenuAnimation.md](Mechanics/UI/MenuAnimation.md) | **Upgrade Menu**: Scanning effect, "DECRYPTING" animations, and 0.2s initial delay. |
 | [Mechanics/Visuals/MatrixSectorColors.md](Mechanics/Visuals/MatrixSectorColors.md) | Unified purple palette for Sector 01-03 identifiers. |
 | [Mechanics/Core/Cooldown.md](Mechanics/Core/Cooldown.md) | Description of the three disparate cooldown systems used in the game. |
+| [Mechanics/UI/UiTranslations.md](Mechanics/UI/UiTranslations.md) | **Global UI Translations**: Modular multi-language (EN/RU) support for all interface elements. |
 | [Mechanics/Debug/CheatCodes.md](Mechanics/Debug/CheatCodes.md) | Debug protocols for resources, bosses, and time manipulation. |
 | [Mechanics/Systems/LeaderboardRounding.md](Mechanics/Systems/LeaderboardRounding.md) | Consistent integer and decimal rounding for score submissions. |
 | [Mechanics/Systems/BlueprintSystem.md](Mechanics/Systems/BlueprintSystem.md) | **Blueprints**: Discovery, Decryption, Activation rules, and stackable Scrapper charges. |
+| [Mechanics/Systems/AuthenticationSystem.md](Mechanics/Systems/AuthenticationSystem.md) | **Authentication**: User registration, login verification, and JWT session management. |
 | [Mechanics/Systems/NecroticSurge.md](Mechanics/Systems/NecroticSurge.md) | **Necrotic Surge**: Ghost Horde event logic, ghost stats, and spawn rules. |
+| [Mechanics/Systems/LootSystem.md](Mechanics/Systems/LootSystem.md) | **Loot & Resources**: Enemy drop rates, Flux/Dust acquisition, and item rewards. |
+| [Mechanics/Systems/IncubatorSystem.md](Mechanics/Systems/IncubatorSystem.md) | **Incubator**: Meteorite growth, fuel management (1 Dust = 1 Fuel), and instability mechanics. |
+| [Mechanics/Core/EnemyCollisionDamage.md](Mechanics/Core/EnemyCollisionDamage.md) | **Collision Damage**: Standardized 7.5% current HP calculation for all enemies. |
 
 ---
 
