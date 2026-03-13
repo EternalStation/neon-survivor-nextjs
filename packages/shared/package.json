@@ -1,0 +1,17 @@
+{
+  "name": "@neon-survivor/shared",
+  "private": true,
+  "main": "index.ts",
+  "dependencies": {
+    "peerjs": "^1.5.5",
+    "lucide-react": "^0.563.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/react": "^19"
+  }
+}

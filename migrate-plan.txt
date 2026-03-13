@@ -1,0 +1,472 @@
+● The plan restructures your project into a Turborepo + pnpm monorepo with:
+
+- packages/shared/ — 95% of your code (game engine, hooks, components, styles, assets) — zero changes needed to game logic
+- apps/web/ — Thin Next.js shell (~5 unique files: layout, page wrapper, API routes, server libs)
+- apps/desktop/ — Thin Electron shell (~8 unique files: main process, preload, Vite entry, Steam stubs)
+
+Key highlights:
+- The entire game engine (src/logic/) has zero React or Next.js imports — moves cleanly
+- Only layout.tsx imports from next/* — everything else is pure React
+- Backend stays on Vercel as-is; desktop client points API_URL to the deployed URL
+- Steam integration is stubbed for now (ready structure, real SDK when you get an App ID)
+- One code change in packages/shared/ reflects in both web and desktop apps
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Ready to code?
+
+Here is Claude's plan:
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+Neon Survivor: Next.js → Monorepo + Electron + Steam Migration Plan
+
+Context
+
+Neon Survivor is a 2D Canvas game built with React 19 + Next.js 16. The Next.js dependency is remarkably thin — only layout.tsx imports from next/* (font loader + Metadata type).
+Zero Next.js imports exist in components, hooks, or game logic. This makes it ideal for a monorepo split where the game engine, UI, and platform shells are cleanly separated.
+
+User requirements: Monorepo with shared packages, minimal code duplication, web + desktop coexist, backend stays on Vercel, Steam auth only for initial release (no App ID yet).
+
+ ---
+Architecture: Turborepo + pnpm Workspaces
+
+neon-survivor/
+├── packages/
+│   └── shared/                    # Everything reusable (95% of current code)
+│       ├── logic/                 # Pure TS game engine (current src/logic/)
+│       ├── hooks/                 # React hooks (current src/hooks/)
+│       ├── components/            # React components (current src/components/)
+│       ├── styles/                # CSS files (current src/styles/)
+│       ├── lib/                   # Shared utils (LanguageContext, translations, api client)
+│       ├── data/                  # Game data (current src/data/)
+│       ├── assets/                # Static assets (current public/assets/, public/audio/)
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── index.ts               # Barrel exports
+├── apps/
+│   ├── web/                       # Next.js thin shell (~5 files)
+│   │   ├── src/app/
+│   │   │   ├── layout.tsx         # Next.js fonts + metadata
+│   │   │   ├── page.tsx           # Imports <App/> from shared
+│   │   │   ├── Globals.css        # Imports shared styles + tailwind
+│   │   │   └── api/               # All API routes (unchanged)
+│   │   ├── src/lib/               # Auth.ts, Db.ts (server-only)
+│   │   ├── public/                # Symlink or copy of shared assets
+│   │   ├── next.config.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── desktop/                   # Electron thin shell
+│       ├── electron/
+│       │   ├── main.ts            # BrowserWindow, protocol, IPC
+│       │   ├── preload.ts         # Context bridge (Steam API, desktop features)
+│       │   ├── steam.ts           # steamworks.js wrapper
+│       │   └── windowState.ts     # Window position/size persistence
+│       ├── src/
+│       │   ├── main.tsx           # ReactDOM.render entry
+│       │   ├── App.tsx            # Imports <App/> from shared + adds Steam auth
+│       │   ├── Globals.css        # Imports shared styles + tailwind
+│       │   └── types/electron.d.ts
+│       ├── index.html             # Vite entry HTML
+│       ├── electron.vite.config.ts
+│       ├── electron-builder.config.js
+│       ├── package.json
+│       └── tsconfig.json
+├── pnpm-workspace.yaml
+├── turbo.json
+├── package.json                   # Root workspace config
+├── tsconfig.base.json             # Shared TS config
+└── .env.example
+
+Why this structure?
+
+- One shared package (not 3-4) — avoids overhead; components/hooks/logic are tightly coupled anyway
+- Apps are thin shells — web is ~5 unique files (layout, page wrapper, API routes, server libs); desktop is ~8 unique files (electron main/preload/steam, Vite entry)
+- Assets shared — single source of truth for sprites, audio, fonts
+
+ ---
+Key Architecture Decisions
+
+┌──────────────────┬────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
+│     Decision     │                                   Choice                                   │                                  Rationale                                  │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Monorepo tool    │ Turborepo + pnpm                                                           │ Industry standard for Next.js monorepos; fast caching, minimal config       │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Bundler          │ electron-vite                                                              │ Handles main/preload/renderer builds; Vite for renderer matches shared      │
+│ (desktop)        │                                                                            │ package                                                                     │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Backend          │ Keep on Vercel as-is                                                       │ API routes stay in apps/web/, Electron client points API_URL to deployed    │
+│                  │                                                                            │ URL                                                                         │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Steam SDK        │ steamworks.js                                                              │ Modern, typed, Electron-compatible; but deferred until App ID obtained      │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Steam features   │ Auth only (initial)                                                        │ Skip achievements/leaderboards/rich presence until later                    │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Asset sharing    │ Shared package exports asset paths; apps copy/symlink assets/ to their     │ Both apps serve static files from their own public/, sourced from one place │
+│                  │ public/                                                                    │                                                                             │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Build tool       │ electron-builder                                                           │ Dir output for Steam; NSIS for standalone distribution                      │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Auto-updates     │ Steam's built-in system                                                    │ No electron-updater needed                                                  │
+├──────────────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ Local storage    │ Keep localStorage + electron-store for desktop settings                    │ Zero migration for existing game settings                                   │
+└──────────────────┴────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────┘
+
+ ---
+Phase 0: Monorepo Scaffolding
+
+Goal: Set up the workspace structure without moving any code yet.
+
+Files to create:
+
+1. pnpm-workspace.yaml:
+   packages:
+- "packages/*"
+- "apps/*"
+2. Root package.json — workspace root (no deps, just scripts):
+   {
+   "name": "neon-survivor",
+   "private": true,
+   "scripts": {
+   "dev:web": "turbo run dev --filter=@neon-survivor/web",
+   "dev:desktop": "turbo run dev --filter=@neon-survivor/desktop",
+   "build:web": "turbo run build --filter=@neon-survivor/web",
+   "build:desktop": "turbo run build --filter=@neon-survivor/desktop",
+   "dist:win": "turbo run dist:win --filter=@neon-survivor/desktop"
+   },
+   "devDependencies": { "turbo": "^2" }
+   }
+3. turbo.json — build pipeline:
+   {
+   "tasks": {
+   "dev": { "persistent": true, "cache": false },
+   "build": { "dependsOn": ["^build"], "outputs": [".next/**", "out/**", "dist/**"] },
+   "dist:win": { "dependsOn": ["build"] }
+   }
+   }
+4. tsconfig.base.json — shared TypeScript config:
+- target: ES2017, strict: true, jsx: react-jsx
+- Base path aliases
+
+ ---
+Phase 1: Extract Shared Package
+
+Goal: Move all reusable code into packages/shared/.
+
+Move operations (rename, not copy):
+
+src/logic/       →  packages/shared/logic/
+src/hooks/       →  packages/shared/hooks/
+src/components/  →  packages/shared/components/
+src/styles/      →  packages/shared/styles/
+src/data/        →  packages/shared/data/
+src/lib/LanguageContext.tsx  →  packages/shared/lib/LanguageContext.tsx
+src/lib/translations/       →  packages/shared/lib/translations/
+src/api/Client.ts           →  packages/shared/api/Client.ts
+src/utils/       →  packages/shared/utils/
+public/assets/   →  packages/shared/assets/
+public/audio/    →  packages/shared/assets/audio/
+
+Create packages/shared/package.json:
+
+{
+"name": "@neon-survivor/shared",
+"private": true,
+"main": "index.ts",
+"dependencies": {
+"peerjs": "^1.5.5",
+"lucide-react": "^0.563.0"
+},
+"peerDependencies": {
+"react": "^19.0.0",
+"react-dom": "^19.0.0"
+},
+"devDependencies": {
+"typescript": "^5",
+"@types/react": "^19"
+}
+}
+
+Create packages/shared/index.ts — barrel exports:
+
+- Export the main <App /> component (extracted from current page.tsx)
+- Export key hooks: useGameLoop, useWindowScale, etc.
+- Export game logic: PLAYER_CLASSES, initKeybinds, etc.
+- Export LanguageProvider, ApiClient
+- Export type definitions
+
+Create packages/shared/App.tsx — the main game app:
+
+- Extract the body of src/app/page.tsx's Home() function
+- Remove 'use client' directive
+- Accept props for platform-specific behavior:
+  interface AppProps {
+  onGameStart?: () => void;
+  authOverride?: { token: string; username: string }; // For Steam auth
+  isDesktop?: boolean;
+  }
+- The component renders: MainMenu, GameCanvas, HUD, all overlays, etc.
+
+Modify packages/shared/api/Client.ts:
+
+// Was: const API_URL = '/api'
+// Now: configurable
+let API_URL = '/api';
+export function setApiUrl(url: string) { API_URL = url; }
+
+Remove 'use client' from:
+
+- packages/shared/lib/LanguageContext.tsx
+
+ ---
+Phase 2: Set Up Web App (Thin Shell)
+
+Goal: apps/web/ wraps shared package with Next.js.
+
+apps/web/src/app/layout.tsx (keep as-is):
+
+- Next.js fonts (Geist, Geist_Mono)
+- Metadata export
+- Only file that imports from next/*
+
+apps/web/src/app/page.tsx (simplified):
+
+'use client'
+import { App } from '@neon-survivor/shared'
+export default function Home() {
+return <App />
+}
+
+apps/web/src/app/api/ — All API routes:
+
+- Move current src/app/api/ here unchanged (auth, runs, leaderboard, feedback, health)
+
+apps/web/src/lib/ — Server-only code:
+
+- Move Auth.ts, Db.ts here
+
+apps/web/package.json:
+
+{
+"name": "@neon-survivor/web",
+"dependencies": {
+"@neon-survivor/shared": "workspace:*",
+"next": "16.1.6",
+"react": "19.2.3",
+"react-dom": "19.2.3",
+"@neondatabase/serverless": "^1.0.2",
+"bcryptjs": "^3.0.3",
+"jsonwebtoken": "^9.0.3"
+}
+}
+
+apps/web/public/ — Static assets:
+
+- Symlink or copy from packages/shared/assets/
+- Or configure next.config.ts to serve from shared package
+
+apps/web/next.config.ts:
+
+- Add transpilePackages: ['@neon-survivor/shared']
+- Configure static asset path if needed
+
+ ---
+Phase 3: Set Up Electron App (Thin Shell)
+
+Goal: apps/desktop/ wraps shared package with Electron.
+
+apps/desktop/electron/main.ts:
+
+- Create BrowserWindow (nodeIntegration: false, contextIsolation: true)
+- Dev: load http://localhost:5173; Prod: load bundled file://
+- Register custom protocol for production asset serving
+- IPC handlers for desktop features (fullscreen, settings)
+- Steam initialization (stubbed until App ID obtained)
+
+apps/desktop/electron/preload.ts:
+
+contextBridge.exposeInMainWorld('electronAPI', {
+isElectron: true,
+toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
+getSettings: () => ipcRenderer.invoke('get-settings'),
+setSettings: (s) => ipcRenderer.invoke('set-settings', s),
+// Steam methods (stubbed for now):
+getSteamUser: () => ipcRenderer.invoke('get-steam-user'),
+getSteamAuthTicket: () => ipcRenderer.invoke('get-steam-auth-ticket'),
+})
+
+apps/desktop/electron/steam.ts:
+
+- Stubbed module that returns mock data when no Steam SDK present
+- Ready structure for steamworks.js integration when App ID is obtained
+
+apps/desktop/index.html — Vite entry:
+
+- Google Fonts <link> tags
+- <div id="root"></div>
+- <script type="module" src="/src/main.tsx"></script>
+
+apps/desktop/src/main.tsx — React entry:
+
+import { createRoot } from 'react-dom/client'
+import { DesktopApp } from './App'
+import './Globals.css'
+createRoot(document.getElementById('root')!).render(<DesktopApp />)
+
+apps/desktop/src/App.tsx — Desktop wrapper:
+
+import { App, setApiUrl } from '@neon-survivor/shared'
+
+setApiUrl(import.meta.env.VITE_API_URL || 'https://your-vercel-url.vercel.app/api')
+
+export function DesktopApp() {
+// Future: Steam auto-login
+// const steamAuth = useSteamAuth()
+return <App isDesktop={true} />
+}
+
+apps/desktop/electron.vite.config.ts:
+
+- Main entry: electron/main.ts
+- Preload entry: electron/preload.ts
+- Renderer: Vite + React plugin
+- Path alias: @neon-survivor/shared resolved to ../../packages/shared
+- PostCSS/Tailwind config
+
+apps/desktop/electron-builder.config.js:
+
+{
+appId: "com.eternalstation.neonsurvivorgame",
+productName: "Neon Survivor",
+directories: { output: "release" },
+files: ["out/**/*"],
+extraResources: ["public/**/*"],
+win: { target: ["dir"], icon: "build/icon.ico" },
+}
+
+apps/desktop/package.json:
+
+{
+"name": "@neon-survivor/desktop",
+"main": "out/main/main.js",
+"dependencies": {
+"@neon-survivor/shared": "workspace:*",
+"react": "19.2.3",
+"react-dom": "19.2.3",
+"electron-store": "^10"
+},
+"devDependencies": {
+"electron": "^33",
+"electron-builder": "^25",
+"electron-vite": "^3",
+"@vitejs/plugin-react": "^4"
+}
+}
+
+ ---
+Phase 4: Desktop Features
+
+Add to packages/shared/:
+
+- isDesktop() utility: typeof window !== 'undefined' && window.electronAPI?.isElectron
+- Conditional rendering: skip mobile controls, portrait blocker when isDesktop
+- DesktopSettings.tsx component (resolution, fullscreen, FPS limiter)
+- Conditionally render in SettingsMenu.tsx
+
+Key file modifications in shared:
+
+┌────────────────────────────────────┬───────────────────────────────────────────────────────┐
+│                File                │                        Change                         │
+├────────────────────────────────────┼───────────────────────────────────────────────────────┤
+│ shared/hooks/UseWindowScale.ts     │ Skip mobile detection when isDesktop()                │
+├────────────────────────────────────┼───────────────────────────────────────────────────────┤
+│ shared/components/SettingsMenu.tsx │ Add desktop settings section                          │
+├────────────────────────────────────┼───────────────────────────────────────────────────────┤
+│ shared/App.tsx                     │ Skip landscape-only check when isDesktop prop is true │
+└────────────────────────────────────┴───────────────────────────────────────────────────────┘
+
+ ---
+Phase 5: Steam Integration (Deferred — needs App ID)
+
+When the Steamworks developer account is set up:
+
+1. Install steamworks.js in apps/desktop/
+2. Implement electron/steam.ts with real SDK calls
+3. Add server endpoint apps/web/src/app/api/auth/steam/route.ts for ticket validation
+4. Desktop App.tsx auto-authenticates via Steam ticket → API → JWT
+5. Skip AuthScreen component for Steam users
+
+ ---
+Phase 6: Build Pipeline & Deployment
+
+1. Web: pnpm --filter @neon-survivor/web build → deploy to Vercel
+2. Desktop: pnpm --filter @neon-survivor/desktop dist:win → produces directory
+3. Steam upload: steamcmd with VDF configs (when ready)
+4. Optional CI: GitHub Actions builds both targets on release
+
+ ---
+Migration Steps (Execution Order)
+
+1. [x] Initialize pnpm workspace + Turborepo at project root
+2. [x] Create packages/shared/ with package.json, tsconfig
+3. [x] Move game code: logic/, hooks/, components/, styles/, data/, lib/, api/, utils/
+4. [x] Extract App.tsx from page.tsx into shared package
+5. [x] Fix all import paths in shared package (relative → package-internal)
+6. [x] Create apps/web/ — thin Next.js shell importing from shared
+7. [x] Move API routes + server libs to apps/web/
+8. [x] Verify web app works: pnpm dev:web
+9. [x] Create apps/desktop/ — Electron shell importing from shared
+10. [x] Configure electron-vite + asset serving
+11. Verify desktop app works: pnpm dev:desktop
+12. Add desktop-specific features (fullscreen, settings)
+13. Test production build: pnpm dist:win
+14. Bundle fonts locally for offline support
+15. [x] Stub Steam integration for future completion
+
+ ---
+Verification Plan
+
+┌─────────────────────┬────────────────────────────────────────────────────────┐
+│        Test         │                    Expected Result                     │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ pnpm dev:web        │ Game runs in browser, identical to current             │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ pnpm dev:desktop    │ Game launches in Electron window, all gameplay works   │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ Web API calls       │ Auth, leaderboards, run submission work from both apps │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ PeerJS multiplayer  │ P2P works desktop↔desktop and desktop↔web              │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ pnpm build:web      │ Next.js production build succeeds                      │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ pnpm dist:win       │ Packaged Electron directory launches standalone        │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ Desktop fullscreen  │ Toggle works, state persists between launches          │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ All assets load     │ Sprites, audio, fonts render in both apps              │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ Shared code changes │ One edit in packages/shared/ reflects in both apps     │
+└─────────────────────┴────────────────────────────────────────────────────────┘
+
+ ---
+Critical Files Reference
+
+┌───────────────────────────────┬────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────┐
+│         Current File          │                                  Destination                                   │                    Notes                    │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/app/page.tsx              │ Split: game logic → packages/shared/App.tsx, shell → apps/web/src/app/page.tsx │ Main extraction point                       │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/app/layout.tsx            │ apps/web/src/app/layout.tsx                                                    │ Only Next.js-specific file                  │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/app/api/**                │ apps/web/src/app/api/**                                                        │ Unchanged, server-only                      │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/lib/Auth.ts, Db.ts        │ apps/web/src/lib/                                                              │ Server-only, not shared                     │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/api/Client.ts             │ packages/shared/api/Client.ts                                                  │ Add configurable API_URL                    │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/logic/**                  │ packages/shared/logic/                                                         │ Zero changes needed                         │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/hooks/**                  │ packages/shared/hooks/                                                         │ Zero changes needed                         │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ src/components/**             │ packages/shared/components/                                                    │ Zero changes needed                         │
+├───────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────┤
+│ public/assets/, public/audio/ │ packages/shared/assets/                                                        │ Single source, copied to each app's public/ │
+└───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────┘
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌

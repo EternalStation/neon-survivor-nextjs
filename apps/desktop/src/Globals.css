@@ -1,0 +1,86 @@
+@import "@neon-survivor/shared/styles/index.css";
+@import "@neon-survivor/shared/styles/animations.css";
+@import "@neon-survivor/shared/styles/MenuAdditions.css";
+@import "@neon-survivor/shared/styles/UpgradeMenu.css";
+
+@import '@fontsource/orbitron/400.css';
+@import '@fontsource/orbitron/700.css';
+@import '@fontsource/orbitron/900.css';
+
+:root {
+  font-family: 'Inter', 'Orbitron', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #020617;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #020617;
+  overflow: hidden; /* Desktop usually doesn't want scrollbars on the body */
+  user-select: none;
+}
+
+body {
+  display: flex;
+  place-items: center;
+  justify-content: center;
+  min-width: 320px;
+  cursor: crosshair;
+}
+
+/* Custom Tactical Cursor */
+body,
+button,
+[role="button"],
+.clickable {
+  cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIzIiBzdHJva2U9IiNmZjAwZmYiIHN0cm9rZS13aWR0aD0iMSIgbm9uZS8+CiAgPHBhdGggZD0iTTEyIDJWMjRNMiAxMkgyNCIgc3Ryb2tlPSIjZmYwMGZmIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+"), crosshair;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: auto;
+}
