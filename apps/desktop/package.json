@@ -1,10 +1,13 @@
 {
   "name": "@neon-survivor/desktop",
+  "version": "1.0.0",
+  "description": "Neon Survivor Desktop",
+  "author": "EternalStation",
   "main": "out/main/main.js",
   "scripts": {
     "dev": "node ../../scripts/copy-assets.js && electron-vite dev",
     "build": "node ../../scripts/copy-assets.js && electron-vite build",
-    "dist:win": "node ../../scripts/copy-assets.js && electron-vite build && electron-builder --win"
+    "dist:win": "node ../../scripts/copy-assets.js && electron-vite build && electron-builder --win --config electron-builder.config.js"
   },
   "dependencies": {
     "@fontsource/orbitron": "^5",

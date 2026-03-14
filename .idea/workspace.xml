@@ -5,629 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="feat: migrate to Turborepo monorepo with Electron desktop shell">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/electron-builder.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/electron.vite.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/electron/main.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/electron/preload.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/electron/steam.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/src/App.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/src/Globals.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/src/main.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/src/types/electron.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/desktop/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/eslint.config.mjs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/next-env.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/next.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/postcss.config.mjs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/Background.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/_redirects" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/blueprint.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/file.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/globe.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/next.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/vercel.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/vite.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/public/window.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/Globals.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/middleware.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrate-plan.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/App.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/api/Client.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Candle.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Dissapointed.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Normal.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Point.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Smile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Assistant/Thinks.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/BladeLVL3.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/CycloneLVL3.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/DushLVL2.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/LaserLVL2.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/LinkLVL2.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/ParasiticLinkLVL3.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/RushLVL2.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/SateliteLVL3.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/ShieldLVL3.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/BossSkills/ThornsLVL2.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Enemies/Zombie.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Enteties/Ship.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheChronoDevourer.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheGravitationalHarvest.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheGravityAnchor.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheIrradiatedMire.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheKineticTsunami.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheNecroKineticEngine.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheNeuralSingularity.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheNeutronStar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheShatteredCapacitor.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheSoulShatterCore.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheTemporalMonolith.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Fusions/TheXenoAlchemist.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/Blueprint.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/BlueprintBroken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/BrowserLogo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/DeathMark.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/FearSkill.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/MeteoriteDust.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/Icons/Void Flux.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/MeteoriteReference.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/100BPM/Defensive Arena 100PBM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/100BPM/Event Horizon Hymn 100BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/100BPM/Iron Cathedral 100BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/120BPM/Economic Arena 120BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/140BPM/Combat Arena 140BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/140BPM/Neon Blood Circuit 140BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/160BPM/Digital Siege Protocol 160BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/80BPM/Crush Protocol 80 BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/80BPM/Grinding In The Grid 80BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/80BPM/Rain on Chrome 80BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/80BPM/Violet Datastream 80BPM.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/80BPM/Violet Datastream v2 80BPM .mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/Alert.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/DefEpi.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/Evacuation.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/Ghost.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/Laser.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/PleasantNeonDing.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/RobotVoice.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/ShipDeparture.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/audio/Transition.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/AigisVortex.PNG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/ComCrit.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/ComLife.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/ComRadiation.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/ComWave.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/CosmicBeam.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/DefBattery.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/DefEpi.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/DefPlatting.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/DefPuddle.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/EcoDMG.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/EcoHP.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/EcoShield.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/EcoXP.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/EventHorizon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/HiveMother.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/hexes/MalwarePrime.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M0Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M0Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M0New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M1Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M1Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M1New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M2Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M2Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M2New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M3Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M3Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M3New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M4Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M4Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M4New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M5Broken.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M5Damaged.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/assets/meteorites/M5New.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/ArenaSelection.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/AudioWidget.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/AuthScreen.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/AuthScreen.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/BlueprintBay.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/BlueprintBay.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/ClassCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/ClassSelection.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/DeathScreen.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/DeathScreen.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/HUD.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/HexTooltip.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/HexTooltip.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/KeybindSettings.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/Leaderboard.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/Leaderboard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/LeaderboardStatistics.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/LeaderboardStatistics.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/LegendaryDetail.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/LegendarySelectionMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/LobbyScreen.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/MainMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/MeteoriteTooltip.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/MeteoriteTooltip.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/Minimap.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/MobileControls.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/ModuleMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/MusicPlayer.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/RadarChart.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/SettingsMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/StatsMenu.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/StatsMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/ThreatProgression.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeIcons.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/common/SpotlightOverlay.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/AdminConsole.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/AlertPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/AssistantOverlay.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/BossStatus.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/BottomRightPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/CheatPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/FeedbackButton.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/FeedbackModal.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/FeedbackModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/IncubatorMonitor.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/PlayerStatus.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/PlayerStatus.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/TopLeftPanel.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/TopLeftPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/TutorialOverlay.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/hud/UpgradeMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/BestiaryDetailView.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/BestiaryView.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ChassisDetail.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ChassisDetail.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/CorruptionWarningModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/EfficiencyLabel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/FusionMenu.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/FusionMenu.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/HexGrid.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/IncubatorPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/InventoryPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/MassRecycleConfirmationModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ModuleDetailPanel.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ModuleDetailPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ModuleMenu.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/ModuleUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/RecalibrateInterface.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/RecalibrateUtils.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/modules/RemovalConfirmationModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/stats/DamageRow.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/stats/StatRow.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/components/stats/VitalsAnalysis.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/data/BestiaryData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseAreaEffectLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGame.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGameInput.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGameLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGameUIHandlers.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerGame.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerLobby.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseOrbit.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/hooks/UseWindowScale.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/LanguageContext.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/OrbitTranslations.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/UiTranslations.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/translations/ui/EnTranslationsPart1.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/translations/ui/EnTranslationsPart2.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/translations/ui/RuTranslationsPart1.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/translations/ui/RuTranslationsPart2.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/lib/translations/ui/en.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/audio/AudioBase.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/audio/AudioLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/audio/SfxAssets.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/audio/SfxLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileEnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectilePlayerLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileSpawning.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/Classes.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/Constants.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/GameConfig.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/GameState.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/GameWorkerLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/SpatialGrid.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/TutorialLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/Types.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/effects/ParticleLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/effects/PulseSystem.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/BossEnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/DirectorLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EliteEnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyAILogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyArchetypes.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyIndividualUpdate.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyMergeLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemySpawnLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemySystemLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/NormalEnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/UniqueEnemyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/WormLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossLogicPart1.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossLogicPart2.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/mission/DeathLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/mission/ExtractionLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/mission/LootLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/mission/MapLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/mission/TurretLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/networking/NetworkManager.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerCombat.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerMovement.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerStats.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/player/SkillLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/ColorPalettes.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/GameRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossSkillRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossVisualFX.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EffectRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EliteRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EnemyRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EntityRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MapRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MergeRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PlayerRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PoiRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/ProjectileRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/SandboxRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/TextHelper.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/UniqueEnemyRenderer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/BlueprintLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/EfficiencyLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/FusionData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/IncubatorLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/LegendaryData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/LegendaryLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/LegendaryMergeLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/RecalibrateLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/upgrades/UpgradeLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/CleanEnemyLogic.cjs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/CombatUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/CooldownUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/DamageTracking.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/Helpers.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/Keybinds.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/utils/MathUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/styles/MenuAdditions.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/styles/UpgradeMenu.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/styles/animations.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/styles/index.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/utils/DamageMapping.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/utils/DeathCauseUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/utils/Format.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/utils/Leaderboard.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/utils/LeaderboardUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pnpm-workspace.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/copy-assets.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tsconfig.base.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/turbo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eslint.config.mjs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/next.config.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/postcss.config.mjs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/Background.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/_redirects" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Candle.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Dissapointed.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Normal.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Point.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Smile.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Assistant/Thinks.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/BladeLVL3.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/CycloneLVL3.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/DushLVL2.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/LaserLVL2.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/LinkLVL2.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/ParasiticLinkLVL3.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/RushLVL2.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/SateliteLVL3.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/ShieldLVL3.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/BossSkills/ThornsLVL2.JPG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Enemies/Zombie.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Enteties/Ship.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheChronoDevourer.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheGravitationalHarvest.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheGravityAnchor.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheIrradiatedMire.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheKineticTsunami.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheNecroKineticEngine.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheNeuralSingularity.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheNeutronStar.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheShatteredCapacitor.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheSoulShatterCore.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheTemporalMonolith.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Fusions/TheXenoAlchemist.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/Blueprint.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/BlueprintBroken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/BrowserLogo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/DeathMark.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/FearSkill.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/MeteoriteDust.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/Icons/Void Flux.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/MeteoriteReference.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/AigisVortex.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/ComCrit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/ComLife.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/ComRadiation.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/ComWave.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/CosmicBeam.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/DefBattery.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/DefEpi.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/DefPlatting.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/DefPuddle.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/EcoDMG.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/EcoHP.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/EcoShield.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/EcoXP.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/EventHorizon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/HiveMother.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/hexes/MalwarePrime.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M0Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M0Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M0New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M1Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M1Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M1New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M2Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M2Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M2New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M3Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M3Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M3New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M4Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M4Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M4New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M5Broken.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M5Damaged.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/assets/meteorites/M5New.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/100BPM/Defensive Arena 100PBM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/100BPM/Event Horizon Hymn 100BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/100BPM/Iron Cathedral 100BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/120BPM/Economic Arena 120BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/140BPM/Combat Arena 140BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/140BPM/Neon Blood Circuit 140BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/160BPM/Digital Siege Protocol 160BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/80BPM/Crush Protocol 80 BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/80BPM/Grinding In The Grid 80BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/80BPM/Rain on Chrome 80BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/80BPM/Violet Datastream 80BPM.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/80BPM/Violet Datastream v2 80BPM .mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/Alert.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/DefEpi.wav" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/Evacuation.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/Ghost.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/Laser.flac" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/PleasantNeonDing.wav" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/RobotVoice.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/ShipDeparture.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/audio/Transition.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/blueprint.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/file.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/globe.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/next.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/vercel.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/vite.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/window.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/api/Client.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/admin/migrate-overlord/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/admin/migrate-overlord/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/auth/login/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/auth/login/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/auth/register/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/auth/register/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/auth/verify/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/auth/verify/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/feedback/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/feedback/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/health/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/health/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/leaderboard/daily/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/leaderboard/daily/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/leaderboard/global/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/leaderboard/global/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/leaderboard/patch/[version]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/leaderboard/patch/[version]/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/leaderboard/patches/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/leaderboard/patches/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/leaderboard/weekly/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/leaderboard/weekly/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runs/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/runs/[id]/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runs/me/all/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/runs/me/all/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runs/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/api/runs/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ArenaSelection.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AudioWidget.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AuthScreen.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AuthScreen.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/BlueprintBay.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/BlueprintBay.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ClassCard.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ClassSelection.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/DeathScreen.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/DeathScreen.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/GameCanvas.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/HUD.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/HexTooltip.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/HexTooltip.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/KeybindSettings.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Leaderboard.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Leaderboard.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LeaderboardStatistics.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LeaderboardStatistics.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LegendaryDetail.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LegendarySelectionMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LobbyScreen.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MainMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MeteoriteTooltip.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MeteoriteTooltip.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Minimap.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MobileControls.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ModuleMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MusicPlayer.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/RadarChart.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SettingsMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/StatsMenu.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/StatsMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ThreatProgression.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/UpgradeCard.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/UpgradeIcons.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/SpotlightOverlay.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/AdminConsole.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/AlertPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/AssistantOverlay.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/BossStatus.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/BottomRightPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/CheatPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/FeedbackButton.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/FeedbackModal.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/FeedbackModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/IncubatorMonitor.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/PlayerStatus.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/PlayerStatus.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/TopLeftPanel.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/TopLeftPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/TutorialOverlay.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/hud/UpgradeMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/BestiaryDetailView.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/BestiaryView.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ChassisDetail.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ChassisDetail.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/CorruptionWarningModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/EfficiencyLabel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/FusionMenu.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/FusionMenu.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/HexGrid.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/IncubatorPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/InventoryPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/MassRecycleConfirmationModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ModuleDetailPanel.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ModuleDetailPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ModuleMenu.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/ModuleUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/RecalibrateInterface.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/RecalibrateUtils.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/modules/RemovalConfirmationModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/stats/DamageRow.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/stats/StatRow.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/stats/VitalsAnalysis.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/BestiaryData.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseAreaEffectLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseGame.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseGameInput.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseGameLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseGameUIHandlers.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseMultiplayerGame.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseMultiplayerLobby.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseOrbit.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/UseWindowScale.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/lib/Auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/lib/Db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LanguageContext.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/OrbitTranslations.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/UiTranslations.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/translations/ui/EnTranslationsPart1.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/translations/ui/EnTranslationsPart2.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/translations/ui/RuTranslationsPart1.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/translations/ui/RuTranslationsPart2.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/translations/ui/en.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/audio/AudioBase.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/audio/AudioLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/audio/SfxAssets.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/audio/SfxLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/combat/ProjectileEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/combat/ProjectileLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/combat/ProjectilePlayerLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/combat/ProjectileSpawning.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/Classes.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/Constants.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/GameConfig.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/GameState.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/GameWorkerLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/SpatialGrid.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/TutorialLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/core/Types.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/effects/ParticleLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/effects/PulseSystem.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/BossEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/DirectorLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EliteEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemyAILogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemyArchetypes.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemyIndividualUpdate.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemyMergeLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemySpawnLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/EnemySystemLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/NormalEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/UniqueEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/WormLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/bosses/BossLogicPart1.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/enemies/bosses/BossLogicPart2.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/mission/DeathLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/mission/ExtractionLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/mission/LootLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/mission/MapLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/mission/TurretLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/networking/NetworkManager.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/player/PlayerCombat.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/player/PlayerLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/player/PlayerMovement.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/player/PlayerStats.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/player/SkillLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/ColorPalettes.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/GameRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/BossRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/BossSkillRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/BossVisualFX.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/EffectRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/EliteRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/EnemyRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/EntityRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/MapRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/MergeRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/PlayerRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/PoiRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/ProjectileRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/SandboxRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/TextHelper.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/rendering/renderers/UniqueEnemyRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/BlueprintLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/EfficiencyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/FusionData.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/IncubatorLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/LegendaryData.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/LegendaryLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/LegendaryMergeLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/RecalibrateLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/upgrades/UpgradeLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/CleanEnemyLogic.cjs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/CombatUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/CooldownUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/DamageTracking.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/Helpers.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/Keybinds.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/utils/MathUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles/MenuAdditions.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles/UpgradeMenu.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles/animations.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles/index.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/DamageMapping.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/DeathCauseUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Format.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Leaderboard.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/LeaderboardUtils.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/desktop/electron-builder.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron-builder.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/desktop/electron.vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron.vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/desktop/electron/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/desktop/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/next-env.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/App.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -635,7 +20,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="882" />
+    <option name="cachedIndexableFilesCount" value="879" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -686,7 +71,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "migrate-to-electron",
+    "git-widget-placeholder": "#13 on migrate-to-electron",
     "javascript.preferred.runtime.type.id": "node",
     "js.debugger.nextJs.config.created.client": "true",
     "js.debugger.nextJs.config.created.server": "true",
@@ -698,9 +83,12 @@
     "nodejs_package_manager_path": "npm",
     "npm.Next.js: server-side.executor": "Run",
     "npm.build.executor": "Run",
+    "npm.build:desktop.executor": "Run",
+    "npm.build:web.executor": "Run",
     "npm.dev.executor": "Run",
     "npm.dev:desktop.executor": "Run",
     "npm.dev:web.executor": "Run",
+    "npm.dist:win.executor": "Run",
     "ts.external.directory.path": "D:\\Prog\\my\\.temp\\neon-survivor-nextjs\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
@@ -710,12 +98,32 @@
       <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\mechanics" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dev:desktop">
+  <component name="RunManager" selected="npm.dist:win">
     <configuration name="build" type="js.build_tools.npm" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
       <scripts>
         <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="build:desktop" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build:desktop" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="build:web" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build:web" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -751,8 +159,21 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="dist:win" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dist:win" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.dist:win" />
+        <item itemvalue="npm.build:desktop" />
+        <item itemvalue="npm.build:web" />
         <item itemvalue="npm.dev:desktop" />
         <item itemvalue="npm.dev:web" />
       </list>
@@ -779,7 +200,8 @@
       <workItem from="1773359153397" duration="33000" />
       <workItem from="1773360946633" duration="6000" />
       <workItem from="1773396731482" duration="5000" />
-      <workItem from="1773434293047" duration="4656000" />
+      <workItem from="1773434293047" duration="5094000" />
+      <workItem from="1773475076957" duration="5270000" />
     </task>
     <task id="LOCAL-00001" summary="upd: Reorganize stats menu with grouped sections &amp; class metrics">
       <option name="closed" value="true" />
@@ -829,7 +251,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773064967810</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="feat: migrate to Turborepo monorepo with Electron desktop shell">
+      <option name="closed" value="true" />
+      <created>1773445186450</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773445186450</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

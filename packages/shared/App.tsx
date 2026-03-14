@@ -54,7 +54,10 @@ export function App({ onGameStart, authOverride, isDesktop }: AppProps) {
   // Check if user is already logged in
   useEffect(() => {
     if (authOverride) return;
-    api.verifyToken().then(result => {
+    const timeout = new Promise<{ valid: false }>(resolve =>
+      setTimeout(() => resolve({ valid: false }), 6000)
+    );
+    Promise.race([api.verifyToken(), timeout]).then(result => {
       if (result.valid) {
         setIsAuthenticated(true);
         setUsername(result.user.username);

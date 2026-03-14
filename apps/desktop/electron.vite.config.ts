@@ -1,7 +1,6 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   main: {
@@ -23,15 +22,7 @@ export default defineConfig({
   renderer: {
     root: '.',
     plugins: [
-      react(),
-      viteStaticCopy({
-        targets: [
-          {
-            src: path.resolve(__dirname, '../../packages/shared/assets/*'),
-            dest: 'assets'
-          }
-        ]
-      })
+      react()
     ],
     build: {
       rollupOptions: {

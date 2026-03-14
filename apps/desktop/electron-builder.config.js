@@ -23,6 +23,10 @@ module.exports = {
         arch: ["x64"]
       },
       {
+        target: "portable",
+        arch: ["x64"]
+      },
+      {
         target: "dir",
         arch: ["x64"]
       }
