@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { createInitialGameState } from '../logic/core/GameState';
 import { resetEnemyAggro } from '../logic/enemies/EnemyLogic';
 import { updateExtraction } from '../logic/mission/ExtractionLogic';
@@ -14,6 +14,7 @@ import type { GameState, UpgradeChoice, PlayerClass } from '../logic/core/Types'
 import { useMultiplayerGame } from './UseMultiplayerGame';
 import { useLanguage } from '../lib/LanguageContext';
 import { getKeybinds } from '../logic/utils/Keybinds';
+import type { PixiApp } from '../logic/rendering/pixi/PixiApp';
 
 export function useGameLoop(gameStarted: boolean) {
     const { language } = useLanguage();
@@ -37,8 +38,7 @@ export function useGameLoop(gameStarted: boolean) {
     const upgradeChoicesRef = useRef<UpgradeChoice[] | null>(null);
     const wasModuleMenuOpenRef = useRef(false);
     const wasPausedRef = useRef(false);
-
-    const meteoriteImagesRef = useRef<Record<string, HTMLImageElement>>({});
+    const pixiAppRef = useRef<PixiApp | null>(null);
 
     const [uiState, setUiState] = useState<number>(0);
     const [upgradeChoices, setUpgradeChoices] = useState<UpgradeChoice[] | null>(null);
@@ -167,46 +167,6 @@ export function useGameLoop(gameStarted: boolean) {
 
     useEffect(() => {
         if (!gameStarted) return;
-
-        const qualities = ['Broken', 'Damaged', 'New'];
-        for (let i = 0; i <= 5; i++) {
-            qualities.forEach(q => {
-                const key = `M${i}${q}`;
-                if (!(meteoriteImagesRef.current as any)[key]) {
-                    const img = new Image();
-                    img.src = `/assets/meteorites/${key}.png`;
-                    meteoriteImagesRef.current[key] = img;
-                }
-            });
-        }
-        const assets = [
-            { key: 'zombie', src: '/assets/Enemies/Zombie.png' },
-            { key: 'fear', src: '/assets/Icons/FearSkill.png' },
-            { key: 'deathMark', src: '/assets/Icons/DeathMark.png' },
-            { key: 'blueprint', src: '/assets/Icons/Blueprint.png' },
-            { key: 'ship', src: '/assets/Enteties/Ship.png' },
-            { key: 'void_flux', src: '/assets/Icons/Void Flux.png' },
-            { key: 'dust_pile', src: '/assets/Icons/MeteoriteDust.png' }
-        ];
-
-      const hexes = ['ComCrit', 'ComWave', 'DefPuddle', 'DefEpi', 'DefShield', 'HiveMother', 'MalwarePrime', 'EventHorizon', 'CosmicBeam', 'AigisVortex', 'EcoDMG', 'EcoXP', 'EcoHP', 'ComLife', 'DefBattery', 'ComRad', 'EcoPlating'];
-
-        assets.forEach(a => {
-            if (!(meteoriteImagesRef.current as any)[a.key]) {
-                const img = new Image();
-                img.src = a.src;
-                (meteoriteImagesRef.current as any)[a.key] = img;
-            }
-        });
-
-        hexes.forEach(hex => {
-            if (!(meteoriteImagesRef.current as any)[hex]) {
-                const img = new Image();
-                const ext = (hex === 'AigisVortex') ? 'PNG' : 'png';
-                img.src = `/assets/hexes/${hex}.${ext}`;
-                (meteoriteImagesRef.current as any)[hex] = img;
-            }
-        });
 
         if (!workerRef.current) {
             workerRef.current = new Worker(new URL('../logic/core/GameWorkerLogic.ts', import.meta.url), { type: 'module' });
@@ -362,14 +322,13 @@ export function useGameLoop(gameStarted: boolean) {
             updateOrbit(safeDt);
 
             if (!state.isPaused) {
-                const ctx = canvasRef.current?.getContext('2d');
-                if (ctx) {
+                const pixiApp = pixiAppRef.current;
+                if (pixiApp) {
                     try {
-                        renderGame(ctx, state, meteoriteImagesRef.current, windowScaleFactor.current, language);
+                        renderGame(pixiApp, state, language);
                     } catch (e) {
                         console.error("Render Error:", e);
                     }
-                    try { ctx.restore(); } catch (e) { }
                 }
             }
 
@@ -424,9 +383,16 @@ export function useGameLoop(gameStarted: boolean) {
     const [fps, setFps] = useState(60);
     const framesRef = useRef(0);
     const lastFpsUpdateRef = useRef(0);
+    const setWindowScaleFactor = useCallback((scale: number) => {
+        windowScaleFactor.current = scale;
+    }, []);
+    const setPixiApp = useCallback((pixiApp: PixiApp | null) => {
+        pixiAppRef.current = pixiApp;
+    }, []);
 
     return {
         canvasRef,
+        pixiAppRef,
         gameState: gameState.current,
         upgradeChoices,
         handleUpgradeSelect,
@@ -449,9 +415,8 @@ export function useGameLoop(gameStarted: boolean) {
         uiState,
         inputVector,
         handleJoystickInput,
-        setWindowScaleFactor: (scale: number) => {
-            windowScaleFactor.current = scale;
-        },
+        setWindowScaleFactor,
+        setPixiApp,
         recycleMeteorite,
         spendDust,
         triggerPortal,

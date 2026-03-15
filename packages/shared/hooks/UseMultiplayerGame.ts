@@ -3,6 +3,7 @@ import { GameState } from '../logic/core/Types';
 import { networkManager } from '../logic/networking/NetworkManager';
 import { PALETTES } from '../logic/core/Constants';
 import { createInitialPlayer } from '../logic/core/GameState';
+import { removeDeadInPlace } from '../logic/core/ObjectPool';
 
 export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>, gameStarted: boolean) {
     const lastBroadcastTime = useRef(0);
@@ -96,7 +97,7 @@ export function useMultiplayerGame(gameState: React.MutableRefObject<GameState>,
                     });
 
                     // Remove enemies that are no longer active according to host
-                    state.enemies = state.enemies.filter(e => activeIds.has(e.id) || e.boss);
+                    removeDeadInPlace(state.enemies, e => !activeIds.has(e.id) && !e.boss);
                 }
             },
             onBulletSpawn: (data: any) => {

@@ -12,6 +12,8 @@ import { triggerKineticBolt } from '../player/PlayerCombat';
 import { applyHealToPlayer } from '../utils/CombatUtils';
 import { recordDamage, recordHealing } from '../utils/DamageTracking';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
+import { bulletPool } from './ProjectileSpawning';
+import { removeAtSwapPop } from '../core/ObjectPool';
 
 export function updateSinglePlayerBullet(
     state: GameState,
@@ -57,7 +59,7 @@ export function updateSinglePlayerBullet(
                 b.y += normal.y * (Math.abs(dist) + 5);
             }
             if (b.life <= 0 || b.pierce < 0) {
-                bullets.splice(index, 1);
+                removeAtSwapPop(bullets, index, bulletPool);
                 return true;
             }
             return false;
@@ -71,7 +73,7 @@ export function updateSinglePlayerBullet(
                 ringData.totalDmg -= b.dmg;
             }
         }
-        bullets.splice(index, 1);
+        removeAtSwapPop(bullets, index, bulletPool);
         return true;
     }
 
@@ -226,16 +228,17 @@ export function updateSinglePlayerBullet(
 
             for (let k = 0; k < countToSpawn; k++) {
                 const angle = (k / countToSpawn) * Math.PI * 2 + (state.gameTime * 0.05);
-                bullets.push({
-                    ...b, id: Math.random(), isRing: false, vortexState: 'orbiting',
-                    orbitAngle: angle, orbitDist: b.ringRadius,
-                    x: owner.x + Math.cos(angle) * b.ringRadius!,
-                    y: owner.y + Math.sin(angle) * b.ringRadius!,
-                    dmg: avgDmg, color: b.color, life: 999999,
-                    vx: 0, vy: 0, hits: new Set(), pierce: 0, isEnemy: false, size: 4
-                });
+                const rb = bulletPool.acquire();
+                rb.id = Math.random(); rb.ownerId = b.ownerId; rb.isRing = false; rb.vortexState = 'orbiting';
+                rb.orbitAngle = angle; rb.orbitDist = b.ringRadius;
+                rb.x = owner.x + Math.cos(angle) * b.ringRadius!;
+                rb.y = owner.y + Math.sin(angle) * b.ringRadius!;
+                rb.dmg = avgDmg; rb.color = b.color; rb.life = 999999;
+                rb.vx = 0; rb.vy = 0; rb.pierce = 0; rb.isEnemy = false; rb.size = 4;
+                rb.isCrit = b.isCrit; rb.critMult = b.critMult; rb.isTsunami = b.isTsunami;
+                bullets.push(rb);
             }
-            bullets.splice(index, 1);
+            removeAtSwapPop(bullets, index, bulletPool);
             return true;
         }
 
@@ -608,7 +611,7 @@ export function updateSinglePlayerBullet(
             const rd = owner.aigisRings[b.orbitDist];
             if (rd.count > 0) { rd.count--; rd.totalDmg -= b.dmg; }
         }
-        bullets.splice(index, 1);
+        removeAtSwapPop(bullets, index, bulletPool);
         return true;
     }
 

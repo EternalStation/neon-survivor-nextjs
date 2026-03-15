@@ -1,9 +1,10 @@
 
-import type { GameState, Player } from '../core/Types';
+import type { GameState, Player, ShieldChunk } from '../core/Types';
 import { calcStat, getDefenseReduction } from './MathUtils';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
 import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { recordIncomingDamage, recordHealing } from './DamageTracking';
+import { removeDeadInPlace } from '../core/ObjectPool';
 
 export interface DamageOptions {
     sourceType?: 'collision' | 'projectile' | 'other';
@@ -74,7 +75,7 @@ export function applyDamageToPlayer(
                 chunk.amount = 0;
             }
         }
-        player.shieldChunks = player.shieldChunks.filter(c => c.amount > 0);
+        removeDeadInPlace(player.shieldChunks, (c: ShieldChunk) => c.amount <= 0);
         dmg = remaining;
     }
 

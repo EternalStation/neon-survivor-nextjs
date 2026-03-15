@@ -1,37 +1,45 @@
 import React, { useEffect } from 'react';
 import { useGameLoop } from '../hooks/UseGame';
 import { useWindowScale } from '../hooks/UseWindowScale';
+import { PixiApp } from '../logic/rendering/pixi/PixiApp';
 
 interface GameCanvasProps {
-    // We can pass props from App if needed, but hook manages most
     hook: ReturnType<typeof useGameLoop>;
 }
 
 export const GameCanvas: React.FC<GameCanvasProps> = ({ hook }) => {
-    const { canvasRef } = hook;
+    const { canvasRef, setPixiApp, setWindowScaleFactor } = hook;
     const { scale } = useWindowScale();
 
     useEffect(() => {
-        if (canvasRef.current) {
-            const dpr = window.devicePixelRatio || 1;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-            // Buffer size (Physical Pixels)
-            canvasRef.current.width = window.innerWidth * dpr;
-            canvasRef.current.height = window.innerHeight * dpr;
+        const app = new PixiApp();
+        let destroyed = false;
 
-            // CSS size
-            canvasRef.current.style.width = `${window.innerWidth}px`;
-            canvasRef.current.style.height = `${window.innerHeight}px`;
+        app.init(canvas)
+            .then(() => {
+                if (destroyed) {
+                    app.destroy();
+                    return;
+                }
+                setPixiApp(app);
+            })
+            .catch(error => {
+                console.error('Failed to initialize PixiApp:', error);
+            });
 
-            // Context scale is handled inside useGame's renderGame loop now, 
-            // but we trigger the hook update below.
-        }
-    }, [canvasRef, scale]);
+        return () => {
+            destroyed = true;
+            setPixiApp(null);
+            app.destroy();
+        };
+    }, [canvasRef, setPixiApp]);
 
-    // Updating the hook with the latest scale to be used in render/logic
     useEffect(() => {
-        hook.setWindowScaleFactor(scale);
-    }, [scale, hook]);
+        setWindowScaleFactor(scale);
+    }, [scale, setWindowScaleFactor]);
 
     return (
         <canvas

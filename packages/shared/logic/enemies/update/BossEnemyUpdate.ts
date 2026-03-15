@@ -1,0 +1,1 @@
+export { updateBossEnemy } from '../BossEnemyLogic';

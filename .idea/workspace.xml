@@ -4,15 +4,116 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="feat: migrate to Turborepo monorepo with Electron desktop shell">
-      <change afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+    <list default="true" id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="fix: fixed dist:win build">
+      <change afterPath="$PROJECT_DIR$/docs/plan-prisma-trpc.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/plan-vps-migration.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.1-viewport-culling.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.2-remove-shadowblur.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.3-object-pool.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.1-enemy-interface.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.2-player-interface.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.3-bullet-interface.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.1-pixi-setup.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.2-sprite-atlas.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.1-background-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.2-projectile-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.3-enemy-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.4-particle-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.5-player-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.6-effect-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.7-boss-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.8-ui-overlay-layer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.5-game-canvas.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.6-remove-old-renderers.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.1-enemy-logic-split.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.2-enemy-update-dispatch.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.3-effect-renderer-split.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.1-swap-and-pop.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.2-spatial-grid.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.3-particle-container.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.1-glow-shader.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.2-sprite-atlas-pipeline.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.3-bitmap-font.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/ObjectPool.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/enemy.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/player.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/projectile.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossStageUtils.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/CircleBossLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/DiamondBossLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/OverlordBossLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/PentagonBossLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/TriangleBossLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/GlitcherLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/MinionLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/PrismLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/SnitchLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/ZombieLogic.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EliteEnemyUpdate.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EnemyUpdateCore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EnemyUpdateDispatch.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/NormalEnemyUpdate.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/GlowSprites.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/ViewportCulling.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiCamera.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/SpriteAtlasGenerator.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/BackgroundLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/BossLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/EffectLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/EntityLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/PlayerLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/ProjectileLayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/UILayer.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/agents/task-runner/task-runner.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/desktop/electron-builder.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron-builder.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/desktop/electron.vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron.vite.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/desktop/electron/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/electron/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/desktop/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/desktop/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/web/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/next-env.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/migrate-plan.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/components/UpgradeCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/components/UpgradeIcons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeIcons.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/components/hud/UpgradeMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/hud/UpgradeMenu.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseGame.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGame.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseGameLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGameLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerGame.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerGame.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileEnemyLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectilePlayerLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectilePlayerLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileSpawning.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileSpawning.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/core/SpatialGrid.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/core/SpatialGrid.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/effects/ParticleLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/effects/ParticleLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/BossEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/BossEnemyLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EliteEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EliteEnemyLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyIndividualUpdate.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/NormalEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/NormalEnemyLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/UniqueEnemyLogic.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossLogicPart2.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/mission/DeathLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/mission/DeathLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerCombat.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerCombat.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerLogic.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerStats.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerStats.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/GameRenderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/GameRenderer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossSkillRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossVisualFX.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EffectRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EliteRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EnemyRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EntityRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MapRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MergeRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PlayerRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PoiRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/ProjectileRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/SandboxRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/TextHelper.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/UniqueEnemyRenderer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/utils/CombatUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/utils/CombatUtils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/styles/UpgradeMenu.css" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/styles/UpgradeMenu.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,41 +165,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "#13 on migrate-to-electron",
-    "javascript.preferred.runtime.type.id": "node",
-    "js.debugger.nextJs.config.created.client": "true",
-    "js.debugger.nextJs.config.created.server": "true",
-    "last_opened_file_path": "D:/Prog/my/.temp/neon-survivor-nextjs",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "npm.Next.js: server-side.executor": "Run",
-    "npm.build.executor": "Run",
-    "npm.build:desktop.executor": "Run",
-    "npm.build:web.executor": "Run",
-    "npm.dev.executor": "Run",
-    "npm.dev:desktop.executor": "Run",
-    "npm.dev:web.executor": "Run",
-    "npm.dist:win.executor": "Run",
-    "ts.external.directory.path": "D:\\Prog\\my\\.temp\\neon-survivor-nextjs\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#13 on migrate-to-electron&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
+    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Prog/my/.temp/neon-survivor-nextjs&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.Next.js: server-side.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build:desktop.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build:web.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:desktop.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:web.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dist:win.executor&quot;: &quot;Run&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;D:\\Prog\\my\\.temp\\neon-survivor-nextjs\\apps\\web\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\tasks\pixi-migration" />
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\tasks\test-suite" />
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\.temp" />
       <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\mechanics" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dist:win">
+  <component name="RunManager" selected="npm.dev:web">
     <configuration name="build" type="js.build_tools.npm" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
@@ -171,11 +275,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.dev:web" />
+        <item itemvalue="npm.build:web" />
         <item itemvalue="npm.dist:win" />
         <item itemvalue="npm.build:desktop" />
-        <item itemvalue="npm.build:web" />
         <item itemvalue="npm.dev:desktop" />
-        <item itemvalue="npm.dev:web" />
       </list>
     </recent_temporary>
   </component>
@@ -201,7 +305,7 @@
       <workItem from="1773360946633" duration="6000" />
       <workItem from="1773396731482" duration="5000" />
       <workItem from="1773434293047" duration="5094000" />
-      <workItem from="1773475076957" duration="5270000" />
+      <workItem from="1773475076957" duration="38107000" />
     </task>
     <task id="LOCAL-00001" summary="upd: Reorganize stats menu with grouped sections &amp; class metrics">
       <option name="closed" value="true" />
@@ -259,7 +363,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773445186450</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="fix: fixed dist:win build">
+      <option name="closed" value="true" />
+      <created>1773484069591</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1773484069591</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -272,6 +384,7 @@
     <MESSAGE value="new: Add vitals tab to leaderboard &amp; death screen" />
     <MESSAGE value="new: Allow mv command in Claude settings" />
     <MESSAGE value="feat: migrate to Turborepo monorepo with Electron desktop shell" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: migrate to Turborepo monorepo with Electron desktop shell" />
+    <MESSAGE value="fix: fixed dist:win build" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: fixed dist:win build" />
   </component>
 </project>

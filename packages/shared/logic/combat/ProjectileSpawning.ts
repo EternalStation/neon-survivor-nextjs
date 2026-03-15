@@ -1,15 +1,39 @@
-import type { GameState, Player } from '../core/Types';
+import type { GameState, Player, Bullet } from '../core/Types';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { PLAYER_CLASSES } from '../core/Classes';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus, getLogarithmicSum } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
-import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
+import { spawnParticles, spawnFloatingNumber, particlePool } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
 import { PALETTES } from '../core/Constants';
 import { getPlayerThemeColor } from '../utils/Helpers';
 import { networkManager } from '../networking/NetworkManager';
+import { ObjectPool, removeAtSwapPop } from '../core/ObjectPool';
+
+export const bulletPool = new ObjectPool<Bullet>(
+    () => ({ id: 0, x: 0, y: 0, vx: 0, vy: 0, dmg: 0, pierce: 0, life: 0, isEnemy: false, hits: new Set(), size: 0 }),
+    (b) => {
+        b.id = 0; b.x = 0; b.y = 0; b.vx = 0; b.vy = 0; b.dmg = 0; b.pierce = 0; b.life = 0; b.isEnemy = false; b.size = 0;
+        b.hits.clear();
+        b.ownerId = undefined; b.color = undefined; b.isCrit = undefined; b.critMult = undefined;
+        b.bounceCount = undefined; b.isHyperPulse = undefined; b.vortexState = undefined;
+        b.orbitAngle = undefined; b.orbitDist = undefined; b.spawnTime = undefined; b.trails = undefined;
+        b.isNanite = undefined; b.naniteTargetId = undefined; b.isWobbly = undefined;
+        b.isHiveMotherSkill = undefined; b.hiveMotherSpitId = undefined;
+        b.cloudCenterX = undefined; b.cloudCenterY = undefined; b.cloudRadius = undefined;
+        b.bounceDmgMult = undefined; b.bounceSpeedBonus = undefined;
+        b.isRing = undefined; b.ringRadius = undefined; b.ringVisualIntensity = undefined; b.ringAmmo = undefined;
+        b.insideSandbox = undefined; b.isTrace = undefined; b.slowPercent = undefined; b.freezeDuration = undefined;
+        b.isMist = undefined; b.isVisualOnly = undefined; b.burnDamage = undefined;
+        b.isTurretFire = undefined; b.turretLevel = undefined; b.turretVariant = undefined;
+        b.isBomb = undefined; b.explodeRadius = undefined;
+        b.isShockwaveCircle = undefined; b.isSingularity = undefined; b.isTsunami = undefined;
+        b.maxSize = undefined; b.shockwaveLevel = undefined; b.maxLife = undefined;
+        b.startAngle = undefined; b.endAngle = undefined; b.sourceShape = undefined;
+    }
+)
 
 
 
@@ -43,49 +67,30 @@ export function triggerShockwave(state: GameState, player: Player, level: number
 
     const waveLife = 60;
 
-    state.particles.push({
-        x: player.x,
-        y: player.y,
-        vx: 0,
-        vy: 0,
-        life: waveLife,
-        maxLife: waveLife,
-        color: isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : '#ef4444'),
-        size: range,
-        type: 'shockwave_circle',
-        isTsunami,
-        isSingularity,
-        alpha: 1.0,
-        decay: 1.0 / waveLife
-    });
+    const wp = particlePool.acquire();
+    wp.x = player.x; wp.y = player.y; wp.vx = 0; wp.vy = 0;
+    wp.life = waveLife; wp.maxLife = waveLife;
+    wp.color = isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : '#ef4444');
+    wp.size = range; wp.type = 'shockwave_circle';
+    wp.isTsunami = isTsunami; wp.isSingularity = isSingularity;
+    wp.alpha = 1.0; wp.decay = 1.0 / waveLife;
+    state.particles.push(wp);
 
 
 
     playSfx('sonic-wave');
 
 
-    state.bullets.push({
-        id: Math.random(),
-        ownerId: player.id,
-        x: player.x,
-        y: player.y,
-        vx: 0,
-        vy: 0,
-        dmg: waveDmg,
-        pierce: 999999,
-        life: waveLife,
-        maxLife: waveLife,
-        isEnemy: false,
-        hits: new Set(),
-        size: 0,
-        isShockwaveCircle: true,
-        maxSize: range,
-        shockwaveLevel: Math.max(2, level),
-        isSingularity,
-        isTsunami,
-        color: isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : themeColor),
-        spawnTime: Date.now()
-    });
+    const wb = bulletPool.acquire();
+    wb.id = Math.random(); wb.ownerId = player.id;
+    wb.x = player.x; wb.y = player.y; wb.vx = 0; wb.vy = 0;
+    wb.dmg = waveDmg; wb.pierce = 999999; wb.life = waveLife; wb.maxLife = waveLife;
+    wb.isEnemy = false; wb.size = 0;
+    wb.isShockwaveCircle = true; wb.maxSize = range; wb.shockwaveLevel = Math.max(2, level);
+    wb.isSingularity = isSingularity; wb.isTsunami = isTsunami;
+    wb.color = isTsunami ? '#fbbf24' : (isSingularity ? '#a855f7' : themeColor);
+    wb.spawnTime = Date.now();
+    state.bullets.push(wb);
 }
 
 export function spawnBullet(state: GameState, player: Player, x: number, y: number, angle: number, dmg: number, pierce: number, offsetAngle: number = 0) {
@@ -129,27 +134,15 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
 
 
 
-    const b: any = {
-        id: bulletId,
-        ownerId: player.id,
-        x, y,
-        vx: Math.cos(angle + offsetAngle) * spd,
-        vy: Math.sin(angle + offsetAngle) * spd,
-        dmg: finalDmg,
-        pierce: bulletPierce,
-
-        life: 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) / (state.gameSpeedMult ?? 1),
-        bounceDmgMult: (classStats?.stats.bounceDmgMult || 0) * (1 + resonance),
-        bounceSpeedBonus: (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance),
-        isEnemy: false,
-        hits: new Set(),
-        size: bulletSize,
-        isCrit,
-        critMult: mult,
-        isHyperPulse,
-        color: bulletColor,
-        spawnTime: Date.now()
-    };
+    const b = bulletPool.acquire();
+    b.id = bulletId; b.ownerId = player.id; b.x = x; b.y = y;
+    b.vx = Math.cos(angle + offsetAngle) * spd; b.vy = Math.sin(angle + offsetAngle) * spd;
+    b.dmg = finalDmg; b.pierce = bulletPierce;
+    b.life = 140 * (classStats?.stats.projLifeMult || 1) * (1 + resonance) / (state.gameSpeedMult ?? 1);
+    b.bounceDmgMult = (classStats?.stats.bounceDmgMult || 0) * (1 + resonance);
+    b.bounceSpeedBonus = (classStats?.stats.bounceSpeedBonus || 0) * (1 + resonance);
+    b.isEnemy = false; b.size = bulletSize; b.isCrit = isCrit; b.critMult = mult;
+    b.isHyperPulse = isHyperPulse; b.color = bulletColor; b.spawnTime = Date.now();
 
 
     if (player.playerClass === 'aigis') {
@@ -193,7 +186,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
                         if (b.vortexState === 'orbiting' && Math.abs((b.orbitDist || 0) - distance) < 5) {
                             removedCount++;
                             removedDmg += b.dmg;
-                            state.bullets.splice(i, 1);
+                            removeAtSwapPop(state.bullets, i, bulletPool);
                         }
                     }
 
@@ -205,24 +198,14 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
                     ringData.totalDmg = removedDmg + baseBullet.dmg;
 
 
-                    const ringProj: any = {
-                        id: Math.random(),
-                        x: player.x,
-                        y: player.y,
-                        vx: 0, vy: 0,
-                        dmg: 0,
-                        pierce: 999999,
-                        life: 999999,
-                        isEnemy: false,
-                        hits: new Set(),
-                        color: baseBullet.color || '#22d3ee',
-                        size: distance,
-                        isRing: true,
-                        ringRadius: distance,
-                        ringAmmo: ringData.count,
-                        ringVisualIntensity: 1.0,
-                        spawnTime: Date.now()
-                    };
+                    const ringProj = bulletPool.acquire();
+                    ringProj.id = Math.random(); ringProj.x = player.x; ringProj.y = player.y;
+                    ringProj.vx = 0; ringProj.vy = 0; ringProj.dmg = 0; ringProj.pierce = 999999;
+                    ringProj.life = 999999; ringProj.isEnemy = false;
+                    ringProj.color = baseBullet.color || '#22d3ee'; ringProj.size = distance;
+                    ringProj.isRing = true; ringProj.ringRadius = distance;
+                    ringProj.ringAmmo = ringData.count; ringProj.ringVisualIntensity = 1.0;
+                    ringProj.spawnTime = Date.now();
                     state.bullets.push(ringProj);
 
 
@@ -233,7 +216,9 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
             }
 
 
-            const bullet = { ...baseBullet, id: Math.random(), orbitDist: distance };
+            const bullet = bulletPool.acquire();
+            Object.assign(bullet, baseBullet);
+            bullet.id = Math.random(); bullet.orbitDist = distance; bullet.hits = new Set(baseBullet.hits);
             state.bullets.push(bullet);
 
 
@@ -267,6 +252,7 @@ export function spawnBullet(state: GameState, player: Player, x: number, y: numb
             handleRingSpawn(b, 320);
         }
 
+        bulletPool.release(b);
         return;
     }
 
@@ -296,20 +282,12 @@ export function spawnEnemyBullet(state: GameState, x: number, y: number, angle: 
     const eraPalette = PALETTES[eraIndex % PALETTES.length];
     const brightColor = eraPalette.colors[0];
 
-    state.enemyBullets.push({
-        id: Math.random(),
-        x, y,
-        vx: Math.cos(angle) * spd,
-        vy: Math.sin(angle) * spd,
-        dmg,
-        pierce: 0,
-        life: 300 / (state.gameSpeedMult ?? 1),
-        isEnemy: true,
-        hits: new Set(),
-        color: brightColor,
-        size: 4,
-        sourceShape
-    });
+    const eb = bulletPool.acquire();
+    eb.id = Math.random(); eb.x = x; eb.y = y;
+    eb.vx = Math.cos(angle) * spd; eb.vy = Math.sin(angle) * spd;
+    eb.dmg = dmg; eb.pierce = 0; eb.life = 300 / (state.gameSpeedMult ?? 1);
+    eb.isEnemy = true; eb.color = brightColor; eb.size = 4; eb.sourceShape = sourceShape;
+    state.enemyBullets.push(eb);
 
 
     if (state.multiplayer.active && state.multiplayer.isHost) {

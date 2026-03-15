@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import type { UpgradeChoice, GameState, PlayerStats } from '../logic/core/Types';
 import { BASE_UPGRADE_VALUES } from '../logic/core/Constants';
 import { calcStat } from '../logic/utils/MathUtils';
@@ -127,10 +127,12 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
             className={`upgrade-card card-${rId} ${isSelected ? 'active active-tutorial-target' : 'idle'}`}
             onMouseEnter={() => onHover(index)}
             onClick={handleClick}
+            style={{
+                ['--card-glow' as any]: baseColor,
+                borderColor: baseColor
+            }}
         >
-
             <div className="card-bg-effect" />
-
 
             {sparks.map(s => (
                 <div key={s.id} className="spark" style={{
@@ -141,41 +143,27 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ choice: c, index, isSe
                 }} />
             ))}
 
-            <div className="card-content-stack">
-                <div className="icon-badge-center" style={{ color: baseColor }}>
-                    <div style={{ transform: 'scale(1.5)' }}>
-                        {c.type ? getIcon(c.type.icon, baseColor) : null}
-                    </div>
+            <div className="card-inner">
+                <div className="card-icon" style={{ color: baseColor }}>
+                    {c.type ? getIcon(c.type.icon, baseColor) : null}
                 </div>
 
-                <div className="card-title-center">
+                <div className="card-name">
                     {displayName}
                 </div>
 
-                <div className="card-value-center" style={{ color: baseColor, textShadow: `0 0 10px ${baseColor}` }}>
+                <div className="card-value" style={{ color: baseColor, textShadow: `0 0 10px ${baseColor}` }}>
                     <span>{valStr}</span>
                     {finalIncreaseStr && (
-                        <span style={{
-                            fontSize: '11px',
-                            opacity: 0.8,
-                            marginTop: '0px',
-                            fontWeight: 'normal',
-                            textShadow: 'none',
-                            letterSpacing: '0px'
-                        }}>
-                            {finalIncreaseStr}
-                        </span>
+                        <span className="card-value-sub">{finalIncreaseStr}</span>
                     )}
                 </div>
 
-
-
-                <div className="card-footer-group rarity-sockets">
-                    <div className="rarity-label-bottom" style={{ color: baseColor }}>
+                <div className="card-footer">
+                    <div className="card-rarity" style={{ color: baseColor }}>
                         {label}
                     </div>
-
-                    <div className="card-crystal-bar">
+                    <div className="card-gems">
                         {Array.from({ length: 9 }).map((_, i) => (
                             <div key={i} className="gem-socket-diamond" style={{
                                 borderColor: i < filledSockets ? UNIFORM_SOCKET_COLOR : '#333'

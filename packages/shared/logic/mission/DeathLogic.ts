@@ -6,6 +6,7 @@ import { trySpawnMeteorite, createMeteorite, spawnVoidFlux, spawnDustPile } from
 import { getSpawnPosition } from '../enemies/EnemySpawnLogic';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
+import { bulletPool } from '../combat/ProjectileSpawning';
 import { trySpawnBlueprint, dropBlueprint } from '../upgrades/BlueprintLogic';
 import { handleVoidBurrowerDeath } from '../enemies/WormLogic';
 import { getUiTranslation } from '../../lib/UiTranslations';
@@ -275,22 +276,13 @@ export function handleEnemyDeath(state: GameState, e: Enemy, onEvent?: (event: s
             targets.forEach(t => {
                 const other = t.enemy;
 
-                state.bullets.push({
-                    id: Math.random(),
-                    x: e.x,
-                    y: e.y,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: (Math.random() - 0.5) * 2,
-                    dmg: e.infectionDmg || 5,
-                    pierce: 1,
-                    life: 120,
-                    isEnemy: false,
-                    hits: new Set([e.id]),
-                    color: '#4ade80',
-                    size: 4,
-                    isNanite: true,
-                    naniteTargetId: other.id
-                });
+                const jb = bulletPool.acquire();
+                jb.id = Math.random(); jb.x = e.x; jb.y = e.y;
+                jb.vx = (Math.random() - 0.5) * 2; jb.vy = (Math.random() - 0.5) * 2;
+                jb.dmg = e.infectionDmg || 5; jb.pierce = 1; jb.life = 120; jb.isEnemy = false;
+                jb.hits.add(e.id); jb.color = '#4ade80'; jb.size = 4;
+                jb.isNanite = true; jb.naniteTargetId = other.id;
+                state.bullets.push(jb);
             });
         }
     }

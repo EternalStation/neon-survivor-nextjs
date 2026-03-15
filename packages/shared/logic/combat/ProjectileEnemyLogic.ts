@@ -7,6 +7,8 @@ import { getHexLevel, calculateLegendaryBonus } from '../upgrades/LegendaryLogic
 import { triggerKineticBatteryZap } from '../player/PlayerCombat';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { applyDamageToPlayer } from '../utils/CombatUtils';
+import { bulletPool } from './ProjectileSpawning';
+import { removeAtSwapPop } from '../core/ObjectPool';
 
 export function updateSingleEnemyBullet(
     state: GameState,
@@ -60,7 +62,7 @@ export function updateSingleEnemyBullet(
     }
 
     if (!isInMap(eb.x, eb.y)) {
-        enemyBullets.splice(index, 1);
+        removeAtSwapPop(enemyBullets, index, bulletPool);
         return true;
     }
 
@@ -79,7 +81,7 @@ export function updateSingleEnemyBullet(
                         spawnParticles(state, z.x, z.y, '#4ade80', 15);
                     }
                 }
-                enemyBullets.splice(index, 1);
+                removeAtSwapPop(enemyBullets, index, bulletPool);
                 return true;
             }
         }
@@ -103,13 +105,13 @@ export function updateSingleEnemyBullet(
                 if (getHexLevel(state, 'DefBattery') >= 1) triggerKineticBatteryZap(state, p);
             }
 
-            enemyBullets.splice(index, 1);
+            removeAtSwapPop(enemyBullets, index, bulletPool);
             return true;
         }
     }
 
     if (eb.life <= 0) {
-        enemyBullets.splice(index, 1);
+        removeAtSwapPop(enemyBullets, index, bulletPool);
         return true;
     }
 

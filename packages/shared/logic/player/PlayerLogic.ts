@@ -1,10 +1,11 @@
 
-import type { GameState } from '../core/Types';
+import type { GameState, ShieldChunk } from '../core/Types';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/Constants';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { handlePlayerMovement } from './PlayerMovement';
 import { updatePlayerStats } from './PlayerStats';
 import { handlePlayerCombat, triggerKineticBatteryZap, triggerZombieZap, spawnLightning } from './PlayerCombat';
+import { removeDeadInPlace } from '../core/ObjectPool';
 
 export { triggerKineticBatteryZap, triggerZombieZap, spawnLightning };
 
@@ -24,7 +25,7 @@ export function updatePlayer(
 
 
     if (player.shieldChunks) {
-        player.shieldChunks = player.shieldChunks.filter((c: any) => now < c.expiry && c.amount > 0);
+        removeDeadInPlace(player.shieldChunks, (c: ShieldChunk) => now >= c.expiry || c.amount <= 0);
     }
 
     const hpAtStart = player.curHp;

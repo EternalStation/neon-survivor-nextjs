@@ -1,48 +1,57 @@
 import type { Enemy } from './Types';
 
 export class SpatialGrid {
+    private static readonly KEY_OFFSET = 32768;
+    private static readonly KEY_MASK = 0xffff;
+
     private cellSize: number;
-    private grid: Map<string, Enemy[]>;
+    private grid: Map<number, Enemy[]>;
+    private activeKeys: number[];
 
     constructor(cellSize: number = 200) {
         this.cellSize = cellSize;
         this.grid = new Map();
+        this.activeKeys = [];
     }
 
     clear() {
-        this.grid.clear();
+        for (const key of this.activeKeys) {
+            this.grid.get(key)!.length = 0;
+        }
+        this.activeKeys.length = 0;
     }
 
-    private getKey(col: number, row: number): string {
-        return `${col},${row}`;
+    private getKey(col: number, row: number): number {
+        return (
+            ((((col + SpatialGrid.KEY_OFFSET) & SpatialGrid.KEY_MASK) << 16) |
+                ((row + SpatialGrid.KEY_OFFSET) & SpatialGrid.KEY_MASK)) >>>
+            0
+        );
     }
 
     add(enemy: Enemy) {
         const col = Math.floor(enemy.x / this.cellSize);
         const row = Math.floor(enemy.y / this.cellSize);
 
-        
         this.addToCell(col, row, enemy);
-
-        
-        
-        
-        
     }
 
     private addToCell(col: number, row: number, enemy: Enemy) {
         const key = this.getKey(col, row);
-        if (!this.grid.has(key)) {
-            this.grid.set(key, []);
+        let cell = this.grid.get(key);
+        if (!cell) {
+            cell = [];
+            this.grid.set(key, cell);
         }
-        this.grid.get(key)!.push(enemy);
+        if (cell.length === 0) {
+            this.activeKeys.push(key);
+        }
+        cell.push(enemy);
     }
 
-    query(x: number, y: number, radius: number): Enemy[] {
-        const enemies: Enemy[] = [];
-        const seen = new Set<number>(); 
+    query(x: number, y: number, radius: number, result: Enemy[] = []): Enemy[] {
+        result.length = 0;
 
-        
         const startCol = Math.floor((x - radius) / this.cellSize);
         const endCol = Math.floor((x + radius) / this.cellSize);
         const startRow = Math.floor((y - radius) / this.cellSize);
@@ -53,14 +62,12 @@ export class SpatialGrid {
                 const cell = this.grid.get(this.getKey(c, r));
                 if (cell) {
                     for (const enemy of cell) {
-                        if (!seen.has(enemy.id)) {
-                            enemies.push(enemy);
-                            seen.add(enemy.id);
-                        }
+                        result.push(enemy);
                     }
                 }
             }
         }
-        return enemies;
+
+        return result;
     }
 }

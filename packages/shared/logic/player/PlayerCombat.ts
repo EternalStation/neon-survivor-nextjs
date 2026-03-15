@@ -5,12 +5,12 @@ import { GAME_CONFIG } from '../core/GameConfig';
 import { calcStat, getDefenseReduction } from '../utils/MathUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
-import { spawnFloatingNumber, spawnParticles } from '../effects/ParticleLogic';
+import { spawnFloatingNumber, spawnParticles, particlePool } from '../effects/ParticleLogic';
 import { getHexLevel, getHexMultiplier, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { ARENA_CENTERS, isInMap } from '../mission/MapLogic';
-import { spawnBullet } from '../combat/ProjectileSpawning';
+import { spawnBullet, bulletPool } from '../combat/ProjectileSpawning';
 import { recordDamage, recordHealing } from '../utils/DamageTracking';
 import { applyDamageToPlayer, applyHealToPlayer } from '../utils/CombatUtils';
 
@@ -142,14 +142,13 @@ export function handlePlayerCombat(
             const range = (mireLvl > 0 || neutronLvl > 0) ? 666 : 500;
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.random() * range;
-            state.particles.push({
-                x: player.x + Math.cos(angle) * dist,
-                y: player.y + Math.sin(angle) * dist,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: (Math.random() - 0.5) * 0.4,
-                life: 60, maxLife: 60, color: (neutronLvl > 0 && Math.random() < 0.3) ? '#facc15' : '#bef264',
-                size: 6 + Math.random() * 8, type: 'bubble', alpha: 0.5
-            });
+            const rp = particlePool.acquire();
+            rp.x = player.x + Math.cos(angle) * dist; rp.y = player.y + Math.sin(angle) * dist;
+            rp.vx = (Math.random() - 0.5) * 0.4; rp.vy = (Math.random() - 0.5) * 0.4;
+            rp.life = 60; rp.maxLife = 60;
+            rp.color = (neutronLvl > 0 && Math.random() < 0.3) ? '#facc15' : '#bef264';
+            rp.size = 6 + Math.random() * 8; rp.type = 'bubble'; rp.alpha = 0.5;
+            state.particles.push(rp);
         }
     }
 
@@ -382,27 +381,14 @@ export function spawnNanitesFromCloud(state: GameState, effect: import('../core/
         const driftAngle = Math.random() * Math.PI * 2;
         const driftSpeed = 0.3 + Math.random() * 0.7;
 
-        state.bullets.push({
-            id: Math.random(),
-            ownerId: owner.id,
-            x: startX,
-            y: startY,
-            vx: Math.cos(driftAngle) * driftSpeed,
-            vy: Math.sin(driftAngle) * driftSpeed,
-            dmg,
-            pierce: 0,
-            life: 180,
-            isEnemy: false,
-            hits: new Set<number>(),
-            color: '#22c55e',
-            size: 4 + Math.random() * 4,
-            isNanite: true,
-            isHiveMotherSkill: true,
-            hiveMotherSpitId: spitId,
-            cloudCenterX: effect.x,
-            cloudCenterY: effect.y,
-            cloudRadius: effect.radius,
-        });
+        const nb = bulletPool.acquire();
+        nb.id = Math.random(); nb.ownerId = owner.id; nb.x = startX; nb.y = startY;
+        nb.vx = Math.cos(driftAngle) * driftSpeed; nb.vy = Math.sin(driftAngle) * driftSpeed;
+        nb.dmg = dmg; nb.pierce = 0; nb.life = 180; nb.isEnemy = false;
+        nb.color = '#22c55e'; nb.size = 4 + Math.random() * 4;
+        nb.isNanite = true; nb.isHiveMotherSkill = true; nb.hiveMotherSpitId = spitId;
+        nb.cloudCenterX = effect.x; nb.cloudCenterY = effect.y; nb.cloudRadius = effect.radius;
+        state.bullets.push(nb);
     }
 }
 
@@ -555,15 +541,15 @@ export function spawnHuntingLine(state: GameState, x1: number, y1: number, x2: n
         const py = y1 + (y2 - y1) * t + Math.sin(angle + Math.PI / 2) * wobble;
 
 
-        state.particles.push({
-            x: px, y: py, vx: 0, vy: 0, life: 8, color: '#fff',
-            size: 0.6, type: 'spark', alpha: 1.0
-        });
+        const sp1 = particlePool.acquire();
+        sp1.x = px; sp1.y = py; sp1.vx = 0; sp1.vy = 0; sp1.life = 8;
+        sp1.color = '#fff'; sp1.size = 0.6; sp1.type = 'spark'; sp1.alpha = 1.0;
+        state.particles.push(sp1);
 
-        state.particles.push({
-            x: px, y: py, vx: 0, vy: 0, life: 12, color: color,
-            size: 1.5, type: 'spark', alpha: 0.4
-        });
+        const sp2 = particlePool.acquire();
+        sp2.x = px; sp2.y = py; sp2.vx = 0; sp2.vy = 0; sp2.life = 12;
+        sp2.color = color; sp2.size = 1.5; sp2.type = 'spark'; sp2.alpha = 0.4;
+        state.particles.push(sp2);
     }
 }
 
@@ -691,7 +677,10 @@ function processPendingZaps(state: GameState, onEvent?: (type: string, data?: an
                 }
 
                 const boltColor = zap.color || '#60a5fa';
-                state.particles.push({ x: target.x, y: target.y, vx: 0, vy: 0, life: 10, color: boltColor, size: 20, type: 'shockwave', alpha: 0.8 });
+                const bp = particlePool.acquire();
+                bp.x = target.x; bp.y = target.y; bp.vx = 0; bp.vy = 0; bp.life = 10;
+                bp.color = boltColor; bp.size = 20; bp.type = 'shockwave'; bp.alpha = 0.8;
+                state.particles.push(bp);
 
                 zap.currentIndex++;
                 zap.sourcePos = { x: target.x, y: target.y };
@@ -734,17 +723,16 @@ export function spawnLightning(state: GameState, x1: number, y1: number, x2: num
             const tt = j / dots;
             const px = lastX + (targetX - lastX) * tt, py = lastY + (targetY - lastY) * tt;
 
-            state.particles.push({
-                x: px, y: py, vx: 0, vy: 0,
-                life: lifeOverride || 6, color: '#fff',
-                size: 0.5, type: 'spark', alpha: 1.0
-            });
+            const lp1 = particlePool.acquire();
+            lp1.x = px; lp1.y = py; lp1.vx = 0; lp1.vy = 0;
+            lp1.life = lifeOverride || 6; lp1.color = '#fff'; lp1.size = 0.5; lp1.type = 'spark'; lp1.alpha = 1.0;
+            state.particles.push(lp1);
 
-            state.particles.push({
-                x: px, y: py, vx: 0, vy: 0,
-                life: (lifeOverride ? lifeOverride + 2 : 8), color: color,
-                size: isBranch ? 1.0 : 1.5, type: 'spark', alpha: 0.6
-            });
+            const lp2 = particlePool.acquire();
+            lp2.x = px; lp2.y = py; lp2.vx = 0; lp2.vy = 0;
+            lp2.life = lifeOverride ? lifeOverride + 2 : 8; lp2.color = color;
+            lp2.size = isBranch ? 1.0 : 1.5; lp2.type = 'spark'; lp2.alpha = 0.6;
+            state.particles.push(lp2);
         }
 
         lastX = targetX; lastY = targetY;

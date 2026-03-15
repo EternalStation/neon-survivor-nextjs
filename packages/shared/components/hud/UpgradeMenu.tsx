@@ -76,32 +76,11 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
                 <div className="honeycomb-cluster" style={{ bottom: '20%', right: '15%' }} />
             </div>
 
-            <h2 style={{
-                position: 'absolute',
-                top: '20px',
-                color: '#FFFFFF',
-                fontSize: 32,
-                fontFamily: 'Orbitron, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: 8,
-                textShadow: '0 0 20px rgba(255, 255, 255, 0.5)',
-                zIndex: 20,
-                textAlign: 'center',
-                width: '100%',
-            }}>
+            <h2 className="upgrade-menu-title">
                 {upgradeChoices[0].isSpecial ? t.voidTechDetected : t.selectSystemUpgrade}
             </h2>
 
-            <div style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 20,
-                perspective: '1000px',
-                gap: '60px',
-                marginTop: '-40px'
-            }}>
+            <div className="upgrade-cards-row">
 
                 {upgradeChoices.map((c, i) => (
                     <div key={i} className={`upgrade-card-container ${!canSelect ? 'locked' : ''}`}>
@@ -130,58 +109,11 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
             </div>
 
             {gameState.player.rerolls > 0 && onUpgradeReroll && !upgradeChoices[0].isSpecial && (
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginTop: '50px',
-                    zIndex: 20,
-                    width: '100%'
-                }}>
+                <div className="reroll-wrapper">
                     <button
+                        className="reroll-button"
                         onClick={() => canSelect && onUpgradeReroll()}
                         disabled={!canSelect}
-                        style={{
-                            padding: '8px 20px',
-                            background: 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))',
-                            border: '1px solid rgba(56, 189, 248, 0.5)',
-                            borderBottom: `2px solid #38bdf8`,
-                            boxShadow: canSelect ? '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)' : 'none',
-                            color: '#38bdf8',
-                            fontFamily: 'Orbitron, sans-serif',
-                            fontSize: 14,
-                            fontWeight: 'bold',
-                            cursor: canSelect ? 'pointer' : 'not-allowed',
-                            textTransform: 'uppercase',
-                            letterSpacing: 3,
-                            borderRadius: '6px',
-                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            opacity: canSelect ? 1 : 0.7,
-                            transform: canSelect ? 'scale(1)' : 'scale(0.92)'
-                        }}
-                        onMouseOver={(e) => {
-                            if (!canSelect) return;
-                            e.currentTarget.style.background = 'linear-gradient(45deg, rgba(30, 41, 59, 1), rgba(56, 189, 248, 0.2))';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.2)';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.borderColor = '#38bdf8';
-                        }}
-                        onMouseOut={(e) => {
-                            if (!canSelect) return;
-                            e.currentTarget.style.background = 'linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 1))';
-                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.1)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
-                        }}
-                        onMouseDown={(e) => {
-                            if (!canSelect) return;
-                            e.currentTarget.style.transform = 'translateY(2px)';
-                        }}
-                        onMouseUp={(e) => {
-                            if (!canSelect) return;
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                        }}
                     >
                         {t.rerollUpgrades} ({gameState.player.rerolls})
                     </button>
@@ -189,19 +121,7 @@ export const UpgradeMenu: React.FC<UpgradeMenuProps> = ({ upgradeChoices, onUpgr
             )}
 
             {gameState.rareRewardActive && (
-                <div className="glitch-text" style={{
-                    color: '#c084fc',
-                    fontSize: 24,
-                    fontFamily: 'Orbitron, sans-serif',
-                    textTransform: 'uppercase',
-                    letterSpacing: 2,
-                    textShadow: '0 0 10px #c084fc',
-                    zIndex: 20,
-                    textAlign: 'center',
-                    width: '100%',
-                    marginBottom: 20,
-                    animation: 'pulse 1s infinite'
-                }}>
+                <div className="glitch-reward-text">
                     {t.anomalyTerminated}
                 </div>
             )}

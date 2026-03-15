@@ -1,6 +1,6 @@
 import type { GameState } from '../core/Types';
 import { handleWorldSystems, handleSpawnExecution, handleScheduledSpawns, handleLegionAndMerges } from './EnemySystemLogic';
-import { updateSingleEnemy } from './EnemyIndividualUpdate';
+import { updateSingleEnemy } from './update/EnemyUpdateCore';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 
 

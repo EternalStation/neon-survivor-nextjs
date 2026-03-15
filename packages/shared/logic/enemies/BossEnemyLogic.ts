@@ -1,6 +1,10 @@
 import type { Enemy, GameState } from '../core/Types';
-import { updateAbominationBoss, updateSquareBoss, updateCircleBoss } from './bosses/BossLogicPart1';
-import { updateTriangleBoss, updateDiamondBoss, updatePentagonBoss } from './bosses/BossLogicPart2';
+import { updateSquareBoss } from './bosses/BossLogicPart1';
+import { updateCircleBoss } from './bosses/CircleBossLogic';
+import { updateTriangleBoss } from './bosses/TriangleBossLogic';
+import { updateDiamondBoss } from './bosses/DiamondBossLogic';
+import { updatePentagonBoss } from './bosses/PentagonBossLogic';
+import { updateOverlordBoss } from './bosses/OverlordBossLogic';
 
 export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: number, pushX: number, pushY: number, state: GameState, onEvent?: (event: string, data?: any) => void) {
     
@@ -11,7 +15,7 @@ export function updateBossEnemy(e: Enemy, currentSpd: number, dx: number, dy: nu
 
     
     if (e.shape === 'abomination') {
-        return updateAbominationBoss(e, currentSpd, dx, dy, pushX, pushY, state, isLevel4);
+        return updateOverlordBoss(e, currentSpd, dx, dy, pushX, pushY, state, isLevel4);
     }
 
     

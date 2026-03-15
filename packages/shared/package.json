@@ -3,15 +3,16 @@
   "private": true,
   "main": "index.ts",
   "dependencies": {
+    "lucide-react": "^0.563.0",
     "peerjs": "^1.5.5",
-    "lucide-react": "^0.563.0"
+    "pixi.js": "^8.17.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/react": "^19"
+    "@types/react": "^19",
+    "typescript": "^5"
   }
 }

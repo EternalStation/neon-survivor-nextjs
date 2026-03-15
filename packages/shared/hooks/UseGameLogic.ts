@@ -26,6 +26,7 @@ import { updateTurrets, updateAllies, relocateTurretsToArena } from '../logic/mi
 
 import { updateAreaEffects } from './UseAreaEffectLogic';
 import { getKeybinds } from '../logic/utils/Keybinds';
+import { removeDeadInPlace } from '../logic/core/ObjectPool';
 
 interface UseGameLogicProps {
     gameState: React.MutableRefObject<GameState>;
@@ -387,7 +388,7 @@ export function useGameLogic({
 
 
         if (isHost) {
-            state.enemies = state.enemies.filter(e => !e.dead);
+            removeDeadInPlace(state.enemies, e => e.dead);
         }
 
 

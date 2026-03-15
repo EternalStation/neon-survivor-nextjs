@@ -1,11 +1,12 @@
 import { isInMap, getHexDistToWall } from '../mission/MapLogic';
+import { removeDeadInPlace } from '../core/ObjectPool';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { getChassisResonance } from '../upgrades/EfficiencyLogic';
 import { isBuffActive } from '../upgrades/BlueprintLogic';
 import { getCdMod, isOnCooldown } from '../utils/CooldownUtils';
 import { playSfx } from '../audio/AudioLogic';
 import { calcStat } from '../utils/MathUtils';
-import type { GameState, Enemy, Bullet } from '../core/Types';
+import type { GameState, Enemy, Bullet, ShieldChunk } from '../core/Types';
 import { spawnParticles, spawnFloatingNumber } from '../effects/ParticleLogic';
 import { getHexMultiplier, getHexLevel, calculateLegendaryBonus } from '../upgrades/LegendaryLogic';
 import { handleEnemyDeath } from '../mission/DeathLogic';
@@ -62,12 +63,12 @@ export function updateProjectiles(
 
     Object.values(state.players).forEach(p => {
         if (p.shieldChunks) {
-            p.shieldChunks = p.shieldChunks.filter(c => now < c.expiry && c.amount > 0);
+            removeDeadInPlace(p.shieldChunks, (c: ShieldChunk) => now >= c.expiry || c.amount <= 0);
         }
     });
 
 
     if (state.player.shieldChunks) {
-        state.player.shieldChunks = state.player.shieldChunks.filter(c => now < c.expiry && c.amount > 0);
+        removeDeadInPlace(state.player.shieldChunks, (c: ShieldChunk) => now >= c.expiry || c.amount <= 0);
     }
 }

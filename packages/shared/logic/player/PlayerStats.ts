@@ -1,5 +1,5 @@
 
-import type { GameState } from '../core/Types';
+import type { GameState, ShieldChunk } from '../core/Types';
 import { calcStat } from '../utils/MathUtils';
 import { recordHealing } from '../utils/DamageTracking';
 import { calculateLegendaryBonus, getHexLevel, getHexMultiplier } from '../upgrades/LegendaryLogic';
@@ -8,6 +8,7 @@ import { spawnFloatingNumber } from '../effects/ParticleLogic';
 import { playSfx } from '../audio/AudioLogic';
 import { GAME_CONFIG } from '../core/GameConfig';
 import { applyHealToPlayer } from '../utils/CombatUtils';
+import { removeDeadInPlace } from '../core/ObjectPool';
 
 
 export function updatePlayerStats(state: GameState, overridePlayer?: any) {
@@ -119,7 +120,7 @@ export function updatePlayerStats(state: GameState, overridePlayer?: any) {
                 const shieldAmount = totalArmor * 1.0;
                 if (!player.shieldChunks) player.shieldChunks = [];
 
-                player.shieldChunks = player.shieldChunks.filter((c: any) => (c as any).source !== 'kinetic');
+                removeDeadInPlace(player.shieldChunks, (c: ShieldChunk) => c.source === 'kinetic');
 
                 player.shieldChunks.push({
                     amount: shieldAmount,
