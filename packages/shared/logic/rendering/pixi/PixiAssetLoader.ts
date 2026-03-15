@@ -37,10 +37,13 @@ export class PixiAssetLoader {
         ) as Record<PlayerClassId, string>
         const iconEntries = await Promise.all(
             PLAYER_CLASSES.map(async playerClass => {
-                const texture = playerClass.iconUrl
-                    ? await this.loadTexture(playerClass.iconUrl)
-                    : Texture.EMPTY
-                return [playerClass.id, texture] as const
+                if (!playerClass.iconUrl) return [playerClass.id, Texture.EMPTY] as const
+                try {
+                    const texture = await this.loadTexture(playerClass.iconUrl)
+                    return [playerClass.id, texture] as const
+                } catch {
+                    return [playerClass.id, Texture.EMPTY] as const
+                }
             })
         )
 

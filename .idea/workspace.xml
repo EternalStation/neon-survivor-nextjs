@@ -5,115 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="fix: fixed dist:win build">
-      <change afterPath="$PROJECT_DIR$/docs/plan-prisma-trpc.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/plan-vps-migration.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.1-viewport-culling.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.2-remove-shadowblur.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/0.3-object-pool.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.1-enemy-interface.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.2-player-interface.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/1.3-bullet-interface.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.1-pixi-setup.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.2-sprite-atlas.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.1-background-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.2-projectile-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.3-enemy-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.4-particle-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.5-player-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.6-effect-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.7-boss-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.3.8-ui-overlay-layer.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.5-game-canvas.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/2.6-remove-old-renderers.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.1-enemy-logic-split.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.2-enemy-update-dispatch.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/3.3-effect-renderer-split.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.1-swap-and-pop.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.2-spatial-grid.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/4.3-particle-container.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.1-glow-shader.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.2-sprite-atlas-pipeline.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/tasks/pixi-migration/5.3-bitmap-font.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/ObjectPool.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/enemy.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/player.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/core/types/projectile.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossStageUtils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/CircleBossLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/DiamondBossLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/OverlordBossLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/PentagonBossLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/TriangleBossLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/GlitcherLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/MinionLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/PrismLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/SnitchLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/unique/ZombieLogic.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EliteEnemyUpdate.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EnemyUpdateCore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/EnemyUpdateDispatch.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/update/NormalEnemyUpdate.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/GlowSprites.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/ViewportCulling.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiCamera.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/SpriteAtlasGenerator.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/BackgroundLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/BossLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/EffectLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/EntityLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/PlayerLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/ProjectileLayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/UILayer.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/agents/task-runner/task-runner.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/next-env.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/migrate-plan.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/components/UpgradeCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/components/UpgradeIcons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/UpgradeIcons.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/components/hud/UpgradeMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/hud/UpgradeMenu.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseGame.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGame.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseGameLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseGameLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerGame.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/hooks/UseMultiplayerGame.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileEnemyLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectilePlayerLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectilePlayerLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileSpawning.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/combat/ProjectileSpawning.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/core/SpatialGrid.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/core/SpatialGrid.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/effects/ParticleLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/effects/ParticleLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/BossEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/BossEnemyLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EliteEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EliteEnemyLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyIndividualUpdate.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/EnemyLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/NormalEnemyLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/enemies/NormalEnemyLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/UniqueEnemyLogic.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/enemies/bosses/BossLogicPart2.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/mission/DeathLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/mission/DeathLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerCombat.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerCombat.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerLogic.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerLogic.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/player/PlayerStats.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/player/PlayerStats.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/GameRenderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/GameRenderer.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossSkillRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/BossVisualFX.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EffectRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EliteRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EnemyRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/EntityRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MapRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/MergeRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PlayerRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/PoiRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/ProjectileRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/SandboxRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/TextHelper.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/renderers/UniqueEnemyRenderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/logic/utils/CombatUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/utils/CombatUtils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/shared/styles/UpgradeMenu.css" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/styles/UpgradeMenu.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/effects/ParticleRenderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/effects/ParticleRenderer.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,7 +17,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="879" />
+    <option name="cachedIndexableFilesCount" value="1163" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -306,6 +202,8 @@
       <workItem from="1773396731482" duration="5000" />
       <workItem from="1773434293047" duration="5094000" />
       <workItem from="1773475076957" duration="38107000" />
+      <workItem from="1773534100749" duration="675000" />
+      <workItem from="1773564661466" duration="4163000" />
     </task>
     <task id="LOCAL-00001" summary="upd: Reorganize stats menu with grouped sections &amp; class metrics">
       <option name="closed" value="true" />
@@ -371,7 +269,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773484069591</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="fix: fixed dist:win build">
+      <option name="closed" value="true" />
+      <created>1773534168882</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1773534168883</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

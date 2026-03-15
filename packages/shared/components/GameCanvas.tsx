@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGameLoop } from '../hooks/UseGame';
 import { useWindowScale } from '../hooks/UseWindowScale';
 import { PixiApp } from '../logic/rendering/pixi/PixiApp';
@@ -9,11 +9,19 @@ interface GameCanvasProps {
 
 export const GameCanvas: React.FC<GameCanvasProps> = ({ hook }) => {
     const { canvasRef, setPixiApp, setWindowScaleFactor } = hook;
+    const containerRef = useRef<HTMLDivElement>(null);
     const { scale } = useWindowScale();
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const container = containerRef.current;
+        if (!container) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.style.display = 'block';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        container.appendChild(canvas);
+        (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current = canvas;
 
         const app = new PixiApp();
         let destroyed = false;
@@ -27,13 +35,15 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ hook }) => {
                 setPixiApp(app);
             })
             .catch(error => {
-                console.error('Failed to initialize PixiApp:', error);
+                console.error('Failed to initialize PixiApp — the game canvas will be blank. Error:', error);
             });
 
         return () => {
             destroyed = true;
             setPixiApp(null);
             app.destroy();
+            if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+            (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current = null;
         };
     }, [canvasRef, setPixiApp]);
 
@@ -42,9 +52,6 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ hook }) => {
     }, [scale, setWindowScaleFactor]);
 
     return (
-        <canvas
-            ref={canvasRef}
-            style={{ display: 'block', width: '100vw', height: '100vh' }}
-        />
+        <div ref={containerRef} style={{ width: '100vw', height: '100vh' }} />
     );
 };

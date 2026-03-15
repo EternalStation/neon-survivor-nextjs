@@ -27,6 +27,7 @@ export class PixiApp {
     private destroyed = false
     private renderErrored = false
     private layerErrors = new Set<string>()
+    private initLogged = false
 
     async init(canvas: HTMLCanvasElement): Promise<void> {
         if (this.destroyed) return
@@ -63,6 +64,7 @@ export class PixiApp {
         }
 
         this.app = app
+        this.patchGlGetShaderSource(app)
         this.patchPixiRenderers(app)
 
         this.worldContainer = new Container()
@@ -74,8 +76,16 @@ export class PixiApp {
         app.stage.addChild(this.uiContainer)
 
         this.assets = new PixiAssetLoader()
-        await this.assets.initSpriteAtlas(this.app)
-        initializeFloatingNumberFonts()
+        try {
+            await this.assets.initSpriteAtlas(this.app)
+        } catch (error) {
+            console.warn('Sprite atlas init failed, continuing with fallback textures.', error)
+        }
+        try {
+            initializeFloatingNumberFonts()
+        } catch (error) {
+            console.warn('Floating number font init failed, continuing without bitmap fonts.', error)
+        }
 
         this.backgroundLayer = new BackgroundLayer()
         this.projectileLayer = new ProjectileLayer(this.assets)
@@ -94,6 +104,7 @@ export class PixiApp {
         this.uiContainer.addChild(this.uiLayer.container)
 
         this.initialized = true
+        console.info('PixiApp initialized successfully.')
     }
 
     updateCamera(x: number, y: number, zoom: number): void {
@@ -105,7 +116,13 @@ export class PixiApp {
     }
 
     render(state: GameState, _language: Language): void {
-        if (!this.initialized || this.renderErrored) return
+        if (!this.initialized || this.renderErrored) {
+            if (!this.initLogged) {
+                this.initLogged = true
+                console.warn(`PixiApp.render skipped: initialized=${this.initialized}, renderErrored=${this.renderErrored}, destroyed=${this.destroyed}`)
+            }
+            return
+        }
 
         try {
             const screenWidth = this.app!.screen.width
@@ -141,7 +158,24 @@ export class PixiApp {
         }
     }
 
+    private nullSplitErrorCount = 0
+    private static readonly NULL_SPLIT_LOG_LIMIT = 3
+
+    private patchGlGetShaderSource(app: Application): void {
+        const canvas = app.canvas as HTMLCanvasElement
+        const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+        if (!gl) return
+
+        const originalGetShaderSource = gl.getShaderSource.bind(gl)
+        gl.getShaderSource = (shader: WebGLShader): string | null => {
+            const source = originalGetShaderSource(shader)
+            if (source === null) return ''
+            return source
+        }
+    }
+
     private patchPixiRenderers(app: Application): void {
+        const self = this
         const pixiApp = app as Application & {
             render: (...args: unknown[]) => void
             __neonPatchedRender?: boolean
@@ -158,7 +192,10 @@ export class PixiApp {
                     return originalRendererRender(...args)
                 } catch (error) {
                     if (isNullSplitPixiError(error)) {
-                        console.warn('Suppressed Pixi renderer null.split error.', error)
+                        if (self.nullSplitErrorCount < PixiApp.NULL_SPLIT_LOG_LIMIT) {
+                            self.nullSplitErrorCount++
+                            console.warn(`Suppressed Pixi renderer null.split error (${self.nullSplitErrorCount}/${PixiApp.NULL_SPLIT_LOG_LIMIT}).`, error)
+                        }
                         return
                     }
                     throw error
@@ -174,7 +211,10 @@ export class PixiApp {
                     return originalAppRender(...args)
                 } catch (error) {
                     if (isNullSplitPixiError(error)) {
-                        console.warn('Suppressed Pixi app null.split error.', error)
+                        if (self.nullSplitErrorCount < PixiApp.NULL_SPLIT_LOG_LIMIT) {
+                            self.nullSplitErrorCount++
+                            console.warn(`Suppressed Pixi app null.split error (${self.nullSplitErrorCount}/${PixiApp.NULL_SPLIT_LOG_LIMIT}).`, error)
+                        }
                         return
                     }
                     throw error

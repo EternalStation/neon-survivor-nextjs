@@ -86,7 +86,7 @@ export class ParticleRenderer {
             if (spriteIndex >= MAX_RENDERED_PARTICLES) continue
             if (spriteIndex >= this.activeSprites.length) {
                 const sprite = this.spritePool.acquire()
-                this.particleContainer.addChild(sprite)
+                this.particleContainer.addParticle(sprite)
                 this.activeSprites.push(sprite)
             }
             this.updateParticleSprite(this.activeSprites[spriteIndex++], particle, gameTime)
@@ -94,7 +94,7 @@ export class ParticleRenderer {
 
         while (spriteIndex < this.activeSprites.length) {
             const sprite = this.activeSprites.pop()!
-            this.particleContainer.removeChild(sprite)
+            this.particleContainer.removeParticle(sprite)
             this.spritePool.release(sprite)
         }
     }
