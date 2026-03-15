@@ -1,0 +1,27 @@
+{
+  "name": "@neon-survivor/desktop",
+  "version": "1.0.0",
+  "description": "Neon Survivor Desktop",
+  "author": "EternalStation",
+  "main": "out/main/main.js",
+  "scripts": {
+    "dev": "node ../../scripts/copy-assets.js && electron-vite dev",
+    "build": "node ../../scripts/copy-assets.js && electron-vite build",
+    "dist:win": "node ../../scripts/copy-assets.js && electron-vite build && electron-builder --win --config electron-builder.config.js"
+  },
+  "dependencies": {
+    "@fontsource/orbitron": "^5",
+    "@neon-survivor/shared": "workspace:*",
+    "@tailwindcss/postcss": "^4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "tailwindcss": "^4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25",
+    "electron-vite": "^3",
+    "vite-plugin-static-copy": "^3.2.0"
+  }
+}

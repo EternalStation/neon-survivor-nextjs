@@ -12,7 +12,8 @@
       "Read(//c/Users/riot1/AppData/Local/**)",
       "Bash(rm:*)",
       "Bash(mv:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(cd \"D:\\\\Prog\\\\my\\\\.temp\\\\neon-survivor-nextjs\" && mkdir -p apps/web/src/app/api && cp -r backend/. apps/web/src/app/api/ && rm -rf backend)"
     ]
   },
   "outputStyle": "default"

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="fix: fixed dist:win build">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/components/GameCanvas.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiApp.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/PixiAssetLoader.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/effects/ParticleRenderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/shared/logic/rendering/pixi/layers/effects/ParticleRenderer.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="1163" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;TaraShevchenko&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/EternalStation/neon-survivor-nextjs.git&quot;,
+    &quot;accountId&quot;: &quot;7e546a73-47f6-4663-8f4b-c49665b7f0dc&quot;
+  },
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
+    },
+    &quot;owner&quot;: &quot;EternalStation&quot;,
+    &quot;repository&quot;: &quot;neon-survivor-nextjs&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="3Acx9I632vM95WMzrlu0thzMVPf" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#13 on migrate-to-electron&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
+    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Prog/my/.temp/neon-survivor-nextjs&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.Next.js: server-side.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build:desktop.executor&quot;: &quot;Run&quot;,
+    &quot;npm.build:web.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:desktop.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:web.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dist:win.executor&quot;: &quot;Run&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;D:\\Prog\\my\\.temp\\neon-survivor-nextjs\\apps\\web\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\tasks\pixi-migration" />
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\tasks\test-suite" />
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\.temp" />
+      <recent name="D:\Prog\my\.temp\neon-survivor-nextjs\docs\mechanics" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.dev:web">
+    <configuration name="build" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="build:desktop" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build:desktop" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="build:web" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build:web" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:desktop" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:desktop" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:web" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:web" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dist:win" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dist:win" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.dev:web" />
+        <item itemvalue="npm.build:web" />
+        <item itemvalue="npm.dist:win" />
+        <item itemvalue="npm.build:desktop" />
+        <item itemvalue="npm.dev:desktop" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.31033.133" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3a32e2d8-2b6a-45a7-85b6-3de1f0298254" name="Changes" comment="" />
+      <created>1772905506716</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1772905506716</updated>
+      <workItem from="1772905509825" duration="8305000" />
+      <workItem from="1772925318650" duration="2000" />
+      <workItem from="1772925669084" duration="6000" />
+      <workItem from="1773053986811" duration="7173000" />
+      <workItem from="1773359153397" duration="33000" />
+      <workItem from="1773360946633" duration="6000" />
+      <workItem from="1773396731482" duration="5000" />
+      <workItem from="1773434293047" duration="5094000" />
+      <workItem from="1773475076957" duration="38107000" />
+      <workItem from="1773534100749" duration="675000" />
+      <workItem from="1773564661466" duration="4163000" />
+    </task>
+    <task id="LOCAL-00001" summary="upd: Reorganize stats menu with grouped sections &amp; class metrics">
+      <option name="closed" value="true" />
+      <created>1772909702883</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1772909702883</updated>
+    </task>
+    <task id="LOCAL-00002" summary="new: Add vitals tracking system for HP/damage/healing">
+      <option name="closed" value="true" />
+      <created>1773054003763</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773054003763</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fix: fixed build">
+      <option name="closed" value="true" />
+      <created>1773055185252</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773055185252</updated>
+    </task>
+    <task id="LOCAL-00004" summary="new: Add vitals tab to leaderboard &amp; death screen">
+      <option name="closed" value="true" />
+      <created>1773064156385</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773064156385</updated>
+    </task>
+    <task id="LOCAL-00005" summary="new: Allow mv command in Claude settings">
+      <option name="closed" value="true" />
+      <created>1773064746468</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773064746468</updated>
+    </task>
+    <task id="LOCAL-00006" summary="new: Allow mv command in Claude settings">
+      <option name="closed" value="true" />
+      <created>1773064967810</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773064967810</updated>
+    </task>
+    <task id="LOCAL-00007" summary="feat: migrate to Turborepo monorepo with Electron desktop shell">
+      <option name="closed" value="true" />
+      <created>1773445186450</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773445186450</updated>
+    </task>
+    <task id="LOCAL-00008" summary="fix: fixed dist:win build">
+      <option name="closed" value="true" />
+      <created>1773484069591</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1773484069591</updated>
+    </task>
+    <task id="LOCAL-00009" summary="fix: fixed dist:win build">
+      <option name="closed" value="true" />
+      <created>1773534168882</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1773534168883</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="upd: Reorganize stats menu with grouped sections &amp; class metrics" />
+    <MESSAGE value="new: Add vitals tracking system for HP/damage/healing" />
+    <MESSAGE value="fix: fixed build" />
+    <MESSAGE value="new: Add vitals tab to leaderboard &amp; death screen" />
+    <MESSAGE value="new: Allow mv command in Claude settings" />
+    <MESSAGE value="feat: migrate to Turborepo monorepo with Electron desktop shell" />
+    <MESSAGE value="fix: fixed dist:win build" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: fixed dist:win build" />
+  </component>
+</project>

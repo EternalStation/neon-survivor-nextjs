@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap');
+@import "@neon-survivor/shared/styles/index.css";
+@import "@neon-survivor/shared/styles/animations.css";
+@import "@neon-survivor/shared/styles/MenuAdditions.css";
+@import "@neon-survivor/shared/styles/UpgradeMenu.css";
+
+/* Next.js specific globals can go here */
+@import "tailwindcss";
+
+:root {
+  --foreground: #ffffff;
+  --background: #020617;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
